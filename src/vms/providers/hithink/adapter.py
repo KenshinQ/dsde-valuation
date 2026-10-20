@@ -46,9 +46,10 @@ class FetchDiagnostics:
     flags: list[str] = field(default_factory=list)
     price_diag: dict[str, Any] = field(default_factory=dict)
     rest_notes: list[str] = field(default_factory=list)
-    corporate_actions: str = "empty — adj events lack announced_at (HITHINK-CA-DEFER-v1)"
-    shares_outstanding: str = "null — not reliably available in HiThink store"
-    industry: str = "unset — no Shenwan L1 in meta (identity gate may BLOCK in production)"
+    corporate_actions: str = "pending enrichment"
+    shares_outstanding: str = "pending enrichment"
+    industry: str = "pending enrichment"
+    enrichment: dict[str, Any] = field(default_factory=dict)
 
     def as_dict(self) -> dict[str, Any]:
         return redact_secrets({
@@ -69,6 +70,7 @@ class FetchDiagnostics:
             "corporate_actions": self.corporate_actions,
             "shares_outstanding": self.shares_outstanding,
             "industry": self.industry,
+            "enrichment": self.enrichment,
             "source_id": SOURCE_ID,
             "versioning": "LATEST_ONLY",
             "pit_complete_expected": False,
@@ -146,9 +148,13 @@ def fetch_bundle(
             "HITHINK-UNITS-YUAN-v1",
             "HITHINK-NO-VENDOR-QFQ-v1",
             "HITHINK-LOCAL-FIRST-v1",
-            "HITHINK-CA-DEFER-v1",
             "HITHINK-REPORT-DATE-FALLBACK-v1",
             "HITHINK-FIELD-MAP-v1",
+            "EM-CA-SHAREBONUS-v1",
+            "EM-SHARES-EQUITY-v1",
+            "INDUSTRY-SW-L1-PROXY-EM-v1",
+            "INDUSTRY-NO-RECLASS-HISTORY-v1",
+            "HITHINK-ALLOTMENT-DEFER-v1",
             "ASOF-DATE-CLOSE-v1",
             "PIT-INCOMPLETE-v1",
         ),
@@ -320,13 +326,46 @@ def fetch_bundle(
             "refusing silent vendor swap"
         )
 
+    # --- Eastmoney enrichment: CA (announce dates), shares, industry proxy ---
+    from vms.providers.eastmoney import enrich_bundle
+
+    enr = enrich_bundle(
+        thscode,
+        market=market,
+        prefer_local=prefer_local,
+        fund_db=fdb,
+    )
+    market = enr.market
+    diag.enrichment = enr.diagnostics
+    diag.assumptions = sorted(set(diag.assumptions) | set(enr.assumptions))
+    n_ca = len(enr.corporate_actions)
+    n_cls = len(enr.classifications)
+    shares_n = sum(1 for m in market if m.shares_outstanding is not None)
+    diag.corporate_actions = (
+        f"{n_ca} events from EM RPT_SHAREBONUS_DET (EM-CA-SHAREBONUS-v1)"
+        if n_ca else "empty — EM sharebonus miss or no announce+ex rows"
+    )
+    diag.shares_outstanding = (
+        f"stamped on {shares_n}/{len(market)} bars via EM RPT_F10_EH_EQUITY (EM-SHARES-EQUITY-v1)"
+        if shares_n else "null — EM equity miss"
+    )
+    if n_cls:
+        c0 = enr.classifications[0]
+        diag.industry = f"{c0.scheme}:{c0.industry} (INDUSTRY-SW-L1-PROXY-EM-v1)"
+    else:
+        diag.industry = "unset — EM F10 industry miss (production may BLOCK)"
+    diag.market_bars = len(market)
+
+    sources = {SOURCE_ID: _source_descriptor()}
+    sources.update(enr.sources)
+
     load = LoadResult(
         financial=financial,
         market=market,
-        corporate_actions=[],
-        classifications=[],  # industry unset → production identity gate
-        sources={SOURCE_ID: _source_descriptor()},
-        corporate_actions_provided=False,  # explicit empty, not "missing file"
+        corporate_actions=enr.corporate_actions,
+        classifications=enr.classifications,
+        sources=sources,
+        corporate_actions_provided=True,  # enrichment path always declares CA table (may be empty)
         sources_provided=True,
         files={},
         errors=[],

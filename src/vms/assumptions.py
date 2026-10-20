@@ -287,7 +287,27 @@ ASSUMPTIONS: dict[str, str] = {
                              "On miss for the requested ticker: Recipe E (one HiThink REST upsert + re-read). "
                              "Do not silently switch vendors. Never echo API keys.",
     "HITHINK-CA-DEFER-v1": "Corporate actions from marketdb raw_adjustment_events lack announced_at (ex_date only), "
-                          "so they are not PIT-safe. VMS leaves corporate_actions empty and documents the limitation.",
+                          "so they are not PIT-safe. Superseded by EM-CA-SHAREBONUS-v1 (Eastmoney announce dates).",
+    "EM-CA-SHAREBONUS-v1": "A-share cash dividends and bonus/转增 events come from Eastmoney RPT_SHAREBONUS_DET. "
+                          "announced_at = PLAN_NOTICE_DATE @ 15:00 Asia/Shanghai (else NOTICE_DATE); "
+                          "ex_date = EX_DIVIDEND_DATE. PRETAX_BONUS_RMB and BONUS_IT_RATIO are per 10 shares "
+                          "(÷10 → cash_per_share / share_ratio=1+ratio/10). Rows without announce date or "
+                          "ex_date are skipped — never invent announced_at from ex_date. "
+                          "Allotment/rights without EM announce stay deferred (HITHINK-ALLOTMENT-DEFER-v1).",
+    "EM-SHARES-EQUITY-v1": "Shares outstanding from Eastmoney RPT_F10_EH_EQUITY TOTAL_SHARES, known-at = "
+                          "NOTICE_DATE. Applied to MarketObservation.shares_outstanding on bars with "
+                          "date >= NOTICE_DATE. Diluted shares are not published separately on this report "
+                          "⇒ diluted = basic (DILUTED-SHARES-BASIC-v1). Local DuckDB cache em_equity_changes.",
+    "INDUSTRY-SW-L1-PROXY-EM-v1": "No public Shenwan L1 membership feed found on EM datacenter / HiThink stock "
+                                 "meta (2026-10-20 probe). Industry = EM F10 CompanySurvey sshy+sszjhhy mapped "
+                                 "to SW2021_L1 proxy names (keyword+board table) so unsupported 银行/非银金融 "
+                                 "still gate. scheme remains SW2021_L1. Not official SW membership.",
+    "INDUSTRY-NO-RECLASS-HISTORY-v1": "EM F10 industry is a current snapshot only. published_at uses listing "
+                                     "date when available (ssrq) so past as_of can see a class; historical "
+                                     "reclassifications are not versioned — labeled limitation.",
+    "HITHINK-ALLOTMENT-DEFER-v1": "HiThink/marketdb adjustment events expose allotment_ratio but only ex_date "
+                                 "(no announced_at). Rights/allotment share_issuance stays out of VMS CA until "
+                                 "an announce-date source is wired. Do not backfill announce from ex_date.",
     "HITHINK-FIELD-MAP-v1": "HiThink columns map to FIELDS-2 via vms.providers.hithink.mapping (documented in "
                            "docs/data_contracts.md). Outflows use positive magnitudes. Unmapped columns ignored "
                            "with optional warning count. pay_dividends_profits_interest_cash → dividends_paid "
@@ -298,6 +318,7 @@ ASSUMPTIONS: dict[str, str] = {
 
 
 SUPERSEDED: dict[str, str] = {
+    "HITHINK-CA-DEFER-v1": "EM-CA-SHAREBONUS-v1",
     "PAYOUT-SAME-YEAR-v1": "DIVIDEND-T-PLUS-1-v1",
     "INDUSTRY-UNCLASSIFIED-v1": "INDUSTRY-UNCLASSIFIED-v2",
     "INTEREST-OPENING-DEBT-v1": "INTEREST-OPENING-DEBT-v2",

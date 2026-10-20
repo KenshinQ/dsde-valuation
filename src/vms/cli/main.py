@@ -1084,6 +1084,9 @@ def cmd_ingest_hithink(args: argparse.Namespace) -> int:
         "out": str(out),
         "n_financial": len(load.financial),
         "n_market": len(load.market),
+        "n_corporate_actions": len(load.corporate_actions),
+        "n_classifications": len(load.classifications),
+        "n_market_with_shares": sum(1 for m in load.market if m.shares_outstanding is not None),
         "n_sources": len(load.sources),
         "prefer_local": prefer_local,
         "pit_complete_expected": False,
@@ -1091,6 +1094,9 @@ def cmd_ingest_hithink(args: argparse.Namespace) -> int:
         "versioning": "LATEST_ONLY",
         "notice_joined": diag.notice_joined,
         "notice_fallback": diag.notice_fallback,
+        "industry": diag.industry,
+        "corporate_actions": diag.corporate_actions,
+        "shares_outstanding": diag.shares_outstanding,
         "assumptions": diag.assumptions,
     }, indent=2, ensure_ascii=False, sort_keys=True))
     return EXIT_OK

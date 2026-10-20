@@ -156,6 +156,20 @@ sources:
 - **Corporate actions:** the latest known version per action_id, with status `effective` (ex_date ≤ as_of date)
   or `pending`.
 
+
+## 5.x Real A-share Eastmoney enrichment (PHASE_ENRICH)
+
+| Need | Source | Fields | PIT publish time | Local-first |
+|---|---|---|---|---|
+| Industry (SW2021_L1 **proxy**) | EM F10 `CompanySurveyAjax` (`sshy`/`sszjhhy`) | mapped to SW L1 names | listing date `ssrq` (no reclass history) | `em_industry_profile` in fund DuckDB |
+| Shares outstanding | EM `RPT_F10_EH_EQUITY` | `TOTAL_SHARES` | `NOTICE_DATE` | `em_equity_changes` |
+| Cash dividend / 送转 | EM `RPT_SHAREBONUS_DET` | `PRETAX_BONUS_RMB`, `BONUS_IT_RATIO` (per **10** shares) | `PLAN_NOTICE_DATE` else `NOTICE_DATE` | `em_sharebonus` |
+| HiThink adj events | marketdb `raw_adjustment_events` | ex_date only | **unavailable** — not used for CA | allotment deferred |
+
+Assumptions: `EM-CA-SHAREBONUS-v1`, `EM-SHARES-EQUITY-v1`, `INDUSTRY-SW-L1-PROXY-EM-v1`,
+`INDUSTRY-NO-RECLASS-HISTORY-v1`, `HITHINK-ALLOTMENT-DEFER-v1`. Official Shenwan L1 membership
+is **not** on public EM datacenter / HiThink stock meta (as of 2026-10-20).
+
 ## 6. Data-quality report (`data_quality_report.json`, DQ-REPORT-1)
 Status precedence: any CRITICAL → **BLOCKED**; otherwise any PIT_INCOMPLETE finding → **PIT_INCOMPLETE**;
 otherwise any WARNING → **PASS_WITH_WARNINGS**; otherwise **PASS**. PIT_INCOMPLETE does not block

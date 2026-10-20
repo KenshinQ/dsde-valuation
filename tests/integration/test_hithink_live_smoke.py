@@ -33,6 +33,14 @@ def test_fetch_bundle_local_moutai():
     assert src.reporting_convention.value == "CN_CUMULATIVE_YTD"
     assert all(m.adjusted_close is None for m in load.market)
     assert diag.notice_joined + diag.notice_fallback > 0
+    # Enrichment (EM public APIs / local cache): industry, shares, CA with announce dates
+    assert load.classifications, "expected EM F10 industry classification"
+    assert load.classifications[0].scheme == "SW2021_L1"
+    assert load.classifications[0].industry  # e.g. 食品饮料
+    assert load.corporate_actions_provided is True
+    assert len(load.corporate_actions) >= 1
+    assert all(e.announced_at is not None for e in load.corporate_actions)
+    assert sum(1 for m in load.market if m.shares_outstanding is not None) > 0
     # Never period_end-as-PIT for NOTICE-joined rows
     for o in load.financial:
         if o.revision_id and "hithink_report_date_ms_fallback" in (o.revision_id or ""):
@@ -56,6 +64,9 @@ def test_cli_ingest_and_build_snapshot(tmp_path):
     summary = json.loads(r.stdout)
     assert summary["n_financial"] > 0
     assert summary["pit_complete_expected"] is False
+    assert summary.get("n_corporate_actions", 0) >= 1
+    assert summary.get("n_classifications", 0) >= 1
+    assert summary.get("n_market_with_shares", 0) > 0
     assert (out / "sources.yaml").is_file()
     assert (out / "financial_observations.csv").is_file() or (out / "financial_observations.parquet").is_file()
 

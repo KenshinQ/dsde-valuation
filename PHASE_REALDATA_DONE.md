@@ -12,7 +12,8 @@ Local commits only. No DSDE wiring / Phase 11 valuation changes beyond the adapt
 | HITHINK-UNITS-YUAN-v1 | Amounts = CNY yuan |
 | HITHINK-NO-VENDOR-QFQ-v1 | `raw_close` only; `adjusted_close=null` |
 | HITHINK-LOCAL-FIRST-v1 | marketdb + fund DuckDB first; Recipe E REST on miss; no silent vendor swap; no key echo |
-| HITHINK-CA-DEFER-v1 | CA empty (no announced_at on adj events) |
+| HITHINK-CA-DEFER-v1 | superseded by EM-CA-SHAREBONUS-v1 |
+| EM-CA-SHAREBONUS-v1 | EM RPT_SHAREBONUS_DET with PLAN/NOTICE announce dates |
 | HITHINK-FIELD-MAP-v1 | Column map in `mapping.py` + docs/data_contracts.md |
 
 ## Deliverables
@@ -35,7 +36,7 @@ Local commits only. No DSDE wiring / Phase 11 valuation changes beyond the adapt
 
 ## Known limitations (real A-share)
 
-- No Shenwan L1 in meta → `INDUSTRY_UNCLASSIFIED` (production BLOCKED; use exploratory + reason).
+- Industry: see PHASE_ENRICH_DONE.md (EM F10 → SW2021_L1 **proxy**; not official Shenwan).
 - Inventory / AP / D&A absent from HiThink store.
 - `total_debt` ≈ interest-bearing debt (approximation).
 - `dividends_paid` from mixed dividends+interest cashflow field → `low_confidence`.

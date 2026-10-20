@@ -124,8 +124,7 @@ def test_engine_build_return_distributions():
         p6.valuation, p6.financial_paths, spot_price=spot, horizons_years=[1, 3],
         simulation=p6.bundle, regimes=p6.regimes)
     assert bundle.n_valid_paths > 0
-    with pytest.raises(NotImplementedError, match="Phase 8"):
-        eng.run_diagnostics()
+    # Phase 8 is live via eng.run_diagnostics(load, ...)
 
 
 def test_no_dividend_double_count_in_formula():

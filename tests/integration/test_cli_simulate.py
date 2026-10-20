@@ -31,7 +31,7 @@ def test_simulate_artifacts(tmp_path, capsys):
     b = json.loads((out / "simulation_bundle.json").read_text())
     meta = json.loads((out / "simulation_metadata.json").read_text())
     assert b["run_id"] == summ["run_id"] == meta["run_id"]
-    assert b["schema_version"] == "vms-0.1.phase7"
+    assert b["schema_version"] == "vms-0.1.phase8"
     assert b["sampler_version"] == "PATH-SAMPLER-1"
     assert b["central"]["kind"] == "central" and b["paths"]
     assert b["dependence"]["method"] == "gaussian_copula_shrunk_pearson"

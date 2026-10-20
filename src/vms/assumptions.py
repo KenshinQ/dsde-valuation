@@ -246,6 +246,17 @@ ASSUMPTIONS: dict[str, str] = {
                                 "return. Changing the fundamental posterior / future-value distribution requires joint "
                                 "recomputation. Never encode that lower price alone improves fundamental odds, or that "
                                 "price decline proves fundamental deterioration.",
+    "SENS-OAT-ISOLATION-v1": "One-at-a-time driver sensitivities shock only the named driver on frozen baseline paths; "
+                            "isolation_check verifies other year-1 driver means are unchanged. Config/valuation OATs "
+                            "change only the named valuation inputs.",
+    "SENS-MC-PERCENTILE-NOT-CI-v1": "Monte Carlo p05/p95 (and similar) bands in sensitivity and valuation/return reports "
+                                   "are empirical percentile intervals across simulated paths. They must NOT be labeled "
+                                   "statistical confidence intervals unless a separate CI construction is documented.",
+    "SENS-PROCESS-VS-PARAM-v1": "Process vs parameter uncertainty: compare runs with parameter_mode=fixed (point "
+                               "estimates) vs parameter_mode=resampled (bootstrap), holding the process seed stream "
+                               "convention fixed. Difference approximates parameter-uncertainty contribution.",
+    "SENS-DRIVER-ABLATION-v1": "Driver contribution uses simple pathwise ablation to the central path year-1 value "
+                              "(baseline metric minus ablated metric). Not a Shapley/game-theoretic allocation.",
 }
 
 

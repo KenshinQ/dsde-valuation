@@ -36,6 +36,8 @@ jobs:
         run: .venv/bin/vms value --input /tmp/vms_demo/data --ticker SYN000001.SZ --as-of 2025-06-30 --out /tmp/vms_val --paths 100 --years 3
       - name: Entry-price returns on synthetic data
         run: .venv/bin/vms returns --input /tmp/vms_demo/data --ticker SYN000001.SZ --as-of 2025-06-30 --out /tmp/vms_ret --paths 100 --years 3 --horizons 1,3
+      - name: Sensitivity attribution on prior run
+        run: .venv/bin/vms sensitivity --run-dir /tmp/vms_ret --out /tmp/vms_sens --paths 50 --years 3
       - name: Leakage mutation check
         run: PY=.venv/bin/python scripts/leakage_mutation_check.sh
       - name: Invariant mutation check

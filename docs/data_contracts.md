@@ -1,4 +1,4 @@
-# Data contracts (Phase 7)
+# Data contracts (Phase 8)
 
 Sources of truth: `src/vms/schemas/observations.py`, `src/vms/schemas/fields.py`,
 `src/vms/pit/snapshot.py`, `src/vms/quality/issues.py`. Artifact schema version: `vms-0.1.phase1`.
@@ -226,6 +226,10 @@ known period.
 - `return_distribution_summary.json`: entry-price × horizon mixture stats + regime-conditional diagnostics;
   dividend treatment DIVIDEND-NO-REINVEST-v1; lean path_returns sample.
 - `path_returns.parquet`: full path × entry × horizon return rows.
+
+## 6g. Phase 8 artifacts (`vms sensitivity`, also by `vms demo`)
+- `sensitivity_report.json`: OAT/joint cases, isolation checks, process vs parameter, driver ablation,
+  DCF vs multiple, TV contribution, dominant assumptions, MC-percentile-not-CI labeling, content_hash.
 
 ## 7. Not yet covered
 FX conversion (SCOPE-CNY-v1); non-calendar fiscal years (FISCAL-YEAR-CALENDAR-v1); suspension/price-limit flags;

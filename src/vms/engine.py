@@ -112,8 +112,16 @@ class ValuationEngine:
                            entry_prices=entry_prices, horizons_years=horizons_years, mode=mode,
                            override_reason=override_reason)
 
-    def run_diagnostics(self, *args: Any, **kwargs: Any) -> None:
-        raise NotImplementedError("run_diagnostics: Phase 8")
+    def run_diagnostics(self, load: LoadResult, *, instrument_id: str, as_of: datetime, seed: int,
+                        n_paths: int | None = None, n_years: int | None = None,
+                        spot_price: float | None = None, baseline: Phase7Run | None = None,
+                        mode: Literal["production", "exploratory"] = "exploratory",
+                        override_reason: str | None = "phase8_sensitivity_diagnostics"):
+        from vms.diagnostics import run_diagnostics
+        return run_diagnostics(
+            load=load, instrument_id=instrument_id, as_of=as_of, loaded=self.loaded, seed=seed,
+            n_paths=n_paths, n_years=n_years, spot_price=spot_price, baseline=baseline,
+            mode=mode, override_reason=override_reason)
 
     def run(self, load: LoadResult, *, instrument_id: str, as_of: datetime, seed: int, **kw: Any) -> Phase7Run:
         return self.returns_from_load(load, instrument_id=instrument_id, as_of=as_of, seed=seed, **kw)

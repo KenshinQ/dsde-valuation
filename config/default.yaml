@@ -126,3 +126,20 @@ estimation:                            # (Phase 3) driver distributions — DRIV
     quantiles: [0.1, 0.5, 0.9]
     default_spec: regime_t
     coverage_tolerance: 0.15
+
+sensitivity:                           # (Phase 8) labeled shocks — not calibrated
+  n_paths: 50
+  check_seed_stability: false
+  oat_driver_shocks:
+    revenue_growth: 0.02
+    ebit_margin: 0.01
+    capex_to_revenue: 0.01
+    receivables_to_revenue: 0.02
+    diluted_share_growth: 0.01
+  wacc_shock: 0.01
+  terminal_growth_shock: 0.005
+  exit_multiple_shock: 1.0
+  policy_alt: historical_continuation
+  posterior_tilt_state: GROWTH
+  posterior_tilt: 0.15
+  transition_stay_boost: 0.5

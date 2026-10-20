@@ -193,20 +193,25 @@ def _central_path(regimes: RegimeResult, dist: DistributionModel, years: Sequenc
 
 def _one_path(path_i: int, *, regimes: RegimeResult, dist: DistributionModel, years: Sequence[int],
               states: Sequence[str], chol: np.ndarray, names: Sequence[str], df: float,
-              seed: int) -> PathRecord | InvalidPathSummary:
+              seed: int, parameter_mode: str = "resampled") -> PathRecord | InvalidPathSummary:
     rng = stream_rng(seed, f"path:{path_i}")
     # --- parameter uncertainty: ONE shared bootstrap index across drivers (PARAM-BOOTSTRAP-COUPLED-v1)
+    # parameter_mode="fixed" => point estimates only (process uncertainty remains)
     draw_idx: dict[str, int | None] = {}
     path_loc: dict[str, float] = {}
     path_scale: dict[str, float] = {}
     regime_shift: dict[str, dict[str, tuple[float, float]]] = {}
-    pflags: list[str] = ["PARAM_BOOTSTRAP_COUPLED"]
+    pflags: list[str] = ["PARAM_BOOTSTRAP_COUPLED"] if parameter_mode != "fixed" else ["PARAM_FIXED_POINT"]
     boot_lens = [len(dd.parameter_uncertainty.draws_loc)
                  for dd in dist.drivers.values()
                  if dd.parameter_uncertainty.method == "nonparametric_bootstrap" and dd.parameter_uncertainty.draws_loc]
-    shared_i = int(rng.integers(0, min(boot_lens))) if boot_lens else None
-    if shared_i is None:
+    if parameter_mode == "fixed":
+        shared_i = None
         pflags.append("PARAM_POINT_ESTIMATE_ALL")
+    else:
+        shared_i = int(rng.integers(0, min(boot_lens))) if boot_lens else None
+        if shared_i is None:
+            pflags.append("PARAM_POINT_ESTIMATE_ALL")
     for name, dd in dist.drivers.items():
         loc, scale, idx, fl = _param_draw_coupled(dd, shared_i)
         draw_idx[name] = idx
@@ -282,7 +287,8 @@ def simulate_paths(*, regimes: RegimeResult, distributions: DistributionModel, p
                    n_paths: int, n_years: int, seed: int, mc: MonteCarloConfig, est: EstimationConfig,
                    base_year: int, provenance: dict[str, Any] | None = None,
                    check_seed_stability: bool = True,
-                   mode: str = "production", override_reason: str | None = None) -> SimulationBundle:
+                   mode: str = "production", override_reason: str | None = None,
+                   parameter_mode: str = "resampled") -> SimulationBundle:
     """Build a reproducible SimulationBundle. Independent sampling of material blocks is prohibited."""
     if n_paths <= 0 or n_years <= 0:
         raise ValueError("n_paths and n_years must be positive")
@@ -298,9 +304,11 @@ def simulate_paths(*, regimes: RegimeResult, distributions: DistributionModel, p
     valid: list[PathRecord] = []
     invalid: list[InvalidPathSummary] = []
     df = est.student_t_df
+    if parameter_mode not in ("resampled", "fixed"):
+        raise ValueError(f"parameter_mode must be 'resampled' or 'fixed'; got {parameter_mode!r}")
     for i in range(n_paths):
         r = _one_path(i, regimes=regimes, dist=distributions, years=years, states=states, chol=chol,
-                      names=names, df=df, seed=seed)
+                      names=names, df=df, seed=seed, parameter_mode=parameter_mode)
         if isinstance(r, InvalidPathSummary):
             invalid.append(r)
         else:
@@ -318,14 +326,15 @@ def simulate_paths(*, regimes: RegimeResult, distributions: DistributionModel, p
     if check_seed_stability and n_paths >= 10:
         # re-run with the same seed: first path must match exactly
         r0 = _one_path(0, regimes=regimes, dist=distributions, years=years, states=states, chol=chol,
-                       names=names, df=df, seed=seed)
+                       names=names, df=df, seed=seed, parameter_mode=parameter_mode)
         r0b = _one_path(0, regimes=regimes, dist=distributions, years=years, states=states, chol=chol,
-                        names=names, df=df, seed=seed)
+                        names=names, df=df, seed=seed, parameter_mode=parameter_mode)
         if isinstance(r0, PathRecord) and isinstance(r0b, PathRecord):
             repeated_ok = r0.model_dump() == r0b.model_dump()
             # different seed should move year-1 revenue_growth mean
             alt = [_one_path(i, regimes=regimes, dist=distributions, years=years, states=states, chol=chol,
-                             names=names, df=df, seed=seed + 1) for i in range(min(n_paths, 50))]
+                             names=names, df=df, seed=seed + 1, parameter_mode=parameter_mode)
+                   for i in range(min(n_paths, 50))]
             a = [p.years[0].drivers["revenue_growth"] for p in alt if isinstance(p, PathRecord)]
             b = [p.years[0].drivers["revenue_growth"] for p in valid[:len(a)]]
             if a and b:
@@ -338,6 +347,7 @@ def simulate_paths(*, regimes: RegimeResult, distributions: DistributionModel, p
         key_statistics=stats_map, repeated_seed_max_abs_diff=repeated_diff,
         repeated_seed_stable=repeated_ok, flags=dflags)
     param_snap = {
+        "parameter_mode": parameter_mode,
         "distribution_version": distributions.distribution_version,
         "selected_specs": {n: d.selected_spec for n, d in distributions.drivers.items()},
         "regime_model": distributions.regime_model,

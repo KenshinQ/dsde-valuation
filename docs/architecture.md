@@ -1,4 +1,4 @@
-# Architecture (state at Phase 7)
+# Architecture (state at Phase 8)
 
 Target pipeline: SPEC §4 (adapters → PIT store → gates → drivers → regimes → sampler →
 statements → capital allocation → DCF/multiples → equity bridge → per-share value →
@@ -52,7 +52,7 @@ entry-price-conditioned returns → diagnostics → result bundle).
 
 ## Boundaries
 - No imports from `dsde-engine` or other legacy code; DSDE adapter is Phase 10 and optional.
-- All artifacts carry `run_id` and `schema_version` (`vms-0.1.phase7`).
+- All artifacts carry `run_id` and `schema_version` (`vms-0.1.phase8`).
 
 ## Phase 1 data flow
 ```
@@ -149,3 +149,14 @@ ValuationBundle + FinancialPathBundle + spot
   ├─ R=(VPS_H + cum_DPS - P0)/P0; ann geo (1+R)^(1/H)-1
   └─ mixture + regime-conditional stats (CVaR, hurdles, MCSE); price×regime invariant
 return_distribution_summary.json + path_returns.parquet
+
+## Phase 8 flow (sensitivity / attribution; not walk-forward eval)
+```
+Baseline Phase 7 run (frozen paths where possible)
+  ├─ OAT: single driver shock on paths OR single valuation/policy/posterior/transition input
+  ├─ Joint: growth+margin; capex+WC; WACC+g
+  ├─ Ablation attribution (pathwise → central year-1)
+  ├─ Process vs parameter (parameter_mode fixed vs resampled)
+  ├─ DCF vs exit-multiple comparison; TV fraction + g-shock
+  └─ Tail metrics: Δ mean return, Δ p_loss, Δ CVaR (MC percentile ≠ CI)
+sensitivity_report.json (reproducible content_hash)

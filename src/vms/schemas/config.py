@@ -373,6 +373,31 @@ class EstimationConfig(_Strict):
     walk_forward: WalkForwardConfig
 
 
+
+class SensitivityConfig(_Strict):
+    """Phase 8 sensitivity / attribution defaults (explicit labeled shocks, not calibrated)."""
+
+    n_paths: int = Field(default=50, gt=0, le=100_000, description="paths for each sensitivity re-run")
+    check_seed_stability: bool = Field(default=False, description="skip expensive seed check on sensitivity re-sims")
+    oat_driver_shocks: dict[str, float] = Field(
+        default_factory=lambda: {
+            "revenue_growth": 0.02,
+            "ebit_margin": 0.01,
+            "capex_to_revenue": 0.01,
+            "receivables_to_revenue": 0.02,
+            "diluted_share_growth": 0.01,
+        },
+        description="additive OAT shocks to path driver levels",
+    )
+    wacc_shock: float = Field(default=0.01, gt=0, lt=0.2, description="additive shock to cost_of_equity / RF path")
+    terminal_growth_shock: float = Field(default=0.005, gt=0, lt=0.05)
+    exit_multiple_shock: float = Field(default=1.0, gt=0, lt=20)
+    policy_alt: str = Field(default="historical_continuation", description="alternate capital-allocation policy")
+    posterior_tilt_state: str = Field(default="GROWTH", description="state to overweight in posterior OAT")
+    posterior_tilt: float = Field(default=0.15, ge=0, le=0.9, description="probability mass shifted toward tilt state")
+    transition_stay_boost: float = Field(default=0.5, ge=0, le=5.0, description="Dirichlet stay pseudo-count add-on")
+
+
 class VMSConfig(_Strict):
     configuration_version: str = Field(min_length=1)
     mode: Literal["production", "exploratory"]
@@ -391,6 +416,7 @@ class VMSConfig(_Strict):
     regimes: RegimeConfig
     estimation: EstimationConfig
     valuation: ValuationConfig
+    sensitivity: SensitivityConfig = Field(default_factory=SensitivityConfig)
 
     @field_validator("timezone")
     @classmethod

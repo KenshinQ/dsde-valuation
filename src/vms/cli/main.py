@@ -9,7 +9,8 @@ Implemented commands:
   project-paths   Phase 5 path-wise statements + capital allocation (FinancialPathBundle)
   value           Phase 6 FCFF DCF + exit-multiple + EV-equity bridge
   returns         Phase 7 entry-price-conditioned multi-horizon returns
-  demo            offline SYNTHETIC smoke through Phase 7 returns.
+  sensitivity     Phase 8 sensitivity & uncertainty attribution
+  demo            offline SYNTHETIC smoke through Phase 8 diagnostics.
 
 Exit codes: 0 ok, 1 unexpected error, 2 invalid input/config/arguments,
             3 BLOCKED by critical data-quality errors in production mode,
@@ -41,6 +42,7 @@ from vms.schemas import ValuationRequest, format_validation_error
 from vms.schemas.config import ConfigError, LoadedConfig, load_config
 from vms.schemas.fields import FIELD_REGISTRY_VERSION
 from vms.capital_allocation.policies import POLICIES
+from vms.diagnostics import run_diagnostics
 from vms.pipeline import (Phase2Run, Phase3Run, Phase4Run, Phase5Run, Phase6Run, Phase7Run, run_estimation,
                           run_path_projection, run_projection, run_returns, run_simulation, run_valuation)
 from vms.regimes import RegimeModelNotImplemented
@@ -49,12 +51,13 @@ from vms.statements import CentralPathError
 from vms.seeding import stream_rng
 
 EXIT_OK, EXIT_ERROR, EXIT_INVALID, EXIT_BLOCKED, EXIT_UNSUPPORTED, EXIT_PROJECTION = 0, 1, 2, 3, 4, 5
-SMOKE_STATUS = "PHASE7_SMOKE_NOT_SENSITIVITY_ATTRIBUTION"
+SMOKE_STATUS = "PHASE8_SMOKE_NOT_WALK_FORWARD_EVAL"
 DETERMINISTIC_ARTIFACTS = ("request.json", "config_snapshot.json", "data_manifest.json",
                            "data_quality_report.json", "pit_snapshot.json", "state_posterior.json",
                            "driver_diagnostics.json", "statement_projection.json", "simulation_bundle.json",
                            "financial_path_bundle.json", "valuation_summary.json",
-                           "return_distribution_summary.json", "simulation_metadata.json")
+                           "return_distribution_summary.json", "sensitivity_report.json",
+                           "simulation_metadata.json")
 
 
 class InputError(ValueError):
@@ -662,7 +665,7 @@ def _write_phase7(out: Path, stamp, run: Phase7Run) -> None:  # noqa: ANN001
     write_artifact(out, "simulation_metadata.json", {
         "status": "ENTRY_PRICE_RETURNS",
         "implemented_phase": "PHASE_7",
-        "warning": "Entry-price returns only; no sensitivity/attribution (Phase 8).",
+        "warning": "Entry-price returns; run vms sensitivity for Phase 8 attribution.",
         "spot_price": r.spot_price,
         "entry_prices": r.entry_prices,
         "horizons_years": r.horizons_years,
@@ -745,6 +748,103 @@ def cmd_returns(args: argparse.Namespace) -> int:
     return EXIT_OK
 
 
+
+def _write_phase8(out: Path, stamp, report) -> None:  # noqa: ANN001
+    payload = report.model_dump(mode="json")
+    # lean: drop bulky per-case valuation dict details already summarized in deltas
+    write_artifact(out, "sensitivity_report.json", payload, stamp)
+    write_artifact(out, "simulation_metadata.json", {
+        "status": "SENSITIVITY_ATTRIBUTION",
+        "implemented_phase": "PHASE_8",
+        "warning": "Sensitivity/attribution only; no walk-forward evaluation (Phase 9).",
+        "content_hash": report.content_hash,
+        "n_cases": len(report.cases),
+        "flags": report.flags,
+        "interval_labeling": report.interval_labeling["rule"],
+    }, stamp)
+
+
+def _p8_summary(report) -> dict:  # noqa: ANN001
+    top = report.dominant_assumptions[:3] if report.dominant_assumptions else []
+    return {
+        "sensitivity_content_hash": report.content_hash,
+        "n_sensitivity_cases": len(report.cases),
+        "top_dimensions": [t["dimension"] for t in top],
+        "tail_risk_included": "TAIL_RISK_SENSITIVITY_INCLUDED" in report.flags,
+        "interval_labeling": report.interval_labeling["rule"],
+    }
+
+
+def cmd_sensitivity(args: argparse.Namespace) -> int:
+    """Run Phase 8 diagnostics into --out (often a prior returns run directory)."""
+    cfg = load_config(args.config)
+    if not args.mode:
+        args.mode = "exploratory"
+    if args.mode == "exploratory" and not (args.override_reason or "").strip():
+        args.override_reason = "phase8_sensitivity_cli"
+    mode = _mode(args, cfg)
+    run_dir = Path(args.run_dir) if args.run_dir else None
+    out = Path(args.out) if args.out else (run_dir if run_dir else None)
+    if out is None:
+        raise InputError("--out is required (or pass --run-dir to write into that directory)")
+
+    # Resolve inputs from prior run directory when provided
+    ticker = args.ticker
+    as_of_text = args.as_of
+    input_dir = args.input
+    seed = args.seed
+    spot = args.spot_price
+    if run_dir is not None:
+        req_path = run_dir / "request.json"
+        meta_path = run_dir / "simulation_metadata.json"
+        if req_path.is_file():
+            req = json.loads(req_path.read_text())
+            body = req.get("request", req)
+            ticker = ticker or body.get("instrument_id")
+            as_of_text = as_of_text or (body.get("as_of") or "")[:10]
+            seed = seed if seed is not None else body.get("random_seed")
+            spot = spot if spot is not None else body.get("spot_price")
+            if args.run_id and req.get("run_id") and args.run_id not in (req.get("run_id"), req["run_id"][:16]):
+                # soft check: allow prefix match
+                if not str(req.get("run_id", "")).startswith(str(args.run_id)) and args.run_id != req.get("run_id"):
+                    raise InputError(f"--run-id {args.run_id} does not match request.json run_id {req.get('run_id')}")
+        if input_dir is None and (run_dir / "data").is_dir():
+            input_dir = str(run_dir / "data")
+        if seed is None and meta_path.is_file():
+            meta = json.loads(meta_path.read_text())
+            seed = (meta.get("metadata") or {}).get("seed")
+    if not ticker or not as_of_text or not input_dir:
+        raise InputError("sensitivity requires --ticker/--as-of/--input, or a --run-dir with request.json + data/")
+
+    if "T" in str(as_of_text):
+        as_of_text = str(as_of_text)[:10]
+    as_of, note = _as_of(str(as_of_text))
+    load = _load(input_dir)
+    seed = cfg.config.monte_carlo.default_seed if seed is None else int(seed)
+    paths = cfg.config.sensitivity.n_paths if args.paths is None else args.paths
+    years = args.years or max(cfg.config.horizons_years)
+    stamp = ArtifactStamp(run_id=content_run_id(
+        kind="sensitivity", instrument=ticker, as_of=as_of.isoformat(), data=dataset_hash(load),
+        config=sha256_of({"c": cfg.config.model_dump(mode="json"), "p": cfg.profile.model_dump(mode="json")}),
+        mode=mode, override=args.override_reason, seed=seed, paths=paths, years=years,
+        prior_run_id=args.run_id))
+    try:
+        report = run_diagnostics(
+            load=load, instrument_id=ticker, as_of=as_of, loaded=cfg, seed=seed,
+            n_paths=paths, n_years=years, spot_price=spot, mode=mode,
+            override_reason=args.override_reason)
+    except GateError as e:
+        print(f"error: {e}", file=sys.stderr)
+        return EXIT_BLOCKED
+    except (SamplingGateError, CentralPathError, ValueError) as e:
+        print(f"error: {e}", file=sys.stderr)
+        return EXIT_PROJECTION if not isinstance(e, ValueError) else EXIT_INVALID
+    _write_phase8(out, stamp, report)
+    print(json.dumps({"run_id": stamp.run_id, "schema_version": SCHEMA_VERSION, "out": str(out),
+                      "seed": seed, **_p8_summary(report)}, indent=2, ensure_ascii=False))
+    return EXIT_OK
+
+
 def cmd_demo(args: argparse.Namespace) -> int:
     loaded = load_config(args.config)
     cfg = loaded.config
@@ -790,6 +890,7 @@ def cmd_demo(args: argparse.Namespace) -> int:
     write_artifact(out, "config_snapshot.json", config_snapshot, meta)
     _write_snapshot_bundle(out, meta, load, None, as_of, as_of_note, snap, report, blocked)
     run3 = None
+    run_sens = None
     if run is not None:
         _write_phase2(out, meta, run)
         run7 = run_returns(load, instrument_id=synthetic.SYNTHETIC_INSTRUMENT, as_of=as_of, loaded=loaded,
@@ -801,16 +902,24 @@ def cmd_demo(args: argparse.Namespace) -> int:
         _write_phase5(out, meta, run7)
         _write_phase6(out, meta, run7)
         _write_phase7(out, meta, run7)
+        # Phase 8 smoke: small-path sensitivity into the same out dir
+        sens = run_diagnostics(
+            load=load, instrument_id=synthetic.SYNTHETIC_INSTRUMENT, as_of=as_of, loaded=loaded,
+            seed=seed, n_paths=min(paths, 40), n_years=max(horizons), spot_price=spot,
+            baseline=run7, mode=mode,
+            override_reason=args.override_reason or "phase8_demo_smoke")
+        _write_phase8(out, meta, sens)
         run3 = run7
         run4 = run7
         run5 = run7
+        run_sens = sens
     else:
         run4 = None
     smoke = stream_rng(seed, "phase0_smoke").standard_normal(5)
     write_artifact(out, "simulation_metadata.json", {
         "status": SMOKE_STATUS,
         "implemented_phase": IMPLEMENTED_PHASE,
-        "warning": "Smoke artifact through Phase 7 entry-price returns; no sensitivity/attribution (Phase 8).",
+        "warning": "Smoke artifact through Phase 8 sensitivity; no walk-forward evaluation (Phase 9).",
         "data_label": "SYNTHETIC — not real market data",
         "quality_status": report.status.value,
         "metadata": meta.model_dump(mode="json"),
@@ -831,6 +940,7 @@ def cmd_demo(args: argparse.Namespace) -> int:
                       **({} if run4 is None or not isinstance(run4, (Phase5Run, Phase6Run, Phase7Run)) else {"phase5": _p5_summary(run4)}),
                       **({} if not isinstance(run4, (Phase6Run, Phase7Run)) else {"phase6": _p6_summary(run4)}),
                       **({} if not isinstance(run4, Phase7Run) else {"phase7": _p7_summary(run4)}),
+                      **({} if run_sens is None else {"phase8": _p8_summary(run_sens)}),
                       "run_id": meta.run_id,
                       "schema_version": SCHEMA_VERSION, "out": str(out), "spot_price": spot, "seed": seed,
                       "paths": paths, "data_hash": data_hash[:16], "config_hash": meta.config_hash[:16],
@@ -851,7 +961,7 @@ def _gate_args(p: argparse.ArgumentParser) -> None:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    p = argparse.ArgumentParser(prog="vms", description="VMS-0.1 valuation engine (Phase 7: entry-price-conditioned returns)")
+    p = argparse.ArgumentParser(prog="vms", description="VMS-0.1 valuation engine (Phase 8: sensitivity & attribution)")
     sub = p.add_subparsers(dest="command", required=True)
     asof_help = "YYYY-MM-DD (=> 15:00 Asia/Shanghai, rule ASOF-DATE-CLOSE-v1) or ISO-8601 with offset"
 
@@ -912,6 +1022,21 @@ def build_parser() -> argparse.ArgumentParser:
     _gate_args(pp)
     pp.set_defaults(func=cmd_project_paths)
 
+
+
+    sen = sub.add_parser("sensitivity", help="sensitivity & uncertainty attribution (Phase 8)")
+    sen.add_argument("--run-dir", help="prior run directory (request.json + data/); writes sensitivity_report.json here if --out omitted")
+    sen.add_argument("--run-id", help="optional: verify against request.json run_id")
+    sen.add_argument("--input", help="data directory (default: <run-dir>/data)")
+    sen.add_argument("--ticker")
+    sen.add_argument("--as-of", help=asof_help)
+    sen.add_argument("--out", help="output directory (default: --run-dir)")
+    sen.add_argument("--seed", type=int)
+    sen.add_argument("--paths", type=int, help="paths per sensitivity case (default: config sensitivity.n_paths)")
+    sen.add_argument("--years", type=int)
+    sen.add_argument("--spot-price", type=float)
+    _gate_args(sen)
+    sen.set_defaults(func=cmd_sensitivity)
 
     rt = sub.add_parser("returns", help="entry-price-conditioned multi-horizon returns (Phase 7)")
     rt.add_argument("--input", required=True)

@@ -20,7 +20,8 @@ Not started: Phase 8 (sensitivity / uncertainty attribution).
 - Tests: `test_returns.py` (9+), `test_cli_returns.py`, `test_return_properties.py`
 
 ## Tests
-- **439 passed** (~175 s box). Leakage **6/6 KILLED**; invariant **7/7 KILLED**. Clean-clone note in verification commit.
+- **439 passed** (~175 s box; clean clone + uv/py3.11.17 + lock: **439 passed** in 191 s; `vms returns` exit 0, n_valid_return_paths=40, artifacts return_distribution_summary.json + path_returns.parquet).
+- Leakage **6/6 KILLED**; invariant **7/7 KILLED**.
 
 ## Acceptance evidence
 

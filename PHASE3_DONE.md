@@ -32,7 +32,7 @@ Not started: Phase 4 (dependence, joint sampling, paths).
 - Docs and CI: `README.md`, `docs/architecture.md`, `docs/data_contracts.md`, `.github/workflows/ci.yml` (`vms estimate` step).
 
 ## Tests run
-- `pytest`: **392 passed** (76 new in Phase 3; 316 before), 86.6 s, Python 3.13 box venv. Clean-clone Python 3.11 results: see the end of this file.
+- `pytest`: **392 passed** (76 new in Phase 3; 316 before): 86.6 s on the box (Python 3.13); clean clone + `uv venv --python 3.11` + `uv pip sync requirements.lock`: 392 passed in 94.3 s, demo + estimate exit 0, leakage 6/6 and invariant 7/7 KILLED.
 - `scripts/leakage_mutation_check.sh`: **6/6 KILLED**:
   - 4 PIT-filter leaks;
   - walk-forward origin snapshot at t+400 d, with all guards removed;

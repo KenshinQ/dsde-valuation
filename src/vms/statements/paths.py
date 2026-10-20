@@ -21,6 +21,11 @@ from vms.statements.projection import PATH_LABEL, ProjectionResult
 PATH_BUNDLE_VERSION = "FIN-PATH-1"
 
 
+class CentralPathError(RuntimeError):
+    """Central path failed invariants / insufficient data (CENTRAL-PATH-GATE-v1)."""
+
+
+
 class _M(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
 
@@ -128,7 +133,8 @@ def _aggregates(valid: list[FinancialPathRecord], years: list[int]) -> dict[str,
 def project_financial_paths(*, bundle: SimulationBundle, snapshot: PITSnapshot, history: AnnualHistory,
                             drivers: DriverModel, resolution: ProfileResolution, profile: DriverProfile,
                             proj_cfg: ProjectionConfig, ca_cfg: CapitalAllocationConfig,
-                            policy_id: str | None = None) -> FinancialPathBundle:
+                            policy_id: str | None = None,
+                            mode: str = "production", override_reason: str | None = None) -> FinancialPathBundle:
     """Project every SimulationBundle path (central + MC). Failed paths are recorded and excluded from aggregates."""
     if resolution.profile_id != "operating_company":
         raise ValueError(f"path projection only for operating_company; got {resolution.profile_id}")
@@ -154,15 +160,22 @@ def project_financial_paths(*, bundle: SimulationBundle, snapshot: PITSnapshot, 
     valid = [r for r in records if not r.excluded_from_aggregates]
     failed = [{"path_id": r.path_id, "status": r.status, "reason": r.invalid_reason,
                "violation_codes": r.violation_codes} for r in records if r.excluded_from_aggregates]
-    if central.excluded_from_aggregates:
-        # central failure is reported but does not enter MC aggregates either
+    flags = []
+    if central.excluded_from_aggregates or central.status != "VALID":
+        flags.append("CENTRAL_PATH_FAILED")
         failed = [{"path_id": central.path_id, "status": central.status, "reason": central.invalid_reason,
                    "violation_codes": central.violation_codes}, *failed]
-    flags = []
-    if failed:
+        if mode == "production":
+            raise CentralPathError(
+                f"central path {central.status}: {central.invalid_reason or central.violation_codes} "
+                f"(CENTRAL-PATH-GATE-v1). Fix the model/data, or rerun with --mode exploratory "
+                f"--override-reason '...'")
+        if not (override_reason or "").strip():
+            raise CentralPathError(
+                "central path failed: exploratory mode requires --override-reason")
+        flags.append("CENTRAL_PATH_FAILURE_OVERRIDDEN")
+    if any(r.excluded_from_aggregates for r in records):
         flags.append("SOME_PATHS_FAILED_EXCLUDED")
-    if central.status != "VALID":
-        flags.append("CENTRAL_PATH_FAILED")
     return FinancialPathBundle(
         policy=policy.describe(), base_year=base_year, years=years,
         n_input_paths=len(bundle.paths), n_valid=len(valid), n_failed=len(failed),
@@ -170,6 +183,8 @@ def project_financial_paths(*, bundle: SimulationBundle, snapshot: PITSnapshot, 
         failed=failed, aggregates=_aggregates(valid, years),
         sampler_ref={"sampler_version": bundle.sampler_version, "seed": bundle.seed,
                      "n_paths": bundle.n_paths, "dependence_hash": bundle.parameter_snapshot.get("dependence_hash")},
-        assumptions=cite("PATH-STATEMENTS-v1", "FAILED-PATHS-EXCLUDED-v1", "DIVIDEND-T-PLUS-1-v1",
-                         "DILUTED-SHARES-BASIC-v1", "REVOLVER-MIN-CASH-v1", "BUYBACK-PRICE-v1"),
+        assumptions=cite("PATH-STATEMENTS-v1", "FAILED-PATHS-EXCLUDED-v1", "CENTRAL-PATH-GATE-v1",
+                         "PATH-LEDGER-PARQUET-v1", "BUYBACK-PRICE-LAST-CLOSE-v1",
+                         "DIVIDEND-T-PLUS-1-v1", "DILUTED-SHARES-BASIC-v1", "REVOLVER-MIN-CASH-v1",
+                         "BUYBACK-PRICE-v1"),
         flags=sorted(set(flags)))

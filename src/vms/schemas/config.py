@@ -116,6 +116,61 @@ class TerminalValueConfig(_Strict):
     min_wacc_minus_g: float = Field(gt=0, lt=0.2)
     max_terminal_growth: float = Field(gt=-0.05, lt=0.1)
     tv_fraction_warning: float = Field(gt=0, le=1)
+    terminal_growth: float = Field(gt=-0.05, lt=0.1, description="Gordon g; must be <= max_terminal_growth")
+
+    @model_validator(mode="after")
+    def _g_bound(self):  # noqa: ANN202
+        if self.terminal_growth > self.max_terminal_growth + 1e-15:
+            raise ValueError(f"terminal_growth {self.terminal_growth} > max_terminal_growth {self.max_terminal_growth}")
+        return self
+
+
+class ExitMultipleConfig(_Strict):
+    metric: Literal["ebitda", "ebit"] = "ebitda"
+    multiple: float | None = Field(default=None, gt=0, description="explicit multiple when peers empty")
+    peers: list[float] = Field(default_factory=list, description="synthetic/PIT peer multiples")
+    shrink_prior: float = Field(gt=0, description="shrink peer median toward this prior")
+    shrink_strength: float = Field(ge=0, description="pseudo-observations of the prior")
+    normalize_years: int = Field(ge=1, le=5, description="trailing years averaged for the metric")
+
+
+class ValuationConfig(_Strict):
+    """Phase 6 WACC / DCF / multiple / bridge inputs. Missing RF is a hard config error."""
+
+    risk_free_rate: float = Field(ge=-0.05, le=0.3, description="REQUIRED; never invented (WACC-RF-CONFIG-v1)")
+    erp: float = Field(gt=0, lt=0.3, description="equity risk premium default 0.06")
+    beta: float | None = Field(default=None, gt=-1, lt=5, description="explicit beta; else from series/prior")
+    beta_prior: float = Field(default=1.0, gt=-1, lt=5)
+    beta_shrink_strength: float = Field(default=2.0, ge=0)
+    beta_n_eff: float = Field(default=0.0, ge=0, description="effective obs for shrink when beta series absent")
+    cost_of_equity: float | None = Field(default=None, gt=-0.5, lt=1.0, description="optional override of ke")
+    cost_of_debt: float | None = Field(default=None, gt=-0.05, lt=1.0, description="override; else driver/snapshot")
+    tax_rate: float | None = Field(default=None, ge=0, lt=1, description="override; else driver effective tax")
+    target_debt_weight: float | None = Field(default=None, ge=0, le=1)
+    target_equity_weight: float | None = Field(default=None, ge=0, le=1)
+    use_snapshot_capital_structure: bool = Field(
+        default=True, description="if target weights unset, use market equity + interest-bearing debt at as_of")
+    lease_debt_like: float = Field(default=0.0, ge=0, description="explicit lease liability add-on (LEASE-BRIDGE)")
+    other_senior_claims: float = Field(default=0.0, description="signed: subtract when positive")
+    minority_interest_book: float | None = Field(
+        default=None, description="override; else total_equity*(1-parent_share) at horizon if available")
+    exit_multiple: ExitMultipleConfig
+    composite_weights: dict[str, float] | None = Field(
+        default=None, description="None => keep DCF and multiple separate; else versioned weights")
+
+    @model_validator(mode="after")
+    def _weights(self):  # noqa: ANN202
+        wd, we = self.target_debt_weight, self.target_equity_weight
+        if (wd is None) ^ (we is None):
+            raise ValueError("target_debt_weight and target_equity_weight must both be set or both null")
+        if wd is not None and abs(wd + we - 1.0) > 1e-9:
+            raise ValueError(f"target weights must sum to 1; got wd={wd}, we={we}")
+        if self.composite_weights is not None:
+            if set(self.composite_weights) != {"dcf", "exit_multiple"}:
+                raise ValueError("composite_weights keys must be exactly {dcf, exit_multiple}")
+            if abs(sum(self.composite_weights.values()) - 1.0) > 1e-9:
+                raise ValueError("composite_weights must sum to 1")
+        return self
 
 
 class ReturnsConfig(_Strict):
@@ -335,6 +390,7 @@ class VMSConfig(_Strict):
     capital_allocation: CapitalAllocationConfig
     regimes: RegimeConfig
     estimation: EstimationConfig
+    valuation: ValuationConfig
 
     @field_validator("timezone")
     @classmethod

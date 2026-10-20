@@ -198,6 +198,37 @@ def run_path_projection(load: LoadResult, *, instrument_id: str, as_of: datetime
     fp = project_financial_paths(
         bundle=p4.bundle, snapshot=p4.snapshot, history=p4.history, drivers=p4.central, resolution=p4.resolution,
         profile=loaded.profile, proj_cfg=loaded.config.projection, ca_cfg=loaded.config.capital_allocation,
-        policy_id=policy_id)
+        policy_id=policy_id, mode=mode, override_reason=override_reason)
     return Phase5Run(p4.snapshot, p4.report, p4.resolution, p4.history, p4.regimes, p4.walk_forward,
                      p4.distributions, p4.central, p4.bundle, fp)
+
+
+@dataclass(frozen=True)
+class Phase6Run:
+    snapshot: "PITSnapshot"
+    report: "DataQualityReport"
+    resolution: "ProfileResolution"
+    history: "AnnualHistory"
+    regimes: "RegimeResult | None"
+    walk_forward: "WalkForwardReport | None"
+    distributions: "DistributionModel | None"
+    central: "DriverModel | None"
+    bundle: "SimulationBundle | None"
+    financial_paths: "FinancialPathBundle | None"
+    valuation: "ValuationBundle | None"
+
+
+def run_valuation(load: LoadResult, *, instrument_id: str, as_of: datetime, loaded: LoadedConfig, seed: int,
+                  n_paths: int | None = None, n_years: int | None = None, policy_id: str | None = None,
+                  mode: Literal["production", "exploratory"] = "production",
+                  override_reason: str | None = None) -> Phase6Run:
+    from vms.valuation import value_paths
+
+    p5 = run_path_projection(load, instrument_id=instrument_id, as_of=as_of, loaded=loaded, seed=seed,
+                             n_paths=n_paths, n_years=n_years, policy_id=policy_id, mode=mode,
+                             override_reason=override_reason)
+    if p5.financial_paths is None:
+        return Phase6Run(p5.snapshot, p5.report, p5.resolution, p5.history, None, None, None, None, None, None, None)
+    val = value_paths(financial=p5.financial_paths, snapshot=p5.snapshot, loaded=loaded)
+    return Phase6Run(p5.snapshot, p5.report, p5.resolution, p5.history, p5.regimes, p5.walk_forward,
+                     p5.distributions, p5.central, p5.bundle, p5.financial_paths, val)

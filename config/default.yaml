@@ -22,8 +22,34 @@ entry_price_grid:                      # (Phase 7) multipliers of spot price
 
 terminal_value:                        # (Phase 6)
   min_wacc_minus_g: 0.01               # require WACC - g >= this margin
-  max_terminal_growth: 0.04            # ASSUMPTION: long-run nominal growth bound, to be documented
+  max_terminal_growth: 0.04            # ASSUMPTION: long-run nominal growth bound
   tv_fraction_warning: 0.75            # warn when TV/EV exceeds this
+  terminal_growth: 0.03                # Gordon g (ASSUMPTION)
+
+valuation:                             # (Phase 6) WACC / multiple / bridge — RF REQUIRED
+  risk_free_rate: 0.025                # LABELED ASSUMPTION for offline/synthetic; PIT 10y CGB adapter later
+  erp: 0.06
+  beta: 1.0                            # explicit; shrink formula used when beta_n_eff > 0
+  beta_prior: 1.0
+  beta_shrink_strength: 2.0
+  beta_n_eff: 0.0
+  cost_of_equity: null                 # optional override
+  cost_of_debt: null                   # null => use path/driver cost_of_debt
+  tax_rate: null                       # null => use path/driver effective_tax_rate
+  target_debt_weight: null             # null => snapshot market structure when use_snapshot_capital_structure
+  target_equity_weight: null
+  use_snapshot_capital_structure: true
+  lease_debt_like: 0.0
+  other_senior_claims: 0.0
+  minority_interest_book: null
+  exit_multiple:
+    metric: ebitda
+    multiple: 8.0                      # used when peers empty
+    peers: []
+    shrink_prior: 8.0
+    shrink_strength: 2.0
+    normalize_years: 1
+  composite_weights: null              # keep DCF and exit-multiple separate
 
 returns:                               # (Phase 7)
   loss_thresholds: [-0.4, -0.2]

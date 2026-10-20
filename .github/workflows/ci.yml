@@ -32,6 +32,8 @@ jobs:
         run: .venv/bin/vms simulate --input /tmp/vms_demo/data --ticker SYN000001.SZ --as-of 2025-06-30 --out /tmp/vms_sim --paths 200 --years 3
       - name: Path-wise statements on synthetic data
         run: .venv/bin/vms project-paths --input /tmp/vms_demo/data --ticker SYN000001.SZ --as-of 2025-06-30 --out /tmp/vms_fp --paths 100 --years 3
+      - name: DCF valuation on synthetic data
+        run: .venv/bin/vms value --input /tmp/vms_demo/data --ticker SYN000001.SZ --as-of 2025-06-30 --out /tmp/vms_val --paths 100 --years 3
       - name: Leakage mutation check
         run: PY=.venv/bin/python scripts/leakage_mutation_check.sh
       - name: Invariant mutation check

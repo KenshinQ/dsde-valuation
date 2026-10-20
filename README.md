@@ -2,13 +2,13 @@
 
 Standalone valuation & conditional return engine for China A-shares. Spec: [SPEC.md](SPEC.md).
 
-**Status: Phases 0–5 done.** Phase 0: contracts, config, run metadata, seeding. Phase 1: PIT data
+**Status: Phases 0–6 done.** Phase 0: contracts, config, run metadata, seeding. Phase 1: PIT data
 and integrity gates. Phase 2: drivers, sector profiles, deterministic central-case statements,
 capital-allocation policies, and accounting invariants. Phase 3: rule-based fundamental regimes
 (PIT fundamentals only), Dirichlet transition matrix, regime-conditional driver distributions with
-shrinkage and bootstrap parameter uncertainty, rolling-origin walk-forward selection. Phase 4: correlated path sampler. Phase 5: path-wise statements + capital allocation (FinancialPathBundle) (Gaussian copula over shrunk residual correlations; parameter then process uncertainty; SimulationBundle). There is **no valuation yet**
+shrinkage and bootstrap parameter uncertainty, rolling-origin walk-forward selection. Phase 4: correlated path sampler. Phase 5: path-wise statements + capital allocation. Phase 6: FCFF DCF, exit-multiple cross-check, EV-equity bridge. (Gaussian copula over shrunk residual correlations; parameter then process uncertainty; SimulationBundle). There is **no valuation yet**
 (no joint sampling, WACC, DCF, paths, or returns). Projections are labeled `DETERMINISTIC_CENTRAL_CASE_NOT_A_VALUATION`,
-and `vms demo` is `PHASE5_SMOKE_NOT_A_VALUATION`. See PHASE0_DONE.md–PHASE5_DONE.md and the assumption register
+and `vms demo` is `PHASE6_SMOKE_NOT_A_FULL_RETURN_PRODUCT`. See PHASE0_DONE.md–PHASE6_DONE.md and the assumption register
 [docs/assumptions.md](docs/assumptions.md).
 
 Fully standalone: does not import `dsde-engine` or any legacy PIT/FTD/DV1/Monte-Carlo code
@@ -47,12 +47,14 @@ scipy is used from Phase 3 (Student-t quantiles in `vms.drivers.distributions`).
 vms validate-data --input <dir> [--as-of 2026-06-30] [--ticker ID]       # schema; + PIT/quality gates with --as-of
 vms build-snapshot --input <dir> --ticker 000001.SZ --as-of 2026-06-30 --out runs/snap
 vms project --input <dir> --ticker 000001.SZ --as-of 2026-06-30 --out runs/proj [--years 5] [--policy ID]
+vms value --input <dir> --ticker 000001.SZ --as-of 2026-06-30 --out runs/val [--paths N] [--seed 42]
 vms project-paths --input <dir> --ticker 000001.SZ --as-of 2026-06-30 --out runs/fp [--paths N] [--policy ID]
 vms simulate --input <dir> --ticker 000001.SZ --as-of 2026-06-30 --out runs/sim [--paths N] [--seed 42]
 vms estimate --input <dir> --ticker 000001.SZ --as-of 2026-06-30 --out runs/est [--seed 42]  # regimes + distributions
 vms demo --out runs/demo --seed 42 [--format csv|parquet] [--as-of ...] [--policy ID]  # SYNTHETIC smoke, no valuation
 # gate options: --mode production|exploratory  --override-reason "..."  --config path
 ```
+Valuation requires explicit `valuation.risk_free_rate` in config (never invented).
 Date-only `--as-of` = 15:00:00 Asia/Shanghai (rule ASOF-DATE-CLOSE-v1).
 Exit codes: `0` ok, `1` unexpected error, `2` invalid input/config/args (incl. `regimes.model: hmm`, interface only — REGIME-HMM-DEFERRED-v1), `3` BLOCKED by critical
 data-quality errors in production mode (incl. missing industry classification, INDUSTRY-UNCLASSIFIED-v2), `4` UNSUPPORTED_PROFILE (e.g. banks/non-bank financials),

@@ -13,7 +13,7 @@ editing `-v1`.** Superseded IDs stay listed and can no longer be cited (`cite()`
 
 Owner decisions: scope/data after Phase 1; Phase 2 follow-ups (2026-10-20); Phase 3 review (2026-10-20):
 CENTRAL-FROM-SELECTED, persistence_t selection, REGIME-CLOCK-MISMATCH, INDUSTRY-PRIORS-DEFER,
-MODEL-SELECTION-WF-v2 eval gates; Phase 6 WACC-INPUTS-v1 (same day); Phase 4 follow-ups (PARAM-BOOTSTRAP-COUPLED, INVALID-PATH-FRACTION-GATE, DEP-BLOCK-BOOTSTRAP-DEFER, COVERAGE-MISCAL-NO-AUTOSWITCH) and Phase 5 PATH-STATEMENTS / FAILED-PATHS-EXCLUDED.
+MODEL-SELECTION-WF-v2 eval gates; Phase 6 WACC-INPUTS-v1 (same day); Phase 4 follow-ups (PARAM-BOOTSTRAP-COUPLED, INVALID-PATH-FRACTION-GATE, DEP-BLOCK-BOOTSTRAP-DEFER, COVERAGE-MISCAL-NO-AUTOSWITCH) and Phase 5 PATH-STATEMENTS / FAILED-PATHS-EXCLUDED; Phase 5 review: CENTRAL-PATH-GATE, PATH-LEDGER-PARQUET, BUYBACK-PRICE-LAST-CLOSE; Phase 6 WACC-RF-CONFIG / TV-GORDON / EXIT-MULTIPLE-SEPARATE / EV-EQUITY-BRIDGE.
 
 ## Notes for later phases
 - **Phase 5 (done):** path-wise statements consume SimulationBundle drivers (PATH-STATEMENTS-v1); failed paths excluded (FAILED-PATHS-EXCLUDED-v1). Dilution from rights: RIGHTS-ADJ-DEFER-v1.

@@ -7,13 +7,15 @@ from typing import Any, Literal
 
 from vms.data.io import LoadResult
 from vms.drivers.distributions import DistributionModel
-from vms.pipeline import (Phase2Run, Phase5Run, run_estimation, run_path_projection, run_projection, run_simulation)
+from vms.pipeline import (Phase2Run, Phase5Run, Phase6Run, run_estimation, run_path_projection, run_projection,
+                          run_simulation, run_valuation)
 from vms.pit.snapshot import PITSnapshot
 from vms.quality.report import DataQualityReport, assess
 from vms.regimes import RegimeResult
 from vms.sampling import SimulationBundle
 from vms.schemas.config import LoadedConfig
 from vms.statements.paths import FinancialPathBundle, project_financial_paths
+from vms.valuation import ValuationBundle, value_paths
 
 
 class ValuationEngine:
@@ -79,8 +81,16 @@ class ValuationEngine:
     def project_central(self, load: LoadResult, *, instrument_id: str, as_of: datetime, **kw: Any) -> Phase2Run:
         return run_projection(load, instrument_id=instrument_id, as_of=as_of, loaded=self.loaded, **kw)
 
-    def value_paths(self, *args: Any, **kwargs: Any) -> None:
-        raise NotImplementedError("value_paths: Phase 6")
+    def value_paths(self, financial: FinancialPathBundle, *, snapshot: PITSnapshot) -> ValuationBundle:
+        return value_paths(financial=financial, snapshot=snapshot, loaded=self.loaded)
+
+    def value_from_load(self, load: LoadResult, *, instrument_id: str, as_of: datetime, seed: int,
+                        n_paths: int | None = None, n_years: int | None = None, policy_id: str | None = None,
+                        mode: Literal["production", "exploratory"] = "production",
+                        override_reason: str | None = None) -> Phase6Run:
+        return run_valuation(load, instrument_id=instrument_id, as_of=as_of, loaded=self.loaded, seed=seed,
+                             n_paths=n_paths, n_years=n_years, policy_id=policy_id, mode=mode,
+                             override_reason=override_reason)
 
     def build_return_distributions(self, *args: Any, **kwargs: Any) -> None:
         raise NotImplementedError("build_return_distributions: Phase 7")
@@ -88,5 +98,5 @@ class ValuationEngine:
     def run_diagnostics(self, *args: Any, **kwargs: Any) -> None:
         raise NotImplementedError("run_diagnostics: Phase 8")
 
-    def run(self, *args: Any, **kwargs: Any) -> None:
-        raise NotImplementedError("run (end-to-end valuation): Phase 6+")
+    def run(self, load: LoadResult, *, instrument_id: str, as_of: datetime, seed: int, **kw: Any) -> Phase6Run:
+        return self.value_from_load(load, instrument_id=instrument_id, as_of=as_of, seed=seed, **kw)

@@ -1,4 +1,4 @@
-# Data contracts (Phase 5)
+# Data contracts (Phase 6)
 
 Sources of truth: `src/vms/schemas/observations.py`, `src/vms/schemas/fields.py`,
 `src/vms/pit/snapshot.py`, `src/vms/quality/issues.py`. Artifact schema version: `vms-0.1.phase1`.
@@ -214,6 +214,13 @@ known period.
 ## 6d. Phase 5 artifacts (`vms project-paths`, also by `vms demo`)
 - `financial_path_bundle.json`: central + MC path records (status, shares/FCFF/FCFE/per-share series, violation codes),
   `valid_path_ids`, `failed` summaries, `aggregates` over valid paths only (FAILED-PATHS-EXCLUDED-v1), policy, sampler_ref.
+
+## 6e. Phase 6 artifacts (`vms value`, also by `vms demo`)
+- `valuation_summary.json`: WACC point inputs, central + MC path valuations (DCF EV/TV fraction/equity/VPS,
+  exit-multiple EV/equity, bridge components), aggregates, flags. DCF and exit-multiple kept separate unless
+  `valuation.composite_weights` is set.
+- `path_valuations.parquet`: one row per path with WACC, DCF, bridge, exit-multiple fields.
+- `financial_path_ledgers.parquet`: full path-year statement ledgers (PATH-LEDGER-PARQUET-v1).
 
 ## 7. Not yet covered
 FX conversion (SCOPE-CNY-v1); non-calendar fiscal years (FISCAL-YEAR-CALENDAR-v1); suspension/price-limit flags;

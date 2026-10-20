@@ -128,8 +128,8 @@ def test_engine_facade_simulate_paths(sim):
     eng = ValuationEngine(L)
     bundle = eng.simulate_paths(load, instrument_id=INST, as_of=as_of, seed=11, n_paths=30, n_years=2)
     assert bundle.n_paths == 30 and bundle.diagnostics.n_paths_valid <= 30
-    with pytest.raises(NotImplementedError, match="Phase 6"):
-        eng.value_paths()
+    with pytest.raises(NotImplementedError, match="Phase 7"):
+        eng.build_return_distributions()
 
 
 def test_gaussian_copula_unit():

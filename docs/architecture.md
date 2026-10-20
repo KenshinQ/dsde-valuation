@@ -1,4 +1,4 @@
-# Architecture (state at Phase 5)
+# Architecture (state at Phase 6)
 
 Target pipeline: SPEC §4 (adapters → PIT store → gates → drivers → regimes → sampler →
 statements → capital allocation → DCF/multiples → equity bridge → per-share value →
@@ -52,7 +52,7 @@ entry-price-conditioned returns → diagnostics → result bundle).
 
 ## Boundaries
 - No imports from `dsde-engine` or other legacy code; DSDE adapter is Phase 10 and optional.
-- All artifacts carry `run_id` and `schema_version` (`vms-0.1.phase5`).
+- All artifacts carry `run_id` and `schema_version` (`vms-0.1.phase6`).
 
 ## Phase 1 data flow
 ```
@@ -130,3 +130,12 @@ SimulationBundle.paths (+ central)
        └─ same §9 order / Phase 2 policies / check_invariants
             ├─ VALID → included in aggregates (fcff, shares, fcff_per_share, ...)
             └─ REJECTED / INSUFFICIENT_DATA → recorded with reason codes; EXCLUDED_FROM_AGGREGATES
+
+## Phase 6 flow (DCF + exit-multiple + bridge; not a return product)
+```
+FinancialPathBundle (VALID paths only)
+  ├─ build_wacc(rf REQUIRED, erp, beta shrink-to-prior, kd, tc, weights)
+  ├─ dcf_fcff: PV(FCFF)+Gordon TV; reject WACC_G_MARGIN_FAIL (no silent repair)
+  ├─ exit_multiple_ev: separate EV (robust peer multiple or explicit)
+  └─ bridge_ev_to_equity: +cash −debt −leases −minority −other; VPS; negative equity preserved
+Aggregates over valid DCF paths; path_valuations.parquet + valuation_summary.json

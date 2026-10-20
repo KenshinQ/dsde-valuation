@@ -257,6 +257,15 @@ ASSUMPTIONS: dict[str, str] = {
                                "convention fixed. Difference approximates parameter-uncertainty contribution.",
     "SENS-DRIVER-ABLATION-v1": "Driver contribution uses simple pathwise ablation to the central path year-1 value "
                               "(baseline metric minus ablated metric). Not a Shapley/game-theoretic allocation.",
+    "EVAL-CHRONOLOGICAL-ONLY-v1": "Phase 9 walk-forward evaluation allows only chronological origins. Random "
+                                 "row-level time-series train/test splits are prohibited (RandomSplitProhibitedError).",
+    "EVAL-FORECAST-BEFORE-OUTCOME-v1": "At each origin, forecasts are persisted with outcomes=null before any "
+                                      "realization is attached. Evaluation of a horizon occurs only after that horizon elapses.",
+    "EVAL-TARGETS-SEPARATE-v1": "Operating cash-flow, intrinsic value, market-price, and TSR forecasts are scored in "
+                               "separate metric blocks. Intrinsic value is never judged solely by matching future market prices.",
+    "EVAL-INVESTMENT-LABEL-v1": "Every evaluation report carries ENGINEERING_PASS, DATA_QUALITY_PASS, CALIBRATION_PASS "
+                               "(or INCONCLUSIVE), and investment_value. Synthetic / no predeclared leakage-safe OOS "
+                               "evidence => INVESTMENT_VALUE_NOT_ESTABLISHED; never SUPPORTED on synthetic demos.",
 }
 
 

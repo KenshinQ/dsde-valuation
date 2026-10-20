@@ -38,6 +38,8 @@ jobs:
         run: .venv/bin/vms returns --input /tmp/vms_demo/data --ticker SYN000001.SZ --as-of 2025-06-30 --out /tmp/vms_ret --paths 100 --years 3 --horizons 1,3
       - name: Sensitivity attribution on prior run
         run: .venv/bin/vms sensitivity --run-dir /tmp/vms_ret --out /tmp/vms_sens --paths 50 --years 3
+      - name: Walk-forward evaluation on synthetic universe
+        run: .venv/bin/vms evaluate --universe config/universe.synthetic.yaml --start 2018-01-01 --end 2022-12-31 --out /tmp/vms_eval
       - name: Leakage mutation check
         run: PY=.venv/bin/python scripts/leakage_mutation_check.sh
       - name: Invariant mutation check

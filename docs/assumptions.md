@@ -7,7 +7,7 @@ editing `-v1`.** Superseded IDs stay listed and can no longer be cited (`cite()`
 
 Owner decisions: scope/data after Phase 1; Phase 2 follow-ups (2026-10-20); Phase 3 review (2026-10-20):
 CENTRAL-FROM-SELECTED, persistence_t selection, REGIME-CLOCK-MISMATCH, INDUSTRY-PRIORS-DEFER,
-MODEL-SELECTION-WF-v2 eval gates; Phase 6 WACC-INPUTS-v1 (same day); Phase 4 follow-ups (PARAM-BOOTSTRAP-COUPLED, INVALID-PATH-FRACTION-GATE, DEP-BLOCK-BOOTSTRAP-DEFER, COVERAGE-MISCAL-NO-AUTOSWITCH) and Phase 5 PATH-STATEMENTS / FAILED-PATHS-EXCLUDED; Phase 5 review: CENTRAL-PATH-GATE, PATH-LEDGER-PARQUET, BUYBACK-PRICE-LAST-CLOSE; Phase 6 WACC-RF-CONFIG / TV-GORDON / EXIT-MULTIPLE-SEPARATE / EV-EQUITY-BRIDGE; Phase 7 DIVIDEND-NO-REINVEST / HORIZON-EQUITY-REMAINING-PV / ANNUALIZED-GEO-ENDYEAR / ENTRY-PRICE-GRID / PRICE-REGIME-INVARIANT; Phase 8 SENS-OAT-ISOLATION / SENS-MC-PERCENTILE-NOT-CI / SENS-PROCESS-VS-PARAM / SENS-DRIVER-ABLATION.
+MODEL-SELECTION-WF-v2 eval gates; Phase 6 WACC-INPUTS-v1 (same day); Phase 4 follow-ups (PARAM-BOOTSTRAP-COUPLED, INVALID-PATH-FRACTION-GATE, DEP-BLOCK-BOOTSTRAP-DEFER, COVERAGE-MISCAL-NO-AUTOSWITCH) and Phase 5 PATH-STATEMENTS / FAILED-PATHS-EXCLUDED; Phase 5 review: CENTRAL-PATH-GATE, PATH-LEDGER-PARQUET, BUYBACK-PRICE-LAST-CLOSE; Phase 6 WACC-RF-CONFIG / TV-GORDON / EXIT-MULTIPLE-SEPARATE / EV-EQUITY-BRIDGE; Phase 7 DIVIDEND-NO-REINVEST / HORIZON-EQUITY-REMAINING-PV / ANNUALIZED-GEO-ENDYEAR / ENTRY-PRICE-GRID / PRICE-REGIME-INVARIANT; Phase 8 SENS-OAT-ISOLATION / SENS-MC-PERCENTILE-NOT-CI / SENS-PROCESS-VS-PARAM / SENS-DRIVER-ABLATION; Phase 9 EVAL-CHRONOLOGICAL-ONLY / EVAL-FORECAST-BEFORE-OUTCOME / EVAL-TARGETS-SEPARATE / EVAL-INVESTMENT-LABEL.
 
 ## Notes for later phases
 - **Phase 5 (done):** path-wise statements consume SimulationBundle drivers (PATH-STATEMENTS-v1); failed paths excluded (FAILED-PATHS-EXCLUDED-v1). Dilution from rights: RIGHTS-ADJ-DEFER-v1.
@@ -16,7 +16,8 @@ MODEL-SELECTION-WF-v2 eval gates; Phase 6 WACC-INPUTS-v1 (same day); Phase 4 fol
   (10y CGB RF, ERP 6% default swept, beta vs CSI 300 2y weekly shrink-to-1).
 - **Phase 7 (done):** entry-price returns with DIVIDEND-NO-REINVEST-v1; horizon equity via remaining FCFF PV (HORIZON-EQUITY-REMAINING-PV-v1); holders at as_of also receive announced dividends with ex_date > as_of (ANNOUNCED-DIVIDEND-BASE-v1) via the path cash/DPS construction.
 - **Phase 8 (done):** OAT/joint sensitivity, process vs param, driver ablation, MC percentile ≠ CI.
-- **Phase 9:** exclude snapshots with `pit_complete == false` from unbiased evaluation metrics (PIT-INCOMPLETE-v1).
+- **Phase 9 (done):** chronological walk-forward evaluation; synthetic => INVESTMENT_VALUE_NOT_ESTABLISHED.
+- **Phase 9 note:** exclude snapshots with `pit_complete == false` from unbiased evaluation metrics (PIT-INCOMPLETE-v1).
 
 | ID | Status | Assumption |
 |---|---|---|
@@ -108,3 +109,7 @@ MODEL-SELECTION-WF-v2 eval gates; Phase 6 WACC-INPUTS-v1 (same day); Phase 4 fol
 | `SENS-MC-PERCENTILE-NOT-CI-v1` | active | Monte Carlo p05/p95 (and similar) bands in sensitivity and valuation/return reports are empirical percentile intervals across simulated paths. They must NOT be labeled statistical confidence intervals unless a separate CI construction is documented. |
 | `SENS-PROCESS-VS-PARAM-v1` | active | Process vs parameter uncertainty: compare runs with parameter_mode=fixed (point estimates) vs parameter_mode=resampled (bootstrap), holding the process seed stream convention fixed. Difference approximates parameter-uncertainty contribution. |
 | `SENS-DRIVER-ABLATION-v1` | active | Driver contribution uses simple pathwise ablation to the central path year-1 value (baseline metric minus ablated metric). Not a Shapley/game-theoretic allocation. |
+| `EVAL-CHRONOLOGICAL-ONLY-v1` | active | Phase 9 walk-forward evaluation allows only chronological origins. Random row-level time-series train/test splits are prohibited (RandomSplitProhibitedError). |
+| `EVAL-FORECAST-BEFORE-OUTCOME-v1` | active | At each origin, forecasts are persisted with outcomes=null before any realization is attached. Evaluation of a horizon occurs only after that horizon elapses. |
+| `EVAL-TARGETS-SEPARATE-v1` | active | Operating cash-flow, intrinsic value, market-price, and TSR forecasts are scored in separate metric blocks. Intrinsic value is never judged solely by matching future market prices. |
+| `EVAL-INVESTMENT-LABEL-v1` | active | Every evaluation report carries ENGINEERING_PASS, DATA_QUALITY_PASS, CALIBRATION_PASS (or INCONCLUSIVE), and investment_value. Synthetic / no predeclared leakage-safe OOS evidence => INVESTMENT_VALUE_NOT_ESTABLISHED; never SUPPORTED on synthetic demos. |

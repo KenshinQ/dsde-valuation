@@ -1,0 +1,16 @@
+# Offline SYNTHETIC universe for Phase 9 walk-forward evaluation.
+# Numbers describe no real companies. Investment value is never "supported" here.
+universe_id: synthetic_offline_v1
+data_label: SYNTHETIC
+split_mode: chronological
+forbid_random_splits: true
+horizons_years: [1]
+min_history_years: 3
+instruments:
+  - {instrument_id: SYN000000.SZ, data_dir: null}
+  - {instrument_id: SYN000001.SZ, data_dir: null}
+synthetic:
+  seed: 42
+  n_instruments: 2
+  start_year: 2015
+  n_years: 9

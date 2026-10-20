@@ -15,6 +15,7 @@ from vms.regimes import RegimeResult
 from vms.sampling import SimulationBundle
 from vms.schemas.config import LoadedConfig
 from vms.statements.paths import FinancialPathBundle, project_financial_paths
+from vms.evaluation import EvaluationReport, run_evaluation
 from vms.returns import ReturnDistributionBundle, build_return_distributions
 from vms.valuation import ValuationBundle, value_paths
 
@@ -122,6 +123,12 @@ class ValuationEngine:
             load=load, instrument_id=instrument_id, as_of=as_of, loaded=self.loaded, seed=seed,
             n_paths=n_paths, n_years=n_years, spot_price=spot_price, baseline=baseline,
             mode=mode, override_reason=override_reason)
+
+    def evaluate(self, *, universe, start, end, out_dir, evaluation_as_of=None,
+                 split_mode: str | None = None) -> EvaluationReport:
+        """Chronological walk-forward evaluation (Phase 9). Refuses random splits."""
+        return run_evaluation(universe=universe, loaded=self.loaded, start=start, end=end, out_dir=out_dir,
+                              evaluation_as_of=evaluation_as_of, split_mode=split_mode)
 
     def run(self, load: LoadResult, *, instrument_id: str, as_of: datetime, seed: int, **kw: Any) -> Phase7Run:
         return self.returns_from_load(load, instrument_id=instrument_id, as_of=as_of, seed=seed, **kw)

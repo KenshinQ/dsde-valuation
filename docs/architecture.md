@@ -1,4 +1,4 @@
-# Architecture (state at Phase 8)
+# Architecture (state at Phase 9)
 
 Target pipeline: SPEC §4 (adapters → PIT store → gates → drivers → regimes → sampler →
 statements → capital allocation → DCF/multiples → equity bridge → per-share value →
@@ -52,7 +52,7 @@ entry-price-conditioned returns → diagnostics → result bundle).
 
 ## Boundaries
 - No imports from `dsde-engine` or other legacy code; DSDE adapter is Phase 10 and optional.
-- All artifacts carry `run_id` and `schema_version` (`vms-0.1.phase8`).
+- All artifacts carry `run_id` and `schema_version` (`vms-0.1.phase9`).
 
 ## Phase 1 data flow
 ```
@@ -160,3 +160,15 @@ Baseline Phase 7 run (frozen paths where possible)
   ├─ DCF vs exit-multiple comparison; TV fraction + g-shock
   └─ Tail metrics: Δ mean return, Δ p_loss, Δ CVaR (MC percentile ≠ CI)
 sensitivity_report.json (reproducible content_hash)
+
+## Phase 9 flow (walk-forward evaluation; not DSDE adapter)
+```
+Universe (synthetic offline OK)
+  for each instrument, chronological FY origin in [start, end]:
+    reconstruct PIT @ origin (past-only)
+    persist forecasts BEFORE outcomes (CF / IV / price / TSR + baselines)
+    if horizon elapsed: realize outcomes; score separately
+  exclude PIT_INCOMPLETE from unbiased metrics
+  labels: ENGINEERING / DATA_QUALITY / CALIBRATION / INVESTMENT_VALUE_NOT_ESTABLISHED (synthetic)
+evaluation_report.json + forecasts/
+Random splits => RandomSplitProhibitedError

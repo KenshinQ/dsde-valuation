@@ -10,7 +10,8 @@ Implemented commands:
   value           Phase 6 FCFF DCF + exit-multiple + EV-equity bridge
   returns         Phase 7 entry-price-conditioned multi-horizon returns
   sensitivity     Phase 8 sensitivity & uncertainty attribution
-  demo            offline SYNTHETIC smoke through Phase 8 diagnostics.
+  evaluate        Phase 9 chronological walk-forward evaluation
+  demo            offline SYNTHETIC smoke (through Phase 8; evaluate is separate).
 
 Exit codes: 0 ok, 1 unexpected error, 2 invalid input/config/arguments,
             3 BLOCKED by critical data-quality errors in production mode,
@@ -43,6 +44,8 @@ from vms.schemas.config import ConfigError, LoadedConfig, load_config
 from vms.schemas.fields import FIELD_REGISTRY_VERSION
 from vms.capital_allocation.policies import POLICIES
 from vms.diagnostics import run_diagnostics
+from vms.evaluation import RandomSplitProhibitedError, run_evaluation
+from vms.evaluation.universe import load_universe
 from vms.pipeline import (Phase2Run, Phase3Run, Phase4Run, Phase5Run, Phase6Run, Phase7Run, run_estimation,
                           run_path_projection, run_projection, run_returns, run_simulation, run_valuation)
 from vms.regimes import RegimeModelNotImplemented
@@ -51,7 +54,7 @@ from vms.statements import CentralPathError
 from vms.seeding import stream_rng
 
 EXIT_OK, EXIT_ERROR, EXIT_INVALID, EXIT_BLOCKED, EXIT_UNSUPPORTED, EXIT_PROJECTION = 0, 1, 2, 3, 4, 5
-SMOKE_STATUS = "PHASE8_SMOKE_NOT_WALK_FORWARD_EVAL"
+SMOKE_STATUS = "PHASE9_SMOKE_EVAL_VIA_VMS_EVALUATE"
 DETERMINISTIC_ARTIFACTS = ("request.json", "config_snapshot.json", "data_manifest.json",
                            "data_quality_report.json", "pit_snapshot.json", "state_posterior.json",
                            "driver_diagnostics.json", "statement_projection.json", "simulation_bundle.json",
@@ -756,7 +759,7 @@ def _write_phase8(out: Path, stamp, report) -> None:  # noqa: ANN001
     write_artifact(out, "simulation_metadata.json", {
         "status": "SENSITIVITY_ATTRIBUTION",
         "implemented_phase": "PHASE_8",
-        "warning": "Sensitivity/attribution only; no walk-forward evaluation (Phase 9).",
+        "warning": "Sensitivity/attribution complete; use vms evaluate for Phase 9 walk-forward.",
         "content_hash": report.content_hash,
         "n_cases": len(report.cases),
         "flags": report.flags,
@@ -845,6 +848,61 @@ def cmd_sensitivity(args: argparse.Namespace) -> int:
     return EXIT_OK
 
 
+
+def cmd_evaluate(args: argparse.Namespace) -> int:
+    from datetime import date as date_cls
+    cfg = load_config(args.config)
+    uni_path = Path(args.universe)
+    if not uni_path.is_file():
+        # allow relative to config dir / repo
+        alt = Path(args.config).resolve().parent / Path(args.universe).name
+        if alt.is_file():
+            uni_path = alt
+        else:
+            raise InputError(f"universe file not found: {args.universe}")
+    try:
+        start = date_cls.fromisoformat(args.start)
+        end = date_cls.fromisoformat(args.end)
+    except ValueError as e:
+        raise InputError(f"--start/--end must be YYYY-MM-DD: {e}") from None
+    if end < start:
+        raise InputError("--end must be >= --start")
+    out = Path(args.out)
+    stamp = ArtifactStamp(run_id=content_run_id(
+        kind="evaluate", universe=str(uni_path), start=args.start, end=args.end,
+        config=sha256_of({"c": cfg.config.model_dump(mode="json")})))
+    try:
+        report = run_evaluation(universe=uni_path, loaded=cfg, start=start, end=end, out_dir=out,
+                                split_mode=args.split_mode)
+    except RandomSplitProhibitedError as e:
+        print(f"error: {e}", file=sys.stderr)
+        return EXIT_INVALID
+    except ValueError as e:
+        print(f"error: {e}", file=sys.stderr)
+        return EXIT_INVALID
+    # stamp evaluation_report already written by run_evaluation; add run_id
+    rep_path = out / "evaluation_report.json"
+    body = json.loads(rep_path.read_text())
+    body = {"run_id": stamp.run_id, **body}
+    rep_path.write_text(json.dumps(body, sort_keys=True, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    write_artifact(out, "simulation_metadata.json", {
+        "status": "WALK_FORWARD_EVALUATION",
+        "implemented_phase": "PHASE_9",
+        "warning": "Walk-forward evaluation only; no DSDE adapter (Phase 10).",
+        "labels": report.labels,
+        "content_hash": report.content_hash,
+        "n_scored": report.n_scored,
+    }, stamp)
+    print(json.dumps({
+        "run_id": stamp.run_id, "schema_version": SCHEMA_VERSION, "out": str(out),
+        "universe_id": report.universe_id, "n_forecasts_persisted": report.n_forecasts_persisted,
+        "n_scored": report.n_scored, "n_excluded_pit_incomplete": report.n_excluded_pit_incomplete,
+        "labels": report.labels, "content_hash": report.content_hash,
+        "baselines_present": report.baselines_present,
+    }, indent=2, ensure_ascii=False))
+    return EXIT_OK
+
+
 def cmd_demo(args: argparse.Namespace) -> int:
     loaded = load_config(args.config)
     cfg = loaded.config
@@ -919,7 +977,7 @@ def cmd_demo(args: argparse.Namespace) -> int:
     write_artifact(out, "simulation_metadata.json", {
         "status": SMOKE_STATUS,
         "implemented_phase": IMPLEMENTED_PHASE,
-        "warning": "Smoke artifact through Phase 8 sensitivity; no walk-forward evaluation (Phase 9).",
+        "warning": "Smoke artifact through Phase 8; run vms evaluate for Phase 9 walk-forward.",
         "data_label": "SYNTHETIC — not real market data",
         "quality_status": report.status.value,
         "metadata": meta.model_dump(mode="json"),
@@ -961,7 +1019,7 @@ def _gate_args(p: argparse.ArgumentParser) -> None:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    p = argparse.ArgumentParser(prog="vms", description="VMS-0.1 valuation engine (Phase 8: sensitivity & attribution)")
+    p = argparse.ArgumentParser(prog="vms", description="VMS-0.1 valuation engine (Phase 9: walk-forward evaluation)")
     sub = p.add_subparsers(dest="command", required=True)
     asof_help = "YYYY-MM-DD (=> 15:00 Asia/Shanghai, rule ASOF-DATE-CLOSE-v1) or ISO-8601 with offset"
 
@@ -1024,6 +1082,17 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 
+
+    evl = sub.add_parser("evaluate", help="chronological walk-forward evaluation (Phase 9)")
+    evl.add_argument("--universe", required=True, help="universe YAML (e.g. config/universe.synthetic.yaml)")
+    evl.add_argument("--start", required=True, help="YYYY-MM-DD")
+    evl.add_argument("--end", required=True, help="YYYY-MM-DD")
+    evl.add_argument("--out", required=True)
+    evl.add_argument("--split-mode", default=None,
+                     help="must be chronological if set; random splits are rejected")
+    _gate_args(evl)
+    evl.set_defaults(func=cmd_evaluate)
+
     sen = sub.add_parser("sensitivity", help="sensitivity & uncertainty attribution (Phase 8)")
     sen.add_argument("--run-dir", help="prior run directory (request.json + data/); writes sensitivity_report.json here if --out omitted")
     sen.add_argument("--run-id", help="optional: verify against request.json run_id")
@@ -1081,7 +1150,7 @@ def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     try:
         return args.func(args)
-    except (ConfigError, InputError, RegimeModelNotImplemented) as e:
+    except (ConfigError, InputError, RegimeModelNotImplemented, RandomSplitProhibitedError) as e:
         print(f"error: {e}", file=sys.stderr)
         return EXIT_INVALID
 

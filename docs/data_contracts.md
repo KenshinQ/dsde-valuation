@@ -1,4 +1,4 @@
-# Data contracts (Phase 8)
+# Data contracts (Phase 9)
 
 Sources of truth: `src/vms/schemas/observations.py`, `src/vms/schemas/fields.py`,
 `src/vms/pit/snapshot.py`, `src/vms/quality/issues.py`. Artifact schema version: `vms-0.1.phase1`.
@@ -230,6 +230,12 @@ known period.
 ## 6g. Phase 8 artifacts (`vms sensitivity`, also by `vms demo`)
 - `sensitivity_report.json`: OAT/joint cases, isolation checks, process vs parameter, driver ablation,
   DCF vs multiple, TV contribution, dominant assumptions, MC-percentile-not-CI labeling, content_hash.
+
+## 6h. Phase 9 artifacts (`vms evaluate`)
+- `evaluation_report.json`: walk-forward summary, separate-target scores, baselines list, labels, content_hash.
+- `forecasts/<instrument>/<origin>_hH.json`: persisted forecasts (outcomes attached only after horizon).
+- `origin_records.json`: lean index of origins.
+- `config/universe.synthetic.yaml`: offline SYNTHETIC universe definition.
 
 ## 7. Not yet covered
 FX conversion (SCOPE-CNY-v1); non-calendar fiscal years (FISCAL-YEAR-CALENDAR-v1); suspension/price-limit flags;

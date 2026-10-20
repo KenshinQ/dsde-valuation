@@ -128,9 +128,10 @@ def test_engine_facade_simulate_paths(sim):
     eng = ValuationEngine(L)
     bundle = eng.simulate_paths(load, instrument_id=INST, as_of=as_of, seed=11, n_paths=30, n_years=2)
     assert bundle.n_paths == 30 and bundle.diagnostics.n_paths_valid <= 30
-    # Phase 8 live; Phase 9 evaluation module still empty
-    import vms.evaluation as ev
-    assert "NOT IMPLEMENTED" in (ev.__doc__ or "")
+    # Phase 9 live: chronological evaluate refuses random splits
+    from vms.evaluation import RandomSplitProhibitedError, require_chronological
+    with pytest.raises(RandomSplitProhibitedError):
+        require_chronological("random")
 
 
 def test_gaussian_copula_unit():

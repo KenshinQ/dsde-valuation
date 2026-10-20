@@ -2,13 +2,13 @@
 
 Standalone valuation & conditional return engine for China A-shares. Spec: [SPEC.md](SPEC.md).
 
-**Status: Phases 0–8 done.** Phase 0: contracts, config, run metadata, seeding. Phase 1: PIT data
+**Status: Phases 0–9 done.** Phase 0: contracts, config, run metadata, seeding. Phase 1: PIT data
 and integrity gates. Phase 2: drivers, sector profiles, deterministic central-case statements,
 capital-allocation policies, and accounting invariants. Phase 3: rule-based fundamental regimes
 (PIT fundamentals only), Dirichlet transition matrix, regime-conditional driver distributions with
-shrinkage and bootstrap parameter uncertainty, rolling-origin walk-forward selection. Phase 4: correlated path sampler. Phase 5: path-wise statements + capital allocation. Phase 6: FCFF DCF, exit-multiple cross-check, EV-equity bridge. Phase 7: entry-price-conditioned multi-horizon returns (DIVIDEND-NO-REINVEST). Phase 8: sensitivity & uncertainty attribution (OAT/joint, process vs param). (Gaussian copula over shrunk residual correlations; parameter then process uncertainty; SimulationBundle). There is **no valuation yet**
+shrinkage and bootstrap parameter uncertainty, rolling-origin walk-forward selection. Phase 4: correlated path sampler. Phase 5: path-wise statements + capital allocation. Phase 6: FCFF DCF, exit-multiple cross-check, EV-equity bridge. Phase 7: entry-price-conditioned multi-horizon returns (DIVIDEND-NO-REINVEST). Phase 8: sensitivity & uncertainty attribution (OAT/joint, process vs param). Phase 9: chronological walk-forward evaluation (synthetic => INVESTMENT_VALUE_NOT_ESTABLISHED). (Gaussian copula over shrunk residual correlations; parameter then process uncertainty; SimulationBundle). There is **no valuation yet**
 (no joint sampling, WACC, DCF, paths, or returns). Projections are labeled `DETERMINISTIC_CENTRAL_CASE_NOT_A_VALUATION`,
-and `vms demo` is `PHASE8_SMOKE_NOT_WALK_FORWARD_EVAL`. See PHASE0_DONE.md–PHASE8_DONE.md and the assumption register
+and `vms demo` is `PHASE9_SMOKE_EVAL_VIA_VMS_EVALUATE`. See PHASE0_DONE.md–PHASE9_DONE.md and the assumption register
 [docs/assumptions.md](docs/assumptions.md).
 
 Fully standalone: does not import `dsde-engine` or any legacy PIT/FTD/DV1/Monte-Carlo code
@@ -50,6 +50,7 @@ vms project --input <dir> --ticker 000001.SZ --as-of 2026-06-30 --out runs/proj 
 vms value --input <dir> --ticker 000001.SZ --as-of 2026-06-30 --out runs/val [--paths N] [--seed 42]
 vms returns --input <dir> --ticker 000001.SZ --as-of 2026-06-30 --out runs/ret [--spot-price S] [--horizons 1,3,5] [--paths N] [--seed 42]
 vms sensitivity --run-dir runs/ret [--run-id ...] [--paths N]  # writes sensitivity_report.json
+vms evaluate --universe config/universe.synthetic.yaml --start 2018-01-01 --end 2022-12-31 --out runs/eval
 vms project-paths --input <dir> --ticker 000001.SZ --as-of 2026-06-30 --out runs/fp [--paths N] [--policy ID]
 vms simulate --input <dir> --ticker 000001.SZ --as-of 2026-06-30 --out runs/sim [--paths N] [--seed 42]
 vms estimate --input <dir> --ticker 000001.SZ --as-of 2026-06-30 --out runs/est [--seed 42]  # regimes + distributions

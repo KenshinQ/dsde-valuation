@@ -59,7 +59,7 @@ def test_demo_via_console_script(tmp_path):
         art = json.loads((out / name).read_text())
         assert art["run_id"] == summary["run_id"] and art["schema_version"] == summary["schema_version"]
     meta = json.loads((out / "simulation_metadata.json").read_text())
-    assert ("phase 9" in meta["warning"].lower() or "walk-forward" in meta["warning"].lower() or "phase 8" in meta["warning"].lower()) and meta["metadata"]["seed"] == 42
+    assert ("phase 9" in meta["warning"].lower() or "evaluate" in meta["warning"].lower() or "phase 8" in meta["warning"].lower()) and meta["metadata"]["seed"] == 42
     assert summary["projection_status"] == "VALID" and summary["violations"] == []
     req = json.loads((out / "request.json").read_text())
     assert req["request"]["as_of"] == "2025-06-30T15:00:00+08:00" and req["as_of_rule"]["id"] == "ASOF-DATE-CLOSE"

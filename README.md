@@ -41,6 +41,33 @@ Dev deps: pytest, **hypothesis** — justification: SPEC §19 mandates property-
 is test-only and never imported by `src/`.
 scipy is used from Phase 3 (Student-t quantiles in `vms.drivers.distributions`).
 
+
+## Real A-share ingest (optional HiThink + Eastmoney NOTICE)
+
+Core / synthetic path never requires DuckDB or live HiThink. Optional extra:
+
+```bash
+uv pip install --python .venv/bin/python 'dsde-valuation[hithink]'   # duckdb + requests
+# Env (defaults shown):
+#   HITHINK_FUND_DB_PATH=/workspace/data/hithink_fundamentals.duckdb
+#   MARKETDB_DB_PATH=/workspace/data/market.duckdb
+#   HITHINK_FUND_LIB=/workspace/data/hithink_fund
+```
+
+```bash
+vms ingest-hithink --ticker 600519.SH --out data/600519 --prefer-local
+vms build-snapshot --input data/600519 --ticker 600519.SH --as-of 2025-06-30 --out runs/snap \
+  --mode exploratory --override-reason "industry unset / LATEST_ONLY PIT"
+# Convenience: ingest+snapshot
+vms build-snapshot --provider hithink --ticker 600519.SH --as-of 2025-06-30 --out runs/snap \
+  --mode exploratory --override-reason "hithink_smoke"
+```
+
+PIT `published_at` = Eastmoney NOTICE_DATE (HITHINK-PIT-NOTICE-v1). Source is `LATEST_ONLY` →
+`pit_complete=false`. Never puts vendor qfq into `adjusted_close`. See
+[docs/data_contracts.md](docs/data_contracts.md), [docs/model_card.md](docs/model_card.md),
+[PHASE_REALDATA_DONE.md](PHASE_REALDATA_DONE.md).
+
 ## Offline end-to-end demo (Phases 0–10)
 
 ```bash

@@ -44,6 +44,7 @@ sensitivity → evaluate with lightweight path counts.
 | Evaluation | `vms.evaluation` | Chronological only |
 | Reporting / seeding | `vms.reporting`, `vms.seeding` | Implemented |
 | Optional DSDE adapter | `vms.adapters.dsde` | Implemented; DSDE absent = no-op |
+| Real A-share HiThink+EM NOTICE | `vms.providers.hithink` | Optional; DuckDB local-first; LATEST_ONLY → pit_complete=false |
 | Public run result | `vms.result.ValuationRunResult` | Implemented |
 | Facade | `vms.engine.ValuationEngine` | Full `run` orchestration |
 

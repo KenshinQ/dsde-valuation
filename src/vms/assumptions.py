@@ -266,6 +266,32 @@ ASSUMPTIONS: dict[str, str] = {
     "EVAL-INVESTMENT-LABEL-v1": "Every evaluation report carries ENGINEERING_PASS, DATA_QUALITY_PASS, CALIBRATION_PASS "
                                "(or INCONCLUSIVE), and investment_value. Synthetic / no predeclared leakage-safe OOS "
                                "evidence => INVESTMENT_VALUE_NOT_ESTABLISHED; never SUPPORTED on synthetic demos.",
+    # ---- real A-share HiThink + Eastmoney NOTICE adapter (2026-10-20)
+    "HITHINK-PIT-NOTICE-v1": "PIT published_at for HiThink statements = Eastmoney NOTICE_DATE joined by "
+                            "(thscode/security_code, period_end ↔ EM REPORTDATE). Date-only NOTICE → "
+                            "15:00:00 Asia/Shanghai that day (same clock as ASOF-DATE-CLOSE-v1). "
+                            "Forbidden: using HiThink period_end_ms as published_at.",
+    "HITHINK-REPORT-DATE-FALLBACK-v1": "Only if NOTICE is missing after local+EM fetch: use HiThink "
+                                      "report_date_ms as published_at with quality_status=low_confidence and "
+                                      "published_at_source=hithink_report_date_ms_fallback. Never claim exchange announce.",
+    "HITHINK-LATEST-ONLY-v1": "HiThink fundamentals store has no restatement history (versioning=LATEST_ONLY). "
+                             "SourceDescriptor source_id=hithink_em_notice ⇒ snapshots are PIT_INCOMPLETE / "
+                             "pit_complete=false so Phase 9 unbiased metrics exclude them (PIT-INCOMPLETE-v1).",
+    "HITHINK-UNITS-YUAN-v1": "HiThink statement amounts are treated as CNY yuan (元), unit_scale=unit. "
+                            "Confirmed on CSI300 samples (e.g. 600519.SH annual revenue ~1e11). If a feed "
+                            "were in 万元, convert ×10000 and label — not observed in the local store.",
+    "HITHINK-NO-VENDOR-QFQ-v1": "MarketObservation.raw_close comes from marketdb raw_kline_daily (unadjusted). "
+                               "Never put vendor forward-adjusted (qfq) closes into adjusted_close — qfq embeds "
+                               "future splits. adjusted_close left null unless VMS-side adjust from known-at CAs.",
+    "HITHINK-LOCAL-FIRST-v1": "Ingest is local-first: marketdb + hithink_fundamentals.duckdb + em_earnings_notices. "
+                             "On miss for the requested ticker: Recipe E (one HiThink REST upsert + re-read). "
+                             "Do not silently switch vendors. Never echo API keys.",
+    "HITHINK-CA-DEFER-v1": "Corporate actions from marketdb raw_adjustment_events lack announced_at (ex_date only), "
+                          "so they are not PIT-safe. VMS leaves corporate_actions empty and documents the limitation.",
+    "HITHINK-FIELD-MAP-v1": "HiThink columns map to FIELDS-2 via vms.providers.hithink.mapping (documented in "
+                           "docs/data_contracts.md). Outflows use positive magnitudes. Unmapped columns ignored "
+                           "with optional warning count. pay_dividends_profits_interest_cash → dividends_paid "
+                           "as low_confidence (mixed interest).",
 }
 
 

@@ -24,6 +24,7 @@ MODEL-SELECTION-WF-v2 eval gates; Phase 6 WACC-INPUTS-v1 (same day); Phase 4 fol
 - **Phase 8 (done):** OAT/joint sensitivity, process vs param, driver ablation, MC percentile ≠ CI.
 - **Phase 9 (done):** chronological walk-forward evaluation; synthetic => INVESTMENT_VALUE_NOT_ESTABLISHED.
 - **Phase 9 note:** exclude snapshots with `pit_complete == false` from unbiased evaluation metrics (PIT-INCOMPLETE-v1).
+- **Real A-share adapter:** HiThink + Eastmoney NOTICE_DATE (HITHINK-PIT-NOTICE-v1); LATEST_ONLY ⇒ pit_complete=false; no vendor qfq in adjusted_close; CA deferred.
 
 | ID | Status | Assumption |
 |---|---|---|

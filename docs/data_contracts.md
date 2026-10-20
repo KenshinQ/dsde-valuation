@@ -272,3 +272,51 @@ price; per-record reporting-convention overrides.
 - Optional: `vms.adapters.dsde.dsde_availability()`, `consumer_view_from_result()`, `try_notify_dsde()`.
 - Discovery of `dsde_engine` / `dsde` uses `importlib` only when `try_notify_dsde` is called.
 - Legacy PIT/FTD/DV1 modules are never imported (enforced by unit tests).
+
+---
+
+## Real A-share HiThink + Eastmoney NOTICE adapter (HITHINK-FIELD-MAP-v1)
+
+**SourceDescriptor**
+
+| Field | Value |
+|---|---|
+| `source_id` | `hithink_em_notice` |
+| `reporting_convention` | `CN_CUMULATIVE_YTD` |
+| `versioning` | `LATEST_ONLY` (no restatement history) |
+| Effect | Snapshots are **`PIT_INCOMPLETE` / `pit_complete=false`**; Phase 9 unbiased metrics exclude them (PIT-INCOMPLETE-v1 / HITHINK-LATEST-ONLY-v1). |
+
+**PIT published_at (HITHINK-PIT-NOTICE-v1)**
+
+- Join EM `NOTICE_DATE` to statements by `(security_code, REPORTDATE ↔ period_end)`.
+- Date-only NOTICE → `15:00:00 Asia/Shanghai` that day.
+- **Forbidden:** `period_end_ms` as `published_at`.
+- Fallback only if NOTICE missing after local+EM fetch: `report_date_ms` with `quality_status=low_confidence` and `published_at_source=hithink_report_date_ms_fallback`.
+
+**Units:** CNY **yuan (元)**, `unit_scale=unit` (HITHINK-UNITS-YUAN-v1).
+
+**Column mapping**
+
+| HiThink table | HiThink column | VMS field | Postprocess |
+|---|---|---|---|
+| income | operating_income | revenue | as_is |
+| income | operating_costs | cost_of_revenue | abs_magnitude |
+| income | operating_expenses | operating_expenses | abs_magnitude |
+| income | sales_fee+manage_fee+R&D (fallback) | operating_expenses | abs sum |
+| income | operating_profit | ebit | as_is |
+| income | interest_expenses | interest_expense | abs_magnitude |
+| income | income_tax_expense | tax_expense | as_is |
+| income | parent_holder_net_profit | parent_net_income | as_is |
+| balance | cash | cash | as_is |
+| balance | total_debt | interest_bearing_debt | abs_magnitude (approx) |
+| balance | accounts_receivable | accounts_receivable | as_is |
+| balance | assets_total | total_assets | as_is |
+| balance | holder_equity_total | total_equity | as_is |
+| balance | assets − equity | total_liabilities | derived |
+| cashflow | act_cash_flow_net | cash_flow_from_operations | as_is |
+| cashflow | pay_fixed_assets_etc_cash | capex | abs_magnitude |
+| cashflow | pay_dividends_profits_interest_cash | dividends_paid | abs_magnitude + low_confidence (mixed interest) |
+
+Unmapped columns ignored (optional warning count in ingest diagnostics). Inventory / AP / D&A not in HiThink store → absent.
+
+**Prices (HITHINK-NO-VENDOR-QFQ-v1):** `raw_close` from `market.duckdb` `raw_kline_daily`; `adjusted_close` always null. Corporate actions empty (HITHINK-CA-DEFER-v1). Shares / Shenwan L1 unset when unavailable.

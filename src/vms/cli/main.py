@@ -259,7 +259,30 @@ def cmd_build_snapshot(args: argparse.Namespace) -> int:
     cfg = load_config(args.config)
     mode = _mode(args, cfg)
     as_of, note = _as_of(args.as_of)
-    load = _load(args.input)
+    input_dir = args.input
+    if getattr(args, "provider", None) == "hithink":
+        from vms.providers.hithink import HiThinkFetchError, HiThinkUnavailable, fetch_bundle
+        from vms.data.io import write_directory
+        data_out = Path(args.out) / "data"
+        prefer_local = not bool(getattr(args, "refresh", False))
+        try:
+            load, diag = fetch_bundle(args.ticker, prefer_local=prefer_local)
+        except (HiThinkUnavailable, HiThinkFetchError) as e:
+            raise InputError(str(e)) from e
+        write_directory(
+            data_out, load.financial, load.market,
+            corporate_actions=[], sources=list(load.sources.values()),
+            fmt=getattr(args, "format", "csv") or "csv",
+            classifications=load.classifications or None,
+        )
+        (data_out / "hithink_ingest_diagnostics.json").write_text(
+            json.dumps(diag.as_dict(), indent=2, ensure_ascii=False, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+        input_dir = str(data_out)
+    elif not input_dir:
+        raise InputError("--input is required unless --provider hithink")
+    load = _load(input_dir)
     snap, report = assess(load, instrument_id=args.ticker, as_of=as_of, cfg=cfg.config.quality, mode=mode,
                           override_reason=args.override_reason)
     stamp = ArtifactStamp(run_id=content_run_id(kind="build-snapshot", instrument=args.ticker,
@@ -268,7 +291,7 @@ def cmd_build_snapshot(args: argparse.Namespace) -> int:
                                                 mode=mode, override=args.override_reason))
     blocked = report.status is QualityState.BLOCKED and mode == "production"
     out = Path(args.out)
-    _write_snapshot_bundle(out, stamp, load, args.input, as_of, note, snap, report, blocked)
+    _write_snapshot_bundle(out, stamp, load, input_dir, as_of, note, snap, report, blocked)
     print(json.dumps({"run_id": stamp.run_id, "schema_version": SCHEMA_VERSION, "out": str(out),
                       **_summary(report)}, indent=2, ensure_ascii=False))
     try:
@@ -1018,8 +1041,64 @@ def _gate_args(p: argparse.ArgumentParser) -> None:
     p.add_argument("--override-reason", help="required with --mode exploratory; recorded in the report")
 
 
+
+def cmd_ingest_hithink(args: argparse.Namespace) -> int:
+    """Fetch HiThink+EM NOTICE bundle and write canonical CSV/Parquet + sources.yaml."""
+    from vms.providers.hithink import HiThinkFetchError, HiThinkUnavailable, fetch_bundle
+    from vms.data.io import write_directory
+
+    prefer_local = not bool(getattr(args, "refresh", False))
+    if getattr(args, "prefer_local", None) is True:
+        prefer_local = True
+    if getattr(args, "prefer_local", None) is False and getattr(args, "refresh", False):
+        prefer_local = False
+    # argparse: --prefer-local / --refresh mutually
+    if getattr(args, "refresh", False):
+        prefer_local = False
+    try:
+        load, diag = fetch_bundle(
+            args.ticker,
+            prefer_local=prefer_local,
+            min_local=args.min_local,
+            start=None if not args.start else __import__("datetime").date.fromisoformat(args.start),
+            end=None if not args.end else __import__("datetime").date.fromisoformat(args.end),
+        )
+    except (HiThinkUnavailable, HiThinkFetchError) as e:
+        raise InputError(str(e)) from e
+    out = Path(args.out)
+    write_directory(
+        out, load.financial, load.market,
+        corporate_actions=load.corporate_actions if load.corporate_actions_provided else [],
+        sources=list(load.sources.values()),
+        fmt=args.format,
+        classifications=load.classifications or None,
+    )
+    # Always write empty CA file marker? write_directory with empty list still writes file.
+    # Write diagnostics (redacted)
+    (out / "hithink_ingest_diagnostics.json").write_text(
+        json.dumps(diag.as_dict(), indent=2, ensure_ascii=False, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    print(json.dumps({
+        "ticker": args.ticker,
+        "out": str(out),
+        "n_financial": len(load.financial),
+        "n_market": len(load.market),
+        "n_sources": len(load.sources),
+        "prefer_local": prefer_local,
+        "pit_complete_expected": False,
+        "source_id": "hithink_em_notice",
+        "versioning": "LATEST_ONLY",
+        "notice_joined": diag.notice_joined,
+        "notice_fallback": diag.notice_fallback,
+        "assumptions": diag.assumptions,
+    }, indent=2, ensure_ascii=False, sort_keys=True))
+    return EXIT_OK
+
+
+
 def build_parser() -> argparse.ArgumentParser:
-    p = argparse.ArgumentParser(prog="vms", description="VMS-0.1 valuation engine (Phase 9: walk-forward evaluation)")
+    p = argparse.ArgumentParser(prog="vms", description="VMS-0.1 valuation engine (Phases 0–10 + HiThink A-share ingest)")
     sub = p.add_subparsers(dest="command", required=True)
     asof_help = "YYYY-MM-DD (=> 15:00 Asia/Shanghai, rule ASOF-DATE-CLOSE-v1) or ISO-8601 with offset"
 
@@ -1031,10 +1110,14 @@ def build_parser() -> argparse.ArgumentParser:
     v.set_defaults(func=cmd_validate_data)
 
     b = sub.add_parser("build-snapshot", help="PIT snapshot + quality report for one instrument")
-    b.add_argument("--input", required=True)
-    b.add_argument("--ticker", required=True, help="instrument_id, e.g. 000001.SZ")
+    b.add_argument("--input", help="directory with canonical CSV/Parquet (required unless --provider hithink)")
+    b.add_argument("--provider", choices=["hithink"], help="optional: ingest via provider then snapshot")
+    b.add_argument("--ticker", required=True, help="instrument_id, e.g. 000001.SZ or 600519.SH")
     b.add_argument("--as-of", required=True, help=asof_help)
     b.add_argument("--out", required=True)
+    b.add_argument("--refresh", action="store_true", help="with --provider hithink: allow Recipe E REST")
+    b.add_argument("--format", choices=["csv", "parquet"], default="csv",
+                   help="when --provider hithink writes data under <out>/data")
     _gate_args(b)
     b.set_defaults(func=cmd_build_snapshot)
 
@@ -1132,6 +1215,18 @@ def build_parser() -> argparse.ArgumentParser:
     vl.add_argument("--policy", choices=sorted(POLICIES))
     _gate_args(vl)
     vl.set_defaults(func=cmd_value)
+
+
+    ih = sub.add_parser("ingest-hithink", help="HiThink+EM NOTICE → canonical LoadResult files (real A-share)")
+    ih.add_argument("--ticker", required=True, help="thscode e.g. 600519.SH")
+    ih.add_argument("--out", required=True, help="output directory for financial/market/sources.yaml")
+    ih.add_argument("--format", choices=["csv", "parquet"], default="csv")
+    ih.add_argument("--prefer-local", dest="prefer_local", action="store_true", default=True)
+    ih.add_argument("--refresh", action="store_true", help="allow Recipe E REST upsert on miss (not silent vendor swap)")
+    ih.add_argument("--min-local", type=int, default=4, help="local statement rows to skip REST")
+    ih.add_argument("--start", help="optional YYYY-MM-DD filter / price window start")
+    ih.add_argument("--end", help="optional YYYY-MM-DD filter / price window end")
+    ih.set_defaults(func=cmd_ingest_hithink)
 
     d = sub.add_parser("demo", help="offline SYNTHETIC smoke (through returns/sensitivity)")
     d.add_argument("--policy", choices=sorted(POLICIES))

@@ -18,6 +18,7 @@ MODEL-SELECTION-WF-v2 eval gates; Phase 6 WACC-INPUTS-v1 (same day); Phase 4 fol
 - **Phase 8 (done):** OAT/joint sensitivity, process vs param, driver ablation, MC percentile ≠ CI.
 - **Phase 9 (done):** chronological walk-forward evaluation; synthetic => INVESTMENT_VALUE_NOT_ESTABLISHED.
 - **Phase 9 note:** exclude snapshots with `pit_complete == false` from unbiased evaluation metrics (PIT-INCOMPLETE-v1).
+- **Real A-share adapter:** HiThink + Eastmoney NOTICE_DATE (HITHINK-PIT-NOTICE-v1); LATEST_ONLY ⇒ pit_complete=false; no vendor qfq in adjusted_close; CA deferred.
 
 | ID | Status | Assumption |
 |---|---|---|
@@ -113,3 +114,11 @@ MODEL-SELECTION-WF-v2 eval gates; Phase 6 WACC-INPUTS-v1 (same day); Phase 4 fol
 | `EVAL-FORECAST-BEFORE-OUTCOME-v1` | active | At each origin, forecasts are persisted with outcomes=null before any realization is attached. Evaluation of a horizon occurs only after that horizon elapses. |
 | `EVAL-TARGETS-SEPARATE-v1` | active | Operating cash-flow, intrinsic value, market-price, and TSR forecasts are scored in separate metric blocks. Intrinsic value is never judged solely by matching future market prices. |
 | `EVAL-INVESTMENT-LABEL-v1` | active | Every evaluation report carries ENGINEERING_PASS, DATA_QUALITY_PASS, CALIBRATION_PASS (or INCONCLUSIVE), and investment_value. Synthetic / no predeclared leakage-safe OOS evidence => INVESTMENT_VALUE_NOT_ESTABLISHED; never SUPPORTED on synthetic demos. |
+| `HITHINK-PIT-NOTICE-v1` | active | PIT published_at for HiThink statements = Eastmoney NOTICE_DATE joined by (thscode/security_code, period_end ↔ EM REPORTDATE). Date-only NOTICE → 15:00:00 Asia/Shanghai that day (same clock as ASOF-DATE-CLOSE-v1). Forbidden: using HiThink period_end_ms as published_at. |
+| `HITHINK-REPORT-DATE-FALLBACK-v1` | active | Only if NOTICE is missing after local+EM fetch: use HiThink report_date_ms as published_at with quality_status=low_confidence and published_at_source=hithink_report_date_ms_fallback. Never claim exchange announce. |
+| `HITHINK-LATEST-ONLY-v1` | active | HiThink fundamentals store has no restatement history (versioning=LATEST_ONLY). SourceDescriptor source_id=hithink_em_notice ⇒ snapshots are PIT_INCOMPLETE / pit_complete=false so Phase 9 unbiased metrics exclude them (PIT-INCOMPLETE-v1). |
+| `HITHINK-UNITS-YUAN-v1` | active | HiThink statement amounts are treated as CNY yuan (元), unit_scale=unit. Confirmed on CSI300 samples (e.g. 600519.SH annual revenue ~1e11). If a feed were in 万元, convert ×10000 and label — not observed in the local store. |
+| `HITHINK-NO-VENDOR-QFQ-v1` | active | MarketObservation.raw_close comes from marketdb raw_kline_daily (unadjusted). Never put vendor forward-adjusted (qfq) closes into adjusted_close — qfq embeds future splits. adjusted_close left null unless VMS-side adjust from known-at CAs. |
+| `HITHINK-LOCAL-FIRST-v1` | active | Ingest is local-first: marketdb + hithink_fundamentals.duckdb + em_earnings_notices. On miss for the requested ticker: Recipe E (one HiThink REST upsert + re-read). Do not silently switch vendors. Never echo API keys. |
+| `HITHINK-CA-DEFER-v1` | active | Corporate actions from marketdb raw_adjustment_events lack announced_at (ex_date only), so they are not PIT-safe. VMS leaves corporate_actions empty and documents the limitation. |
+| `HITHINK-FIELD-MAP-v1` | active | HiThink columns map to FIELDS-2 via vms.providers.hithink.mapping (documented in docs/data_contracts.md). Outflows use positive magnitudes. Unmapped columns ignored with optional warning count. pay_dividends_profits_interest_cash → dividends_paid as low_confidence (mixed interest). |

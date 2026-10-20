@@ -2,13 +2,13 @@
 
 Standalone valuation & conditional return engine for China A-shares. Spec: [SPEC.md](SPEC.md).
 
-**Status: Phases 0–9 done.** Phase 0: contracts, config, run metadata, seeding. Phase 1: PIT data
-and integrity gates. Phase 2: drivers, sector profiles, deterministic central-case statements,
-capital-allocation policies, and accounting invariants. Phase 3: rule-based fundamental regimes
-(PIT fundamentals only), Dirichlet transition matrix, regime-conditional driver distributions with
-shrinkage and bootstrap parameter uncertainty, rolling-origin walk-forward selection. Phase 4: correlated path sampler. Phase 5: path-wise statements + capital allocation. Phase 6: FCFF DCF, exit-multiple cross-check, EV-equity bridge. Phase 7: entry-price-conditioned multi-horizon returns (DIVIDEND-NO-REINVEST). Phase 8: sensitivity & uncertainty attribution (OAT/joint, process vs param). Phase 9: chronological walk-forward evaluation (synthetic => INVESTMENT_VALUE_NOT_ESTABLISHED). (Gaussian copula over shrunk residual correlations; parameter then process uncertainty; SimulationBundle). There is **no valuation yet**
-(no joint sampling, WACC, DCF, paths, or returns). Projections are labeled `DETERMINISTIC_CENTRAL_CASE_NOT_A_VALUATION`,
-and `vms demo` is `PHASE9_SMOKE_EVAL_VIA_VMS_EVALUATE`. See PHASE0_DONE.md–PHASE9_DONE.md and the assumption register
+**Status: Phases 0–10 complete (VMS-0.1.0 release packaging on synthetic).** Full pipeline:
+contracts → PIT/quality → drivers/regimes → correlated paths → path-wise statements →
+FCFF DCF + exit multiple → entry-price returns (DIVIDEND-NO-REINVEST) → sensitivity →
+chronological walk-forward evaluation → optional DSDE consumer adapter.
+Schema contract: `vms-0.1.0`. Labels always include `INVESTMENT_VALUE_NOT_ESTABLISHED` on
+synthetic (no alpha claim). See [docs/model_card.md](docs/model_card.md),
+[PHASE10_DONE.md](PHASE10_DONE.md), [RELEASE_NOTES.md](RELEASE_NOTES.md), and
 [docs/assumptions.md](docs/assumptions.md).
 
 Fully standalone: does not import `dsde-engine` or any legacy PIT/FTD/DV1/Monte-Carlo code
@@ -41,6 +41,23 @@ Dev deps: pytest, **hypothesis** — justification: SPEC §19 mandates property-
 is test-only and never imported by `src/`.
 scipy is used from Phase 3 (Student-t quantiles in `vms.drivers.distributions`).
 
+## Offline end-to-end demo (Phases 0–10)
+
+```bash
+# After setup above:
+scripts/e2e_offline_demo.sh /tmp/vms_e2e   # lightweight path counts; writes a run bundle
+# Asserts schema_version, ENGINEERING_PASS / DATA_QUALITY_PASS keys, INVESTMENT_VALUE_NOT_ESTABLISHED.
+```
+
+Python facade:
+
+```python
+from vms import ValuationEngine, ValuationRunResult
+from vms.adapters.dsde import consumer_view_from_result, dsde_availability
+# eng.run(request, data_bundle, config) -> ValuationRunResult
+# dsde_availability()["dsde_present"] may be False; core still works.
+```
+
 ## CLI
 
 ```bash
@@ -64,12 +81,11 @@ data-quality errors in production mode (incl. missing industry classification, I
 `5` projection INSUFFICIENT_DATA or REJECTED by an accounting invariant.
 Policies: `conservative_baseline` (default), `historical_continuation`, `fixed_payout`, `target_leverage`,
 `min_cash_excess_distribution` (config `capital_allocation`).
-`value`, `sensitivity`, `evaluate` (SPEC §16.2) are not registered until their phases are implemented.
 
 Leakage mutation check: `scripts/leakage_mutation_check.sh`. It injects 4 PIT-filter leaks, a walk-forward
 origin leak and a regime-inference leak, and requires `tests/leakage` to fail on each. Invariant mutation check: `scripts/invariant_mutation_check.sh`.
 It injects 7 typical modelling bugs into the projection engine and requires each one to be REJECTED.
 
 ## Layout
-`src/vms/<module>/` follows SPEC §17. Modules for later phases exist as empty packages whose
-docstring says `NOT IMPLEMENTED (Phase N)`; a test enforces that they export nothing.
+`src/vms/<module>/` follows SPEC §17. All listed modules are implemented through Phase 10,
+including optional `vms.adapters.dsde`.

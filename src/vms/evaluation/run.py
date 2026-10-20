@@ -10,6 +10,7 @@ from zoneinfo import ZoneInfo
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from vms import SCHEMA_VERSION
 from vms.assumptions import cite
 from vms.evaluation.baselines import build_baselines
 from vms.evaluation.labels import assign_labels
@@ -222,7 +223,7 @@ def run_evaluation(*, universe: UniverseConfig | str | Path, loaded: LoadedConfi
         flags=sorted(set(flags)), notes=notes, content_hash=content_hash,
     )
     (out / "evaluation_report.json").write_text(
-        json.dumps({"schema_version": "vms-0.1.phase9", **report.model_dump(mode="json")},
+        json.dumps({"schema_version": SCHEMA_VERSION, **report.model_dump(mode="json")},
                    sort_keys=True, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     (out / "origin_records.json").write_text(
         json.dumps({"n": len(records), "records": [

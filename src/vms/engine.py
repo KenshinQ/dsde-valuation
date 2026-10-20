@@ -1,4 +1,4 @@
-"""Public ValuationEngine facade (SPEC §16.1). Phase-owned methods are live; the rest raise NotImplementedError."""
+"""Public ValuationEngine facade (SPEC §16.1). Phase 10: full ``run`` → ValuationRunResult."""
 
 from __future__ import annotations
 
@@ -12,8 +12,11 @@ from vms.pipeline import (Phase2Run, Phase5Run, Phase6Run, Phase7Run, run_estima
 from vms.pit.snapshot import PITSnapshot
 from vms.quality.report import DataQualityReport, assess
 from vms.regimes import RegimeResult
+from vms.reporting.metadata import hash_models, make_run_metadata, sha256_of
+from vms.result import ValuationRunResult
 from vms.sampling import SimulationBundle
 from vms.schemas.config import LoadedConfig
+from vms.schemas.observations import ValuationRequest
 from vms.statements.paths import FinancialPathBundle, project_financial_paths
 from vms.evaluation import EvaluationReport, run_evaluation
 from vms.returns import ReturnDistributionBundle, build_return_distributions
@@ -21,7 +24,7 @@ from vms.valuation import ValuationBundle, value_paths
 
 
 class ValuationEngine:
-    """Stable facade. Methods for unimplemented phases raise ``NotImplementedError`` with the phase id."""
+    """Stable facade. ``run`` orchestrates the full pipeline into ValuationRunResult."""
 
     def __init__(self, loaded: LoadedConfig):
         self.loaded = loaded
@@ -130,5 +133,108 @@ class ValuationEngine:
         return run_evaluation(universe=universe, loaded=self.loaded, start=start, end=end, out_dir=out_dir,
                               evaluation_as_of=evaluation_as_of, split_mode=split_mode)
 
-    def run(self, load: LoadResult, *, instrument_id: str, as_of: datetime, seed: int, **kw: Any) -> Phase7Run:
-        return self.returns_from_load(load, instrument_id=instrument_id, as_of=as_of, seed=seed, **kw)
+    def run(
+        self,
+        request: ValuationRequest,
+        data_bundle: LoadResult,
+        config: LoadedConfig | None = None,
+        *,
+        include_sensitivity: bool = False,
+        sensitivity_paths: int | None = None,
+        mode: Literal["production", "exploratory"] = "production",
+        override_reason: str | None = None,
+        policy_id: str | None = None,
+    ) -> ValuationRunResult:
+        """Orchestrate validate → estimate → simulate → project → value → returns [(→ sensitivity)].
+
+        SPEC §16.1 signature: ``run(request, data_bundle, config) -> ValuationRunResult``.
+        ``config`` defaults to the engine's LoadedConfig. Sensitivity is optional (expensive).
+        """
+        loaded = config if config is not None else self.loaded
+        # Temporarily swap if caller passed a different config (preserve engine state).
+        prev = self.loaded
+        self.loaded = loaded
+        try:
+            n_years = max(request.horizons_years)
+            p7 = run_returns(
+                data_bundle,
+                instrument_id=request.instrument_id,
+                as_of=request.as_of,
+                loaded=loaded,
+                seed=request.random_seed,
+                spot_price=request.spot_price,
+                n_paths=request.monte_carlo_paths,
+                n_years=n_years,
+                policy_id=policy_id,
+                entry_prices=None,
+                horizons_years=list(request.horizons_years),
+                mode=mode,
+                override_reason=override_reason,
+            )
+            unsupported = (
+                p7.resolution is not None
+                and getattr(p7.resolution.status, "value", str(p7.resolution.status)) == "UNSUPPORTED_PROFILE"
+            ) or (p7.valuation is None and p7.returns is None and p7.distributions is None)
+            profile_id = None if p7.resolution is None else p7.resolution.profile_id
+            profile_status = None
+            if p7.resolution is not None:
+                profile_status = getattr(p7.resolution.status, "value", str(p7.resolution.status))
+
+            sensitivity = None
+            flags: list[str] = []
+            if include_sensitivity and p7.returns is not None and not unsupported:
+                from vms.diagnostics import run_diagnostics
+                sens_paths = sensitivity_paths if sensitivity_paths is not None else min(
+                    50, request.monte_carlo_paths)
+                sensitivity = run_diagnostics(
+                    load=data_bundle,
+                    instrument_id=request.instrument_id,
+                    as_of=request.as_of,
+                    loaded=loaded,
+                    seed=request.random_seed,
+                    n_paths=sens_paths,
+                    n_years=n_years,
+                    spot_price=request.spot_price,
+                    baseline=p7,
+                    mode="exploratory",
+                    override_reason=override_reason or "phase10_engine_run_sensitivity",
+                )
+                flags.append("SENSITIVITY_INCLUDED")
+            else:
+                flags.append("SENSITIVITY_SKIPPED")
+
+            data_hash = sha256_of({
+                "records": hash_models([
+                    *data_bundle.financial, *data_bundle.market, *data_bundle.corporate_actions,
+                    *data_bundle.classifications,
+                ]),
+                "sources": {k: v.model_dump(mode="json") for k, v in sorted(data_bundle.sources.items())},
+                "corporate_actions_provided": data_bundle.corporate_actions_provided,
+            })
+            config_snapshot = {
+                "config": loaded.config.model_dump(mode="json"),
+                "driver_profile": loaded.profile.model_dump(mode="json"),
+            }
+            meta = make_run_metadata(
+                request=request, config_snapshot=config_snapshot, data_hash=data_hash,
+                seed=request.random_seed, paths=request.monte_carlo_paths,
+            )
+
+            return ValuationRunResult.build(
+                run_id=meta.run_id,
+                request=request,
+                quality=p7.report,
+                regimes=p7.regimes,
+                distributions=p7.distributions,
+                simulation=p7.bundle,
+                financial=p7.financial_paths,
+                valuation=p7.valuation,
+                returns=p7.returns,
+                sensitivity=sensitivity,
+                profile_id=profile_id,
+                profile_status=profile_status,
+                unsupported=bool(unsupported),
+                flags=flags,
+            )
+        finally:
+            self.loaded = prev

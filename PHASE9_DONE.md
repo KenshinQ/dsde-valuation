@@ -1,6 +1,6 @@
 # Phase 9 — Walk-forward evaluation: DONE
 
-Not started: Phase 10 (DSDE adapter / release readiness).
+Completed later: see PHASE10_DONE.md.
 
 ## Decisions recorded
 | ID | Decision |

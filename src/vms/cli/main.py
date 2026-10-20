@@ -11,7 +11,7 @@ Implemented commands:
   returns         Phase 7 entry-price-conditioned multi-horizon returns
   sensitivity     Phase 8 sensitivity & uncertainty attribution
   evaluate        Phase 9 chronological walk-forward evaluation
-  demo            offline SYNTHETIC smoke (through Phase 8; evaluate is separate).
+  demo            offline SYNTHETIC smoke (Phases 0–10; evaluate + optional DSDE adapter).
 
 Exit codes: 0 ok, 1 unexpected error, 2 invalid input/config/arguments,
             3 BLOCKED by critical data-quality errors in production mode,
@@ -1133,7 +1133,7 @@ def build_parser() -> argparse.ArgumentParser:
     _gate_args(vl)
     vl.set_defaults(func=cmd_value)
 
-    d = sub.add_parser("demo", help="offline SYNTHETIC smoke run (no valuation)")
+    d = sub.add_parser("demo", help="offline SYNTHETIC smoke (through returns/sensitivity)")
     d.add_argument("--policy", choices=sorted(POLICIES))
     d.add_argument("--out", required=True)
     d.add_argument("--seed", type=int)

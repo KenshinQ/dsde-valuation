@@ -242,3 +242,33 @@ FX conversion (SCOPE-CNY-v1); non-calendar fiscal years (FISCAL-YEAR-CALENDAR-v1
 price corrections by vendors (PRICE-REVISION-DEFER-v1: market rows have no revision field); rights-issue/placement
 price adjustment (RIGHTS-ADJ-DEFER-v1); configurable source priority (SOURCE-CONFLICT-BLOCK-v1); staleness of last
 price; per-record reporting-convention overrides.
+
+---
+
+## Phase 10 — Versioned output contract (OUTPUT-CONTRACT-v1)
+
+**Schema version stamp:** every public result type and persisted artifact carries
+`schema_version: "vms-0.1.0"` (constant `vms.SCHEMA_VERSION`).
+
+### Public result types
+
+| Type | Module | Required stamps |
+|---|---|---|
+| `ValuationRunResult` | `vms.result` | `schema_kind`, `schema_version`, `run_id`, `labels` |
+| `DSDEConsumerView` | `vms.adapters.dsde` | `schema_kind`, `schema_version`, return mixture + uncertainty diagnostics |
+| `RunMetadata` / `ArtifactStamp` | `vms.reporting.metadata` | `run_id`, `schema_version` |
+| Evaluation / sensitivity / returns / valuation summaries | CLI artifacts | `run_id`, `schema_version` |
+
+### Labels (always present on `ValuationRunResult` / evaluation)
+
+- `ENGINEERING_PASS` — pipeline produced valuation + returns for a supported profile
+- `DATA_QUALITY_PASS` — quality gate usable (or exploratory override)
+- `CALIBRATION_PASS` / `CALIBRATION_STATUS` — synthetic-only → INCONCLUSIVE in VMS-0.1
+- `investment_value` — default **`INVESTMENT_VALUE_NOT_ESTABLISHED`** (never SUPPORTED on SYNTHETIC)
+
+### DSDE adapter contract
+
+- Core: `import vms` never imports DSDE.
+- Optional: `vms.adapters.dsde.dsde_availability()`, `consumer_view_from_result()`, `try_notify_dsde()`.
+- Discovery of `dsde_engine` / `dsde` uses `importlib` only when `try_notify_dsde` is called.
+- Legacy PIT/FTD/DV1 modules are never imported (enforced by unit tests).

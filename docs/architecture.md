@@ -1,4 +1,4 @@
-# Architecture (state at Phase 3)
+# Architecture (state at Phase 4)
 
 Target pipeline: SPEC §4 (adapters → PIT store → gates → drivers → regimes → sampler →
 statements → capital allocation → DCF/multiples → equity bridge → per-share value →
@@ -52,7 +52,7 @@ entry-price-conditioned returns → diagnostics → result bundle).
 
 ## Boundaries
 - No imports from `dsde-engine` or other legacy code; DSDE adapter is Phase 10 and optional.
-- All artifacts carry `run_id` and `schema_version` (`vms-0.1.phase3`).
+- All artifacts carry `run_id` and `schema_version` (`vms-0.1.phase4`).
 
 ## Phase 1 data flow
 ```
@@ -108,3 +108,17 @@ build_distribution_model: full-history fits + seeded bootstrap of the estimator 
   else the configured default with `SELECTION_DEFAULT_INSUFFICIENT_ORIGINS`. In-sample pinball is reported
   only (a test corrupts it and checks selection is unchanged).
 - **Not yet:** dependence between drivers, joint sampling (Phase 4); central case still uses Phase 2 medians.
+
+## Phase 4 flow (correlated paths; not a valuation)
+```
+DistributionModel + RegimeResult
+  ├─ estimate_dependence: residual Pearson → shrink to I (DRIVER-DEPENDENCE-v1); material blocks recorded
+  ├─ central path: argmax state path + selected-spec loc (CENTRAL-FROM-SELECTED-v1)
+  └─ for path i = 0..N-1 (stream path:<i>):
+       sample bootstrap params → Dirichlet transition matrix → initial state
+       → each year: transition → Gaussian-copula Student-t shocks → margins (selected family)
+       → persistence_t uses lag z → clip/repair constraints → accept or InvalidPathSummary
+MCDiagnostics: key stats + MCSE + same-seed stability; provenance hashes persisted
+```
+- CLI: `vms simulate` writes `simulation_bundle.json` (+ `paths.parquet` when >500 paths) and refreshes
+  `simulation_metadata.json`. Facade: `ValuationEngine.simulate_paths`.

@@ -109,6 +109,9 @@ ASSUMPTIONS: dict[str, str] = {
                                "approximation). Minority dividends are not modelled.",
     "WACC-INPUTS-DEFERRED-v1": "WACC / cost-of-equity inputs (risk-free rate, ERP, beta source) are deferred to "
                                "Phase 6 and require an owner decision. Phase 2 only defines the typed rates.",
+    "WACC-INPUTS-v1": "Phase 6 WACC / cost of equity (owner decision 2026-10-20): risk-free = 10-year China "
+                      "government bond yield known at as_of (PIT); equity risk premium default 6% (swept in "
+                      "sensitivity); beta vs CSI 300, estimated on 2-year weekly returns, shrunk toward 1.",
     # ---- Phase 3: regimes and driver distributions
     "REGIME-PIT-FUNDAMENTALS-ONLY-v1": "Fundamental regimes are inferred from PIT financial records only (TTM revenue "
                                        "growth, TTM recurring EBIT margin and its yoy change). Never from prices, "
@@ -148,15 +151,47 @@ ASSUMPTIONS: dict[str, str] = {
     "MODEL-SELECTION-WF-v1": "Driver-distribution specs are selected per driver by mean walk-forward pinball loss "
                              "(transformed space). Fewer than min_origins scored origins => the configured default spec "
                              "(flagged). In-sample fit is reported but never used for selection.",
+    "MODEL-SELECTION-WF-v2": "Driver-distribution specs selected by mean walk-forward pinball (transformed space). "
+                             "Candidates: prior_only, pooled_t, pooled_empirical, regime_t, persistence_t "
+                             "(last observation + shrunk dispersion). Point benchmark naive_last is scored but not "
+                             "selectable. Fewer than min_origins scored origins => default spec + "
+                             "SELECTION_DEFAULT_INSUFFICIENT_ORIGINS + LOW_EVAL_SUPPORT (diagnostics marked "
+                             "low-confidence; no silent calibration claim). Selected-spec central-interval coverage "
+                             "outside nominal +/- coverage_tolerance => COVERAGE_MISCALIBRATED warning.",
     "DRIVER-DEPENDENCE-PHASE4-v1": "Phase 3 estimates marginal (regime-conditional) distributions only. Dependence "
                                    "between drivers is modelled by the Phase 4 sampler (regime-conditional block "
                                    "bootstrap / shrunk correlations).",
+    "DRIVER-DEPENDENCE-v1": "Phase 4: drivers are drawn jointly via a Gaussian copula over shrunk residual "
+                            "correlations in transformed space (identity target). Material blocks "
+                            "(DEMAND_PROFIT, WORKING_CAPITAL, REINVESTMENT, CAPITAL) are never sampled independently. "
+                            "Within-regime residual correlations are used when a state has enough overlapping years; "
+                            "otherwise the pooled shrunk matrix. Small n => heavy shrink (flagged).",
+    "REGIME-CLOCK-MISMATCH-v1": "VMS-0.1 keeps quarterly/TTM fundamental regimes with annual driver observations "
+                                "(REGIME-ANNUAL-LABEL-v1). Known clock mismatch; annual-only regimes are deferred.",
+    "INDUSTRY-PRIORS-DEFER-v1": "Sector/industry priors need a cross-sectional panel and are out of VMS-0.1 scope. "
+                               "Keep global profile priors + shrinkage (PRIORS-GLOBAL-v1).",
+    "CENTRAL-FROM-SELECTED-v1": "Phase 4 central scenario uses the walk-forward-selected, shrunk distribution "
+                               "(median / q=0.5 in transformed space, inverse-transformed and clipped). Phase 2 "
+                               "deterministic projection still uses DRIVER-CENTRAL-MEDIAN-v1.",
+    "PATH-SAMPLER-v1": "Per path: (1) sample parameters from persisted bootstrap draws (or analytic fallback); "
+                       "(2) sample initial fundamental state from current posterior; (3) simulate annual transitions "
+                       "from a Dirichlet draw of the transition posterior; (4) sample correlated driver shocks "
+                       "conditional on state and, for persistence_t, the lagged z; (5) enforce documented bounds/"
+                       "accounting constraints; (6) reject invalid paths with reason codes. Process and parameter "
+                       "uncertainty stay separate (SPEC section 8.1).",
+    "PATH-CONSTRAINTS-v1": "Driver bounds from the profile. Soft repairs: clip to [lower, upper]; if ebit_margin > "
+                           "gross_margin set ebit_margin = gross_margin (flagged MARGIN_ORDER_REPAIRED). Hard rejects: "
+                           "non-finite draws, growth <= -1 after inverse, empty parameter draws "
+                           "(BOUND_VIOLATION, GROWTH_UNDEFINED, PARAMETER_DRAW_EMPTY, DEPENDENCE_DRAW_FAILED).",
 }
 
 SUPERSEDED: dict[str, str] = {
     "PAYOUT-SAME-YEAR-v1": "DIVIDEND-T-PLUS-1-v1",
     "INDUSTRY-UNCLASSIFIED-v1": "INDUSTRY-UNCLASSIFIED-v2",
     "INTEREST-OPENING-DEBT-v1": "INTEREST-OPENING-DEBT-v2",
+    "WACC-INPUTS-DEFERRED-v1": "WACC-INPUTS-v1",
+    "MODEL-SELECTION-WF-v1": "MODEL-SELECTION-WF-v2",
+    "DRIVER-DEPENDENCE-PHASE4-v1": "DRIVER-DEPENDENCE-v1",
 }
 
 

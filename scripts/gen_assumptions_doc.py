@@ -11,18 +11,16 @@ table in sync; regenerate with `python scripts/gen_assumptions_doc.py`. Artifact
 (e.g. `statement_projection.json → assumptions`). **Changing an assumption means adding `-v2`, never silently
 editing `-v1`.** Superseded IDs stay listed and can no longer be cited (`cite()` raises).
 
-Owner decisions: scope/data items (ASOF, SCOPE-CNY, PIT-INCOMPLETE, PRICE-REVISION-DEFER, RIGHTS-ADJ-DEFER,
-STALENESS, SOURCE-CONFLICT) after Phase 1 review; ANNUAL-BASE-STALENESS, INDUSTRY-UNCLASSIFIED-v2,
-DIVIDEND-T-PLUS-1, ANNOUNCED-DIVIDEND-BASE, INTEREST-OPENING-DEBT-v2, REVOLVER-RATE, CASH-INTEREST-ZERO,
-BS-RESIDUAL-WARN, LEASE-BRIDGE-DEBTLIKE, MINORITY-BOOK-BRIDGE, WACC-INPUTS-DEFERRED after Phase 2 review (2026-10-20).
+Owner decisions: scope/data after Phase 1; Phase 2 follow-ups (2026-10-20); Phase 3 review (2026-10-20):
+CENTRAL-FROM-SELECTED, persistence_t selection, REGIME-CLOCK-MISMATCH, INDUSTRY-PRIORS-DEFER,
+MODEL-SELECTION-WF-v2 eval gates; Phase 6 WACC-INPUTS-v1 (same day).
 
 ## Notes for later phases
-- **Phase 4:** sample parameters from the persisted parameter-uncertainty draws and the Dirichlet transition
-  posterior; do not collapse the uncertainty types (SPEC §8.1).
 - **Phase 5:** dilution from rights issues/placements enters through share-count paths (RIGHTS-ADJ-DEFER-v1).
-- **Phase 6:** leases are debt-like in the bridge and FCFF must not also deduct lease principal (LEASE-BRIDGE-DEBTLIKE-v1).
-  Minority interest at book (MINORITY-BOOK-BRIDGE-v1). Dividends declared on the final FY are unpaid at the horizon
-  (DIVIDEND-T-PLUS-1-v1). WACC inputs need an owner decision (WACC-INPUTS-DEFERRED-v1).
+  Path-wise statements consume SimulationBundle drivers.
+- **Phase 6:** leases debt-like in the bridge (LEASE-BRIDGE-DEBTLIKE-v1); minority at book
+  (MINORITY-BOOK-BRIDGE-v1); unpaid final-FY dividends (DIVIDEND-T-PLUS-1-v1); WACC-INPUTS-v1
+  (10y CGB RF, ERP 6% default swept, beta vs CSI 300 2y weekly shrink-to-1).
 - **Phase 7:** holders at as_of receive announced dividends with ex_date > as_of (ANNOUNCED-DIVIDEND-BASE-v1).
 - **Phase 9:** exclude snapshots with `pit_complete == false` from unbiased evaluation metrics (PIT-INCOMPLETE-v1).
 

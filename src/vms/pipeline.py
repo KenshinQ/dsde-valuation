@@ -1,9 +1,10 @@
-"""Pipelines. Phase 2: PIT snapshot → quality gate → profile → drivers → deterministic statements.
-Phase 3 (run_estimation): PIT snapshot → gate → profile → fundamental regimes → walk-forward → driver
-distributions with parameter uncertainty.
+"""Pipelines.
 
-Partial implementation of the SPEC §16.1 facade (build_pit_snapshot / estimate_driver_distributions
-(central values only) / project_financials). Distributions, simulation and valuation are later phases.
+Phase 2: PIT → gate → profile → drivers → deterministic statements.
+Phase 3: PIT → gate → profile → regimes → walk-forward → driver distributions.
+Phase 4: Phase 3 + correlated path sampler (SimulationBundle).
+
+Partial SPEC §16.1 facade: see ``vms.engine.ValuationEngine``.
 """
 
 from __future__ import annotations
@@ -94,5 +95,77 @@ def run_estimation(load: LoadResult, *, instrument_id: str, as_of: datetime, loa
                       profile=loaded.profile, est=cfg.estimation, reg_cfg=cfg.regimes)
     dist = build_distribution_model(history, loaded.profile, regimes=regimes, walk_forward_report=wf,
                                     cfg=cfg.estimation, seed=seed)
-    central = estimate_drivers(history, loaded.profile, cfg.projection)
+    central = _central_from_selected(dist, loaded.profile, history, cfg.projection)
     return Phase3Run(snap, report, resolution, history, regimes, wf, dist, central)
+
+
+def _central_from_selected(dist, profile, history, proj_cfg):  # noqa: ANN001
+    """CENTRAL-FROM-SELECTED-v1: DriverModel from selected-spec medians (Phase 2 projection still uses medians)."""
+    from vms.assumptions import cite
+    from vms.drivers.estimate import DriverModel, estimate_drivers
+    from vms.drivers.transforms import inverse
+
+    legacy = estimate_drivers(history, profile, proj_cfg)
+    estimates = {}
+    for name, est in legacy.estimates.items():
+        dd = dist.drivers[name]
+        fit = dd.specs[dd.selected_spec]
+        raw = inverse(dd.transform, fit.loc, dd.lower, dd.upper)
+        value = min(max(raw, dd.lower), dd.upper)
+        estimates[name] = est.model_copy(update={
+            "value": value, "transformed_value": fit.loc, "method": "selected_median",
+            "clipped": value != raw, "low_confidence": dd.low_confidence,
+            "flags": sorted({*est.flags, *dd.flags, "CENTRAL_FROM_SELECTED"}),
+        })
+    return DriverModel(
+        profile_id=profile.profile_id, profile_version=profile.profile_version,
+        bounds_status=profile.bounds_status, history_years=legacy.history_years, estimates=estimates,
+        assumptions=cite("CENTRAL-FROM-SELECTED-v1", "MODEL-SELECTION-WF-v2", "DRIVER-TRANSFORMS-v1",
+                         "ANNUAL-BASE-v1"))
+
+
+
+@dataclass(frozen=True)
+class Phase4Run:
+    snapshot: "PITSnapshot"
+    report: "DataQualityReport"
+    resolution: "ProfileResolution"
+    history: "AnnualHistory"
+    regimes: "RegimeResult | None"
+    walk_forward: "WalkForwardReport | None"
+    distributions: "DistributionModel | None"
+    central: "DriverModel | None"
+    bundle: "SimulationBundle | None"
+
+
+def run_simulation(load: LoadResult, *, instrument_id: str, as_of: datetime, loaded: LoadedConfig, seed: int,
+                   n_paths: int | None = None, n_years: int | None = None,
+                   mode: Literal["production", "exploratory"] = "production",
+                   override_reason: str | None = None) -> Phase4Run:
+    from vms.reporting.metadata import code_version, hash_models, sha256_of
+    from vms.sampling import simulate_paths
+
+    p3 = run_estimation(load, instrument_id=instrument_id, as_of=as_of, loaded=loaded, seed=seed, mode=mode,
+                        override_reason=override_reason)
+    if p3.distributions is None or p3.regimes is None:
+        return Phase4Run(p3.snapshot, p3.report, p3.resolution, p3.history, None, None, None, None, None)
+    cfg = loaded.config
+    paths = cfg.monte_carlo.default_paths if n_paths is None else n_paths
+    years = n_years or max(cfg.horizons_years)
+    base_year = max(p3.history.years) if p3.history.years else as_of.year - 1
+    data_hash = sha256_of({"records": hash_models([*load.financial, *load.market, *load.corporate_actions,
+                                                    *load.classifications]),
+                           "sources": sorted(load.sources)})
+    prov = {
+        "data_hash": data_hash,
+        "config_hash": sha256_of({"c": cfg.model_dump(mode="json"), "p": loaded.profile.model_dump(mode="json")}),
+        "code_version": code_version(),
+        "seed_streams": ["param_bootstrap:<driver>", "path:<i>"],
+        "estimation_seed": seed,
+    }
+    bundle = simulate_paths(regimes=p3.regimes, distributions=p3.distributions, profile=loaded.profile,
+                            n_paths=paths, n_years=years, seed=seed, mc=cfg.monte_carlo, est=cfg.estimation,
+                            base_year=base_year, provenance=prov)
+    return Phase4Run(p3.snapshot, p3.report, p3.resolution, p3.history, p3.regimes, p3.walk_forward,
+                     p3.distributions, p3.central, bundle)
+

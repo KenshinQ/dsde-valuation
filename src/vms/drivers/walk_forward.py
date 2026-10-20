@@ -1,5 +1,5 @@
 """Rolling-origin, past-only walk-forward diagnostics and model selection (SPEC §7.3, §15.1).
-WALK-FORWARD-ORIGINS-v1, MODEL-SELECTION-WF-v1.
+WALK-FORWARD-ORIGINS-v1, MODEL-SELECTION-WF-v2.
 
 For each fiscal year y of the run's history (as known at the run as_of):
 1. origin_as_of = first publication time of FY y revenue (the moment FY y became known).
@@ -140,15 +140,24 @@ def walk_forward(load: LoadResult, *, instrument_id: str, snap: PITSnapshot, his
         cov = {k: float(np.mean([r["covered"][k] for r in recs])) for k in SPECS if n}
         if n >= wf.min_origins:
             best = min(SPECS, key=lambda k: (mean_pb[k], k != wf.default_spec))
-            sel = {"selected_spec": best, "rule": "min mean walk-forward pinball (MODEL-SELECTION-WF-v1)",
+            sel = {"selected_spec": best, "rule": "min mean walk-forward pinball (MODEL-SELECTION-WF-v2)",
                    "n_scored_origins": n, "flags": []}
         else:
-            sel = {"selected_spec": wf.default_spec, "rule": "default spec: too few scored origins",
-                   "n_scored_origins": n, "flags": ["SELECTION_DEFAULT_INSUFFICIENT_ORIGINS"]}
+            sel = {"selected_spec": wf.default_spec,
+                   "rule": "default spec: too few scored origins (no silent calibration claim)",
+                   "n_scored_origins": n,
+                   "flags": ["SELECTION_DEFAULT_INSUFFICIENT_ORIGINS", "LOW_EVAL_SUPPORT"]}
         if n and "naive_last" in mean_pb and mean_pb["naive_last"] < mean_pb[sel["selected_spec"]]:
             sel["flags"] = [*sel["flags"], "NAIVE_BENCHMARK_BETTER"]   # reported, not hidden (point benchmark)
+        nom = wf.quantiles[-1] - wf.quantiles[0]
+        selected = sel["selected_spec"]
+        if n and selected in cov:
+            lo, hi = nom - wf.coverage_tolerance, nom + wf.coverage_tolerance
+            if not (lo <= cov[selected] <= hi):
+                sel["flags"] = [*sel["flags"], "COVERAGE_MISCALIBRATED"]
         per_driver[spec.name] = {"n_scored_origins": n, "mean_pinball": mean_pb, "central_interval_coverage": cov,
-                                 "nominal_central_coverage": wf.quantiles[-1] - wf.quantiles[0], "selection": sel}
+                                 "nominal_central_coverage": nom,
+                                 "coverage_tolerance": wf.coverage_tolerance, "selection": sel}
     rs = [o.regime for o in origins if o.regime]
     regime = {"n_scored": len(rs),
               "mean_brier": ({k: float(np.mean([r["brier"][k] for r in rs])) for k in rs[0]["brier"]} if rs else {}),

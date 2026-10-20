@@ -1,4 +1,4 @@
-# Data contracts (Phase 3)
+# Data contracts (Phase 4)
 
 Sources of truth: `src/vms/schemas/observations.py`, `src/vms/schemas/fields.py`,
 `src/vms/pit/snapshot.py`, `src/vms/quality/issues.py`. Artifact schema version: `vms-0.1.phase1`.
@@ -203,6 +203,13 @@ known period.
 - New config: `regimes` (states, rules, transition_prior, min_state_support, model rule_based|hmm,
   market_regime_source none) and `estimation` (history window, shrinkage strengths, Student-t df, bootstrap draws,
   walk_forward); each driver in the profile has `prior_scale` (dispersion prior in transformed space).
+
+## 6c. Phase 4 artifacts (`vms simulate`, also by `vms demo`)
+- `simulation_bundle.json`: sampler_version, seed, n_paths/n_years, dependence (method, shrunk correlation, blocks,
+  flags), central path, MC paths (possibly truncated), invalid path summaries with reason codes, diagnostics
+  (MCSE, invalid fraction, seed stability), parameter_snapshot, provenance (data/config/code hashes).
+- `paths.parquet`: full path-year driver table when embedded JSON paths are capped.
+- `simulation_metadata.json`: PATHS_ONLY_NOT_A_VALUATION / PHASE4 smoke status, sampler_version, counts.
 
 ## 7. Not yet covered
 FX conversion (SCOPE-CNY-v1); non-calendar fiscal years (FISCAL-YEAR-CALENDAR-v1); suspension/price-limit flags;

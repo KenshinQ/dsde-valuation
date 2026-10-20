@@ -1,13 +1,13 @@
-"""VMS-0.1 — standalone valuation & conditional return engine.
+"""VMS-0.1 — standalone valuation & conditional return engine for China A-shares.
 
-Phase 0 scope only: contracts, config validation, run metadata, deterministic
-seeding and an offline smoke demo. No valuation logic exists yet.
+Phases 0–4: contracts, PIT gates, deterministic statements, fundamental regimes,
+driver distributions, and correlated path sampling. No DCF / WACC / returns yet.
 """
 
 __version__ = "0.1.0.dev0"
 
 #: Version of the persisted artifact / data-contract schema.
-SCHEMA_VERSION = "vms-0.1.phase3"
+SCHEMA_VERSION = "vms-0.1.phase4"
 
 #: Phase marker embedded in artifacts so nobody mistakes smoke output for a valuation.
-IMPLEMENTED_PHASE = "PHASE_3"
+IMPLEMENTED_PHASE = "PHASE_4"

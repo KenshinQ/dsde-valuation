@@ -37,7 +37,7 @@ class DriverEstimate(BaseModel):
     value: float
     transformed_value: float
     transform: str
-    method: Literal["historical_median", "prior_fallback"]
+    method: Literal["historical_median", "prior_fallback", "selected_median"]
     n_obs: int
     observations: list[DriverObservation]
     lower: float

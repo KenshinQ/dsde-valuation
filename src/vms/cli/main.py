@@ -5,7 +5,8 @@ Implemented commands:
   build-snapshot  PIT snapshot + data_quality_report.json + data_manifest.json for one instrument
   project         PIT snapshot + gate + profile + drivers + deterministic statements (Phase 2)
   estimate        PIT snapshot + gate + fundamental regimes + walk-forward + driver distributions (Phase 3)
-  demo            offline SYNTHETIC smoke run (snapshot, gate, statements, regimes, distributions). NO valuation.
+  simulate        Phase 3 + correlated path sampler (SimulationBundle; not a valuation)
+  demo            offline SYNTHETIC smoke (snapshot, statements, regimes, distributions, paths). NO valuation.
 
 Exit codes: 0 ok, 1 unexpected error, 2 invalid input/config/arguments,
             3 BLOCKED by critical data-quality errors in production mode,
@@ -37,15 +38,16 @@ from vms.schemas import ValuationRequest, format_validation_error
 from vms.schemas.config import ConfigError, LoadedConfig, load_config
 from vms.schemas.fields import FIELD_REGISTRY_VERSION
 from vms.capital_allocation.policies import POLICIES
-from vms.pipeline import Phase2Run, Phase3Run, run_estimation, run_projection
+from vms.pipeline import Phase2Run, Phase3Run, Phase4Run, run_estimation, run_projection, run_simulation
 from vms.regimes import RegimeModelNotImplemented
 from vms.seeding import stream_rng
 
 EXIT_OK, EXIT_ERROR, EXIT_INVALID, EXIT_BLOCKED, EXIT_UNSUPPORTED, EXIT_PROJECTION = 0, 1, 2, 3, 4, 5
-SMOKE_STATUS = "PHASE3_SMOKE_NOT_A_VALUATION"
+SMOKE_STATUS = "PHASE4_SMOKE_NOT_A_VALUATION"
 DETERMINISTIC_ARTIFACTS = ("request.json", "config_snapshot.json", "data_manifest.json",
                            "data_quality_report.json", "pit_snapshot.json", "state_posterior.json",
-                           "driver_diagnostics.json", "statement_projection.json", "simulation_metadata.json")
+                           "driver_diagnostics.json", "statement_projection.json", "simulation_bundle.json",
+                           "simulation_metadata.json")
 
 
 class InputError(ValueError):
@@ -324,6 +326,103 @@ def cmd_estimate(args: argparse.Namespace) -> int:
     return EXIT_OK
 
 
+def _write_phase4(out: Path, stamp, run: Phase4Run) -> None:  # noqa: ANN001
+    """simulation_bundle.json (+ paths.parquet when many paths)."""
+    from vms.sampling import SAMPLER_VERSION
+    if run.bundle is None:
+        write_artifact(out, "simulation_bundle.json", {"status": "UNSUPPORTED_PROFILE", "bundle": None}, stamp)
+        return
+    b = run.bundle
+    paths = list(b.paths)
+    truncated = False
+    path_cap = 500
+    if len(paths) > path_cap:
+        try:
+            import pandas as pd
+            rows = []
+            for pth in paths:
+                for y in pth.years:
+                    rows.append({"path_id": pth.path_id, "year_index": y.year_index, "state": y.state,
+                                 **{f"d_{k}": v for k, v in y.drivers.items()}})
+            pd.DataFrame(rows).to_parquet(out / "paths.parquet", index=False)
+        except Exception as e:  # noqa: BLE001
+            write_artifact(out, "paths_write_error.json", {"error": str(e)}, stamp)
+        paths = paths[:path_cap]
+        truncated = True
+    payload = b.model_dump(mode="json")
+    payload["paths"] = [p.model_dump(mode="json") for p in paths]
+    payload["paths_truncated"] = truncated
+    payload["paths_embedded"] = len(paths)
+    payload["paths_total_valid"] = b.diagnostics.n_paths_valid
+    if truncated:
+        payload["paths_parquet"] = "paths.parquet"
+    write_artifact(out, "simulation_bundle.json", payload, stamp)
+    write_artifact(out, "simulation_metadata.json", {
+        "status": "PATHS_ONLY_NOT_A_VALUATION",
+        "implemented_phase": "PHASE_4",
+        "sampler_version": SAMPLER_VERSION,
+        "seed": b.seed, "n_paths": b.n_paths, "n_years": b.n_years,
+        "n_valid": b.diagnostics.n_paths_valid, "n_invalid": b.diagnostics.n_paths_invalid,
+        "invalid_fraction": b.diagnostics.invalid_fraction,
+        "parameter_snapshot": b.parameter_snapshot,
+        "provenance": b.provenance,
+        "dependence_method": b.dependence.method,
+        "diagnostics_flags": b.diagnostics.flags,
+        "warning": "Correlated driver/state paths only; no statements, DCF, WACC or returns.",
+    }, stamp)
+
+
+def _p4_summary(run: Phase4Run) -> dict:
+    if run.bundle is None:
+        return {"profile": run.resolution.status.value}
+    b = run.bundle
+    base = _p3_summary(run)  # duck-typed Phase3 fields
+    return {**base, "sampler_version": b.sampler_version, "n_paths": b.n_paths, "n_years": b.n_years,
+            "n_valid": b.diagnostics.n_paths_valid, "n_invalid": b.diagnostics.n_paths_invalid,
+            "invalid_fraction": round(b.diagnostics.invalid_fraction, 4),
+            "dependence_overlap_years": b.dependence.n_overlap_years,
+            "seed_stable": b.diagnostics.repeated_seed_stable,
+            "central_year1_state": b.central.years[0].state if b.central.years else None}
+
+
+def cmd_simulate(args: argparse.Namespace) -> int:
+    cfg = load_config(args.config)
+    mode = _mode(args, cfg)
+    as_of, note = _as_of(args.as_of)
+    load = _load(args.input)
+    seed = cfg.config.monte_carlo.default_seed if args.seed is None else args.seed
+    paths = cfg.config.monte_carlo.default_paths if args.paths is None else args.paths
+    years = args.years
+    stamp = ArtifactStamp(run_id=content_run_id(kind="simulate", instrument=args.ticker, as_of=as_of.isoformat(),
+                                                data=dataset_hash(load),
+                                                config=sha256_of({"c": cfg.config.model_dump(mode="json"),
+                                                                  "p": cfg.profile.model_dump(mode="json")}),
+                                                mode=mode, override=args.override_reason, seed=seed,
+                                                paths=paths, years=years))
+    out = Path(args.out)
+    try:
+        run = run_simulation(load, instrument_id=args.ticker, as_of=as_of, loaded=cfg, seed=seed, n_paths=paths,
+                             n_years=years, mode=mode, override_reason=args.override_reason)
+    except GateError as e:
+        snap, report = assess(load, instrument_id=args.ticker, as_of=as_of, cfg=cfg.config.quality, mode=mode)
+        _write_snapshot_bundle(out, stamp, load, args.input, as_of, note, snap, report, blocked=True)
+        print(f"error: {e}", file=sys.stderr)
+        return EXIT_BLOCKED
+    _write_snapshot_bundle(out, stamp, load, args.input, as_of, note, run.snapshot, run.report, blocked=False)
+    _write_phase3(out, stamp, run)
+    _write_phase4(out, stamp, run)
+    print(json.dumps({"run_id": stamp.run_id, "schema_version": SCHEMA_VERSION, "out": str(out), "seed": seed,
+                      **_summary(run.report), **_p4_summary(run)}, indent=2, ensure_ascii=False))
+    if run.bundle is None:
+        print(f"error: {args.ticker}: UNSUPPORTED_PROFILE ({run.resolution.reason})", file=sys.stderr)
+        return EXIT_UNSUPPORTED
+    if "INVALID_PATH_FRACTION_EXCEEDED" in run.bundle.diagnostics.flags:
+        print("error: invalid path fraction exceeded configured max", file=sys.stderr)
+        return EXIT_PROJECTION
+    return EXIT_OK
+
+
+
 def cmd_demo(args: argparse.Namespace) -> int:
     loaded = load_config(args.config)
     cfg = loaded.config
@@ -371,26 +470,38 @@ def cmd_demo(args: argparse.Namespace) -> int:
     run3 = None
     if run is not None:
         _write_phase2(out, meta, run)
-        run3 = run_estimation(load, instrument_id=synthetic.SYNTHETIC_INSTRUMENT, as_of=as_of, loaded=loaded,
-                              seed=seed, mode=mode, override_reason=args.override_reason)
-        _write_phase3(out, meta, run3, run)
+        run4 = run_simulation(load, instrument_id=synthetic.SYNTHETIC_INSTRUMENT, as_of=as_of, loaded=loaded,
+                              seed=seed, n_paths=min(paths, 500), n_years=max(horizons), mode=mode,
+                              override_reason=args.override_reason)
+        _write_phase3(out, meta, run4, run)
+        _write_phase4(out, meta, run4)
+        run3 = run4
+    else:
+        run4 = None
     smoke = stream_rng(seed, "phase0_smoke").standard_normal(5)
     write_artifact(out, "simulation_metadata.json", {
         "status": SMOKE_STATUS,
         "implemented_phase": IMPLEMENTED_PHASE,
-        "warning": "Smoke artifact. Deterministic central-case statements, fundamental regimes and driver "
-                   "distributions only; no valuation, no paths, no return distribution was computed.",
+        "warning": "Smoke artifact. Statements, regimes, distributions and correlated paths only; "
+                   "no DCF, WACC, or return distribution was computed.",
         "data_label": "SYNTHETIC — not real market data",
         "quality_status": report.status.value,
         "metadata": meta.model_dump(mode="json"),
         "rng_smoke_check": {"stream": "phase0_smoke", "first_5_standard_normal": [round(float(x), 12) for x in smoke],
                             "purpose": "proves seed determinism only"},
+        **({} if run4 is None or run4.bundle is None else {
+            "sampler_version": run4.bundle.sampler_version,
+            "n_paths_simulated": run4.bundle.n_paths,
+            "n_valid": run4.bundle.diagnostics.n_paths_valid,
+        }),
     }, meta)
     write_artifact(out, "run_context.json", {"created_at": datetime.now(ZoneInfo(cfg.timezone)).isoformat(),
                                              "deterministic_artifacts": list(DETERMINISTIC_ARTIFACTS)}, meta)
     print(json.dumps({"status": SMOKE_STATUS, "quality_status": report.status.value,
                       **({} if run is None else _p2_summary(run)),
-                      **({} if run3 is None else {"phase3": _p3_summary(run3)}), "run_id": meta.run_id,
+                      **({} if run3 is None else {"phase3": _p3_summary(run3)}),
+                      **({} if run4 is None else {"phase4": _p4_summary(run4)}),
+                      "run_id": meta.run_id,
                       "schema_version": SCHEMA_VERSION, "out": str(out), "spot_price": spot, "seed": seed,
                       "paths": paths, "data_hash": data_hash[:16], "config_hash": meta.config_hash[:16],
                       "git_sha": meta.code_version["git_sha"][:12]}, indent=2))
@@ -410,7 +521,7 @@ def _gate_args(p: argparse.ArgumentParser) -> None:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    p = argparse.ArgumentParser(prog="vms", description="VMS-0.1 valuation engine (Phase 3: regimes & driver distributions; no valuation yet)")
+    p = argparse.ArgumentParser(prog="vms", description="VMS-0.1 valuation engine (Phase 4: correlated paths; no DCF/WACC/returns yet)")
     sub = p.add_subparsers(dest="command", required=True)
     asof_help = "YYYY-MM-DD (=> 15:00 Asia/Shanghai, rule ASOF-DATE-CLOSE-v1) or ISO-8601 with offset"
 
@@ -447,6 +558,17 @@ def build_parser() -> argparse.ArgumentParser:
     es.add_argument("--seed", type=int, help="parameter-bootstrap seed (default: config monte_carlo.default_seed)")
     _gate_args(es)
     es.set_defaults(func=cmd_estimate)
+
+    sm = sub.add_parser("simulate", help="correlated driver/state paths (Phase 4; not a valuation)")
+    sm.add_argument("--input", required=True)
+    sm.add_argument("--ticker", required=True)
+    sm.add_argument("--as-of", required=True, help=asof_help)
+    sm.add_argument("--out", required=True)
+    sm.add_argument("--seed", type=int)
+    sm.add_argument("--paths", type=int, help="Monte Carlo paths (default: config monte_carlo.default_paths)")
+    sm.add_argument("--years", type=int, help="projection years (default: max horizons_years)")
+    _gate_args(sm)
+    sm.set_defaults(func=cmd_simulate)
 
     d = sub.add_parser("demo", help="offline SYNTHETIC smoke run (no valuation)")
     d.add_argument("--policy", choices=sorted(POLICIES))

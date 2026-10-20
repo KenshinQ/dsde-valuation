@@ -5,18 +5,16 @@ table in sync; regenerate with `python scripts/gen_assumptions_doc.py`. Artifact
 (e.g. `statement_projection.json → assumptions`). **Changing an assumption means adding `-v2`, never silently
 editing `-v1`.** Superseded IDs stay listed and can no longer be cited (`cite()` raises).
 
-Owner decisions: scope/data items (ASOF, SCOPE-CNY, PIT-INCOMPLETE, PRICE-REVISION-DEFER, RIGHTS-ADJ-DEFER,
-STALENESS, SOURCE-CONFLICT) after Phase 1 review; ANNUAL-BASE-STALENESS, INDUSTRY-UNCLASSIFIED-v2,
-DIVIDEND-T-PLUS-1, ANNOUNCED-DIVIDEND-BASE, INTEREST-OPENING-DEBT-v2, REVOLVER-RATE, CASH-INTEREST-ZERO,
-BS-RESIDUAL-WARN, LEASE-BRIDGE-DEBTLIKE, MINORITY-BOOK-BRIDGE, WACC-INPUTS-DEFERRED after Phase 2 review (2026-10-20).
+Owner decisions: scope/data after Phase 1; Phase 2 follow-ups (2026-10-20); Phase 3 review (2026-10-20):
+CENTRAL-FROM-SELECTED, persistence_t selection, REGIME-CLOCK-MISMATCH, INDUSTRY-PRIORS-DEFER,
+MODEL-SELECTION-WF-v2 eval gates; Phase 6 WACC-INPUTS-v1 (same day).
 
 ## Notes for later phases
-- **Phase 4:** sample parameters from the persisted parameter-uncertainty draws and the Dirichlet transition
-  posterior; do not collapse the uncertainty types (SPEC §8.1).
 - **Phase 5:** dilution from rights issues/placements enters through share-count paths (RIGHTS-ADJ-DEFER-v1).
-- **Phase 6:** leases are debt-like in the bridge and FCFF must not also deduct lease principal (LEASE-BRIDGE-DEBTLIKE-v1).
-  Minority interest at book (MINORITY-BOOK-BRIDGE-v1). Dividends declared on the final FY are unpaid at the horizon
-  (DIVIDEND-T-PLUS-1-v1). WACC inputs need an owner decision (WACC-INPUTS-DEFERRED-v1).
+  Path-wise statements consume SimulationBundle drivers.
+- **Phase 6:** leases debt-like in the bridge (LEASE-BRIDGE-DEBTLIKE-v1); minority at book
+  (MINORITY-BOOK-BRIDGE-v1); unpaid final-FY dividends (DIVIDEND-T-PLUS-1-v1); WACC-INPUTS-v1
+  (10y CGB RF, ERP 6% default swept, beta vs CSI 300 2y weekly shrink-to-1).
 - **Phase 7:** holders at as_of receive announced dividends with ex_date > as_of (ANNOUNCED-DIVIDEND-BASE-v1).
 - **Phase 9:** exclude snapshots with `pit_complete == false` from unbiased evaluation metrics (PIT-INCOMPLETE-v1).
 
@@ -63,7 +61,8 @@ BS-RESIDUAL-WARN, LEASE-BRIDGE-DEBTLIKE, MINORITY-BOOK-BRIDGE, WACC-INPUTS-DEFER
 | `BS-RESIDUAL-WARN-v1` | active | The base-year unexplained balance-sheet residual (assets - liabilities - equity under source definitions) is held constant. If abs(residual) > bs_residual_warn_ratio (default 5%) x total assets => WARNING BASE_BS_RESIDUAL_LARGE. |
 | `LEASE-BRIDGE-DEBTLIKE-v1` | active | (Phase 6) Lease liabilities are debt-like in the EV-to-equity bridge. Since FCFF (LEASES-EXCLUDED-v1) does not deduct lease principal, it must not be deducted twice. |
 | `MINORITY-BOOK-BRIDGE-v1` | active | (Phase 6) Minority interest is deducted in the bridge at book value (labeled approximation). Minority dividends are not modelled. |
-| `WACC-INPUTS-DEFERRED-v1` | active | WACC / cost-of-equity inputs (risk-free rate, ERP, beta source) are deferred to Phase 6 and require an owner decision. Phase 2 only defines the typed rates. |
+| `WACC-INPUTS-DEFERRED-v1` | superseded by `WACC-INPUTS-v1` | WACC / cost-of-equity inputs (risk-free rate, ERP, beta source) are deferred to Phase 6 and require an owner decision. Phase 2 only defines the typed rates. |
+| `WACC-INPUTS-v1` | active | Phase 6 WACC / cost of equity (owner decision 2026-10-20): risk-free = 10-year China government bond yield known at as_of (PIT); equity risk premium default 6% (swept in sensitivity); beta vs CSI 300, estimated on 2-year weekly returns, shrunk toward 1. |
 | `REGIME-PIT-FUNDAMENTALS-ONLY-v1` | active | Fundamental regimes are inferred from PIT financial records only (TTM revenue growth, TTM recurring EBIT margin and its yoy change). Never from prices, returns or any post-as_of information. |
 | `REGIME-RULES-v1` | active | Rule-based soft classifier: logistic memberships for strong growth, contraction and margin compression; RECOVERY = improvement after a weak (DETERIORATING/RECOVERY) prior period. Thresholds are placeholders. Filter only (no smoothing with later periods). |
 | `REGIME-TRANSITION-DIRICHLET-v1` | active | Annual-step transitions from soft-label expected counts of (p, p+1y) pairs (overlapping quarterly pairs weighted 1/4), with a per-row Dirichlet prior (stay/move pseudo-counts). Rows with little support are flagged prior-dominated. |
@@ -76,5 +75,12 @@ BS-RESIDUAL-WARN, LEASE-BRIDGE-DEBTLIKE, MINORITY-BOOK-BRIDGE, WACC-INPUTS-DEFER
 | `PRIORS-GLOBAL-v1` | active | Profile priors (prior, prior_scale) act as the global prior. A dedicated sector profile supplies sector priors through its own driver-profile file. All are placeholders. |
 | `PARAM-UNCERTAINTY-BOOTSTRAP-v1` | active | Parameter uncertainty: nonparametric bootstrap of the full pooled estimator (resample observations, re-shrink), seeded per driver stream. Draws are persisted for Phase 4. Walk-forward predictive scales add the analytic se = s/sqrt(n+k). |
 | `WALK-FORWARD-ORIGINS-v1` | active | Rolling-origin evaluation: at each FY origin the snapshot is rebuilt as known at the first publication of that FY (past-only data, including versions). Specs are fitted there and score the next FY value as known at the run as_of. |
-| `MODEL-SELECTION-WF-v1` | active | Driver-distribution specs are selected per driver by mean walk-forward pinball loss (transformed space). Fewer than min_origins scored origins => the configured default spec (flagged). In-sample fit is reported but never used for selection. |
-| `DRIVER-DEPENDENCE-PHASE4-v1` | active | Phase 3 estimates marginal (regime-conditional) distributions only. Dependence between drivers is modelled by the Phase 4 sampler (regime-conditional block bootstrap / shrunk correlations). |
+| `MODEL-SELECTION-WF-v1` | superseded by `MODEL-SELECTION-WF-v2` | Driver-distribution specs are selected per driver by mean walk-forward pinball loss (transformed space). Fewer than min_origins scored origins => the configured default spec (flagged). In-sample fit is reported but never used for selection. |
+| `MODEL-SELECTION-WF-v2` | active | Driver-distribution specs selected by mean walk-forward pinball (transformed space). Candidates: prior_only, pooled_t, pooled_empirical, regime_t, persistence_t (last observation + shrunk dispersion). Point benchmark naive_last is scored but not selectable. Fewer than min_origins scored origins => default spec + SELECTION_DEFAULT_INSUFFICIENT_ORIGINS + LOW_EVAL_SUPPORT (diagnostics marked low-confidence; no silent calibration claim). Selected-spec central-interval coverage outside nominal +/- coverage_tolerance => COVERAGE_MISCALIBRATED warning. |
+| `DRIVER-DEPENDENCE-PHASE4-v1` | superseded by `DRIVER-DEPENDENCE-v1` | Phase 3 estimates marginal (regime-conditional) distributions only. Dependence between drivers is modelled by the Phase 4 sampler (regime-conditional block bootstrap / shrunk correlations). |
+| `DRIVER-DEPENDENCE-v1` | active | Phase 4: drivers are drawn jointly via a Gaussian copula over shrunk residual correlations in transformed space (identity target). Material blocks (DEMAND_PROFIT, WORKING_CAPITAL, REINVESTMENT, CAPITAL) are never sampled independently. Within-regime residual correlations are used when a state has enough overlapping years; otherwise the pooled shrunk matrix. Small n => heavy shrink (flagged). |
+| `REGIME-CLOCK-MISMATCH-v1` | active | VMS-0.1 keeps quarterly/TTM fundamental regimes with annual driver observations (REGIME-ANNUAL-LABEL-v1). Known clock mismatch; annual-only regimes are deferred. |
+| `INDUSTRY-PRIORS-DEFER-v1` | active | Sector/industry priors need a cross-sectional panel and are out of VMS-0.1 scope. Keep global profile priors + shrinkage (PRIORS-GLOBAL-v1). |
+| `CENTRAL-FROM-SELECTED-v1` | active | Phase 4 central scenario uses the walk-forward-selected, shrunk distribution (median / q=0.5 in transformed space, inverse-transformed and clipped). Phase 2 deterministic projection still uses DRIVER-CENTRAL-MEDIAN-v1. |
+| `PATH-SAMPLER-v1` | active | Per path: (1) sample parameters from persisted bootstrap draws (or analytic fallback); (2) sample initial fundamental state from current posterior; (3) simulate annual transitions from a Dirichlet draw of the transition posterior; (4) sample correlated driver shocks conditional on state and, for persistence_t, the lagged z; (5) enforce documented bounds/accounting constraints; (6) reject invalid paths with reason codes. Process and parameter uncertainty stay separate (SPEC section 8.1). |
+| `PATH-CONSTRAINTS-v1` | active | Driver bounds from the profile. Soft repairs: clip to [lower, upper]; if ebit_margin > gross_margin set ebit_margin = gross_margin (flagged MARGIN_ORDER_REPAIRED). Hard rejects: non-finite draws, growth <= -1 after inverse, empty parameter draws (BOUND_VIOLATION, GROWTH_UNDEFINED, PARAMETER_DRAW_EMPTY, DEPENDENCE_DRAW_FAILED). |

@@ -9,7 +9,7 @@ Per driver, in TRANSFORMED space z = T(x) (DRIVER-TRANSFORMS-v1):
   k_regime. Otherwise the pooled estimate is used (REGIME_POOLED_FALLBACK).
 - Families (DRIVER-FAMILY-v1): Student-t(df) or empirical standardized residuals.
 - Parameter uncertainty (PARAM-UNCERTAINTY-BOOTSTRAP-v1): bootstrap of the whole pooled estimator.
-- Specs (model uncertainty): prior_only, pooled_t, pooled_empirical, regime_t; naive_last is a
+- Specs (model uncertainty): prior_only, pooled_t, pooled_empirical, regime_t, persistence_t (last obs + shrunk dispersion); naive_last is a
   benchmark only. Selection is done by walk-forward (vms.drivers.walk_forward), never in-sample.
 Quantiles are back-transformed to raw units and clipped to bounds (monotone => quantiles map).
 Dependence between drivers is Phase 4 (DRIVER-DEPENDENCE-PHASE4-v1).
@@ -31,7 +31,7 @@ from vms.schemas.config import DriverSpec, EstimationConfig
 from vms.seeding import stream_rng
 
 DISTRIBUTION_VERSION = "DRIVER-DIST-1"
-SPECS = ("prior_only", "pooled_t", "pooled_empirical", "regime_t")
+SPECS = ("prior_only", "pooled_t", "pooled_empirical", "regime_t", "persistence_t")
 BENCHMARKS = ("naive_last",)
 MAD_K = 1.4826
 
@@ -274,6 +274,15 @@ def fit_specs(obs: Sequence[DistObservation], spec: DriverSpec, states: Sequence
                           math.sqrt(sum(w * (sc ** 2 + m ** 2) for w, m, sc in comps)
                                     - sum(w * m for w, m, _ in comps) ** 2),
                           dict(zip(qs, t_mix_quantiles(qs, comps, df))), regime=regime, flags=rflags)
+    # persistence_t: last observation as location + shrunk pooled dispersion (selectable; MODEL-SELECTION-WF-v2)
+    if n:
+        last = float(z[-1])
+        fits["persistence_t"] = mk("persistence_t", "student_t", last, s,
+                                   {q: last + sp * tq[q] for q in qs},
+                                   flags=["PERSISTENCE_LAST_PLUS_SHRUNK_SCALE"])
+    else:
+        fits["persistence_t"] = fits["pooled_t"].model_copy(
+            update={"spec_id": "persistence_t", "flags": sorted({*fits["pooled_t"].flags, "PRIOR_FALLBACK"})})
     bench: dict[str, SpecFit] = {}
     if n:
         last = float(z[-1])
@@ -332,7 +341,7 @@ def estimate_distribution(history: AnnualHistory, spec: DriverSpec, *, state_wei
         observations=obs, prior_loc_z=_prior_z(spec, cfg), prior_scale_z=spec.prior_scale, loc_hat=loc_hat,
         scale_hat=s_hat, shrink_weight_data=n / (n + k), specs=fits, benchmarks=bench, selected_spec=sel,
         selection=selection, parameter_uncertainty=pu, uncertainty=uncertainty,
-        low_confidence="LOW_CONFIDENCE" in flags, flags=sorted(flags))
+        low_confidence=("LOW_CONFIDENCE" in flags or "LOW_EVAL_SUPPORT" in flags), flags=sorted(flags))
 
 
 class DistributionModel(_M):
@@ -373,6 +382,6 @@ def build_distribution_model(history: AnnualHistory, profile, *, regimes, walk_f
                       "states": states},
         history_years=history.years, drivers=out,
         assumptions=cite("DRIVER-TRANSFORMS-v1", "DRIVER-DIST-v1", "DRIVER-FAMILY-v1", "PRIORS-GLOBAL-v1",
-                         "PARAM-UNCERTAINTY-BOOTSTRAP-v1", "WALK-FORWARD-ORIGINS-v1", "MODEL-SELECTION-WF-v1",
-                         "REGIME-ANNUAL-LABEL-v1", "DRIVER-DEPENDENCE-PHASE4-v1", "DRIVER-PRIORS-PLACEHOLDER-v1",
+                         "PARAM-UNCERTAINTY-BOOTSTRAP-v1", "WALK-FORWARD-ORIGINS-v1", "MODEL-SELECTION-WF-v2",
+                         "REGIME-ANNUAL-LABEL-v1", "DRIVER-DEPENDENCE-v1", "CENTRAL-FROM-SELECTED-v1", "REGIME-CLOCK-MISMATCH-v1", "INDUSTRY-PRIORS-DEFER-v1", "DRIVER-PRIORS-PLACEHOLDER-v1",
                          "ANNUAL-BASE-v1", "DIVIDEND-T-PLUS-1-v1"))

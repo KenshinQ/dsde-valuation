@@ -90,7 +90,10 @@ class DriverProfile(_Strict):
 class MonteCarloConfig(_Strict):
     default_paths: int = Field(gt=0, le=10_000_000)
     default_seed: int = Field(ge=0, lt=2**63)
-    max_invalid_path_fraction: float = Field(gt=0, lt=1, description="consumed in Phase 4/5")
+    max_invalid_path_fraction: float = Field(gt=0, lt=1, description="reject run / flag when invalid fraction exceeds this")
+    correlation_prior_strength: float = Field(gt=0, description="shrink residual correlations toward identity")
+    min_correlation_years: int = Field(ge=1, description="below => CORRELATION_SPARSE_HEAVY_SHRINK")
+    artifact_path_cap: int = Field(ge=0, le=100_000, description="max MC paths embedded in simulation_bundle.json; 0=all")
 
 
 class EntryPriceGridConfig(_Strict):
@@ -287,7 +290,8 @@ class WalkForwardConfig(_Strict):
     min_train_years: int = Field(ge=1, description="annual observations needed before the first origin")
     min_origins: int = Field(ge=1, description="fewer scored origins => default spec, never in-sample selection")
     quantiles: list[float] = Field(min_length=1)
-    default_spec: Literal["pooled_t", "pooled_empirical", "regime_t", "prior_only"]
+    default_spec: Literal["pooled_t", "pooled_empirical", "regime_t", "prior_only", "persistence_t"]
+    coverage_tolerance: float = Field(gt=0, lt=0.5, description="flag COVERAGE_MISCALIBRATED when |coverage - nominal| > this")
 
     @field_validator("quantiles")
     @classmethod

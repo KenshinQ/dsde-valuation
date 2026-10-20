@@ -34,7 +34,7 @@ def test_estimate_artifacts_and_provenance(tmp_path, capsys):
     sp = json.loads((out / "state_posterior.json").read_text())
     dd = json.loads((out / "driver_diagnostics.json").read_text())
     for art in (sp, dd):
-        assert art["run_id"] == summ["run_id"] and art["schema_version"] == "vms-0.1.phase3"
+        assert art["run_id"] == summ["run_id"] and art["schema_version"] == "vms-0.1.phase4"
     # distinct schemas; market UNAVAILABLE
     assert sp["fundamental"]["kind"] == "FUNDAMENTAL" and sp["fundamental"]["inputs"] == "PIT_FUNDAMENTALS_ONLY"
     assert sp["market"] == {**sp["market"], "kind": "MARKET", "status": "UNAVAILABLE", "probabilities": None}
@@ -52,7 +52,7 @@ def test_estimate_artifacts_and_provenance(tmp_path, capsys):
     g = dist["drivers"]["revenue_growth"]
     assert all(o["refs"] for o in g["observations"]) and g["parameter_uncertainty"]["draws_loc"]
     assert g["selection"]["rule"].startswith("min mean walk-forward pinball")
-    assert "MODEL-SELECTION-WF-v1" in dist["assumptions"]
+    assert "MODEL-SELECTION-WF-v2" in dist["assumptions"]
     assert "REGIME-PIT-FUNDAMENTALS-ONLY-v1" in sp["fundamental"]["assumptions"]
 
 

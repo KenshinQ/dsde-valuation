@@ -69,7 +69,9 @@ def test_too_few_origins_default_flagged():
     r = est(load, as_of)
     assert len(r.walk_forward.origins) < WF.min_origins
     d = r.distributions.drivers["ebit_margin"]
-    assert d.selected_spec == WF.default_spec and "SELECTION_DEFAULT_INSUFFICIENT_ORIGINS" in d.flags
+    assert d.selected_spec == WF.default_spec
+    assert {"SELECTION_DEFAULT_INSUFFICIENT_ORIGINS", "LOW_EVAL_SUPPORT"} <= set(d.flags)
+    assert d.low_confidence
 
 
 def test_diagnostics_content(cyc):
@@ -77,6 +79,7 @@ def test_diagnostics_content(cyc):
     pd = r.walk_forward.per_driver["revenue_growth"]
     assert pd["n_scored_origins"] == len(r.walk_forward.origins)
     assert set(pd["mean_pinball"]) == {*SPECS, "naive_last"}
+    assert "persistence_t" in SPECS
     assert all(0 <= v <= 1 for v in pd["central_interval_coverage"].values())
     assert pd["nominal_central_coverage"] == pytest.approx(WF.quantiles[-1] - WF.quantiles[0])
     reg = r.walk_forward.regime

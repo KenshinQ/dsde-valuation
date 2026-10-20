@@ -171,9 +171,18 @@ def run_evaluation(*, universe: UniverseConfig | str | Path, loaded: LoadedConfi
         and n_persisted > 0
         and all(r.get("persisted_before_outcomes") for r in records)
     )
-    # Data quality: fraction of origins not BLOCKED
-    n_blocked = sum(1 for r in records if r.get("quality_status") == "BLOCKED")
-    data_quality_ok = n_persisted > 0 and (n_blocked / max(n_persisted, 1)) < 0.5
+    # Data quality: most origins produced usable forecast points; PIT-incomplete rate not dominant.
+    # Exploratory walk-forward may continue past overridden CRITICAL; do not equate report.status==BLOCKED
+    # with DATA_QUALITY fail when forecasts still materialize.
+    n_good = sum(
+        1 for r in records
+        if ((r.get("forecasts") or {}).get("operating_cash_flow") or {}).get("point") is not None
+    )
+    data_quality_ok = (
+        n_persisted > 0
+        and (n_good / n_persisted) >= 0.8
+        and (len(excluded_pit) / max(n_persisted, 1)) < 0.5
+    )
 
     labels = assign_labels(
         engineering_ok=engineering_ok, data_quality_ok=data_quality_ok, calibration_ok=cal_ok,

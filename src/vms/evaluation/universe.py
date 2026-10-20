@@ -23,7 +23,6 @@ TZ = ZoneInfo("Asia/Shanghai")
 
 CF_FIELDS = frozenset({
     "cash_flow_from_operations", "capex", "acquisitions_net", "dividends_paid", "share_repurchases",
-    "depreciation_amortization",
 })
 
 

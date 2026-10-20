@@ -19,7 +19,8 @@ Not started: Phase 10 (DSDE adapter / release readiness).
 - Tests: `test_evaluation.py`, `test_cli_evaluate.py`
 
 ## Tests
-- **453 passed** (~224 s box). Leakage **6/6 KILLED**; invariant **7/7 KILLED**. Clean-clone in verification commit.
+- **453 passed** (~224 s box; clean clone uv/py3.11: **453 passed** in 254 s; `vms evaluate` exit 0, labels ENGINEERING_PASS + DATA_QUALITY_PASS + INVESTMENT_VALUE_NOT_ESTABLISHED).
+- Leakage **6/6 KILLED**; invariant **7/7 KILLED**.
 
 ## Acceptance evidence
 

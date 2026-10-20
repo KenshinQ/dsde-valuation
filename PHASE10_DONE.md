@@ -59,8 +59,9 @@ Stopped after Phase 10 (no Phase 11 invented).
 | 9 | No profitability claim without predeclared leakage-safe OOS evidence | labels always NOT_ESTABLISHED on synthetic; **no alpha claim** |
 
 ## Tests
-- Full pytest (box + clean py3.11 clone) — see Chinese report / RELEASE_NOTES for counts.
-- Leakage + invariant mutation checks remain green.
+- **462 passed** (box ~228 s; clean uv/py3.11 clone ~267 s).
+- E2E `scripts/e2e_offline_demo.sh` PASS (clean clone).
+- Leakage **6/6 KILLED**; invariant **7/7 KILLED**.
 
 ## Remaining known limitations (real A-share)
 1. **HiThink / live provider adapter is future work** — VMS-0.1 ingests offline CSV/Parquet + SYNTHETIC only.

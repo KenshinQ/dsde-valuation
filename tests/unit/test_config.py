@@ -43,6 +43,9 @@ def test_shipped_configs_valid(repo):
     (lambda c: c["returns"].update(loss_thresholds=[0.2]), ["loss_thresholds", "-0.2"]),
     (lambda c: c["returns"].update(cvar_levels=[95]), ["cvar_levels", "0.95"]),
     (lambda c: c.pop("monte_carlo"), ["monte_carlo", "Field required"]),
+    (lambda c: c["quality"].update(balance_sheet_rel_tol=0), ["quality.balance_sheet_rel_tol"]),
+    (lambda c: c["quality"].update(unit_jump_ratio=1), ["quality.unit_jump_ratio", "greater than 1"]),
+    (lambda c: c.pop("quality"), ["quality", "Field required"]),
     (lambda c: c.update(unknown_key=1), ["unknown_key", "Extra inputs"]),
 ])
 def test_invalid_config_actionable(tmp_path, repo, mutate, needles):

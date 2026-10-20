@@ -18,10 +18,12 @@ def main() -> None:
     p = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     p.add_argument("--seed", type=int, default=42)
     p.add_argument("--out", required=True)
+    p.add_argument("--format", choices=["csv", "parquet"], default="csv")
     a = p.parse_args()
-    fin, mkt = synthetic.generate(a.seed)
-    write_directory(a.out, fin, mkt)
-    print(f"SYNTHETIC data written to {a.out}: {len(fin)} financial, {len(mkt)} market records (seed={a.seed})")
+    fin, mkt, ca = synthetic.generate(a.seed)
+    write_directory(a.out, fin, mkt, ca, synthetic.source_descriptors(), fmt=a.format)
+    print(f"SYNTHETIC data written to {a.out}: {len(fin)} financial, {len(mkt)} market, "
+          f"{len(ca)} corporate-action records (seed={a.seed})")
 
 
 if __name__ == "__main__":

@@ -1,1 +1,1 @@
-"""Point-in-time snapshots and availability-time filtering. NOT IMPLEMENTED (Phase 1)."""
+"""Point-in-time snapshots and availability-time filtering. Phase 1: implemented."""

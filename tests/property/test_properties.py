@@ -25,9 +25,9 @@ def test_fixed_seed_reproduces_stream(seed, name):
 @settings(max_examples=15, deadline=None)
 @given(seed=st.integers(min_value=0, max_value=10_000))
 def test_fixed_seed_reproduces_synthetic_data(seed):
-    a = synthetic.generate(seed, n_quarters=4)
-    b = synthetic.generate(seed, n_quarters=4)
-    assert hash_models([*a[0], *a[1]]) == hash_models([*b[0], *b[1]])
+    a = synthetic.generate(seed)
+    b = synthetic.generate(seed)
+    assert hash_models([*a[0], *a[1], *a[2]]) == hash_models([*b[0], *b[1], *b[2]])
 
 
 @given(h=st.lists(st.integers(min_value=-50, max_value=50), min_size=1, max_size=6),

@@ -147,6 +147,17 @@ class ReturnsConfig(_Strict):
         return sorted(v)
 
 
+class QualityConfig(_Strict):
+    """Phase 1 integrity-gate thresholds (explicit, versioned assumptions)."""
+
+    balance_sheet_rel_tol: float = Field(gt=0, lt=0.5, description="|A-L-E|/A above this => warning")
+    share_change_rel_tol: float = Field(gt=0, lt=0.5, description="unexplained share change above this => warning")
+    adj_factor_rel_tol: float = Field(gt=0, lt=0.5, description="vendor adj-factor jump above this w/o known action")
+    unit_jump_ratio: float = Field(gt=1, description="value ratio between versions/periods suggesting unit error")
+    max_capex_to_revenue: float = Field(gt=0, description="capex/revenue above this => cash-flow unit warning")
+    late_publication_days: int = Field(gt=0, description="published more than this many days after period_end => INFO")
+
+
 class VMSConfig(_Strict):
     configuration_version: str = Field(min_length=1)
     mode: Literal["production", "exploratory"]
@@ -158,6 +169,7 @@ class VMSConfig(_Strict):
     entry_price_grid: EntryPriceGridConfig
     terminal_value: TerminalValueConfig
     returns: ReturnsConfig
+    quality: QualityConfig
 
     @field_validator("timezone")
     @classmethod

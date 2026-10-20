@@ -2,9 +2,9 @@
 
 Standalone valuation & conditional return engine for China A-shares. Spec: [SPEC.md](SPEC.md).
 
-**Status: Phase 0 only** (contracts, config validation, run metadata, deterministic seeding,
-offline smoke demo). There is **no valuation logic yet**; `vms demo` output is labeled
-`PHASE0_SMOKE_NOT_A_VALUATION`. See [PHASE0_DONE.md](PHASE0_DONE.md).
+**Status: Phases 0–1 done.** Phase 0: contracts, config, run metadata, seeding. Phase 1: PIT data
+and integrity gates. There is **no valuation logic yet**; `vms demo` output is labeled
+`PHASE1_SMOKE_NOT_A_VALUATION`. See [PHASE0_DONE.md](PHASE0_DONE.md) and [PHASE1_DONE.md](PHASE1_DONE.md).
 
 Fully standalone: does not import `dsde-engine` or any legacy PIT/FTD/DV1/Monte-Carlo code
 (enforced by `tests/unit/test_no_legacy_imports.py`).
@@ -28,7 +28,9 @@ Python 3.11 floor:
 uv pip compile pyproject.toml --extra dev --python-version 3.11 -o requirements.lock
 ```
 
-Runtime deps: numpy, pandas, scipy, pydantic, pyyaml (SPEC §3.3 suggested set + YAML config).
+Runtime deps: numpy, pandas, scipy, pydantic, pyyaml (SPEC §3.3 suggested set + YAML config),
+**pyarrow**. pyarrow is justified because Phase 1 requires Parquet ingestion (§18) and §13 path outputs
+use Parquet. It is the pandas Parquet engine and is never imported directly by `src/`.
 Dev deps: pytest, **hypothesis** — justification: SPEC §19 mandates property-based tests
 (monotonicity, seed reproducibility, posterior normalization); hypothesis is the standard tool,
 is test-only and never imported by `src/`.
@@ -37,12 +39,18 @@ scipy is locked but not yet imported (first use expected in Phase 3/4 distributi
 ## CLI
 
 ```bash
-vms validate-data --input <dir> [--as-of 2026-06-30]   # schema validation only (Phase 0)
-vms demo --out runs/demo --seed 42 [--paths N] [--horizons 1,3,5] [--as-of ISO8601+08:00]
+vms validate-data --input <dir> [--as-of 2026-06-30] [--ticker ID]       # schema; + PIT/quality gates with --as-of
+vms build-snapshot --input <dir> --ticker 000001.SZ --as-of 2026-06-30 --out runs/snap
+vms demo --out runs/demo --seed 42 [--format csv|parquet] [--as-of ...]  # SYNTHETIC smoke, no valuation
+# gate options on all three: --mode production|exploratory  --override-reason "..."  --config path
 ```
-Exit codes: `0` ok, `2` invalid input/config, `1` unexpected error.
-`build-snapshot`, `value`, `sensitivity`, `evaluate` (SPEC §16.2) are not registered until
-their phases are implemented.
+Date-only `--as-of` = 15:00:00 Asia/Shanghai (rule ASOF-DATE-CLOSE-1).
+Exit codes: `0` ok, `1` unexpected error, `2` invalid input/config/args, `3` BLOCKED by critical
+data-quality errors in production mode.
+`value`, `sensitivity`, `evaluate` (SPEC §16.2) are not registered until their phases are implemented.
+
+Leakage mutation check: `scripts/leakage_mutation_check.sh`. It injects 4 PIT-filter leaks and
+requires `tests/leakage` to fail on each.
 
 ## Layout
 `src/vms/<module>/` follows SPEC §17. Modules for later phases exist as empty packages whose

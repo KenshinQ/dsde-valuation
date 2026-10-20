@@ -7,7 +7,7 @@ import pytest
 SPEC_MODULES = ["schemas", "data", "pit", "quality", "drivers", "regimes", "sampling", "statements",
                 "capital_allocation", "valuation", "equity_bridge", "returns", "diagnostics",
                 "evaluation", "reporting", "cli"]
-UNIMPLEMENTED = ["pit", "quality", "drivers", "regimes", "sampling", "statements", "capital_allocation",
+UNIMPLEMENTED = ["drivers", "regimes", "sampling", "statements", "capital_allocation",
                  "valuation", "equity_bridge", "returns", "diagnostics", "evaluation"]
 
 

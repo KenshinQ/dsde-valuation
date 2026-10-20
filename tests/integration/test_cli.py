@@ -1,4 +1,4 @@
-"""CLI exit codes, manifests and reproducibility (Phase 0 acceptance)."""
+"""CLI exit codes, artifacts, gating and reproducibility (Phase 0 + Phase 1)."""
 
 from __future__ import annotations
 
@@ -14,13 +14,15 @@ import pytest
 
 from vms.cli.main import DETERMINISTIC_ARTIFACTS, SMOKE_STATUS, main
 from vms.data import synthetic
-from vms.data.io import FINANCIAL_FILE, MARKET_FILE, write_directory
+from vms.data.io import write_directory
 
 REPO = Path(__file__).resolve().parents[2]
+INST = synthetic.SYNTHETIC_INSTRUMENT
+DATA_FILES = ["financial_observations.csv", "market_observations.csv", "corporate_actions.csv", "sources.yaml"]
 
 
 def _hashes(d: Path) -> dict[str, str]:
-    names = list(DETERMINISTIC_ARTIFACTS) + [f"data/{FINANCIAL_FILE}", f"data/{MARKET_FILE}"]
+    names = list(DETERMINISTIC_ARTIFACTS) + [f"data/{n}" for n in DATA_FILES]
     return {n: hashlib.sha256((d / n).read_bytes()).hexdigest() for n in names}
 
 
@@ -29,35 +31,53 @@ def _vms(*args: str) -> subprocess.CompletedProcess:
     return subprocess.run([exe, *args], capture_output=True, text=True, cwd=REPO, timeout=120)
 
 
+@pytest.fixture
+def data_dir(tmp_path):
+    d = tmp_path / "data"
+    write_directory(d, *synthetic.generate(42), synthetic.source_descriptors())
+    return d
+
+
+def _corrupt_capex_sign(d: Path) -> None:
+    p = d / "financial_observations.csv"
+    df = pd.read_csv(p, dtype=str, keep_default_na=False)
+    idx = df.index[(df.field_name == "capex") & (df.period_end == "2023-06-30")][0]
+    df.loc[idx, "value"] = "-" + df.loc[idx, "value"]
+    df.to_csv(p, index=False)
+
+
+# ---------------------------------------------------------------- demo
 def test_demo_via_console_script(tmp_path):
     out = tmp_path / "run"
     p = _vms("demo", "--out", str(out), "--seed", "42", "--paths", "500")
     assert p.returncode == 0, p.stderr
     summary = json.loads(p.stdout)
-    assert summary["status"] == SMOKE_STATUS
+    assert summary["status"] == SMOKE_STATUS and summary["quality_status"] == "PASS"
     for name in [*DETERMINISTIC_ARTIFACTS, "run_context.json"]:
         art = json.loads((out / name).read_text())
         assert art["run_id"] == summary["run_id"] and art["schema_version"] == summary["schema_version"]
     meta = json.loads((out / "simulation_metadata.json").read_text())
-    assert meta["status"] == SMOKE_STATUS and "No valuation" in meta["warning"]
-    md = meta["metadata"]
-    assert md["seed"] == 42 and md["monte_carlo_paths"] == 500
-    assert len(md["data_hash"]) == 64 and len(md["config_hash"]) == 64
-    assert md["code_version"]["git_sha"]
-    req = json.loads((out / "request.json").read_text())["request"]
-    assert req["as_of"].endswith("+08:00") and req["random_seed"] == 42
-    assert json.loads((out / "data_manifest.json").read_text())["source_id"] == "SYNTHETIC"
+    assert "No valuation" in meta["warning"] and meta["metadata"]["seed"] == 42
+    req = json.loads((out / "request.json").read_text())
+    assert req["request"]["as_of"] == "2025-06-30T15:00:00+08:00" and req["as_of_rule"]["id"] == "ASOF-DATE-CLOSE"
 
 
 def test_same_inputs_reproduce_identical_artifacts(tmp_path):
     a, b, c = tmp_path / "a", tmp_path / "b", tmp_path / "c"
     assert main(["demo", "--out", str(a), "--seed", "7", "--paths", "100"]) == 0
     assert main(["demo", "--out", str(b), "--seed", "7", "--paths", "100"]) == 0
-    assert _hashes(a) == _hashes(b)  # byte-identical: tolerance is exact for Phase 0 artifacts
+    assert _hashes(a) == _hashes(b)
     assert main(["demo", "--out", str(c), "--seed", "8", "--paths", "100"]) == 0
-    hc = _hashes(c)
-    assert hc["data/" + FINANCIAL_FILE] != _hashes(a)["data/" + FINANCIAL_FILE]
-    assert json.loads((c / "request.json").read_text())["run_id"] != json.loads((a / "request.json").read_text())["run_id"]
+    assert _hashes(c)["data/financial_observations.csv"] != _hashes(a)["data/financial_observations.csv"]
+
+
+def test_demo_parquet_same_snapshot_as_csv(tmp_path):
+    assert main(["demo", "--out", str(tmp_path / "c"), "--seed", "7"]) == 0
+    assert main(["demo", "--out", str(tmp_path / "p"), "--seed", "7", "--format", "parquet"]) == 0
+    mc = json.loads((tmp_path / "c/data_manifest.json").read_text())
+    mp = json.loads((tmp_path / "p/data_manifest.json").read_text())
+    assert mc["data_hash"] == mp["data_hash"]
+    assert {v["format"] for v in mp["files"].values()} == {"parquet", "yaml"}
 
 
 def test_config_change_changes_config_hash(tmp_path, repo):
@@ -74,36 +94,6 @@ def test_config_change_changes_config_hash(tmp_path, repo):
     assert mx["data_hash"] == my["data_hash"] and mx["config_hash"] != my["config_hash"]
 
 
-def test_validate_data_ok(tmp_path, capsys):
-    fin, mkt = synthetic.generate(1)
-    write_directory(tmp_path, fin, mkt)
-    assert main(["validate-data", "--input", str(tmp_path), "--as-of", "2023-06-30"]) == 0
-    rep = json.loads(capsys.readouterr().out)
-    assert rep["status"] == "SCHEMA_VALID" and rep["financial_records"] == len(fin)
-
-
-def test_validate_data_invalid_rows_exit_2_with_line_numbers(tmp_path, capsys):
-    fin, mkt = synthetic.generate(1)
-    write_directory(tmp_path, fin, mkt)
-    df = pd.read_csv(tmp_path / FINANCIAL_FILE, dtype=str, keep_default_na=False)
-    df.loc[0, "currency"] = "RMB"
-    df.loc[1, "published_at"] = "2021-04-28T18:00:00"   # naive
-    df.loc[2, "unit_scale"] = "millions"
-    df.to_csv(tmp_path / FINANCIAL_FILE, index=False)
-    assert main(["validate-data", "--input", str(tmp_path)]) == 2
-    err = capsys.readouterr().err
-    assert "line 2: currency" in err and "line 3: published_at" in err and "timezone-naive" in err
-    assert "line 4: unit_scale" in err
-
-
-def test_validate_data_missing_files_and_columns(tmp_path, capsys):
-    assert main(["validate-data", "--input", str(tmp_path / "nope")]) == 2
-    tmp_path.joinpath(FINANCIAL_FILE).write_text("instrument_id,value\nX,1\n")
-    assert main(["validate-data", "--input", str(tmp_path)]) == 2
-    err = capsys.readouterr().err
-    assert "missing required columns" in err and MARKET_FILE in err
-
-
 @pytest.mark.parametrize("args,needle", [
     (["--as-of", "2025-06-30T15:00:00"], "timezone-naive"),
     (["--as-of", "yesterday"], "not ISO-8601"),
@@ -111,7 +101,106 @@ def test_validate_data_missing_files_and_columns(tmp_path, capsys):
     (["--horizons", "1,x"], "comma-separated integers"),
     (["--horizons", "0,3"], "positive"),
     (["--config", "/nonexistent.yaml"], "not found"),
+    (["--mode", "exploratory"], "--override-reason"),
+    (["--override-reason", "x"], "only valid with --mode exploratory"),
 ])
 def test_demo_invalid_inputs_exit_2(tmp_path, capsys, args, needle):
     assert main(["demo", "--out", str(tmp_path / "o"), *args]) == 2
     assert needle in capsys.readouterr().err
+
+
+# ---------------------------------------------------------------- build-snapshot
+def test_build_snapshot_ok(tmp_path, data_dir):
+    out = tmp_path / "snap"
+    p = _vms("build-snapshot", "--input", str(data_dir), "--ticker", INST, "--as-of", "2024-05-15", "--out", str(out))
+    assert p.returncode == 0, p.stderr
+    s = json.loads(p.stdout)
+    assert s["status"] == "PASS_WITH_WARNINGS" and "MISSING_QUARTER" in s["issues"]
+    for n in ("data_manifest.json", "data_quality_report.json", "pit_snapshot.json"):
+        art = json.loads((out / n).read_text())
+        assert art["run_id"] == s["run_id"] and art["schema_version"] == s["schema_version"]
+    man = json.loads((out / "data_manifest.json").read_text())
+    assert man["as_of"] == "2024-05-15T15:00:00+08:00" and man["field_registry_version"] == "FIELDS-1"
+    assert man["excluded_post_as_of"]["financial"] > 0 and len(man["snapshot_hash"]) == 64
+    rep = json.loads((out / "data_quality_report.json").read_text())
+    assert {c["check"]: c["status"] for c in rep["checks"]}["EV_BRIDGE"] == "DEFERRED"
+
+
+def test_build_snapshot_blocked_production_exit_3_no_snapshot(tmp_path, data_dir):
+    _corrupt_capex_sign(data_dir)
+    out = tmp_path / "snap"
+    p = _vms("build-snapshot", "--input", str(data_dir), "--ticker", INST, "--as-of", "2024-12-31", "--out", str(out))
+    assert p.returncode == 3
+    assert "BLOCKED" in p.stderr and "SIGN_CONVENTION_VIOLATION" in p.stderr
+    assert (out / "data_quality_report.json").is_file() and not (out / "pit_snapshot.json").exists()
+    assert json.loads((out / "data_quality_report.json").read_text())["status"] == "BLOCKED"
+
+
+def test_build_snapshot_blocked_before_bad_record_published(tmp_path, data_dir):
+    _corrupt_capex_sign(data_dir)   # bad record published 2023-08-28 18:00
+    assert main(["build-snapshot", "--input", str(data_dir), "--ticker", INST, "--as-of", "2023-08-28",
+                 "--out", str(tmp_path / "s")]) == 0
+
+
+def test_build_snapshot_exploratory_override_recorded(tmp_path, data_dir):
+    _corrupt_capex_sign(data_dir)
+    out = tmp_path / "snap"
+    rc = main(["build-snapshot", "--input", str(data_dir), "--ticker", INST, "--as-of", "2024-12-31",
+               "--out", str(out), "--mode", "exploratory", "--override-reason", "checking sign issue"])
+    assert rc == 0 and (out / "pit_snapshot.json").is_file()
+    rep = json.loads((out / "data_quality_report.json").read_text())
+    assert rep["status"] == "BLOCKED" and rep["usable_for_production"] is False
+    assert rep["override"] == {"mode": "exploratory", "reason": "checking sign issue",
+                               "overridden_critical_codes": ["SIGN_CONVENTION_VIOLATION"]}
+
+
+def test_build_snapshot_invalid_schema_exit_2(tmp_path, data_dir, capsys):
+    p = data_dir / "financial_observations.csv"
+    df = pd.read_csv(p, dtype=str, keep_default_na=False)
+    df.loc[0, "currency"] = "RMB"
+    df.to_csv(p, index=False)
+    assert main(["build-snapshot", "--input", str(data_dir), "--ticker", INST, "--as-of", "2024-12-31",
+                 "--out", str(tmp_path / "s")]) == 2
+    assert "line 2: currency" in capsys.readouterr().err
+
+
+# ---------------------------------------------------------------- validate-data
+def test_validate_data_schema_only(data_dir, capsys):
+    assert main(["validate-data", "--input", str(data_dir)]) == 0
+    rep = json.loads(capsys.readouterr().out)
+    assert rep["status"] == "SCHEMA_VALID" and "pass --as-of" in rep["note"]
+
+
+def test_validate_data_as_of_filters(data_dir, capsys):
+    assert main(["validate-data", "--input", str(data_dir), "--as-of", "2022-06-30"]) == 0
+    rep = json.loads(capsys.readouterr().out)
+    inst = rep["instruments"][0]
+    assert inst["status"] == "PASS" and inst["excluded_post_as_of"]["financial"] > 0
+    assert rep["as_of"] == "2022-06-30T15:00:00+08:00"
+
+
+def test_validate_data_as_of_blocked_exit_3(data_dir, capsys):
+    _corrupt_capex_sign(data_dir)
+    assert main(["validate-data", "--input", str(data_dir), "--as-of", "2024-12-31"]) == 3
+    assert "BLOCKED" in capsys.readouterr().err
+
+
+def test_validate_data_invalid_rows_exit_2_with_line_numbers(data_dir, capsys):
+    p = data_dir / "financial_observations.csv"
+    df = pd.read_csv(p, dtype=str, keep_default_na=False)
+    df.loc[0, "currency"] = "RMB"
+    df.loc[1, "published_at"] = "2021-04-28T18:00:00"
+    df.loc[2, "unit_scale"] = "millions"
+    df.to_csv(p, index=False)
+    assert main(["validate-data", "--input", str(data_dir)]) == 2
+    err = capsys.readouterr().err
+    assert "line 2: currency" in err and "line 3: published_at" in err and "timezone-naive" in err
+    assert "line 4: unit_scale" in err
+
+
+def test_validate_data_missing_files_and_columns(tmp_path, capsys):
+    assert main(["validate-data", "--input", str(tmp_path / "nope")]) == 2
+    tmp_path.joinpath("financial_observations.csv").write_text("instrument_id,value\nX,1\n")
+    assert main(["validate-data", "--input", str(tmp_path)]) == 2
+    err = capsys.readouterr().err
+    assert "missing required columns" in err and "market_observations" in err

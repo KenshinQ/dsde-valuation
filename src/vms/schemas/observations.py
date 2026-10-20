@@ -183,6 +183,90 @@ class MarketObservation(_Base):
         return _validate_currency(v)
 
 
+class ReportingConvention(str, Enum):
+    """How a source reports income/cash-flow FLOWS within a fiscal year."""
+
+    CN_CUMULATIVE_YTD = "CN_CUMULATIVE_YTD"      # Q1, H1, 9M, FY cumulative (A-share statutory style)
+    STANDALONE_QUARTER = "STANDALONE_QUARTER"    # each period_end carries its own quarter only
+    UNKNOWN = "UNKNOWN"                          # never converted; flagged
+
+
+class Versioning(str, Enum):
+    """Whether a source preserves every published version (needed for unbiased PIT history)."""
+
+    FULL_HISTORY = "FULL_HISTORY"
+    LATEST_ONLY = "LATEST_ONLY"
+    UNKNOWN = "UNKNOWN"
+
+
+class SourceDescriptor(_Base):
+    """Declared per source in ``sources.yaml``. Nothing about a source is ever guessed."""
+
+    source_id: str = Field(min_length=1)
+    reporting_convention: ReportingConvention
+    versioning: Versioning
+    fiscal_year_end: Literal["12-31"] = "12-31"
+    description: str = ""
+
+
+CorporateActionType = Literal["cash_dividend", "bonus_share", "stock_split", "share_issuance",
+                              "share_cancellation"]
+#: Price-neutral share-count changes that require price adjustment.
+PRICE_ADJUSTING_ACTIONS = frozenset({"bonus_share", "stock_split"})
+SHARE_CHANGING_ACTIONS = frozenset({"bonus_share", "stock_split", "share_issuance", "share_cancellation"})
+
+
+class CorporateActionEvent(_Base):
+    """Corporate action, known from ``announced_at`` (the PIT availability time).
+
+    share_ratio: post-action shares per pre-action share (10送3 => 1.3; 1:2 split => 2.0;
+    cancellation of 1% => 0.99). cash_per_share: gross cash dividend per pre-action share.
+    Revisions of the same action share ``action_id`` with later ``announced_at``.
+    """
+
+    action_id: str = Field(min_length=1)
+    instrument_id: str = Field(min_length=1)
+    action_type: CorporateActionType
+    announced_at: datetime
+    ex_date: date
+    share_ratio: float | None = Field(default=None, gt=0)
+    cash_per_share: float | None = Field(default=None, ge=0)
+    currency: str
+    source_id: str = Field(min_length=1)
+    revision_id: str | None = None
+
+    @field_validator("announced_at")
+    @classmethod
+    def _tz(cls, v):  # noqa: ANN001
+        return _require_tz(v, "announced_at")
+
+    @field_validator("share_ratio", "cash_per_share")
+    @classmethod
+    def _finite(cls, v, info):  # noqa: ANN001
+        return _require_finite(v, info.field_name)
+
+    @field_validator("currency")
+    @classmethod
+    def _currency(cls, v):  # noqa: ANN001
+        return _validate_currency(v)
+
+    @model_validator(mode="after")
+    def _consistency(self) -> "CorporateActionEvent":
+        if self.action_type == "cash_dividend":
+            if self.cash_per_share is None:
+                raise ValueError(f"{self.action_id}: cash_dividend requires cash_per_share")
+            if self.share_ratio not in (None, 1.0):
+                raise ValueError(f"{self.action_id}: cash_dividend must not change shares (share_ratio={self.share_ratio})")
+        else:
+            if self.share_ratio is None or self.share_ratio == 1.0:
+                raise ValueError(f"{self.action_id}: {self.action_type} requires share_ratio != 1 (e.g. 1.3 for 10送3)")
+        if self.ex_date < self.announced_at.date():
+            raise ValueError(
+                f"{self.action_id}: ex_date={self.ex_date} precedes announced_at={self.announced_at.isoformat()}"
+            )
+        return self
+
+
 class ValuationRequest(_Base):
     instrument_id: str = Field(min_length=1)
     as_of: datetime

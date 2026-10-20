@@ -1,1 +1,1 @@
-"""Missingness, restatement, accounting and integrity gates. NOT IMPLEMENTED (Phase 1)."""
+"""Missingness, restatement, accounting and integrity gates. Phase 1: implemented."""

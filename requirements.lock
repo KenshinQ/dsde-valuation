@@ -17,6 +17,8 @@ pandas==3.0.6
     # via dsde-valuation (pyproject.toml)
 pluggy==1.7.0
     # via pytest
+pyarrow==26.0.0
+    # via dsde-valuation (pyproject.toml)
 pydantic==2.14.1
     # via dsde-valuation (pyproject.toml)
 pydantic-core==2.50.1

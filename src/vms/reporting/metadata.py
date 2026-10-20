@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 import subprocess
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Iterable
 
@@ -23,9 +24,20 @@ def sha256_of(obj: Any) -> str:
     return hashlib.sha256(canonical_json(obj).encode("utf-8")).hexdigest()
 
 
+def _instant_normalised(m: BaseModel) -> dict:
+    """JSON dump with tz-aware datetimes rewritten in UTC, so equal instants hash equally
+    regardless of the offset they were stored with (e.g. CSV +08:00 vs Parquet UTC)."""
+    py = m.model_dump(mode="python")
+    js = m.model_dump(mode="json")
+    for k, v in py.items():
+        if isinstance(v, datetime) and v.tzinfo is not None:
+            js[k] = v.astimezone(timezone.utc).isoformat()
+    return js
+
+
 def hash_models(models: Iterable[BaseModel]) -> str:
-    """Order-independent content hash of a collection of records."""
-    rows = sorted(canonical_json(m.model_dump(mode="json")) for m in models)
+    """Order-independent, timestamp-offset-independent content hash of a collection of records."""
+    rows = sorted(canonical_json(_instant_normalised(m)) for m in models)
     return hashlib.sha256("\n".join(rows).encode("utf-8")).hexdigest()
 
 
@@ -75,9 +87,24 @@ def make_run_metadata(*, request: BaseModel, config_snapshot: dict, data_hash: s
                        code_version=cv)
 
 
-def write_artifact(out_dir: Path, name: str, payload: dict, meta: RunMetadata) -> Path:
+def content_run_id(**parts: Any) -> str:
+    """Content-addressed run id for non-simulation runs (e.g. build-snapshot)."""
+    key = sha256_of({**parts, "code": code_version()["git_sha"], "schema": SCHEMA_VERSION})
+    return f"vms-{key[:16]}"
+
+
+class ArtifactStamp(BaseModel):
+    """Minimal stamp (run_id + schema_version) for artifacts of runs without a seed."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+    run_id: str
+    schema_version: str = SCHEMA_VERSION
+
+
+def write_artifact(out_dir: Path, name: str, payload: dict, meta: "RunMetadata | ArtifactStamp") -> Path:
     """Write one JSON artifact stamped with run_id and schema_version."""
     body = {"run_id": meta.run_id, "schema_version": meta.schema_version, **payload}
+    Path(out_dir).mkdir(parents=True, exist_ok=True)
     path = Path(out_dir) / name
     path.write_text(json.dumps(body, sort_keys=True, indent=2, ensure_ascii=False, allow_nan=False) + "\n",
                     encoding="utf-8")

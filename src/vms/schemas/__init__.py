@@ -2,6 +2,12 @@
 
 from vms.schemas.observations import (
     BASE_CURRENCY,
+    PRICE_ADJUSTING_ACTIONS,
+    SHARE_CHANGING_ACTIONS,
+    CorporateActionEvent,
+    ReportingConvention,
+    SourceDescriptor,
+    Versioning,
     SUPPORTED_CURRENCIES,
     FinancialObservation,
     MarketObservation,
@@ -13,5 +19,6 @@ from vms.schemas.errors import format_validation_error
 
 __all__ = [
     "BASE_CURRENCY", "SUPPORTED_CURRENCIES", "FinancialObservation", "MarketObservation",
-    "QualityStatus", "UnitScale", "ValuationRequest", "format_validation_error",
+    "QualityStatus", "CorporateActionEvent", "ReportingConvention", "SourceDescriptor", "Versioning",
+    "PRICE_ADJUSTING_ACTIONS", "SHARE_CHANGING_ACTIONS", "UnitScale", "ValuationRequest", "format_validation_error",
 ]

@@ -34,3 +34,30 @@ def req_kwargs() -> dict:
     return dict(instrument_id="SYN000001.SZ", as_of=datetime(2025, 6, 30, 15, tzinfo=CST),
                 spot_price=20.0, horizons_years=[1, 3, 5], monte_carlo_paths=1000,
                 random_seed=42, configuration_version="vms-default-0.1.0")
+
+
+# ---------------------------------------------------------------- Phase 1 helpers
+from vms.data import synthetic  # noqa: E402
+from vms.data.io import LoadResult  # noqa: E402
+from vms.schemas.config import load_config  # noqa: E402
+
+
+def make_load(fin, mkt, ca=(), sources=None, ca_provided=True) -> LoadResult:
+    srcs = {s.source_id: s for s in (synthetic.source_descriptors() if sources is None else sources)}
+    return LoadResult(financial=list(fin), market=list(mkt), corporate_actions=list(ca), sources=srcs,
+                      corporate_actions_provided=ca_provided, sources_provided=True)
+
+
+@pytest.fixture(scope="session")
+def syn():
+    return synthetic.generate(42)
+
+
+@pytest.fixture
+def syn_load(syn):
+    return make_load(*syn)
+
+
+@pytest.fixture(scope="session")
+def qcfg():
+    return load_config(REPO / "config/default.yaml").config.quality

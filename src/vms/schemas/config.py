@@ -159,6 +159,8 @@ class QualityConfig(_Strict):
     unit_jump_ratio: float = Field(gt=1, description="value ratio between versions/periods suggesting unit error")
     max_capex_to_revenue: float = Field(gt=0, description="capex/revenue above this => cash-flow unit warning")
     late_publication_days: int = Field(gt=0, description="published more than this many days after period_end => INFO")
+    require_industry_classification: bool = Field(
+        default=True, description="INDUSTRY-UNCLASSIFIED-v2: missing PIT classification => CRITICAL (BLOCKED)")
 
 
 class IndustryConfig(_Strict):
@@ -187,6 +189,10 @@ class ProjectionConfig(_Strict):
     tax_loss_carryforward_years: int = Field(ge=0, le=20, description="TAX-CN-LCF-5Y-v1")
     min_cash_to_revenue: float = Field(ge=0, lt=5, description="REVOLVER-MIN-CASH-v1 floor")
     invariant_abs_tol: float = Field(gt=0, description="CNY tolerance for accounting identities")
+    revolver_spread: float = Field(default=0.0, ge=0, lt=0.5, description="REVOLVER-RATE-v1: revolver = cost_of_debt + spread")
+    cash_interest_rate: float = Field(default=0.0, ge=0, lt=0.5, description="CASH-INTEREST-ZERO-v1 (conservative)")
+    bs_residual_warn_ratio: float = Field(default=0.05, gt=0, lt=1,
+                                          description="BS-RESIDUAL-WARN-v1: |base residual| / total_assets above => WARNING")
 
 
 class ConservativeBaseline(_Strict):

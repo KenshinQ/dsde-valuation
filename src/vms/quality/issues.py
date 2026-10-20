@@ -25,6 +25,9 @@ C, P, W, I = Severity.CRITICAL, Severity.PIT_INCOMPLETE, Severity.WARNING, Sever
 CODES: dict[str, tuple[Severity, str, str]] = {
     "NO_FINANCIAL_DATA": (C, "DATA_AVAILABILITY", "no financial observations known at as_of for this instrument"),
     "NO_MARKET_DATA": (C, "DATA_AVAILABILITY", "no market observation at or before as_of for this instrument"),
+    "INDUSTRY_UNCLASSIFIED": (C, "DATA_AVAILABILITY",
+                              "no industry classification known at as_of; profile cannot be resolved "
+                              "(INDUSTRY-UNCLASSIFIED-v2: production BLOCK, exploratory override => generic profile)"),
     "DUPLICATE_RECORD": (W, "DUPLICATES_CONFLICTS", "exact duplicate records found; one copy kept"),
     "CONFLICTING_VERSIONS": (C, "DUPLICATES_CONFLICTS",
                              "same source/key/published_at carries different values; no resolution rule"),

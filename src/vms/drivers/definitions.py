@@ -108,6 +108,14 @@ def _over_cogs(num: str):  # noqa: ANN202
     return fn
 
 
+def _payout_t_plus_1(h, y) -> Result:  # noqa: ANN001
+    """DIVIDEND-T-PLUS-1-v1: dividends on FY y earnings are paid (cash-flow statement) in y+1."""
+    p, n = _v(h, y, "parent_net_income"), _v(h, y + 1, "dividends_paid")
+    if p is None or p <= 0 or n is None:
+        return None, []
+    return n / p, []
+
+
 def _over_positive_pni(num: str):  # noqa: ANN202
     def fn(h, y) -> Result:  # noqa: ANN001
         p = _v(h, y, "parent_net_income")
@@ -145,8 +153,8 @@ DEFINITIONS: dict[str, DriverDefinition] = {d.name: d for d in [
        ("interest_expense", "interest_bearing_debt"), _cost_of_debt),
     _D("debt_to_revenue", "interest_bearing_debt / revenue", ("interest_bearing_debt", "revenue"),
        _simple("interest_bearing_debt", "revenue")),
-    _D("payout_ratio", "dividends_paid / parent_net_income, parent_net_income > 0 (PAYOUT-SAME-YEAR-v1)",
-       ("dividends_paid", "parent_net_income"), _over_positive_pni("dividends_paid")),
+    _D("payout_ratio", "dividends_paid[y+1] / parent_net_income[y], parent_net_income > 0 (DIVIDEND-T-PLUS-1-v1)",
+       ("dividends_paid", "parent_net_income"), _payout_t_plus_1),
     _D("repurchases_to_net_income", "share_repurchases / parent_net_income, parent_net_income > 0",
        ("share_repurchases", "parent_net_income"), _over_positive_pni("share_repurchases")),
     _D("diluted_share_growth", "shares[y] / shares[y-1] / bonus_split_ratio[y] - 1", ("shares_outstanding",),

@@ -50,7 +50,7 @@ vms demo --out runs/demo --seed 42 [--format csv|parquet] [--as-of ...] [--polic
 ```
 Date-only `--as-of` = 15:00:00 Asia/Shanghai (rule ASOF-DATE-CLOSE-v1).
 Exit codes: `0` ok, `1` unexpected error, `2` invalid input/config/args, `3` BLOCKED by critical
-data-quality errors in production mode, `4` UNSUPPORTED_PROFILE (e.g. banks/non-bank financials),
+data-quality errors in production mode (incl. missing industry classification, INDUSTRY-UNCLASSIFIED-v2), `4` UNSUPPORTED_PROFILE (e.g. banks/non-bank financials),
 `5` projection INSUFFICIENT_DATA or REJECTED by an accounting invariant.
 Policies: `conservative_baseline` (default), `historical_continuation`, `fixed_payout`, `target_leverage`,
 `min_cash_excess_distribution` (config `capital_allocation`).
@@ -58,7 +58,7 @@ Policies: `conservative_baseline` (default), `historical_continuation`, `fixed_p
 
 Leakage mutation check: `scripts/leakage_mutation_check.sh`. It injects 4 PIT-filter leaks and
 requires `tests/leakage` to fail on each. Invariant mutation check: `scripts/invariant_mutation_check.sh`.
-It injects 6 typical modelling bugs into the projection engine and requires each one to be REJECTED.
+It injects 7 typical modelling bugs into the projection engine and requires each one to be REJECTED.
 
 ## Layout
 `src/vms/<module>/` follows SPEC §17. Modules for later phases exist as empty packages whose

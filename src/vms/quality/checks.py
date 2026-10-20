@@ -74,6 +74,8 @@ def run_checks(snap: PITSnapshot, *, known_market: list[MarketObservation],
         ic.add("NO_FINANCIAL_DATA", snap.instrument_id)
     if not snap.market:
         ic.add("NO_MARKET_DATA", snap.instrument_id)
+    if cfg.require_industry_classification and snap.classification is None:
+        ic.add("INDUSTRY_UNCLASSIFIED", snap.instrument_id)
 
     # UNIT_CURRENCY
     for f in reported:

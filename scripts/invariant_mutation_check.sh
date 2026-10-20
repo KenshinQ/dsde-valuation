@@ -17,7 +17,8 @@ for mut in \
   's/cfo - capex - acq + nb, "CFO/cfo - capex + nb, "CFO/' \
   's/+ ni - dist + iss,/+ ni - dist - rep + iss,/' \
   's/sh_open + dil - srep + siss,/sh_open + dil + siss,/' \
-  's/+ nb, "debt\[y-1\] + net_borrowing"/+ 0.5 * nb, "debt[y-1] + net_borrowing"/'; do
+  's/+ nb, "debt\[y-1\] + net_borrowing"/+ 0.5 * nb, "debt[y-1] + net_borrowing"/' \
+  's/div = L.put("dividends", y, L.v("dividends_declared", p),/div = L.put("dividends", y, 0.0,/'; do
   cp "$BAK" "$F"; sed -i "$mut" "$F"
   if cmp -s "$F" "$BAK"; then echo "NOT APPLIED: $mut"; fail=1; continue; fi
   if $PY -m pytest "$T" -q -x -p no:cacheprovider >/dev/null 2>&1; then

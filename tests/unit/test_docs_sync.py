@@ -17,10 +17,14 @@ def test_every_check_documented():
 
 
 def test_assumption_register_documented():
-    from vms.assumptions import ASSUMPTIONS
-    doc = (Path(__file__).resolve().parents[2] / "docs/assumptions.md").read_text()
-    for k, v in ASSUMPTIONS.items():
-        assert f"| `{k}` | {v} |" in doc, k
+    import importlib.util
+
+    root = Path(__file__).resolve().parents[2]
+    spec = importlib.util.spec_from_file_location("gen", root / "scripts/gen_assumptions_doc.py")
+    gen = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(gen)
+    assert (root / "docs/assumptions.md").read_text(encoding="utf-8") == gen.render(), \
+        "docs/assumptions.md out of date: run python scripts/gen_assumptions_doc.py"
 
 
 def test_assumption_ids_versioned_and_cite_rejects_unknown():
@@ -28,7 +32,10 @@ def test_assumption_ids_versioned_and_cite_rejects_unknown():
 
     import pytest
 
-    from vms.assumptions import ASSUMPTIONS, cite
+    from vms.assumptions import ASSUMPTIONS, SUPERSEDED, cite
     assert all(re.fullmatch(r"[A-Z0-9-]+-v\d+", k) for k in ASSUMPTIONS)
     with pytest.raises(KeyError):
         cite("NOT-AN-ASSUMPTION-v1")
+    assert all(k in ASSUMPTIONS and v in ASSUMPTIONS for k, v in SUPERSEDED.items())
+    with pytest.raises(KeyError, match="superseded"):
+        cite("PAYOUT-SAME-YEAR-v1")

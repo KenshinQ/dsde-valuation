@@ -35,7 +35,8 @@ def _vms(*args: str) -> subprocess.CompletedProcess:
 @pytest.fixture
 def data_dir(tmp_path):
     d = tmp_path / "data"
-    write_directory(d, *synthetic.generate(42), synthetic.source_descriptors())
+    write_directory(d, *synthetic.generate(42), synthetic.source_descriptors(),
+                    classifications=synthetic.classifications())
     return d
 
 

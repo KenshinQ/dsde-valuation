@@ -5,7 +5,7 @@
 configuration_version: "vms-default-0.1.0"
 mode: production            # production | exploratory (exploratory overrides must be recorded)
 base_currency: CNY          # internal normalisation currency (only CNY allowed)
-timezone: Asia/Shanghai     # display/run-context tz. Date-only as_of rule is ASOF-DATE-CLOSE-1 (15:00 CST), see vms.pit.asof
+timezone: Asia/Shanghai     # display/run-context tz. Date-only as_of rule is ASOF-DATE-CLOSE-v1 (15:00 CST), see vms.pit.asof
 driver_profile: driver_profiles/operating_company.yaml   # relative to this file
 horizons_years: [1, 3, 5]
 
@@ -34,6 +34,7 @@ quality:                               # (Phase 1) integrity-gate thresholds —
   unit_jump_ratio: 100                 # >=100x jump between versions / consecutive stock periods
   max_capex_to_revenue: 5.0            # same-period capex/revenue above this => suspected unit error
   late_publication_days: 120           # A-share annual deadline is Apr 30 (~120d after FY end)
+  require_industry_classification: true  # INDUSTRY-UNCLASSIFIED-v2: production BLOCK; exploratory override => generic
 
 industry:                              # (Phase 2) INDUSTRY-SW-L1-v1 — labeled assumption
   scheme: SW2021_L1                    # Shenwan 2021 level-1 names
@@ -50,6 +51,9 @@ projection:                            # (Phase 2) deterministic central case
   tax_loss_carryforward_years: 5       # TAX-CN-LCF-5Y-v1
   min_cash_to_revenue: 0.05            # REVOLVER-MIN-CASH-v1
   invariant_abs_tol: 1.0               # CNY yuan
+  revolver_spread: 0.0                 # REVOLVER-RATE-v1: revolver rate = cost_of_debt + spread
+  cash_interest_rate: 0.0              # CASH-INTEREST-ZERO-v1: no interest income on cash (conservative)
+  bs_residual_warn_ratio: 0.05         # BS-RESIDUAL-WARN-v1
 
 capital_allocation:                    # (Phase 2) versioned policies (spec §10)
   default_policy: conservative_baseline

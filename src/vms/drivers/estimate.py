@@ -108,4 +108,4 @@ def estimate_drivers(history: AnnualHistory, profile: DriverProfile, cfg: Projec
     return DriverModel(profile_id=profile.profile_id, profile_version=profile.profile_version,
                        bounds_status=profile.bounds_status, history_years=history.years, estimates=out,
                        assumptions=cite("DRIVER-CENTRAL-MEDIAN-v1", "DRIVER-PRIORS-PLACEHOLDER-v1",
-                                        "ANNUAL-BASE-v1", "PAYOUT-SAME-YEAR-v1", "ONE-OFFS-v1"))
+                                        "ANNUAL-BASE-v1", "DIVIDEND-T-PLUS-1-v1", "ONE-OFFS-v1"))

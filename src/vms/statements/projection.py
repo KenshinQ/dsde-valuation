@@ -9,6 +9,7 @@ Output label: DETERMINISTIC_CENTRAL_CASE_NOT_A_VALUATION. Phase 5 runs the same 
 
 from __future__ import annotations
 
+from datetime import date
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict
@@ -18,7 +19,7 @@ from vms.capital_allocation.policies import AllocationState, Policy
 from vms.drivers.estimate import DriverModel
 from vms.drivers.history import AnnualHistory
 from vms.drivers.profiles import ProfileResolution, SectorProfile, register_profile
-from vms.pit.snapshot import PITSnapshot
+from vms.pit.snapshot import PITSnapshot, local_date
 from vms.schemas import PRICE_ADJUSTING_ACTIONS, SHARE_CHANGING_ACTIONS
 from vms.schemas.config import ProjectionConfig
 from vms.statements.cashflows import FCFESeries, FCFFSeries
@@ -26,11 +27,12 @@ from vms.statements.invariants import Violation, check_invariants
 from vms.statements.ledger import Ledger, TracedValue, unresolved_refs
 from vms.statements.tax import reconstruct_pool
 
-PROJECTION_VERSION = "DET-PROJ-1"
+PROJECTION_VERSION = "DET-PROJ-2"   # 2: t+1 dividends, announced-dividend base deduction, revolver/cash interest
 LABEL = "DETERMINISTIC_CENTRAL_CASE_NOT_A_VALUATION"
 
 REQUIRED_BASE = ("revenue", "cash", "interest_bearing_debt", "accounts_receivable", "inventory",
                  "accounts_payable", "total_assets", "total_liabilities", "total_equity")
+_ADJUSTED_AT_BASE = ("cash", "total_assets", "total_equity")   # ANNOUNCED-DIVIDEND-BASE-v1
 PROJECTION_DRIVERS = frozenset({
     "revenue_growth", "gross_margin", "ebit_margin", "effective_tax_rate", "parent_share_of_net_income",
     "receivables_to_revenue", "inventory_to_cogs", "payables_to_cogs", "capex_to_revenue", "da_to_revenue",
@@ -55,6 +57,7 @@ class ProjectionResult(BaseModel):
     violations: list[Violation]
     missing_inputs: list[str]
     flags: list[str]
+    warnings: list[str] = []
     assumptions: list[str]
 
     @property
@@ -83,15 +86,17 @@ class OperatingCompanyProfile(SectorProfile):
         y0 = history.years[-1]
         L = Ledger()
         missing: list[str] = []
+        warnings: list[str] = []
         for name in REQUIRED_BASE:
             p = history.point(y0, name)
+            key = f"{name}_reported" if name in _ADJUSTED_AT_BASE else name
             if p is None or (p.value is None and p.status != "not_applicable"):
                 missing.append(f"{name}@FY{y0}")
             elif p.value is None:   # explicit not_applicable => 0, labeled
-                L.put(name, y0, 0.0, "not_applicable in source => 0", [p.ref])
+                L.put(key, y0, 0.0, "not_applicable in source => 0", [p.ref])
                 flags.add(f"BASE_{name.upper()}_NOT_APPLICABLE_AS_ZERO")
             else:
-                L.put(name, y0, p.value, "observed (PIT snapshot, FY balance/flow)", [p.ref])
+                L.put(key, y0, p.value, "observed (PIT snapshot, FY balance/flow)", [p.ref])
         gp, cogs = history.point(y0, "gross_profit"), history.point(y0, "cost_of_revenue")
         if cogs is not None and cogs.value is not None:
             pass
@@ -103,6 +108,37 @@ class OperatingCompanyProfile(SectorProfile):
             return _empty("INSUFFICIENT_DATA", snap, resolution, missing, flags)
         d = {k: e.value for k, e in drivers.estimates.items()}
         last = snap.market[-1]
+
+        # ---- announced-but-unpaid cash dividends at the base balance-sheet date (ANNOUNCED-DIVIDEND-BASE-v1)
+        fy_end = date(y0, 12, 31)
+        divs = sorted((a.event for a in snap.corporate_actions
+                       if a.event.action_type == "cash_dividend" and a.event.ex_date > fy_end and a.event.cash_per_share),
+                      key=lambda e: e.ex_date)
+        amount, dref = 0.0, ["assumption:ANNOUNCED-DIVIDEND-BASE-v1"]
+        for e in divs:
+            sh, refs = _shares_before(snap, e.ex_date)
+            amount += e.cash_per_share * sh
+            dref += [f"corporate_action:{e.action_id}#{e.revision_id or '-'}", *refs]
+        L.put("announced_unpaid_dividends", y0, amount,
+              "sum(cash_per_share x shares before ex_date) over cash dividends announced by as_of with ex_date > FY end",
+              dref)
+        for name in _ADJUSTED_AT_BASE:
+            L.put(name, y0, L.v(f"{name}_reported", y0) - amount, f"{name}_reported - announced_unpaid_dividends",
+                  [f"{name}_reported@{y0}", f"announced_unpaid_dividends@{y0}"])
+        if len(divs) > 1:
+            flags.add("MULTIPLE_ANNOUNCED_DIVIDENDS_AT_BASE")
+        if L.v("cash", y0) < 0:
+            flags.add("BASE_CASH_NEGATIVE_AFTER_DIVIDENDS")
+        resid = L.put("balance_sheet_residual", y0,
+                      L.v("total_assets", y0) - L.v("total_liabilities", y0) - L.v("total_equity", y0),
+                      "total_assets - total_liabilities - total_equity (source definitions; held constant)",
+                      [f"total_assets@{y0}", f"total_liabilities@{y0}", f"total_equity@{y0}",
+                       "assumption:BS-RESIDUAL-WARN-v1", "config:bs_residual_warn_ratio"])
+        ta0 = L.v("total_assets", y0)
+        if abs(resid) > cfg.bs_residual_warn_ratio * abs(ta0):
+            flags.add("BASE_BS_RESIDUAL_LARGE")
+            warnings.append(f"BASE_BS_RESIDUAL_LARGE: |residual| {abs(resid):.6g} > {cfg.bs_residual_warn_ratio:g} x "
+                            f"total_assets {ta0:.6g} (FY{y0})")
 
         # ---- base-year derived balances (BALANCE-PLUG-FREE-v1)
         rev0 = L.v("revenue", y0)
@@ -124,6 +160,31 @@ class OperatingCompanyProfile(SectorProfile):
               "shares outstanding at as_of (latest known market observation)",
               [f"snapshot:market:{last.source_id}@{last.timestamp.isoformat()}"])
         flags.add("BASE_SHARES_AT_AS_OF")
+        L.put("revolver_balance", y0, 0.0, "0 at base (all reported debt treated as term debt)",
+              ["assumption:REVOLVER-RATE-v1"])
+
+        # ---- FY-base dividend declaration, paid in year 1 (DIVIDEND-T-PLUS-1-v1)
+        pp = history.point(y0, "parent_net_income")
+        if pp is not None and pp.value is not None:
+            L.put("parent_net_income", y0, pp.value, "observed (PIT snapshot, FY flow)", [pp.ref])
+        else:
+            L.put("parent_net_income", y0, 0.0, "missing => 0 (no FY-base dividend declared)",
+                  ["assumption:DIVIDEND-T-PLUS-1-v1"])
+            flags.add("BASE_PARENT_NET_INCOME_MISSING")
+        L.put("cash_available_for_distribution", y0, L.v("cash", y0), "base cash (after announced dividends)",
+              [f"cash@{y0}"])
+        if divs:
+            L.put("dividends_declared", y0, 0.0, "FY-base dividend already announced and deducted from base cash",
+                  [f"announced_unpaid_dividends@{y0}", "assumption:ANNOUNCED-DIVIDEND-BASE-v1"])
+            flags.add("ANNOUNCED_DIVIDEND_DEDUCTED_AT_BASE")
+        else:
+            st0 = AllocationState(year=y0, revenue=rev0, parent_net_income=L.v("parent_net_income", y0),
+                                  ebitda=0.0,   # not used by dividend rules
+                                  cash_available_for_distribution=L.v("cash_available_for_distribution", y0),
+                                  debt_open=L.v("interest_bearing_debt", y0))
+            dv0 = policy.dividends(st0)
+            L.put("dividends_declared", y0, dv0.value, dv0.formula + " (FY-base declaration, paid next year)",
+                  dv0.inputs + ["assumption:DIVIDEND-T-PLUS-1-v1"])
 
         # ---- tax-loss pools reconstructed from history (TAX-LOSS-POOL-FROM-BOOK-v1)
         hist_pretax, hist_ebit = [], []
@@ -165,11 +226,20 @@ class OperatingCompanyProfile(SectorProfile):
                   [f"gross_profit@{y}", f"ebit@{y}", "assumption:EBIT-MARGIN-PRIMARY-v1"])
             L.put("one_off_items", y, 0.0, "0 (no one-offs projected)", ["assumption:ONE-OFFS-v1"])
             # 4. interest, tax, net income
-            interest = L.put("interest_expense", y, d["cost_of_debt"] * L.v("interest_bearing_debt", p),
-                             "cost_of_debt x opening interest_bearing_debt",
-                             ["driver:cost_of_debt", f"interest_bearing_debt@{p}", "assumption:INTEREST-OPENING-DEBT-v1"])
-            pretax = L.put("pre_tax_income", y, ebit - interest, "ebit - interest_expense",
-                           [f"ebit@{y}", f"interest_expense@{y}"])
+            rev_open = L.v("revolver_balance", p)
+            term_open = L.v("interest_bearing_debt", p) - rev_open
+            interest = L.put("interest_expense", y,
+                             d["cost_of_debt"] * term_open + (d["cost_of_debt"] + cfg.revolver_spread) * rev_open,
+                             "cost_of_debt x (opening debt - opening revolver) + (cost_of_debt + revolver_spread) x "
+                             "opening revolver",
+                             ["driver:cost_of_debt", f"interest_bearing_debt@{p}", f"revolver_balance@{p}",
+                              "config:revolver_spread", "assumption:INTEREST-OPENING-DEBT-v2",
+                              "assumption:REVOLVER-RATE-v1"])
+            ii = L.put("interest_income", y, cfg.cash_interest_rate * max(L.v("cash", p), 0.0),
+                       "cash_interest_rate x max(opening cash, 0)",
+                       ["config:cash_interest_rate", f"cash@{p}", "assumption:CASH-INTEREST-ZERO-v1"])
+            pretax = L.put("pre_tax_income", y, ebit - interest + ii, "ebit - interest_expense + interest_income",
+                           [f"ebit@{y}", f"interest_expense@{y}", f"interest_income@{y}"])
             bs = book_pool.step(y, pretax)
             L.put("book_tax_loss_used", y, bs.loss_used, "FIFO use of book tax-loss pool",
                   [f"book_tax_loss_pool@{p}", f"pre_tax_income@{y}", "assumption:TAX-CN-LCF-5Y-v1"])
@@ -234,10 +304,16 @@ class OperatingCompanyProfile(SectorProfile):
             cbd = L.put("cash_before_distributions", y, L.v("cash", p) + cfo - capex - acq,
                         "cash[y-1] + CFO - capex - acquisitions",
                         [f"cash@{p}", f"cash_flow_from_operations@{y}", f"capex@{y}", f"acquisitions@{y}"])
+            div = L.put("dividends", y, L.v("dividends_declared", p),
+                        "dividends_declared[y-1] (paid the year after the FY)",
+                        [f"dividends_declared@{p}", "assumption:DIVIDEND-T-PLUS-1-v1"])
+            cad = L.put("cash_available_for_distribution", y, cbd - div, "cash_before_distributions - dividends paid",
+                        [f"cash_before_distributions@{y}", f"dividends@{y}"])
             st = AllocationState(year=y, revenue=rev, parent_net_income=pni, ebitda=ebitda,
-                                 cash_before_distributions=cbd, debt_open=L.v("interest_bearing_debt", p))
+                                 cash_available_for_distribution=cad, debt_open=L.v("interest_bearing_debt", p))
             dv, rp, ic, dt = policy.dividends(st), policy.repurchases(st), policy.issuance_cash(st), policy.debt_target(st)
-            div = L.put("dividends", y, dv.value, dv.formula, dv.inputs)
+            L.put("dividends_declared", y, dv.value, dv.formula + " (declared on FY y, paid y+1)",
+                  dv.inputs + ["assumption:DIVIDEND-T-PLUS-1-v1"])
             rep = L.put("share_repurchases", y, rp.value, rp.formula, rp.inputs)
             iss = L.put("share_issuance_proceeds", y, ic.value, ic.formula, ic.inputs)
             L.put("debt_target", y, max(dt.value, 0.0), dt.formula + " (floored at 0)", dt.inputs)
@@ -259,6 +335,9 @@ class OperatingCompanyProfile(SectorProfile):
                        [f"debt_issuance@{y}", f"revolver_draw@{y}", f"debt_repayment@{y}"])
             L.put("interest_bearing_debt", y, L.v("interest_bearing_debt", p) + nb, "debt[y-1] + net_borrowing",
                   [f"interest_bearing_debt@{p}", f"net_borrowing@{y}"])
+            L.put("revolver_balance", y, max(rev_open - dr, 0.0) + rv,
+                  "max(revolver[y-1] - debt_repayment, 0) + revolver_draw (repayments retire the revolver first)",
+                  [f"revolver_balance@{p}", f"debt_repayment@{y}", f"revolver_draw@{y}", "assumption:REVOLVER-RATE-v1"])
             cash = L.put("cash", y, cash_pre + rv,
                          "cash_before_distributions + debt_issuance - debt_repayment - dividends - repurchases + "
                          "issuance + revolver_draw",
@@ -325,9 +404,11 @@ class OperatingCompanyProfile(SectorProfile):
         assumptions = cite("ANNUAL-BASE-v1", "EBIT-MARGIN-PRIMARY-v1", "ONE-OFFS-v1", "TAX-CN-LCF-5Y-v1",
                            "TAX-LOSS-POOL-FROM-BOOK-v1", "NEGATIVE-EBIT-v1", "NWC-OPERATING-v1",
                            "ACQUISITIONS-SEPARATE-v1", "LEASES-EXCLUDED-v1", "SBC-IN-EBIT-v1",
-                           "INTEREST-OPENING-DEBT-v1", "MINORITY-SHARE-v1", "BALANCE-PLUG-FREE-v1",
+                           "INTEREST-OPENING-DEBT-v2", "MINORITY-SHARE-v1", "BALANCE-PLUG-FREE-v1",
                            "REVOLVER-MIN-CASH-v1", "BUYBACK-PRICE-v1", "DILUTED-SHARES-BASIC-v1", "PENDING-CA-v1",
-                           "PAYOUT-SAME-YEAR-v1", *drivers.assumptions, *resolution.assumptions)
+                           "DIVIDEND-T-PLUS-1-v1", "ANNOUNCED-DIVIDEND-BASE-v1", "REVOLVER-RATE-v1",
+                           "CASH-INTEREST-ZERO-v1", "BS-RESIDUAL-WARN-v1", "ANNUAL-BASE-STALENESS-v1",
+                           *drivers.assumptions, *resolution.assumptions)
         violations = check_invariants(L.items, y0, yrs, tol=cfg.invariant_abs_tol,
                                       min_cash_to_revenue=cfg.min_cash_to_revenue)
         trace_bad = unresolved_refs(L.items, drivers=set(drivers.estimates), policy=set(policy.params),
@@ -339,4 +420,22 @@ class OperatingCompanyProfile(SectorProfile):
             status="REJECTED" if violations else "VALID", instrument_id=snap.instrument_id,
             as_of=snap.as_of.isoformat(), profile=resolution, policy=policy.describe(), base_year=y0, years=yrs,
             items=L.items, fcff=fcff, fcfe=fcfe, violations=violations, missing_inputs=[], flags=sorted(flags),
-            assumptions=assumptions)
+            warnings=warnings, assumptions=assumptions)
+
+
+def _shares_before(snap: PITSnapshot, ex_date: date) -> tuple[float, list[str]]:
+    """Shares entitled to a dividend: last known market shares before ex_date x known share-changing
+    ratios with ex_date strictly between that observation and the dividend ex_date."""
+    obs = [m for m in snap.market if m.shares_outstanding is not None and local_date(m.timestamp) < ex_date]
+    if not obs:
+        obs = [m for m in snap.market if m.shares_outstanding is not None]
+    m = obs[-1]
+    od = local_date(m.timestamp)
+    refs = [f"snapshot:market:{m.source_id}@{m.timestamp.isoformat()}"]
+    ratio = 1.0
+    for a in snap.corporate_actions:
+        e = a.event
+        if e.action_type in SHARE_CHANGING_ACTIONS and od < e.ex_date < ex_date:
+            ratio *= e.share_ratio
+            refs.append(f"corporate_action:{e.action_id}#{e.revision_id or '-'}")
+    return m.shares_outstanding * ratio, refs

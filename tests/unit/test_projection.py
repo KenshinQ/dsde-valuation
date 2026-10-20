@@ -8,6 +8,7 @@ from tests.company import company, loaded_config
 from tests.factories import INST, ca
 from vms.assumptions import ASSUMPTIONS
 from vms.pipeline import run_projection
+from vms.schemas.config import ProjectionConfig
 from vms.statements.cashflows import FCFESeries, FCFFSeries
 from vms.statements.ledger import unresolved_refs
 
@@ -34,7 +35,7 @@ def test_valid_and_fully_traced_for_every_policy(policy):
     assert p.years == [2025, 2026, 2027, 2028, 2029] and p.base_year == 2024
     assert p.policy["policy_id"] == policy and p.policy["version"] == "1"
     bad = unresolved_refs(p.items, drivers=set(r.drivers.estimates), policy=set(p.policy["params"]),
-                          config={"tax_loss_carryforward_years", "min_cash_to_revenue"}, assumptions=set(ASSUMPTIONS))
+                          config=set(ProjectionConfig.model_fields), assumptions=set(ASSUMPTIONS))
     assert bad == []
     assert all(tv.formula for tv in p.items.values())
     assert all(a in ASSUMPTIONS for a in p.assumptions)

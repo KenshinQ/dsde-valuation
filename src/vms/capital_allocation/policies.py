@@ -26,7 +26,7 @@ class AllocationState:
     revenue: float
     parent_net_income: float
     ebitda: float
-    cash_before_distributions: float
+    cash_available_for_distribution: float   # cash after CFO, capex, acquisitions and prior-year dividends paid
     debt_open: float
 
 
@@ -107,19 +107,19 @@ class MinCashExcessDistribution(Policy):
     policy_id = "min_cash_excess_distribution"
 
     def _excess(self, s: AllocationState) -> float:
-        return max(s.cash_before_distributions - self.params["min_cash_to_revenue"] * s.revenue, 0.0)
+        return max(s.cash_available_for_distribution - self.params["min_cash_to_revenue"] * s.revenue, 0.0)
 
     def dividends(self, s: AllocationState) -> Decision:
         return Decision(self._excess(s) * self.params["dividend_share"],
-                        "max(cash_before_distributions - min_cash_to_revenue x revenue, 0) x dividend_share",
+                        "max(cash_available_for_distribution - min_cash_to_revenue x revenue, 0) x dividend_share (declared; paid y+1)",
                         ["policy:min_cash_to_revenue", "policy:dividend_share", f"revenue@{s.year}",
-                         f"cash_before_distributions@{s.year}"])
+                         f"cash_available_for_distribution@{s.year}"])
 
     def repurchases(self, s: AllocationState) -> Decision:
         return Decision(self._excess(s) * (1 - self.params["dividend_share"]),
-                        "max(cash_before_distributions - min_cash_to_revenue x revenue, 0) x (1 - dividend_share)",
+                        "max(cash_available_for_distribution - min_cash_to_revenue x revenue, 0) x (1 - dividend_share)",
                         ["policy:min_cash_to_revenue", "policy:dividend_share", f"revenue@{s.year}",
-                         f"cash_before_distributions@{s.year}"])
+                         f"cash_available_for_distribution@{s.year}"])
 
 
 POLICIES: dict[str, type[Policy]] = {p.policy_id: p for p in

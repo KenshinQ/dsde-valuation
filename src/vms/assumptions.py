@@ -2,7 +2,8 @@
 
 Every modelling/scope assumption has a stable ID ``NAME-vN``. Artifacts cite the IDs they rely
 on. docs/assumptions.md mirrors this table (a test keeps them in sync). Changing an assumption
-means adding a new version, not editing the old one silently.
+means adding a new version, not editing the old one silently. Superseded versions stay in the
+register (``SUPERSEDED`` maps old -> new) and can no longer be cited by new outputs.
 """
 
 from __future__ import annotations
@@ -76,6 +77,44 @@ ASSUMPTIONS: dict[str, str] = {
                                "projected dilution.",
     "PENDING-CA-v1": "Known (announced, not yet effective) share-changing corporate actions are applied to shares "
                      "in the projection year containing their ex_date.",
+    # ---- owner decisions after Phase 2 review (2026-10-20)
+    "ANNUAL-BASE-STALENESS-v1": "VMS-0.1 keeps the last full FY as projection base (ANNUAL-BASE-v1). Interim results "
+                                "published after that FY are not used, so the base can be up to ~15 months old. "
+                                "Known limitation; a TTM/interim base is deferred.",
+    "INDUSTRY-UNCLASSIFIED-v2": "No PIT industry classification at as_of => INDUSTRY_UNCLASSIFIED (CRITICAL): "
+                                "BLOCKED in production. An exploratory run with a recorded override reason uses the "
+                                "generic operating-company profile, flagged INDUSTRY_UNCLASSIFIED.",
+    "DIVIDEND-T-PLUS-1-v1": "A-share convention: dividends declared on FY t results are paid in year t+1. The payout "
+                            "driver is dividends_paid[t+1] / parent_net_income[t]. Projected year-t dividends paid = "
+                            "dividends declared on FY t-1. Dividends declared on the final projected FY are unpaid at "
+                            "the horizon (Phase 6 must treat them consistently).",
+    "ANNOUNCED-DIVIDEND-BASE-v1": "Cash dividends announced by as_of with ex_date after the base FY end are unpaid at "
+                                  "the base balance-sheet date. They are deducted from base cash and base equity (and "
+                                  "total assets) and replace the policy's FY-base declaration. Amount = cash_per_share x "
+                                  "shares before ex_date (last known market shares x known pending share ratios before "
+                                  "ex_date). Phase 7: holders at as_of receive those with ex_date > as_of.",
+    "INTEREST-OPENING-DEBT-v2": "Interest expense = cost_of_debt x opening term debt + (cost_of_debt + revolver_spread) "
+                                "x opening revolver balance (opening balances avoid circularity). Interest income = "
+                                "cash_interest_rate x max(opening cash, 0).",
+    "REVOLVER-RATE-v1": "Revolver rate = cost_of_debt + configurable revolver_spread (default 0). Debt repayments "
+                        "retire the revolver first.",
+    "CASH-INTEREST-ZERO-v1": "Interest income on cash defaults to 0 (cash_interest_rate = 0). This is conservative "
+                             "and labeled. Excess cash is valued in the Phase 6 bridge instead.",
+    "BS-RESIDUAL-WARN-v1": "The base-year unexplained balance-sheet residual (assets - liabilities - equity under "
+                           "source definitions) is held constant. If abs(residual) > bs_residual_warn_ratio (default 5%) "
+                           "x total assets => WARNING BASE_BS_RESIDUAL_LARGE.",
+    "LEASE-BRIDGE-DEBTLIKE-v1": "(Phase 6) Lease liabilities are debt-like in the EV-to-equity bridge. Since FCFF "
+                                "(LEASES-EXCLUDED-v1) does not deduct lease principal, it must not be deducted twice.",
+    "MINORITY-BOOK-BRIDGE-v1": "(Phase 6) Minority interest is deducted in the bridge at book value (labeled "
+                               "approximation). Minority dividends are not modelled.",
+    "WACC-INPUTS-DEFERRED-v1": "WACC / cost-of-equity inputs (risk-free rate, ERP, beta source) are deferred to "
+                               "Phase 6 and require an owner decision. Phase 2 only defines the typed rates.",
+}
+
+SUPERSEDED: dict[str, str] = {
+    "PAYOUT-SAME-YEAR-v1": "DIVIDEND-T-PLUS-1-v1",
+    "INDUSTRY-UNCLASSIFIED-v1": "INDUSTRY-UNCLASSIFIED-v2",
+    "INTEREST-OPENING-DEBT-v1": "INTEREST-OPENING-DEBT-v2",
 }
 
 
@@ -83,4 +122,7 @@ def cite(*ids: str) -> list[str]:
     missing = [i for i in ids if i not in ASSUMPTIONS]
     if missing:
         raise KeyError(f"unknown assumption ids {missing}")
+    old = [i for i in ids if i in SUPERSEDED]
+    if old:
+        raise KeyError(f"superseded assumption ids {old}; cite {[SUPERSEDED[i] for i in old]}")
     return sorted(set(ids))

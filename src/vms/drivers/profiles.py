@@ -3,7 +3,8 @@
 Sector logic lives only in registered ``SectorProfile`` classes and in configuration
 (``industry`` block). Nothing else branches on industry. Profile resolution:
 
-1. no PIT classification known  -> default profile, flag INDUSTRY_UNCLASSIFIED (INDUSTRY-UNCLASSIFIED-v1)
+1. no PIT classification known  -> default profile, flag INDUSTRY_UNCLASSIFIED (INDUSTRY-UNCLASSIFIED-v2;
+   reached only in exploratory override: the quality gate BLOCKs it in production)
 2. classification scheme differs from config -> UNSUPPORTED_PROFILE (cannot map safely)
 3. industry in ``unsupported``  -> UNSUPPORTED_PROFILE (raw metrics only, no projection/DCF)
 4. industry in ``profile_map``  -> that registered profile
@@ -87,7 +88,7 @@ def get_profile(profile_id: str) -> SectorProfile:
 
 
 def resolve_profile(classification: InstrumentClassification | None, cfg: IndustryConfig) -> ProfileResolution:
-    a = cite("INDUSTRY-SW-L1-v1", "INDUSTRY-UNCLASSIFIED-v1")
+    a = cite("INDUSTRY-SW-L1-v1", "INDUSTRY-UNCLASSIFIED-v2")
     registered = registered_profiles()
     for ind, pid in cfg.profile_map.items():
         if pid not in registered:

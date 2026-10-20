@@ -82,7 +82,7 @@ Directory with one file per table, either `.csv` or `.parquet` (both present →
 | `market_observations` | yes | `timestamp` (a close is known at its own timestamp) |
 | `corporate_actions` | no (absence → `CORPORATE_ACTIONS_UNAVAILABLE` warning) | `announced_at` |
 | `sources.yaml` | no (absence → every source undeclared → PIT_INCOMPLETE) | — |
-| `instrument_classification` | no (absence → INDUSTRY_UNCLASSIFIED, generic profile) | `published_at` |
+| `instrument_classification` | required for production (absence → `INDUSTRY_UNCLASSIFIED` CRITICAL; exploratory override → generic profile) | `published_at` |
 
 `instrument_classification` columns: `instrument_id`, `scheme` (e.g. `SW2021_L1`), `industry` (scheme name, e.g.
 `机械设备`), `published_at` (tz-aware), `source_id`. The snapshot uses the latest classification with
@@ -180,7 +180,8 @@ known period.
 - `driver_diagnostics.json`: profile resolution (status, profile_id, industry, flags), the annual history used, and
   each driver's definition, formula, transform, bounds, observations, central value, method, and flags
   (`PRIOR_FALLBACK`, `LOW_CONFIDENCE`, `CLIPPED_TO_BOUND`, `OBS_OUT_OF_BOUNDS`, definition flags).
-- `statement_projection.json` (DET-PROJ-1): `status` (VALID / REJECTED / INSUFFICIENT_DATA /
+- `statement_projection.json` (DET-PROJ-2: t+1 dividends, announced-dividend base deduction, revolver/cash interest,
+  base residual warning in `warnings`): `status` (VALID / REJECTED / INSUFFICIENT_DATA /
   UNSUPPORTED_PROFILE), `label`, `base_year`, `years`, `policy` (id, version, params), `items`
   (`item@year` → value/formula/inputs), typed `fcff` / `fcfe`, `violations` (reason codes, see
   `vms.statements.invariants.REASON_CODES`), `flags`, `missing_inputs`, and cited `assumptions`.

@@ -14,7 +14,7 @@ from vms.statements.ledger import TracedValue
 CFG = loaded_config()
 CA = CFG.config.capital_allocation
 D = {"payout_ratio": 0.3, "acquisitions_to_revenue": 0.02, "repurchases_to_net_income": 0.1, "debt_to_revenue": 0.2}
-S = AllocationState(year=2025, revenue=1000, parent_net_income=100, ebitda=150, cash_before_distributions=400,
+S = AllocationState(year=2025, revenue=1000, parent_net_income=100, ebitda=150, cash_available_for_distribution=400,
                     debt_open=100)
 
 

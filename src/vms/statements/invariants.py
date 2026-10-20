@@ -20,10 +20,12 @@ REASON_CODES = {
     "DISTRIBUTION_DOUBLE_COUNT": "distributions_to_shareholders != dividends + repurchases",
     "BALANCE_SHEET_FAIL": "assets - liabilities - equity != base-year residual",
     "NWC_LINK_FAIL": "operating NWC / change in NWC inconsistent with balances",
-    "INCOME_LINK_FAIL": "net income != EBIT - interest - tax, or gross profit/COGS inconsistent",
+    "INCOME_LINK_FAIL": "net income != EBIT - interest + interest income - tax, or gross profit/COGS inconsistent",
     "FCFF_COMPOSITION_FAIL": "FCFF != NOPAT + D&A - capex - dNWC - acquisitions",
     "FCFE_COMPOSITION_FAIL": "FCFE != CFO - capex - acquisitions + net borrowing",
-    "FCF_BRIDGE_FAIL": "FCFF - FCFE != interest + book tax - operating tax - net borrowing",
+    "FCF_BRIDGE_FAIL": "FCFF - FCFE != interest - interest income + book tax - operating tax - net borrowing",
+    "DIVIDEND_TIMING_FAIL": "dividends paid in y != dividends declared on FY y-1 (DIVIDEND-T-PLUS-1-v1)",
+    "REVOLVER_EXCEEDS_DEBT": "revolver balance negative or above total debt",
     "NEGATIVE_TAX": "tax expense or operating tax below zero",
     "REPURCHASE_INCONSISTENT": "repurchase cash != shares repurchased x price",
     "ISSUANCE_INCONSISTENT": "issuance cash != shares issued x price",
@@ -76,13 +78,17 @@ def check_invariants(items: dict[str, TracedValue], base_year: int, years: list[
         onwc = v("accounts_receivable", y) + v("inventory", y) - v("accounts_payable", y)
         bad("NWC_LINK_FAIL", y, v("operating_nwc", y), onwc)
         bad("NWC_LINK_FAIL", y, v("delta_operating_nwc", y), v("operating_nwc", y) - v("operating_nwc", p))
-        bad("INCOME_LINK_FAIL", y, v("net_income", y), v("ebit", y) - v("interest_expense", y) - v("tax_expense", y))
+        bad("INCOME_LINK_FAIL", y, v("net_income", y),
+            v("ebit", y) - v("interest_expense", y) + v("interest_income", y) - v("tax_expense", y))
+        bad("DIVIDEND_TIMING_FAIL", y, div, v("dividends_declared", p))
+        if not (-tol <= v("revolver_balance", y) <= v("interest_bearing_debt", y) + tol):
+            out.append(Violation(code="REVOLVER_EXCEEDS_DEBT", year=y, detail=str(v("revolver_balance", y))))
         bad("INCOME_LINK_FAIL", y, v("gross_profit", y), v("revenue", y) - v("cost_of_revenue", y))
         bad("FCFF_COMPOSITION_FAIL", y, v("fcff", y),
             v("nopat", y) + v("depreciation_amortization", y) - capex - v("delta_operating_nwc", y) - acq)
         bad("FCFE_COMPOSITION_FAIL", y, v("fcfe", y), cfo - capex - acq + nb)
         bad("FCF_BRIDGE_FAIL", y, v("fcff", y) - v("fcfe", y),
-            v("interest_expense", y) + v("tax_expense", y) - v("operating_tax", y) - nb)
+            v("interest_expense", y) - v("interest_income", y) + v("tax_expense", y) - v("operating_tax", y) - nb)
         if v("tax_expense", y) < -tol or v("operating_tax", y) < -tol:
             out.append(Violation(code="NEGATIVE_TAX", year=y, detail="tax < 0"))
         price = v("transaction_price", y)

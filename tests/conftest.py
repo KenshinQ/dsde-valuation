@@ -42,10 +42,19 @@ from vms.data.io import LoadResult  # noqa: E402
 from vms.schemas.config import load_config  # noqa: E402
 
 
-def make_load(fin, mkt, ca=(), sources=None, ca_provided=True) -> LoadResult:
+def default_classifications(fin, mkt):
+    """Every instrument classified (published long before any test as_of); INDUSTRY-UNCLASSIFIED-v2 blocks otherwise."""
+    from vms.schemas import InstrumentClassification
+    ids = sorted({o.instrument_id for o in [*fin, *mkt]} | {synthetic.SYNTHETIC_INSTRUMENT})
+    return [InstrumentClassification(instrument_id=i, scheme=synthetic.INDUSTRY[0], industry=synthetic.INDUSTRY[1],
+                                     published_at=datetime(2000, 1, 1, tzinfo=CST), source_id="TEST") for i in ids]
+
+
+def make_load(fin, mkt, ca=(), sources=None, ca_provided=True, classifications=None) -> LoadResult:
     srcs = {s.source_id: s for s in (synthetic.source_descriptors() if sources is None else sources)}
+    cls = default_classifications(fin, mkt) if classifications is None else list(classifications)
     return LoadResult(financial=list(fin), market=list(mkt), corporate_actions=list(ca), sources=srcs,
-                      corporate_actions_provided=ca_provided, sources_provided=True)
+                      corporate_actions_provided=ca_provided, sources_provided=True, classifications=cls)
 
 
 @pytest.fixture(scope="session")

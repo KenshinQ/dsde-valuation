@@ -1,4 +1,4 @@
-# Data contracts (Phase 6)
+# Data contracts (Phase 7)
 
 Sources of truth: `src/vms/schemas/observations.py`, `src/vms/schemas/fields.py`,
 `src/vms/pit/snapshot.py`, `src/vms/quality/issues.py`. Artifact schema version: `vms-0.1.phase1`.
@@ -221,6 +221,11 @@ known period.
   `valuation.composite_weights` is set.
 - `path_valuations.parquet`: one row per path with WACC, DCF, bridge, exit-multiple fields.
 - `financial_path_ledgers.parquet`: full path-year statement ledgers (PATH-LEDGER-PARQUET-v1).
+
+## 6f. Phase 7 artifacts (`vms returns`, also by `vms demo`)
+- `return_distribution_summary.json`: entry-price × horizon mixture stats + regime-conditional diagnostics;
+  dividend treatment DIVIDEND-NO-REINVEST-v1; lean path_returns sample.
+- `path_returns.parquet`: full path × entry × horizon return rows.
 
 ## 7. Not yet covered
 FX conversion (SCOPE-CNY-v1); non-calendar fiscal years (FISCAL-YEAR-CALENDAR-v1); suspension/price-limit flags;

@@ -7,14 +7,15 @@ from typing import Any, Literal
 
 from vms.data.io import LoadResult
 from vms.drivers.distributions import DistributionModel
-from vms.pipeline import (Phase2Run, Phase5Run, Phase6Run, run_estimation, run_path_projection, run_projection,
-                          run_simulation, run_valuation)
+from vms.pipeline import (Phase2Run, Phase5Run, Phase6Run, Phase7Run, run_estimation, run_path_projection,
+                          run_projection, run_returns, run_simulation, run_valuation)
 from vms.pit.snapshot import PITSnapshot
 from vms.quality.report import DataQualityReport, assess
 from vms.regimes import RegimeResult
 from vms.sampling import SimulationBundle
 from vms.schemas.config import LoadedConfig
 from vms.statements.paths import FinancialPathBundle, project_financial_paths
+from vms.returns import ReturnDistributionBundle, build_return_distributions
 from vms.valuation import ValuationBundle, value_paths
 
 
@@ -92,11 +93,27 @@ class ValuationEngine:
                              n_paths=n_paths, n_years=n_years, policy_id=policy_id, mode=mode,
                              override_reason=override_reason)
 
-    def build_return_distributions(self, *args: Any, **kwargs: Any) -> None:
-        raise NotImplementedError("build_return_distributions: Phase 7")
+    def build_return_distributions(self, valuation: ValuationBundle, financial: FinancialPathBundle, *,
+                                     spot_price: float, entry_prices: list[float] | None = None,
+                                     horizons_years: list[int] | None = None,
+                                     simulation=None, regimes=None) -> ReturnDistributionBundle:
+        return build_return_distributions(
+            valuation=valuation, financial=financial, loaded=self.loaded, spot_price=spot_price,
+            entry_prices=entry_prices, horizons_years=horizons_years, simulation=simulation, regimes=regimes)
+
+    def returns_from_load(self, load: LoadResult, *, instrument_id: str, as_of: datetime, seed: int,
+                          spot_price: float | None = None, n_paths: int | None = None,
+                          n_years: int | None = None, policy_id: str | None = None,
+                          entry_prices: list[float] | None = None, horizons_years: list[int] | None = None,
+                          mode: Literal["production", "exploratory"] = "production",
+                          override_reason: str | None = None) -> Phase7Run:
+        return run_returns(load, instrument_id=instrument_id, as_of=as_of, loaded=self.loaded, seed=seed,
+                           spot_price=spot_price, n_paths=n_paths, n_years=n_years, policy_id=policy_id,
+                           entry_prices=entry_prices, horizons_years=horizons_years, mode=mode,
+                           override_reason=override_reason)
 
     def run_diagnostics(self, *args: Any, **kwargs: Any) -> None:
         raise NotImplementedError("run_diagnostics: Phase 8")
 
-    def run(self, load: LoadResult, *, instrument_id: str, as_of: datetime, seed: int, **kw: Any) -> Phase6Run:
-        return self.value_from_load(load, instrument_id=instrument_id, as_of=as_of, seed=seed, **kw)
+    def run(self, load: LoadResult, *, instrument_id: str, as_of: datetime, seed: int, **kw: Any) -> Phase7Run:
+        return self.returns_from_load(load, instrument_id=instrument_id, as_of=as_of, seed=seed, **kw)

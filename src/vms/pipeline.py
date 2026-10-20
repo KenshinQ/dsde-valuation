@@ -3,6 +3,7 @@
 Phase 2: PIT → gate → profile → drivers → deterministic statements.
 Phase 3: PIT → gate → profile → regimes → walk-forward → driver distributions.
 Phase 4: Phase 3 + correlated path sampler (SimulationBundle).
+Phase 7: entry-price-conditioned return distributions.
 
 Partial SPEC §16.1 facade: see ``vms.engine.ValuationEngine``.
 """
@@ -232,3 +233,51 @@ def run_valuation(load: LoadResult, *, instrument_id: str, as_of: datetime, load
     val = value_paths(financial=p5.financial_paths, snapshot=p5.snapshot, loaded=loaded)
     return Phase6Run(p5.snapshot, p5.report, p5.resolution, p5.history, p5.regimes, p5.walk_forward,
                      p5.distributions, p5.central, p5.bundle, p5.financial_paths, val)
+
+
+@dataclass(frozen=True)
+class Phase7Run:
+    snapshot: "PITSnapshot"
+    report: "DataQualityReport"
+    resolution: "ProfileResolution"
+    history: "AnnualHistory"
+    regimes: "RegimeResult | None"
+    walk_forward: "WalkForwardReport | None"
+    distributions: "DistributionModel | None"
+    central: "DriverModel | None"
+    bundle: "SimulationBundle | None"
+    financial_paths: "FinancialPathBundle | None"
+    valuation: "ValuationBundle | None"
+    returns: "ReturnDistributionBundle | None"
+    spot_price: float | None
+
+
+def run_returns(load: LoadResult, *, instrument_id: str, as_of: datetime, loaded: LoadedConfig, seed: int,
+                spot_price: float | None = None, n_paths: int | None = None, n_years: int | None = None,
+                policy_id: str | None = None, entry_prices: list[float] | None = None,
+                horizons_years: list[int] | None = None,
+                mode: Literal["production", "exploratory"] = "production",
+                override_reason: str | None = None) -> Phase7Run:
+    from vms.returns import build_return_distributions
+
+    p6 = run_valuation(load, instrument_id=instrument_id, as_of=as_of, loaded=loaded, seed=seed,
+                       n_paths=n_paths, n_years=n_years, policy_id=policy_id, mode=mode,
+                       override_reason=override_reason)
+    if p6.valuation is None or p6.financial_paths is None:
+        return Phase7Run(p6.snapshot, p6.report, p6.resolution, p6.history, None, None, None, None, None,
+                         None, None, None, spot_price)
+    spot = spot_price
+    if spot is None:
+        if not p6.snapshot.market:
+            raise ValueError("spot_price required when snapshot has no market observations")
+        spot = float(p6.snapshot.market[-1].raw_close)
+    years = n_years
+    if years is None and horizons_years:
+        years = max(horizons_years)
+    # re-run valuation if n_years was inferred from horizons and differed — already done via n_years arg
+    rets = build_return_distributions(
+        valuation=p6.valuation, financial=p6.financial_paths, loaded=loaded, spot_price=spot,
+        entry_prices=entry_prices, horizons_years=horizons_years or loaded.config.horizons_years,
+        simulation=p6.bundle, regimes=p6.regimes)
+    return Phase7Run(p6.snapshot, p6.report, p6.resolution, p6.history, p6.regimes, p6.walk_forward,
+                     p6.distributions, p6.central, p6.bundle, p6.financial_paths, p6.valuation, rets, spot)

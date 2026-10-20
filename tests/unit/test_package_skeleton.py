@@ -7,7 +7,7 @@ import pytest
 SPEC_MODULES = ["schemas", "data", "pit", "quality", "drivers", "regimes", "sampling", "statements",
                 "capital_allocation", "valuation", "equity_bridge", "returns", "diagnostics",
                 "evaluation", "reporting", "cli"]
-UNIMPLEMENTED = ["returns", "diagnostics", "evaluation"]
+UNIMPLEMENTED = ["diagnostics", "evaluation"]
 
 
 @pytest.mark.parametrize("m", SPEC_MODULES)

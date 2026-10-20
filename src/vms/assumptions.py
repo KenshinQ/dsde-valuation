@@ -228,6 +228,24 @@ ASSUMPTIONS: dict[str, str] = {
                           "- other_senior_claims (LEASE-BRIDGE-DEBTLIKE-v1, MINORITY-BOOK-BRIDGE-v1). Components and "
                           "signs reported. Negative equity preserved (no silent clamp). "
                           "ValuePerShare = EquityValue / diluted_shares (must be > 0 and time-aligned to horizon).",
+    "DIVIDEND-NO-REINVEST-v1": "VMS-0.1 total shareholder return uses cumulative cash dividends WITHOUT reinvestment: "
+                               "R=(VPS_H + cum_DPS_H - P0)/P0 where cum_DPS_H = sum_{y=1..H} dividends[y]/diluted_shares[y]. "
+                               "Buybacks/issuance affect share count / per-share value only (not added as cash); splits "
+                               "already in the share path. No double-counting of dividends, splits, buybacks, or issuance.",
+    "HORIZON-EQUITY-REMAINING-PV-v1": "At forecast horizon H (end of year H within N), EquityValue_H comes from "
+                                     "EV_H = PV_H(remaining FCFF from H+1..N) + PV_H(Gordon TV at N), discounted to H at "
+                                     "path WACC, then the Phase 6 EV-equity bridge with cash/debt/leases/minority/other "
+                                     "and diluted_shares at H. At H=N, EV_N = TV_N. Same WACC-g margin reject as Phase 6.",
+    "ANNUALIZED-GEO-ENDYEAR-v1": "Annualized geometric return = (1+R)^(1/H) - 1 where R is the H-year holding-period "
+                                "total return and H is an integer year count (end-of-year convention). Undefined for R<=-1 "
+                                "(flagged); reported separately from arithmetic mean of R.",
+    "ENTRY-PRICE-GRID-v1": "Entry prices = spot_price * entry_price_grid.relative_to_spot (from config / ValuationRequest). "
+                           "spot_price must be > 0 and finite. Grid shows how returns change across prices; no claim of a "
+                           "universally optimal buy price.",
+    "PRICE-REGIME-INVARIANT-v1": "Holding future-value paths fixed, lower entry price must mechanically improve pathwise "
+                                "return. Changing the fundamental posterior / future-value distribution requires joint "
+                                "recomputation. Never encode that lower price alone improves fundamental odds, or that "
+                                "price decline proves fundamental deterioration.",
 }
 
 

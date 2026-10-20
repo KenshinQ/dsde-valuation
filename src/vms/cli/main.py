@@ -8,7 +8,8 @@ Implemented commands:
   simulate        Phase 3 + correlated path sampler (SimulationBundle; not a valuation)
   project-paths   Phase 5 path-wise statements + capital allocation (FinancialPathBundle)
   value           Phase 6 FCFF DCF + exit-multiple + EV-equity bridge
-  demo            offline SYNTHETIC smoke through DCF bridge. NO return distributions (Phase 7).
+  returns         Phase 7 entry-price-conditioned multi-horizon returns
+  demo            offline SYNTHETIC smoke through Phase 7 returns.
 
 Exit codes: 0 ok, 1 unexpected error, 2 invalid input/config/arguments,
             3 BLOCKED by critical data-quality errors in production mode,
@@ -40,19 +41,20 @@ from vms.schemas import ValuationRequest, format_validation_error
 from vms.schemas.config import ConfigError, LoadedConfig, load_config
 from vms.schemas.fields import FIELD_REGISTRY_VERSION
 from vms.capital_allocation.policies import POLICIES
-from vms.pipeline import (Phase2Run, Phase3Run, Phase4Run, Phase5Run, Phase6Run, run_estimation,
-                          run_path_projection, run_projection, run_simulation, run_valuation)
+from vms.pipeline import (Phase2Run, Phase3Run, Phase4Run, Phase5Run, Phase6Run, Phase7Run, run_estimation,
+                          run_path_projection, run_projection, run_returns, run_simulation, run_valuation)
 from vms.regimes import RegimeModelNotImplemented
 from vms.sampling import SamplingGateError
 from vms.statements import CentralPathError
 from vms.seeding import stream_rng
 
 EXIT_OK, EXIT_ERROR, EXIT_INVALID, EXIT_BLOCKED, EXIT_UNSUPPORTED, EXIT_PROJECTION = 0, 1, 2, 3, 4, 5
-SMOKE_STATUS = "PHASE6_SMOKE_NOT_A_FULL_RETURN_PRODUCT"
+SMOKE_STATUS = "PHASE7_SMOKE_NOT_SENSITIVITY_ATTRIBUTION"
 DETERMINISTIC_ARTIFACTS = ("request.json", "config_snapshot.json", "data_manifest.json",
                            "data_quality_report.json", "pit_snapshot.json", "state_posterior.json",
                            "driver_diagnostics.json", "statement_projection.json", "simulation_bundle.json",
-                           "financial_path_bundle.json", "valuation_summary.json", "simulation_metadata.json")
+                           "financial_path_bundle.json", "valuation_summary.json",
+                           "return_distribution_summary.json", "simulation_metadata.json")
 
 
 class InputError(ValueError):
@@ -637,6 +639,112 @@ def cmd_value(args: argparse.Namespace) -> int:
     return EXIT_OK
 
 
+
+def _write_phase7(out: Path, stamp, run: Phase7Run) -> None:  # noqa: ANN001
+    if run.returns is None:
+        write_artifact(out, "return_distribution_summary.json", {"status": "UNSUPPORTED_PROFILE", "bundle": None}, stamp)
+        return
+    r = run.returns
+    # optional path-level parquet
+    try:
+        import pandas as pd
+        rows = [pr.model_dump(mode="json") for pr in r.path_returns]
+        if rows:
+            pd.DataFrame(rows).to_parquet(out / "path_returns.parquet", index=False)
+    except Exception as e:  # noqa: BLE001
+        write_artifact(out, "path_returns_error.json", {"error": str(e)}, stamp)
+    payload = r.model_dump(mode="json")
+    # lean JSON: drop bulk path_returns (parquet has them)
+    payload["path_returns"] = payload["path_returns"][: min(200, len(payload["path_returns"]))]
+    payload["path_returns_parquet"] = "path_returns.parquet"
+    payload["path_returns_note"] = "JSON embeds at most 200 path-return rows; full grid in path_returns.parquet"
+    write_artifact(out, "return_distribution_summary.json", payload, stamp)
+    write_artifact(out, "simulation_metadata.json", {
+        "status": "ENTRY_PRICE_RETURNS",
+        "implemented_phase": "PHASE_7",
+        "warning": "Entry-price returns only; no sensitivity/attribution (Phase 8).",
+        "spot_price": r.spot_price,
+        "entry_prices": r.entry_prices,
+        "horizons_years": r.horizons_years,
+        "n_valid_paths": r.n_valid_paths,
+        "dividend_treatment": r.dividend_treatment,
+        "flags": r.flags,
+        "valuation_ref": r.valuation_ref,
+    }, stamp)
+
+
+def _p7_summary(run: Phase7Run) -> dict:
+    if run.returns is None:
+        return {**(_p6_summary(run) if run.valuation is not None else {"profile": run.resolution.status.value})}
+    r = run.returns
+    # spot cell @ 1y if present
+    spot_cells = [c for c in r.mixture if abs(c.relative_to_spot - 1.0) < 1e-12]
+    c1 = next((c for c in spot_cells if c.horizon_years == r.horizons_years[0]), spot_cells[0] if spot_cells else None)
+    return {**_p6_summary(run),  # type: ignore[arg-type]
+            "spot_price": r.spot_price,
+            "n_entry_prices": len(r.entry_prices),
+            "horizons_years": r.horizons_years,
+            "n_valid_return_paths": r.n_valid_paths,
+            "spot_h1_mean_return": None if c1 is None else c1.stats.get("mean"),
+            "spot_h1_p_loss": None if c1 is None else c1.stats.get("p_loss"),
+            "return_flags": r.flags,
+            "dividend_treatment": r.dividend_treatment}
+
+
+def cmd_returns(args: argparse.Namespace) -> int:
+    cfg = load_config(args.config)
+    mode = _mode(args, cfg)
+    as_of, note = _as_of(args.as_of)
+    load = _load(args.input)
+    seed = cfg.config.monte_carlo.default_seed if args.seed is None else args.seed
+    paths = cfg.config.monte_carlo.default_paths if args.paths is None else args.paths
+    years = args.years
+    spot = args.spot_price
+    horizons = None
+    if args.horizons:
+        try:
+            horizons = [int(h) for h in args.horizons.split(",")]
+        except ValueError:
+            raise InputError(f"--horizons {args.horizons!r} must be comma-separated integers") from None
+    if years is None and horizons:
+        years = max(horizons)
+    stamp = ArtifactStamp(run_id=content_run_id(kind="returns", instrument=args.ticker, as_of=as_of.isoformat(),
+                                                data=dataset_hash(load),
+                                                config=sha256_of({"c": cfg.config.model_dump(mode="json"),
+                                                                  "p": cfg.profile.model_dump(mode="json")}),
+                                                mode=mode, override=args.override_reason, seed=seed,
+                                                paths=paths, years=years, policy=args.policy,
+                                                spot=spot, horizons=horizons))
+    out = Path(args.out)
+    try:
+        run = run_returns(load, instrument_id=args.ticker, as_of=as_of, loaded=cfg, seed=seed, spot_price=spot,
+                          n_paths=paths, n_years=years, policy_id=args.policy, horizons_years=horizons,
+                          mode=mode, override_reason=args.override_reason)
+    except GateError as e:
+        snap, report = assess(load, instrument_id=args.ticker, as_of=as_of, cfg=cfg.config.quality, mode=mode)
+        _write_snapshot_bundle(out, stamp, load, args.input, as_of, note, snap, report, blocked=True)
+        print(f"error: {e}", file=sys.stderr)
+        return EXIT_BLOCKED
+    except (SamplingGateError, CentralPathError) as e:
+        print(f"error: {e}", file=sys.stderr)
+        return EXIT_PROJECTION
+    except ValueError as e:
+        print(f"error: {e}", file=sys.stderr)
+        return EXIT_INVALID
+    _write_snapshot_bundle(out, stamp, load, args.input, as_of, note, run.snapshot, run.report, blocked=False)
+    _write_phase3(out, stamp, run)
+    _write_phase4(out, stamp, run)
+    _write_phase5(out, stamp, run)
+    _write_phase6(out, stamp, run)
+    _write_phase7(out, stamp, run)
+    print(json.dumps({"run_id": stamp.run_id, "schema_version": SCHEMA_VERSION, "out": str(out), "seed": seed,
+                      **_summary(run.report), **_p7_summary(run)}, indent=2, ensure_ascii=False))
+    if run.returns is None:
+        print(f"error: {args.ticker}: UNSUPPORTED_PROFILE ({run.resolution.reason})", file=sys.stderr)
+        return EXIT_UNSUPPORTED
+    return EXIT_OK
+
+
 def cmd_demo(args: argparse.Namespace) -> int:
     loaded = load_config(args.config)
     cfg = loaded.config
@@ -684,23 +792,25 @@ def cmd_demo(args: argparse.Namespace) -> int:
     run3 = None
     if run is not None:
         _write_phase2(out, meta, run)
-        run6 = run_valuation(load, instrument_id=synthetic.SYNTHETIC_INSTRUMENT, as_of=as_of, loaded=loaded,
-                               seed=seed, n_paths=min(paths, 100), n_years=max(horizons),
-                               policy_id=args.policy, mode=mode, override_reason=args.override_reason)
-        _write_phase3(out, meta, run6, run)
-        _write_phase4(out, meta, run6)
-        _write_phase5(out, meta, run6)
-        _write_phase6(out, meta, run6)
-        run3 = run6
-        run4 = run6
-        run5 = run6
+        run7 = run_returns(load, instrument_id=synthetic.SYNTHETIC_INSTRUMENT, as_of=as_of, loaded=loaded,
+                             seed=seed, n_paths=min(paths, 100), n_years=max(horizons), spot_price=spot,
+                             policy_id=args.policy, horizons_years=horizons, mode=mode,
+                             override_reason=args.override_reason)
+        _write_phase3(out, meta, run7, run)
+        _write_phase4(out, meta, run7)
+        _write_phase5(out, meta, run7)
+        _write_phase6(out, meta, run7)
+        _write_phase7(out, meta, run7)
+        run3 = run7
+        run4 = run7
+        run5 = run7
     else:
         run4 = None
     smoke = stream_rng(seed, "phase0_smoke").standard_normal(5)
     write_artifact(out, "simulation_metadata.json", {
         "status": SMOKE_STATUS,
         "implemented_phase": IMPLEMENTED_PHASE,
-        "warning": "Smoke artifact through Phase 6 DCF/bridge; no entry-price return distributions (Phase 7).",
+        "warning": "Smoke artifact through Phase 7 entry-price returns; no sensitivity/attribution (Phase 8).",
         "data_label": "SYNTHETIC — not real market data",
         "quality_status": report.status.value,
         "metadata": meta.model_dump(mode="json"),
@@ -718,8 +828,9 @@ def cmd_demo(args: argparse.Namespace) -> int:
                       **({} if run is None else _p2_summary(run)),
                       **({} if run3 is None else {"phase3": _p3_summary(run3)}),
                       **({} if run4 is None else {"phase4": _p4_summary(run4)}),
-                      **({} if run4 is None or not isinstance(run4, (Phase5Run, Phase6Run)) else {"phase5": _p5_summary(run4)}),
-                      **({} if not isinstance(run4, Phase6Run) else {"phase6": _p6_summary(run4)}),
+                      **({} if run4 is None or not isinstance(run4, (Phase5Run, Phase6Run, Phase7Run)) else {"phase5": _p5_summary(run4)}),
+                      **({} if not isinstance(run4, (Phase6Run, Phase7Run)) else {"phase6": _p6_summary(run4)}),
+                      **({} if not isinstance(run4, Phase7Run) else {"phase7": _p7_summary(run4)}),
                       "run_id": meta.run_id,
                       "schema_version": SCHEMA_VERSION, "out": str(out), "spot_price": spot, "seed": seed,
                       "paths": paths, "data_hash": data_hash[:16], "config_hash": meta.config_hash[:16],
@@ -740,7 +851,7 @@ def _gate_args(p: argparse.ArgumentParser) -> None:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    p = argparse.ArgumentParser(prog="vms", description="VMS-0.1 valuation engine (Phase 6: FCFF DCF + exit-multiple + bridge; no return distributions yet)")
+    p = argparse.ArgumentParser(prog="vms", description="VMS-0.1 valuation engine (Phase 7: entry-price-conditioned returns)")
     sub = p.add_subparsers(dest="command", required=True)
     asof_help = "YYYY-MM-DD (=> 15:00 Asia/Shanghai, rule ASOF-DATE-CLOSE-v1) or ISO-8601 with offset"
 
@@ -800,6 +911,21 @@ def build_parser() -> argparse.ArgumentParser:
     pp.add_argument("--policy", choices=sorted(POLICIES), help="capital-allocation policy")
     _gate_args(pp)
     pp.set_defaults(func=cmd_project_paths)
+
+
+    rt = sub.add_parser("returns", help="entry-price-conditioned multi-horizon returns (Phase 7)")
+    rt.add_argument("--input", required=True)
+    rt.add_argument("--ticker", required=True)
+    rt.add_argument("--as-of", required=True, help=asof_help)
+    rt.add_argument("--out", required=True)
+    rt.add_argument("--seed", type=int)
+    rt.add_argument("--paths", type=int)
+    rt.add_argument("--years", type=int, help="forecast years (default: max horizons)")
+    rt.add_argument("--horizons", help="comma-separated horizons, e.g. 1,3,5")
+    rt.add_argument("--spot-price", type=float, help="override spot; default last PIT close")
+    rt.add_argument("--policy", choices=sorted(POLICIES))
+    _gate_args(rt)
+    rt.set_defaults(func=cmd_returns)
 
     vl = sub.add_parser("value", help="FCFF DCF + exit-multiple + EV-equity bridge (Phase 6)")
     vl.add_argument("--input", required=True)

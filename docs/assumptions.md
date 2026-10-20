@@ -7,14 +7,14 @@ editing `-v1`.** Superseded IDs stay listed and can no longer be cited (`cite()`
 
 Owner decisions: scope/data after Phase 1; Phase 2 follow-ups (2026-10-20); Phase 3 review (2026-10-20):
 CENTRAL-FROM-SELECTED, persistence_t selection, REGIME-CLOCK-MISMATCH, INDUSTRY-PRIORS-DEFER,
-MODEL-SELECTION-WF-v2 eval gates; Phase 6 WACC-INPUTS-v1 (same day); Phase 4 follow-ups (PARAM-BOOTSTRAP-COUPLED, INVALID-PATH-FRACTION-GATE, DEP-BLOCK-BOOTSTRAP-DEFER, COVERAGE-MISCAL-NO-AUTOSWITCH) and Phase 5 PATH-STATEMENTS / FAILED-PATHS-EXCLUDED; Phase 5 review: CENTRAL-PATH-GATE, PATH-LEDGER-PARQUET, BUYBACK-PRICE-LAST-CLOSE; Phase 6 WACC-RF-CONFIG / TV-GORDON / EXIT-MULTIPLE-SEPARATE / EV-EQUITY-BRIDGE.
+MODEL-SELECTION-WF-v2 eval gates; Phase 6 WACC-INPUTS-v1 (same day); Phase 4 follow-ups (PARAM-BOOTSTRAP-COUPLED, INVALID-PATH-FRACTION-GATE, DEP-BLOCK-BOOTSTRAP-DEFER, COVERAGE-MISCAL-NO-AUTOSWITCH) and Phase 5 PATH-STATEMENTS / FAILED-PATHS-EXCLUDED; Phase 5 review: CENTRAL-PATH-GATE, PATH-LEDGER-PARQUET, BUYBACK-PRICE-LAST-CLOSE; Phase 6 WACC-RF-CONFIG / TV-GORDON / EXIT-MULTIPLE-SEPARATE / EV-EQUITY-BRIDGE; Phase 7 DIVIDEND-NO-REINVEST / HORIZON-EQUITY-REMAINING-PV / ANNUALIZED-GEO-ENDYEAR / ENTRY-PRICE-GRID / PRICE-REGIME-INVARIANT.
 
 ## Notes for later phases
 - **Phase 5 (done):** path-wise statements consume SimulationBundle drivers (PATH-STATEMENTS-v1); failed paths excluded (FAILED-PATHS-EXCLUDED-v1). Dilution from rights: RIGHTS-ADJ-DEFER-v1.
 - **Phase 6:** leases debt-like in the bridge (LEASE-BRIDGE-DEBTLIKE-v1); minority at book
   (MINORITY-BOOK-BRIDGE-v1); unpaid final-FY dividends (DIVIDEND-T-PLUS-1-v1); WACC-INPUTS-v1
   (10y CGB RF, ERP 6% default swept, beta vs CSI 300 2y weekly shrink-to-1).
-- **Phase 7:** holders at as_of receive announced dividends with ex_date > as_of (ANNOUNCED-DIVIDEND-BASE-v1).
+- **Phase 7 (done):** entry-price returns with DIVIDEND-NO-REINVEST-v1; horizon equity via remaining FCFF PV (HORIZON-EQUITY-REMAINING-PV-v1); holders at as_of also receive announced dividends with ex_date > as_of (ANNOUNCED-DIVIDEND-BASE-v1) via the path cash/DPS construction.
 - **Phase 9:** exclude snapshots with `pit_complete == false` from unbiased evaluation metrics (PIT-INCOMPLETE-v1).
 
 | ID | Status | Assumption |
@@ -98,3 +98,8 @@ MODEL-SELECTION-WF-v2 eval gates; Phase 6 WACC-INPUTS-v1 (same day); Phase 4 fol
 | `TV-GORDON-v1` | active | Terminal value TV = FCFF[n]*(1+g)/(WACC-g) with g = valuation.terminal_growth, bounded by terminal_value.max_terminal_growth. Require WACC-g >= min_wacc_minus_g; else reject path (WACC_G_MARGIN_FAIL). No silent denominator repair. Report PV(TV)/EV; warn above tv_fraction_warning. |
 | `EXIT-MULTIPLE-SEPARATE-v1` | active | Exit-multiple cross-check (normalized EBIT or EBITDA x multiple) is reported separately from DCF. Peer multiples from explicit config/synthetic peers with robust location + shrink. Composite with DCF only if valuation.composite_weights is set (versioned); default null = keep separate. |
 | `EV-EQUITY-BRIDGE-v1` | active | EquityValue = EV + cash - interest_bearing_debt - lease_debt_like - minority_book - other_senior_claims (LEASE-BRIDGE-DEBTLIKE-v1, MINORITY-BOOK-BRIDGE-v1). Components and signs reported. Negative equity preserved (no silent clamp). ValuePerShare = EquityValue / diluted_shares (must be > 0 and time-aligned to horizon). |
+| `DIVIDEND-NO-REINVEST-v1` | active | VMS-0.1 total shareholder return uses cumulative cash dividends WITHOUT reinvestment: R=(VPS_H + cum_DPS_H - P0)/P0 where cum_DPS_H = sum_{y=1..H} dividends[y]/diluted_shares[y]. Buybacks/issuance affect share count / per-share value only (not added as cash); splits already in the share path. No double-counting of dividends, splits, buybacks, or issuance. |
+| `HORIZON-EQUITY-REMAINING-PV-v1` | active | At forecast horizon H (end of year H within N), EquityValue_H comes from EV_H = PV_H(remaining FCFF from H+1..N) + PV_H(Gordon TV at N), discounted to H at path WACC, then the Phase 6 EV-equity bridge with cash/debt/leases/minority/other and diluted_shares at H. At H=N, EV_N = TV_N. Same WACC-g margin reject as Phase 6. |
+| `ANNUALIZED-GEO-ENDYEAR-v1` | active | Annualized geometric return = (1+R)^(1/H) - 1 where R is the H-year holding-period total return and H is an integer year count (end-of-year convention). Undefined for R<=-1 (flagged); reported separately from arithmetic mean of R. |
+| `ENTRY-PRICE-GRID-v1` | active | Entry prices = spot_price * entry_price_grid.relative_to_spot (from config / ValuationRequest). spot_price must be > 0 and finite. Grid shows how returns change across prices; no claim of a universally optimal buy price. |
+| `PRICE-REGIME-INVARIANT-v1` | active | Holding future-value paths fixed, lower entry price must mechanically improve pathwise return. Changing the fundamental posterior / future-value distribution requires joint recomputation. Never encode that lower price alone improves fundamental odds, or that price decline proves fundamental deterioration. |

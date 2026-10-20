@@ -23,7 +23,7 @@ def test_value_artifacts(tmp_path, capsys):
     assert rc == 0, capsys.readouterr()
     summ = json.loads(capsys.readouterr().out)
     vs = json.loads((out / "valuation_summary.json").read_text())
-    assert vs["run_id"] == summ["run_id"] and vs["schema_version"] == "vms-0.1.phase6"
+    assert vs["run_id"] == summ["run_id"] and vs["schema_version"] == "vms-0.1.phase7"
     assert vs["central"]["status"] == "VALID"
     assert vs["n_valid_dcf"] == 25
     assert (out / "path_valuations.parquet").exists()

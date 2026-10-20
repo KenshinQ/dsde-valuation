@@ -1,4 +1,4 @@
-# Architecture (state at Phase 6)
+# Architecture (state at Phase 7)
 
 Target pipeline: SPEC §4 (adapters → PIT store → gates → drivers → regimes → sampler →
 statements → capital allocation → DCF/multiples → equity bridge → per-share value →
@@ -52,7 +52,7 @@ entry-price-conditioned returns → diagnostics → result bundle).
 
 ## Boundaries
 - No imports from `dsde-engine` or other legacy code; DSDE adapter is Phase 10 and optional.
-- All artifacts carry `run_id` and `schema_version` (`vms-0.1.phase6`).
+- All artifacts carry `run_id` and `schema_version` (`vms-0.1.phase7`).
 
 ## Phase 1 data flow
 ```
@@ -139,3 +139,13 @@ FinancialPathBundle (VALID paths only)
   ├─ exit_multiple_ev: separate EV (robust peer multiple or explicit)
   └─ bridge_ev_to_equity: +cash −debt −leases −minority −other; VPS; negative equity preserved
 Aggregates over valid DCF paths; path_valuations.parquet + valuation_summary.json
+
+## Phase 7 flow (entry-price returns; not sensitivity attribution)
+```
+ValuationBundle + FinancialPathBundle + spot
+  ├─ entry grid: spot × relative_to_spot (ENTRY-PRICE-GRID-v1)
+  ├─ per path × horizon H: EquityValue_H from remaining FCFF PV + TV @ H (HORIZON-EQUITY-REMAINING-PV-v1)
+  ├─ cum DPS without reinvestment (DIVIDEND-NO-REINVEST-v1)
+  ├─ R=(VPS_H + cum_DPS - P0)/P0; ann geo (1+R)^(1/H)-1
+  └─ mixture + regime-conditional stats (CVaR, hurdles, MCSE); price×regime invariant
+return_distribution_summary.json + path_returns.parquet

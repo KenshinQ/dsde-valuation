@@ -30,9 +30,8 @@ Not started: Phase 7 (entry-price return distributions).
 - Tests: `test_valuation.py` (8), `test_phase5_followups.py` (2), `test_cli_value.py` (1)
 
 ## Tests
-- **429 passed** (~158 s box).
+- **429 passed** (~158 s box; clean clone + uv/py3.11 + requirements.lock: **429 passed** in 175 s; `vms value` exit 0, n_valid_dcf=50, artifacts valuation_summary.json + path_valuations.parquet + financial_path_ledgers.parquet).
 - Leakage mutation: **6/6 KILLED**. Invariant mutation: **7/7 KILLED**.
-- Clean-clone py3.11 + lock: see commit message after verify.
 
 ## Acceptance evidence
 

@@ -32,7 +32,7 @@ Config: `estimation.walk_forward.coverage_tolerance: 0.15`; `monte_carlo.correla
 - Docs/CI: README, architecture, data_contracts, `.github/workflows/ci.yml`
 
 ## Tests run
-- **407 passed** (~120 s, Python 3.13 box). New Phase 4-related: 16 tests (plus persistence/gates).
+- **407 passed** (~120 s Python 3.13 box; clean clone + uv/py3.11 + requirements.lock: 407 passed in 124.8 s; `vms simulate` exit 0). New Phase 4-related: 16 tests.
 - Leakage mutation: **6/6 KILLED**. Invariant mutation: **7/7 KILLED**.
 - `vms demo` / `vms simulate` exit 0 on synthetic data.
 

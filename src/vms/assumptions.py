@@ -109,6 +109,48 @@ ASSUMPTIONS: dict[str, str] = {
                                "approximation). Minority dividends are not modelled.",
     "WACC-INPUTS-DEFERRED-v1": "WACC / cost-of-equity inputs (risk-free rate, ERP, beta source) are deferred to "
                                "Phase 6 and require an owner decision. Phase 2 only defines the typed rates.",
+    # ---- Phase 3: regimes and driver distributions
+    "REGIME-PIT-FUNDAMENTALS-ONLY-v1": "Fundamental regimes are inferred from PIT financial records only (TTM revenue "
+                                       "growth, TTM recurring EBIT margin and its yoy change). Never from prices, "
+                                       "returns or any post-as_of information.",
+    "REGIME-RULES-v1": "Rule-based soft classifier: logistic memberships for strong growth, contraction and margin "
+                       "compression; RECOVERY = improvement after a weak (DETERIORATING/RECOVERY) prior period. "
+                       "Thresholds are placeholders. Filter only (no smoothing with later periods).",
+    "REGIME-TRANSITION-DIRICHLET-v1": "Annual-step transitions from soft-label expected counts of (p, p+1y) pairs "
+                                      "(overlapping quarterly pairs weighted 1/4), with a per-row Dirichlet prior "
+                                      "(stay/move pseudo-counts). Rows with little support are flagged prior-dominated.",
+    "REGIME-HMM-DEFERRED-v1": "The optional hidden-state model is an interface only: a per-company HMM is "
+                              "over-parameterised for ~4-20 observations; a pooled panel HMM needs Phase 9 data.",
+    "MARKET-REGIME-UNAVAILABLE-v1": "No market-regime inputs exist in VMS-0.1. The market dimension is UNAVAILABLE "
+                                    "and never inferred from the fundamental state.",
+    "REGIME-ANNUAL-LABEL-v1": "An annual driver observation for FY y is weighted by the fundamental posterior at "
+                              "y-12-31 (or the last period within FY y). No posterior => equal weights (flagged).",
+    "DRIVER-TRANSFORMS-v1": "Estimation happens in transformed space: logit (scaled to bounds) for bounded margins/"
+                            "ratios, log1p for growth and intensities, identity for zero-inflated policy ratios "
+                            "(payout, buybacks, acquisitions) truncated at bounds. Logit observations at a bound are "
+                            "clamped by boundary_eps (flagged BOUNDARY_OBS).",
+    "DRIVER-DIST-v1": "Robust location = median, dispersion = 1.4826 x MAD (weighted versions per regime). Shrinkage: "
+                      "loc = (n loc_hat + k prior)/(n + k); var = (n_d s_hat^2 + k s_prior^2)/(n_d + k), n_d = n - 1. "
+                      "Regime parameters shrink to the pooled estimate with k_regime, and fall back to pooled below "
+                      "min_regime_support. Fewer than min_history_years observations => SPARSE_HISTORY + "
+                      "LOW_CONFIDENCE; none => PRIOR_FALLBACK.",
+    "DRIVER-FAMILY-v1": "Process uncertainty uses a Student-t (df configurable) in transformed space, or the empirical "
+                        "standardized residuals when n >= min_empirical_n (spec 'pooled_empirical'). No unconstrained "
+                        "normal on bounded or skewed raw variables.",
+    "PRIORS-GLOBAL-v1": "Profile priors (prior, prior_scale) act as the global prior. A dedicated sector profile "
+                        "supplies sector priors through its own driver-profile file. All are placeholders.",
+    "PARAM-UNCERTAINTY-BOOTSTRAP-v1": "Parameter uncertainty: nonparametric bootstrap of the full pooled estimator "
+                                      "(resample observations, re-shrink), seeded per driver stream. Draws are persisted "
+                                      "for Phase 4. Walk-forward predictive scales add the analytic se = s/sqrt(n+k).",
+    "WALK-FORWARD-ORIGINS-v1": "Rolling-origin evaluation: at each FY origin the snapshot is rebuilt as known at the "
+                               "first publication of that FY (past-only data, including versions). Specs are fitted "
+                               "there and score the next FY value as known at the run as_of.",
+    "MODEL-SELECTION-WF-v1": "Driver-distribution specs are selected per driver by mean walk-forward pinball loss "
+                             "(transformed space). Fewer than min_origins scored origins => the configured default spec "
+                             "(flagged). In-sample fit is reported but never used for selection.",
+    "DRIVER-DEPENDENCE-PHASE4-v1": "Phase 3 estimates marginal (regime-conditional) distributions only. Dependence "
+                                   "between drivers is modelled by the Phase 4 sampler (regime-conditional block "
+                                   "bootstrap / shrunk correlations).",
 }
 
 SUPERSEDED: dict[str, str] = {

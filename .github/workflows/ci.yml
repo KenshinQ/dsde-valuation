@@ -26,6 +26,8 @@ jobs:
         run: .venv/bin/vms build-snapshot --input /tmp/vms_demo/data --ticker SYN000001.SZ --as-of 2024-05-15 --out /tmp/vms_snap
       - name: Deterministic projection on synthetic data
         run: .venv/bin/vms project --input /tmp/vms_demo/data --ticker SYN000001.SZ --as-of 2025-06-30 --out /tmp/vms_proj
+      - name: Regimes + driver distributions on synthetic data
+        run: .venv/bin/vms estimate --input /tmp/vms_demo/data --ticker SYN000001.SZ --as-of 2025-06-30 --out /tmp/vms_est
       - name: Leakage mutation check
         run: PY=.venv/bin/python scripts/leakage_mutation_check.sh
       - name: Invariant mutation check

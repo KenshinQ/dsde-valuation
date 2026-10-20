@@ -63,3 +63,36 @@ capital_allocation:                    # (Phase 2) versioned policies (spec §10
     fixed_payout: {version: "1", payout_ratio: 0.30}
     target_leverage: {version: "1", debt_to_ebitda_min: 0.5, debt_to_ebitda_max: 2.5}
     min_cash_excess_distribution: {version: "1", min_cash_to_revenue: 0.15, dividend_share: 0.5}
+
+regimes:                               # (Phase 3) fundamental regimes — PIT fundamentals only, never returns
+  model: rule_based                    # rule_based | hmm (hmm = interface only, NOT IMPLEMENTED)
+  model_version: "1"
+  states: [GROWTH, STABLE, DETERIORATING, RECOVERY]   # subset allowed; dropped states merge into STABLE
+  rules:                               # REGIME-RULES-v1 placeholders (not calibrated)
+    growth_high: 0.10                  # TTM revenue growth yoy
+    growth_low: 0.0
+    tau_growth: 0.03
+    margin_band: 0.01                  # EBIT-margin change yoy (fraction of revenue)
+    tau_margin: 0.005
+    recovery_carry: 0.5
+  transition_prior: {stay: 2.0, move: 0.5}   # Dirichlet pseudo-counts per row (REGIME-TRANSITION-DIRICHLET-v1)
+  min_state_support: 2.0
+  market_regime_source: none           # => market regime UNAVAILABLE (MARKET-REGIME-UNAVAILABLE-v1)
+
+estimation:                            # (Phase 3) driver distributions — DRIVER-DIST-v1 placeholders
+  version: "1"
+  max_history_years: 10
+  min_history_years: 3
+  prior_strength: 2.0                  # pseudo-observations toward profile prior
+  regime_prior_strength: 2.0           # pseudo-observations toward the pooled estimate
+  min_regime_support: 3.0              # effective observations per state
+  min_empirical_n: 6
+  student_t_df: 4
+  boundary_eps: 0.001
+  bootstrap_draws: 400
+  persisted_param_draws: 200
+  walk_forward:
+    min_train_years: 3
+    min_origins: 3
+    quantiles: [0.1, 0.5, 0.9]
+    default_spec: regime_t             # falls back to pooled_t per state when support is insufficient

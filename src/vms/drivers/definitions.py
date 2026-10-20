@@ -20,6 +20,16 @@ class DriverDefinition:
     formula: str
     inputs: tuple[str, ...]
     fn: Callable[[AnnualHistory, int], Result]
+    offsets: tuple[int, ...] = (0,)   # years (relative to y) whose inputs the value uses (provenance)
+
+    def refs(self, h: AnnualHistory, y: int) -> list[str]:
+        out = []
+        for off in self.offsets:
+            for n in self.inputs:
+                p = h.shares.get(y + off) if n == "shares_outstanding" else h.point(y + off, n)
+                if p is not None and p.value is not None:
+                    out.extend(p.ref.split(";"))
+        return sorted(set(out))
 
 
 def _v(h: AnnualHistory, y: int, n: str) -> float | None:
@@ -128,7 +138,7 @@ def _over_positive_pni(num: str):  # noqa: ANN202
 
 _D = DriverDefinition
 DEFINITIONS: dict[str, DriverDefinition] = {d.name: d for d in [
-    _D("revenue_growth", "revenue[y] / revenue[y-1] - 1", ("revenue",), _growth),
+    _D("revenue_growth", "revenue[y] / revenue[y-1] - 1", ("revenue",), _growth, (-1, 0)),
     _D("gross_margin", "gross_profit / revenue  (or (revenue - cost_of_revenue) / revenue)",
        ("revenue", "gross_profit", "cost_of_revenue"), _gross_margin),
     _D("ebit_margin", "(ebit - non_recurring_items_pretax) / revenue  (ebit / revenue if one-offs unreported)",
@@ -150,14 +160,14 @@ DEFINITIONS: dict[str, DriverDefinition] = {d.name: d for d in [
     _D("acquisitions_to_revenue", "acquisitions_net / revenue", ("acquisitions_net", "revenue"),
        _simple("acquisitions_net", "revenue")),
     _D("cost_of_debt", "interest_expense / average(interest_bearing_debt[y], [y-1])",
-       ("interest_expense", "interest_bearing_debt"), _cost_of_debt),
+       ("interest_expense", "interest_bearing_debt"), _cost_of_debt, (-1, 0)),
     _D("debt_to_revenue", "interest_bearing_debt / revenue", ("interest_bearing_debt", "revenue"),
        _simple("interest_bearing_debt", "revenue")),
     _D("payout_ratio", "dividends_paid[y+1] / parent_net_income[y], parent_net_income > 0 (DIVIDEND-T-PLUS-1-v1)",
-       ("dividends_paid", "parent_net_income"), _payout_t_plus_1),
+       ("dividends_paid", "parent_net_income"), _payout_t_plus_1, (0, 1)),
     _D("repurchases_to_net_income", "share_repurchases / parent_net_income, parent_net_income > 0",
        ("share_repurchases", "parent_net_income"), _over_positive_pni("share_repurchases")),
     _D("diluted_share_growth", "shares[y] / shares[y-1] / bonus_split_ratio[y] - 1", ("shares_outstanding",),
-       _share_growth),
+       _share_growth, (-1, 0)),
     _D("cash_to_revenue", "cash / revenue", ("cash", "revenue"), _simple("cash", "revenue")),
 ]}

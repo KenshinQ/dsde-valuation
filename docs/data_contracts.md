@@ -1,4 +1,4 @@
-# Data contracts (Phase 2)
+# Data contracts (Phase 3)
 
 Sources of truth: `src/vms/schemas/observations.py`, `src/vms/schemas/fields.py`,
 `src/vms/pit/snapshot.py`, `src/vms/quality/issues.py`. Artifact schema version: `vms-0.1.phase1`.
@@ -185,6 +185,24 @@ known period.
   UNSUPPORTED_PROFILE), `label`, `base_year`, `years`, `policy` (id, version, params), `items`
   (`item@year` → value/formula/inputs), typed `fcff` / `fcfe`, `violations` (reason codes, see
   `vms.statements.invariants.REASON_CODES`), `flags`, `missing_inputs`, and cited `assumptions`.
+
+## 6b. Phase 3 artifacts (`vms estimate`, also written by `vms demo`)
+- `state_posterior.json`: `fundamental` (kind FUNDAMENTAL, inputs PIT_FUNDAMENTALS_ONLY, model_id/version, states,
+  probabilities, period_end, staleness_days, flags, assumptions), `fundamental_next_year` (posterior propagated one
+  year through the transition mean), `market` (kind MARKET; `status` UNAVAILABLE with `reason` and null
+  probabilities), `model` (id, version, hmm_status, prior), `history` (per period: features with `refs` and
+  `known_at`, posterior with rule memberships), `transitions` (prior α, expected counts, posterior α/mean,
+  row support, n_pairs, pair_weight, flags) and `walk_forward` (regime Brier per origin vs persistence/uniform).
+- `driver_diagnostics.json` adds `distributions` (DRIVER-DIST-1: per driver the observations with z, regime
+  weights and snapshot `refs`; prior; `loc_hat`/`scale_hat`; shrink weight; every spec's parameters and predictive
+  quantiles; benchmark; `selected_spec` + `selection` (rule, walk-forward scores, in-sample pinball labelled not used);
+  `parameter_uncertainty` (bootstrap method, draws, se, quantiles and persisted draws); `uncertainty` split into
+  process/parameter/regime/model/data; flags), the `estimation_config`, `seed`, and the bootstrap stream name. It
+  also adds `walk_forward` (WF-1 protocol, per-origin origin_as_of/train_years/forecasts/realized/pinball/coverage,
+  per-driver means and selection).
+- New config: `regimes` (states, rules, transition_prior, min_state_support, model rule_based|hmm,
+  market_regime_source none) and `estimation` (history window, shrinkage strengths, Student-t df, bootstrap draws,
+  walk_forward); each driver in the profile has `prior_scale` (dispersion prior in transformed space).
 
 ## 7. Not yet covered
 FX conversion (SCOPE-CNY-v1); non-calendar fiscal years (FISCAL-YEAR-CALENDAR-v1); suspension/price-limit flags;

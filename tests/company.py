@@ -50,3 +50,25 @@ def company(years=(2021, 2022, 2023, 2024), growth=0.05, overrides=None, industr
 
 def loaded_config():
     return load_config(REPO / "config/default.yaml")
+
+
+CYCLE_GROWTH = (0.15, 0.12, -0.06, -0.12, 0.02, 0.09, 0.16, 0.13, -0.04, -0.10, 0.03, 0.08, 0.14, 0.11, -0.05)
+
+
+def cyclical_company(first_year=2009, n_years=16, growth=CYCLE_GROWTH, **kw):
+    """Long annual history with growth/contraction cycles; EBIT margin moves with growth (operating leverage)."""
+    years = tuple(range(first_year, first_year + n_years))
+    over = dict(kw.pop("overrides", {}) or {})
+    rev = 1000.0
+    for i, y in enumerate(years):
+        if i:
+            rev *= 1 + growth[(i - 1) % len(growth)]
+        g = growth[(i - 1) % len(growth)] if i else 0.05
+        margin = 0.10 + 0.3 * g
+        over.setdefault((y, "revenue"), rev)
+        over.setdefault((y, "cost_of_revenue"), rev * 0.7)
+        over.setdefault((y, "gross_profit"), rev * 0.3)
+        over.setdefault((y, "ebit"), rev * margin)
+        over.setdefault((y, "operating_expenses"), rev * (0.3 - margin))
+        over.setdefault((y, "accounts_receivable"), rev * (0.15 + 0.1 * max(-g, 0)))
+    return company(years=years, growth=0.0, overrides=over, shares=tuple([1e3] * n_years), **kw)

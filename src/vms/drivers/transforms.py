@@ -9,6 +9,7 @@ from __future__ import annotations
 import math
 
 _EPS = 1e-9
+_Z_MAX = 700.0   # exp(700) ~ 1e304, still finite
 
 
 def forward(transform: str, x: float, lower: float, upper: float) -> float:
@@ -29,7 +30,12 @@ def inverse(transform: str, z: float, lower: float, upper: float) -> float:
     if transform == "identity":
         return z
     if transform == "log1p":
-        return math.expm1(z)
+        return math.expm1(min(z, _Z_MAX))          # capped: callers clip to bounds; avoids OverflowError
     if transform == "logit":
-        return lower + (upper - lower) / (1 + math.exp(-z))
+        if z >= 0:                                  # numerically stable sigmoid for extreme z
+            s = 1.0 / (1.0 + math.exp(-z))
+        else:
+            e = math.exp(max(z, -_Z_MAX))
+            s = e / (1.0 + e)
+        return lower + (upper - lower) * s
     raise ValueError(f"unknown transform {transform!r}")

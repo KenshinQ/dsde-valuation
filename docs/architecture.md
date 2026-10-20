@@ -1,4 +1,4 @@
-# Architecture (state at Phase 2)
+# Architecture (state at Phase 3)
 
 Target pipeline: SPEC §4 (adapters → PIT store → gates → drivers → regimes → sampler →
 statements → capital allocation → DCF/multiples → equity bridge → per-share value →
@@ -21,13 +21,17 @@ entry-price-conditioned returns → diagnostics → result bundle).
 | Deterministic seeding | `vms.seeding` | Implemented (PCG64, named SeedSequence sub-streams) |
 | Run metadata + hashing + artifact writer | `vms.reporting.metadata` | Implemented |
 | Assumption register | `vms.assumptions` | Implemented; mirrored in docs/assumptions.md |
-| Annual history + driver definitions/transforms/estimates | `vms.drivers.history/definitions/transforms/estimate` | Deterministic central values only (distributions: Phase 3) |
+| Annual history + driver definitions/transforms/estimates | `vms.drivers.history/definitions/transforms/estimate` | Deterministic central values (Phase 2 projection) |
+| Fundamental regimes | `vms.regimes` | Rule-based soft classifier FUND-RULES (PIT fundamentals only), Dirichlet transitions, HMM interface NOT_IMPLEMENTED, market regime UNAVAILABLE |
+| Driver distributions | `vms.drivers.distributions` | DRIVER-DIST-1: robust shrunk location/scale in transformed space, regime-conditional Student-t mixture, empirical, bootstrap parameter uncertainty |
+| Walk-forward | `vms.drivers.walk_forward` | WF-1: rolling origin, past-only snapshots, pinball/coverage/Brier, selection by out-of-sample pinball |
 | Sector-profile plug-in interface | `vms.drivers.profiles` | `SectorProfile` ABC + registry; `operating_company` profile; config-driven UNSUPPORTED_PROFILE |
 | Deterministic statements, tax-loss pools, invariants, FCFF/FCFE types | `vms.statements` | Implemented (§9) |
 | Capital-allocation policies | `vms.capital_allocation.policies` | 5 versioned policies (§10) |
 | Phase 2 pipeline | `vms.pipeline.run_projection` | assess → gate → profile → drivers → policy → projection |
-| CLI | `vms.cli.main` | `validate-data [--as-of]`, `build-snapshot`, `project`, `demo` (smoke) |
-| regimes, sampling, valuation, equity_bridge, returns, diagnostics, evaluation | `vms.<module>` | Empty packages — Phases 3–9 |
+| Phase 3 pipeline | `vms.pipeline.run_estimation` | assess → gate → profile → regimes → walk-forward → distributions |
+| CLI | `vms.cli.main` | `validate-data [--as-of]`, `build-snapshot`, `project`, `estimate`, `demo` (smoke) |
+| sampling, valuation, equity_bridge, returns, diagnostics, evaluation | `vms.<module>` | Empty packages — Phases 4–9 |
 
 ## Reproducibility design (§8.3)
 
@@ -48,7 +52,7 @@ entry-price-conditioned returns → diagnostics → result bundle).
 
 ## Boundaries
 - No imports from `dsde-engine` or other legacy code; DSDE adapter is Phase 10 and optional.
-- All artifacts carry `run_id` and `schema_version` (`vms-0.1.phase2`).
+- All artifacts carry `run_id` and `schema_version` (`vms-0.1.phase3`).
 
 ## Phase 1 data flow
 ```
@@ -83,3 +87,24 @@ LoadResult ─assess─▶ PITSnapshot + report ─gate─▶ resolve_profile(sn
   revolver to min cash → cash, debt, equity, balance sheet → FCFE → shares.
 - **FCFF vs FCFE:** distinct pydantic types (`kind` literal); `present_value` accepts only
   FCFF+WACC or FCFE+CostOfEquity, and arithmetic between series raises `CashFlowTypeError`.
+
+## Phase 3 flow (regimes + driver distributions; not a valuation)
+```
+PITSnapshot.financials ─fundamental_features─▶ TTM growth / TTM recurring EBIT margin / Δmargin (known_at ≤ as_of)
+   └─ RuleBasedClassifier.filter (soft logistic rules, forward filter only) ─▶ per-period posteriors
+        ├─ current posterior (FundamentalRegimePosterior, kind=FUNDAMENTAL)
+        └─ estimate_transitions (annual-step soft counts + Dirichlet prior) ─▶ next-year state probabilities
+MarketRegimePosterior (kind=MARKET) = UNAVAILABLE (no source configured; never derived from fundamentals)
+AnnualHistory ─observations(z = transform(x), clipped to bounds)─▶ fit_specs: prior_only | pooled_t |
+   pooled_empirical | regime_t (+ naive_last benchmark)
+walk_forward: for each FY y with ≥ min_train_years: rebuild snapshot at first publication of FY y
+   (past-only), refit regimes + specs, score FY y+1 (pinball, coverage; regime Brier) ─▶ selection
+build_distribution_model: full-history fits + seeded bootstrap of the estimator + selected spec
+```
+- **No returns/prices in regimes:** `infer_regimes(financials, as_of, cfg)` receives snapshot financials only;
+  an AST test forbids price/return identifiers in `vms.regimes`, and perturbation tests show regimes,
+  distributions and walk-forward are invariant to prices and to anything published after as_of.
+- **Selection:** argmin mean walk-forward pinball (transformed space) when ≥ `min_origins` scored origins,
+  else the configured default with `SELECTION_DEFAULT_INSUFFICIENT_ORIGINS`. In-sample pinball is reported
+  only (a test corrupts it and checks selection is unchanged).
+- **Not yet:** dependence between drivers, joint sampling (Phase 4); central case still uses Phase 2 medians.

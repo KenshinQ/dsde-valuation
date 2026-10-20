@@ -50,6 +50,8 @@ class DriverSpec(_Strict):
     upper: float
     role: Literal["projection", "diagnostic"] = "projection"
     prior: float | None = Field(default=None, description="fallback central value (placeholder) when no history")
+    prior_scale: float | None = Field(default=None, gt=0,
+                                      description="(Phase 3) prior dispersion in TRANSFORMED space (placeholder)")
     description: str = ""
 
     @model_validator(mode="after")
@@ -58,11 +60,6 @@ class DriverSpec(_Strict):
             raise ValueError(f"driver '{self.name}': bounds must be finite")
         if self.lower >= self.upper:
             raise ValueError(f"driver '{self.name}': lower={self.lower} must be < upper={self.upper}")
-        if self.transform is DriverTransform.LOGIT and not (0.0 <= self.lower and self.upper <= 1.0):
-            raise ValueError(
-                f"driver '{self.name}': transform 'logit' requires bounds within [0, 1], "
-                f"got [{self.lower}, {self.upper}]"
-            )
         if self.transform is DriverTransform.LOG1P and self.lower <= -1.0:
             raise ValueError(f"driver '{self.name}': transform 'log1p' requires lower > -1, got {self.lower}")
         if self.prior is not None and not (self.lower <= self.prior <= self.upper):
@@ -240,6 +237,83 @@ class CapitalAllocationConfig(_Strict):
     policies: PolicyParams
 
 
+FUNDAMENTAL_STATES = ("GROWTH", "STABLE", "DETERIORATING", "RECOVERY")
+
+
+class RegimeRules(_Strict):
+    """Soft-rule thresholds (REGIME-RULES-v1). Explicit placeholders, not calibrated."""
+
+    growth_high: float = Field(description="TTM revenue growth above this => GROWTH membership > 0.5")
+    growth_low: float = Field(description="TTM revenue growth below this => contraction membership > 0.5")
+    tau_growth: float = Field(gt=0, description="logistic softness for growth memberships")
+    margin_band: float = Field(ge=0, description="EBIT-margin decline (pp, yoy) beyond this => compression")
+    tau_margin: float = Field(gt=0)
+    recovery_carry: float = Field(ge=0, le=1, description="share of prior RECOVERY mass that keeps 'weak' status")
+
+    @model_validator(mode="after")
+    def _order(self) -> "RegimeRules":
+        if self.growth_low >= self.growth_high:
+            raise ValueError(f"growth_low={self.growth_low} must be < growth_high={self.growth_high}")
+        return self
+
+
+class TransitionPrior(_Strict):
+    stay: float = Field(gt=0, description="Dirichlet pseudo-count on the diagonal")
+    move: float = Field(gt=0, description="Dirichlet pseudo-count off the diagonal")
+
+
+class RegimeConfig(_Strict):
+    model: Literal["rule_based", "hmm"] = Field(description="'hmm' is an interface only (NOT IMPLEMENTED)")
+    model_version: str = Field(min_length=1)
+    states: list[str] = Field(min_length=2)
+    rules: RegimeRules
+    transition_prior: TransitionPrior
+    min_state_support: float = Field(gt=0, description="effective transitions per state row below => LOW_SUPPORT")
+    market_regime_source: Literal["none"] = Field(
+        description="no market-regime model in VMS-0.1 => market dimension UNAVAILABLE (never inferred from fundamentals)")
+
+    @field_validator("states")
+    @classmethod
+    def _states(cls, v: list[str]) -> list[str]:
+        bad = [s for s in v if s not in FUNDAMENTAL_STATES]
+        if bad or len(set(v)) != len(v):
+            raise ValueError(f"states must be distinct members of {list(FUNDAMENTAL_STATES)}; bad {bad or v}")
+        if "STABLE" not in v:
+            raise ValueError("states must include STABLE (dropped states are merged into STABLE)")
+        return [s for s in FUNDAMENTAL_STATES if s in v]
+
+
+class WalkForwardConfig(_Strict):
+    min_train_years: int = Field(ge=1, description="annual observations needed before the first origin")
+    min_origins: int = Field(ge=1, description="fewer scored origins => default spec, never in-sample selection")
+    quantiles: list[float] = Field(min_length=1)
+    default_spec: Literal["pooled_t", "pooled_empirical", "regime_t", "prior_only"]
+
+    @field_validator("quantiles")
+    @classmethod
+    def _q(cls, v: list[float]) -> list[float]:
+        if any(not (0 < q < 1) for q in v) or len(set(v)) != len(v):
+            raise ValueError(f"quantiles must be distinct and in (0, 1); got {v}")
+        return sorted(v)
+
+
+class EstimationConfig(_Strict):
+    """Phase 3 driver-distribution estimation (DRIVER-DIST-v1). Explicit placeholders."""
+
+    version: Literal["1"] = "1"
+    max_history_years: int = Field(ge=1, le=30)
+    min_history_years: int = Field(ge=1, description="fewer observations => SPARSE_HISTORY + LOW_CONFIDENCE")
+    prior_strength: float = Field(gt=0, description="pseudo-observations of the profile prior (shrinkage)")
+    regime_prior_strength: float = Field(gt=0, description="pseudo-observations pulling regime params to pooled")
+    min_regime_support: float = Field(gt=0, description="effective obs per state below => pooled fallback")
+    min_empirical_n: int = Field(ge=2, description="observations needed for the empirical residual spec")
+    student_t_df: float = Field(gt=2, description="robust parametric family in transformed space")
+    boundary_eps: float = Field(gt=0, lt=0.1, description="logit clamp for observations at a bound")
+    bootstrap_draws: int = Field(ge=10, le=100_000)
+    persisted_param_draws: int = Field(ge=0, le=10_000)
+    walk_forward: WalkForwardConfig
+
+
 class VMSConfig(_Strict):
     configuration_version: str = Field(min_length=1)
     mode: Literal["production", "exploratory"]
@@ -255,6 +329,8 @@ class VMSConfig(_Strict):
     industry: IndustryConfig
     projection: ProjectionConfig
     capital_allocation: CapitalAllocationConfig
+    regimes: RegimeConfig
+    estimation: EstimationConfig
 
     @field_validator("timezone")
     @classmethod

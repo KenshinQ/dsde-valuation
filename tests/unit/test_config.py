@@ -61,7 +61,8 @@ def test_invalid_config_actionable(tmp_path, repo, mutate, needles):
 @pytest.mark.parametrize("pmut,needle", [
     (lambda p: p["drivers"].append(dict(p["drivers"][0])), "duplicate driver names"),
     (lambda p: p["drivers"][0].update(lower=1, upper=0), "must be < upper"),
-    (lambda p: p["drivers"][1].update(upper=1.5), "logit' requires bounds within [0, 1]"),
+    (lambda p: p["drivers"][1].update(prior_scale=-0.1), "greater than 0"),
+    (lambda p: p["drivers"][1].update(prior=1.5), "outside bounds"),
     (lambda p: p["drivers"][0].update(lower=-1.0), "log1p' requires lower > -1"),
     (lambda p: p["drivers"][0].update(family="magic"), "family"),
     (lambda p: p.update(drivers=[]), "at least 1"),

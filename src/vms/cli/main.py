@@ -4,12 +4,14 @@ Implemented commands:
   validate-data   schema validation; with --as-of also PIT snapshot + quality gate per instrument
   build-snapshot  PIT snapshot + data_quality_report.json + data_manifest.json for one instrument
   project         PIT snapshot + gate + profile + drivers + deterministic statements (Phase 2)
-  demo            offline SYNTHETIC smoke run (snapshot, gate, deterministic statements). NO valuation.
+  estimate        PIT snapshot + gate + fundamental regimes + walk-forward + driver distributions (Phase 3)
+  demo            offline SYNTHETIC smoke run (snapshot, gate, statements, regimes, distributions). NO valuation.
 
 Exit codes: 0 ok, 1 unexpected error, 2 invalid input/config/arguments,
             3 BLOCKED by critical data-quality errors in production mode,
             4 UNSUPPORTED_PROFILE (raw metrics written, no projection),
             5 projection INSUFFICIENT_DATA or REJECTED (accounting invariant violated).
+            (regimes.model=hmm => exit 2: interface only, NOT IMPLEMENTED)
 """
 
 from __future__ import annotations
@@ -35,14 +37,15 @@ from vms.schemas import ValuationRequest, format_validation_error
 from vms.schemas.config import ConfigError, LoadedConfig, load_config
 from vms.schemas.fields import FIELD_REGISTRY_VERSION
 from vms.capital_allocation.policies import POLICIES
-from vms.pipeline import Phase2Run, run_projection
+from vms.pipeline import Phase2Run, Phase3Run, run_estimation, run_projection
+from vms.regimes import RegimeModelNotImplemented
 from vms.seeding import stream_rng
 
 EXIT_OK, EXIT_ERROR, EXIT_INVALID, EXIT_BLOCKED, EXIT_UNSUPPORTED, EXIT_PROJECTION = 0, 1, 2, 3, 4, 5
-SMOKE_STATUS = "PHASE2_SMOKE_NOT_A_VALUATION"
+SMOKE_STATUS = "PHASE3_SMOKE_NOT_A_VALUATION"
 DETERMINISTIC_ARTIFACTS = ("request.json", "config_snapshot.json", "data_manifest.json",
-                           "data_quality_report.json", "pit_snapshot.json", "driver_diagnostics.json",
-                           "statement_projection.json", "simulation_metadata.json")
+                           "data_quality_report.json", "pit_snapshot.json", "state_posterior.json",
+                           "driver_diagnostics.json", "statement_projection.json", "simulation_metadata.json")
 
 
 class InputError(ValueError):
@@ -154,6 +157,56 @@ def _p2_summary(run: Phase2Run) -> dict:
             "fcff": None if p.fcff is None else [round(v) for v in p.fcff.values]}
 
 
+def _write_phase3(out: Path, stamp, run: Phase3Run, run2: Phase2Run | None = None) -> None:  # noqa: ANN001
+    """state_posterior.json + driver_diagnostics.json (central values + distributions + walk-forward)."""
+    if run.regimes is not None:
+        r = run.regimes
+        write_artifact(out, "state_posterior.json", {
+            "fundamental": r.current.model_dump(mode="json"),
+            "fundamental_next_year": r.next_year,
+            "market": r.market.model_dump(mode="json"),
+            "model": {"model_id": r.current.model_id, "model_version": r.current.model_version,
+                      "inputs": "PIT_FUNDAMENTALS_ONLY", "hmm_status": r.hmm_status,
+                      "config": run_cfg_regimes(run)},
+            "history": [{"features": f.model_dump(mode="json"), "posterior": h.model_dump(mode="json")}
+                        for f, h in zip(r.features, r.history)],
+            "transitions": r.transitions.model_dump(mode="json"),
+            "walk_forward": {"protocol": run.walk_forward.protocol, "summary": run.walk_forward.regime,
+                             "origins": [o.regime | {"origin_year": o.origin_year,
+                                                     "origin_as_of": o.origin_as_of.isoformat()}
+                                         for o in run.walk_forward.origins if o.regime]},
+        }, stamp)
+    central = run.central if run2 is None else run2.drivers
+    write_artifact(out, "driver_diagnostics.json", {
+        "profile_resolution": run.resolution.model_dump(mode="json"),
+        "annual_history": run.history.model_dump(mode="json"),
+        "drivers": None if central is None else central.model_dump(mode="json"),
+        "distributions": None if run.distributions is None else run.distributions.model_dump(mode="json"),
+        "walk_forward": None if run.walk_forward is None else run.walk_forward.model_dump(mode="json"),
+        "note": ("UNSUPPORTED_PROFILE: raw annual metrics only; generic drivers/DCF not applicable"
+                 if run.distributions is None else
+                 "Phase 3: 'drivers' = deterministic central values (Phase 2 projection); 'distributions' = "
+                 "regime-conditional driver distributions with parameter uncertainty; specs selected by walk-forward"),
+    }, stamp)
+
+
+def run_cfg_regimes(run: Phase3Run) -> dict:
+    return run.regimes.transitions.model_dump(mode="json", include={"states", "prior_alpha"})
+
+
+def _p3_summary(run: Phase3Run) -> dict:
+    if run.regimes is None:
+        return {"profile": run.resolution.status.value}
+    d = run.distributions
+    return {"profile": run.resolution.status.value,
+            "fundamental_regime": {k: round(v, 4) for k, v in run.regimes.current.probabilities.items()},
+            "fundamental_regime_period": str(run.regimes.current.period_end),
+            "market_regime": run.regimes.market.status,
+            "walk_forward_origins": len(run.walk_forward.origins),
+            "selected_specs": {k: v.selected_spec for k, v in d.drivers.items()},
+            "low_confidence_drivers": sorted(k for k, v in d.drivers.items() if v.low_confidence)}
+
+
 # ------------------------------------------------------------------ commands
 def cmd_validate_data(args: argparse.Namespace) -> int:
     res = load_directory(args.input)
@@ -241,6 +294,36 @@ def cmd_project(args: argparse.Namespace) -> int:
     return _projection_exit(run)
 
 
+def cmd_estimate(args: argparse.Namespace) -> int:
+    cfg = load_config(args.config)
+    mode = _mode(args, cfg)
+    as_of, note = _as_of(args.as_of)
+    load = _load(args.input)
+    seed = cfg.config.monte_carlo.default_seed if args.seed is None else args.seed
+    stamp = ArtifactStamp(run_id=content_run_id(kind="estimate", instrument=args.ticker, as_of=as_of.isoformat(),
+                                                data=dataset_hash(load),
+                                                config=sha256_of({"c": cfg.config.model_dump(mode="json"),
+                                                                  "p": cfg.profile.model_dump(mode="json")}),
+                                                mode=mode, override=args.override_reason, seed=seed))
+    out = Path(args.out)
+    try:
+        run = run_estimation(load, instrument_id=args.ticker, as_of=as_of, loaded=cfg, seed=seed, mode=mode,
+                             override_reason=args.override_reason)
+    except GateError as e:
+        snap, report = assess(load, instrument_id=args.ticker, as_of=as_of, cfg=cfg.config.quality, mode=mode)
+        _write_snapshot_bundle(out, stamp, load, args.input, as_of, note, snap, report, blocked=True)
+        print(f"error: {e}", file=sys.stderr)
+        return EXIT_BLOCKED
+    _write_snapshot_bundle(out, stamp, load, args.input, as_of, note, run.snapshot, run.report, blocked=False)
+    _write_phase3(out, stamp, run)
+    print(json.dumps({"run_id": stamp.run_id, "schema_version": SCHEMA_VERSION, "out": str(out), "seed": seed,
+                      **_summary(run.report), **_p3_summary(run)}, indent=2, ensure_ascii=False))
+    if run.regimes is None:
+        print(f"error: {args.ticker}: UNSUPPORTED_PROFILE ({run.resolution.reason})", file=sys.stderr)
+        return EXIT_UNSUPPORTED
+    return EXIT_OK
+
+
 def cmd_demo(args: argparse.Namespace) -> int:
     loaded = load_config(args.config)
     cfg = loaded.config
@@ -285,14 +368,18 @@ def cmd_demo(args: argparse.Namespace) -> int:
                                          "as_of_interpretation": as_of_note, "as_of_rule": AS_OF_DATE_RULE}, meta)
     write_artifact(out, "config_snapshot.json", config_snapshot, meta)
     _write_snapshot_bundle(out, meta, load, None, as_of, as_of_note, snap, report, blocked)
+    run3 = None
     if run is not None:
         _write_phase2(out, meta, run)
+        run3 = run_estimation(load, instrument_id=synthetic.SYNTHETIC_INSTRUMENT, as_of=as_of, loaded=loaded,
+                              seed=seed, mode=mode, override_reason=args.override_reason)
+        _write_phase3(out, meta, run3, run)
     smoke = stream_rng(seed, "phase0_smoke").standard_normal(5)
     write_artifact(out, "simulation_metadata.json", {
         "status": SMOKE_STATUS,
         "implemented_phase": IMPLEMENTED_PHASE,
-        "warning": "Smoke artifact. Deterministic central-case statements only; no valuation, no paths, "
-                   "no return distribution was computed.",
+        "warning": "Smoke artifact. Deterministic central-case statements, fundamental regimes and driver "
+                   "distributions only; no valuation, no paths, no return distribution was computed.",
         "data_label": "SYNTHETIC — not real market data",
         "quality_status": report.status.value,
         "metadata": meta.model_dump(mode="json"),
@@ -302,7 +389,8 @@ def cmd_demo(args: argparse.Namespace) -> int:
     write_artifact(out, "run_context.json", {"created_at": datetime.now(ZoneInfo(cfg.timezone)).isoformat(),
                                              "deterministic_artifacts": list(DETERMINISTIC_ARTIFACTS)}, meta)
     print(json.dumps({"status": SMOKE_STATUS, "quality_status": report.status.value,
-                      **({} if run is None else _p2_summary(run)), "run_id": meta.run_id,
+                      **({} if run is None else _p2_summary(run)),
+                      **({} if run3 is None else {"phase3": _p3_summary(run3)}), "run_id": meta.run_id,
                       "schema_version": SCHEMA_VERSION, "out": str(out), "spot_price": spot, "seed": seed,
                       "paths": paths, "data_hash": data_hash[:16], "config_hash": meta.config_hash[:16],
                       "git_sha": meta.code_version["git_sha"][:12]}, indent=2))
@@ -322,7 +410,7 @@ def _gate_args(p: argparse.ArgumentParser) -> None:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    p = argparse.ArgumentParser(prog="vms", description="VMS-0.1 valuation engine (Phase 2: drivers & deterministic statements)")
+    p = argparse.ArgumentParser(prog="vms", description="VMS-0.1 valuation engine (Phase 3: regimes & driver distributions; no valuation yet)")
     sub = p.add_subparsers(dest="command", required=True)
     asof_help = "YYYY-MM-DD (=> 15:00 Asia/Shanghai, rule ASOF-DATE-CLOSE-v1) or ISO-8601 with offset"
 
@@ -351,6 +439,15 @@ def build_parser() -> argparse.ArgumentParser:
     _gate_args(pj)
     pj.set_defaults(func=cmd_project)
 
+    es = sub.add_parser("estimate", help="fundamental regimes + driver distributions (Phase 3; not a valuation)")
+    es.add_argument("--input", required=True)
+    es.add_argument("--ticker", required=True)
+    es.add_argument("--as-of", required=True, help=asof_help)
+    es.add_argument("--out", required=True)
+    es.add_argument("--seed", type=int, help="parameter-bootstrap seed (default: config monte_carlo.default_seed)")
+    _gate_args(es)
+    es.set_defaults(func=cmd_estimate)
+
     d = sub.add_parser("demo", help="offline SYNTHETIC smoke run (no valuation)")
     d.add_argument("--policy", choices=sorted(POLICIES))
     d.add_argument("--out", required=True)
@@ -368,7 +465,7 @@ def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     try:
         return args.func(args)
-    except (ConfigError, InputError) as e:
+    except (ConfigError, InputError, RegimeModelNotImplemented) as e:
         print(f"error: {e}", file=sys.stderr)
         return EXIT_INVALID
 

@@ -179,3 +179,36 @@ def test_industry_bank_and_moutai():
     assert cls.scheme == "SW2021_L1"
     assert cls.industry == "食品饮料"
     assert cls.published_at.date() == date(2001, 8, 27)
+
+
+def test_balance_lines_prefers_earnings_notice():
+    from vms.providers.eastmoney.balance_lines import map_balance_line_rows
+
+    rows = [{
+        "REPORT_DATE": "2024-12-31",
+        "NOTICE_DATE": "2026-04-17",  # amended later
+        "DATE_TYPE_CODE": "001",
+        "INVENTORY": 1e10,
+        "ACCOUNTS_PAYABLE": 1e9,
+    }]
+    notice = {date(2024, 12, 31): date(2025, 4, 3)}
+    obs, stats = map_balance_line_rows(rows, instrument_id="600519.SH", notice_by_period_end=notice)
+    assert stats["used_earnings_notice"] == 1
+    assert len(obs) == 2
+    assert all(o.published_at == datetime(2025, 4, 3, 15, 0, tzinfo=TZ) for o in obs)
+    assert {o.field_name for o in obs} == {"inventory", "accounts_payable"}
+    assert all(o.source_id == "em_dmsk_balance" for o in obs)
+
+
+def test_balance_lines_skips_without_publish_date():
+    from vms.providers.eastmoney.balance_lines import map_balance_line_rows
+
+    rows = [{
+        "REPORT_DATE": "2024-12-31",
+        "NOTICE_DATE": None,
+        "INVENTORY": 1.0,
+        "ACCOUNTS_PAYABLE": 1.0,
+    }]
+    obs, stats = map_balance_line_rows(rows, instrument_id="600519.SH")
+    assert obs == []
+    assert stats["skipped_no_publish"] == 1

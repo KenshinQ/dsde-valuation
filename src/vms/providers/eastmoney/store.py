@@ -15,6 +15,7 @@ TZ = ZoneInfo("Asia/Shanghai")
 SHAREBONUS_TABLE = "em_sharebonus"
 EQUITY_TABLE = "em_equity_changes"
 INDUSTRY_TABLE = "em_industry_profile"
+BALANCE_LINES_TABLE = "em_balance_lines"
 
 
 def _connect(db_path: Path, *, read_only: bool = False):
@@ -78,6 +79,27 @@ def ensure_tables(db_path: Path | None = None) -> Path:
                 fetched_at TIMESTAMP
             )
         """)
+
+        con.execute(f"""
+            CREATE TABLE IF NOT EXISTS {BALANCE_LINES_TABLE} (
+                thscode VARCHAR,
+                security_code VARCHAR,
+                report_date DATE,
+                notice_date DATE,
+                date_type_code VARCHAR,
+                report_type_code VARCHAR,
+                inventory DOUBLE,
+                accounts_payable DOUBLE,
+                accounts_receivable DOUBLE,
+                monetary_funds DOUBLE,
+                total_assets DOUBLE,
+                total_liabilities DOUBLE,
+                raw_json VARCHAR,
+                fetched_at TIMESTAMP,
+                PRIMARY KEY (security_code, report_date, date_type_code)
+            )
+        """)
+
     finally:
         con.close()
     return path
@@ -291,5 +313,82 @@ def upsert_industry(thscode: str, row: dict[str, Any], db_path: Path | None = No
                 now,
             ],
         )
+    finally:
+        con.close()
+
+
+
+def count_balance_lines(thscode: str, db_path: Path | None = None) -> int:
+    path = Path(db_path) if db_path else fund_db_path()
+    if not path.is_file():
+        return 0
+    con = _connect(path, read_only=True)
+    try:
+        return int(con.execute(
+            f"SELECT COUNT(*) FROM {BALANCE_LINES_TABLE} WHERE thscode = ?", [thscode]
+        ).fetchone()[0])
+    except Exception:
+        return 0
+    finally:
+        con.close()
+
+
+def read_balance_lines(thscode: str, db_path: Path | None = None) -> list[dict[str, Any]]:
+    path = Path(db_path) if db_path else fund_db_path()
+    if not path.is_file():
+        return []
+    con = _connect(path, read_only=True)
+    try:
+        return con.execute(
+            f"SELECT * FROM {BALANCE_LINES_TABLE} WHERE thscode = ? ORDER BY report_date DESC",
+            [thscode],
+        ).fetchdf().to_dict(orient="records")
+    except Exception:
+        return []
+    finally:
+        con.close()
+
+
+def upsert_balance_lines(thscode: str, rows: list[dict[str, Any]], db_path: Path | None = None) -> int:
+    path = ensure_tables(db_path)
+    if not rows:
+        return 0
+    code = thscode.split(".", 1)[0]
+    now = datetime.now(TZ).replace(tzinfo=None)
+    con = _connect(path, read_only=False)
+    try:
+        n = 0
+        for r in rows:
+            rd = _parse_date(r.get("REPORT_DATE"))
+            if rd is None:
+                continue
+            dtc = str(r.get("DATE_TYPE_CODE") or "")
+            con.execute(
+                f"""
+                INSERT OR REPLACE INTO {BALANCE_LINES_TABLE}
+                (thscode, security_code, report_date, notice_date, date_type_code, report_type_code,
+                 inventory, accounts_payable, accounts_receivable, monetary_funds,
+                 total_assets, total_liabilities, raw_json, fetched_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                [
+                    thscode,
+                    str(r.get("SECURITY_CODE") or code),
+                    rd,
+                    _parse_date(r.get("NOTICE_DATE")),
+                    dtc,
+                    str(r.get("REPORT_TYPE_CODE") or ""),
+                    r.get("INVENTORY"),
+                    r.get("ACCOUNTS_PAYABLE"),
+                    r.get("ACCOUNTS_RECE"),
+                    r.get("MONETARYFUNDS"),
+                    r.get("TOTAL_ASSETS"),
+                    r.get("TOTAL_LIABILITIES"),
+                    json.dumps(r, ensure_ascii=False, default=str),
+                    now,
+                ],
+            )
+            n += 1
+        return n
     finally:
         con.close()

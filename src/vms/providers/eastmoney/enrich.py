@@ -12,7 +12,9 @@ from vms.providers.eastmoney import store as em_store
 from vms.providers.eastmoney.equity import apply_shares_to_market, equity_share_timeline
 from vms.providers.eastmoney.industry import parse_company_survey, to_classification
 from vms.providers.eastmoney.sharebonus import SOURCE_ID as CA_SOURCE, map_sharebonus_rows
-from vms.schemas.observations import (CorporateActionEvent, InstrumentClassification, MarketObservation,
+from vms.providers.eastmoney.balance_lines import SOURCE_ID as BS_SOURCE, map_balance_line_rows
+from vms.schemas.observations import (CorporateActionEvent, FinancialObservation,
+                                     InstrumentClassification, MarketObservation,
                                      ReportingConvention, SourceDescriptor, Versioning)
 
 EQUITY_SOURCE = "em_f10_equity"
@@ -24,6 +26,7 @@ class EnrichmentResult:
     corporate_actions: list[CorporateActionEvent] = field(default_factory=list)
     classifications: list[InstrumentClassification] = field(default_factory=list)
     market: list[MarketObservation] = field(default_factory=list)
+    financial: list[FinancialObservation] = field(default_factory=list)
     sources: dict[str, SourceDescriptor] = field(default_factory=dict)
     diagnostics: dict[str, Any] = field(default_factory=dict)
     assumptions: list[str] = field(default_factory=list)
@@ -137,6 +140,44 @@ def _ensure_industry(thscode: str, *, prefer_local: bool, db: Path) -> tuple[dic
         raise
 
 
+def _bs_source() -> SourceDescriptor:
+    return SourceDescriptor(
+        source_id=BS_SOURCE,
+        reporting_convention=ReportingConvention.UNKNOWN,
+        versioning=Versioning.LATEST_ONLY,
+        fiscal_year_end="12-31",
+        description=(
+            "Eastmoney RPT_DMSK_FN_BALANCE inventory & accounts_payable (EM-BS-LINES-v1). "
+            "published_at prefers earnings NOTICE; else balance NOTICE_DATE."
+        ),
+    )
+
+
+def _ensure_balance_lines(thscode: str, *, prefer_local: bool, min_local: int, db: Path) -> tuple[list[dict], str]:
+    try:
+        em_store.ensure_tables(db)
+    except Exception:
+        pass
+    n = em_store.count_balance_lines(thscode, db_path=db)
+    if prefer_local and n >= min_local:
+        return em_store.read_balance_lines(thscode, db_path=db), "local"
+    code = em_client.security_code_from_thscode(thscode)
+    try:
+        raw = em_client.fetch_datacenter_all(
+            "RPT_DMSK_FN_BALANCE",
+            filter_=f'(SECURITY_CODE="{code}")',
+            sort_columns="REPORT_DATE",
+            referer="https://data.eastmoney.com/bbsj/",
+        )
+        em_store.upsert_balance_lines(thscode, raw, db_path=db)
+        return em_store.read_balance_lines(thscode, db_path=db), "rest_upsert"
+    except Exception as e:  # noqa: BLE001
+        if n > 0:
+            return em_store.read_balance_lines(thscode, db_path=db), f"rest_failed_local:{type(e).__name__}"
+        raise
+
+
+
 def enrich_bundle(
     thscode: str,
     *,
@@ -148,6 +189,8 @@ def enrich_bundle(
     enable_ca: bool = True,
     enable_shares: bool = True,
     enable_industry: bool = True,
+    enable_balance_lines: bool = True,
+    notice_by_period_end: dict | None = None,
 ) -> EnrichmentResult:
     """Fetch/map EM enrichment. Local DuckDB cache first; REST on miss.
 
@@ -164,6 +207,7 @@ def enrich_bundle(
         assumptions=cite(
             "EM-CA-SHAREBONUS-v1",
             "EM-SHARES-EQUITY-v1",
+            "EM-BS-LINES-v1",
             "INDUSTRY-SW-L1-PROXY-EM-v1",
             "INDUSTRY-NO-RECLASS-HISTORY-v1",
             "HITHINK-ALLOTMENT-DEFER-v1",
@@ -227,6 +271,20 @@ def enrich_bundle(
             }
         except Exception as e:  # noqa: BLE001
             diag["industry"] = {"error": f"{type(e).__name__}: {str(e)[:160]}"}
+
+
+    if enable_balance_lines:
+        try:
+            rows, path = _ensure_balance_lines(thscode, prefer_local=prefer_local, min_local=1, db=db)
+            obs, stats = map_balance_line_rows(
+                rows, instrument_id=thscode, notice_by_period_end=notice_by_period_end or {},
+            )
+            res.financial = obs
+            if obs:
+                res.sources[BS_SOURCE] = _bs_source()
+            diag["balance_lines"] = {"path": path, "rows": len(rows), **stats, "observations": len(obs)}
+        except Exception as e:  # noqa: BLE001
+            diag["balance_lines"] = {"error": f"{type(e).__name__}: {str(e)[:160]}"}
 
     res.diagnostics = diag
     return res

@@ -308,6 +308,7 @@ ASSUMPTIONS: dict[str, str] = {
     "HITHINK-ALLOTMENT-DEFER-v1": "HiThink/marketdb adjustment events expose allotment_ratio but only ex_date "
                                  "(no announced_at). Rights/allotment share_issuance stays out of VMS CA until "
                                  "an announce-date source is wired. Do not backfill announce from ex_date.",
+    "EM-BS-LINES-v1": "Inventory and accounts_payable from Eastmoney RPT_DMSK_FN_BALANCE (local DuckDB em_balance_lines). published_at prefers EM earnings NOTICE for the same period_end (HITHINK-PIT-NOTICE-v1); else balance NOTICE_DATE @ 15:00 Asia/Shanghai. Never invent published_at from REPORT_DATE. Balance NOTICE often tracks amendments (LATEST_ONLY) so values may be restated; pit_complete stays false. HiThink local balance_sheets lacks these columns.",
     "HITHINK-FIELD-MAP-v1": "HiThink columns map to FIELDS-2 via vms.providers.hithink.mapping (documented in "
                            "docs/data_contracts.md). Outflows use positive magnitudes. Unmapped columns ignored "
                            "with optional warning count. pay_dividends_profits_interest_cash → dividends_paid "

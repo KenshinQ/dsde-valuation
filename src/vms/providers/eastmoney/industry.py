@@ -23,12 +23,36 @@ from vms.schemas.observations import InstrumentClassification
 
 TZ = ZoneInfo("Asia/Shanghai")
 SOURCE_ID = "em_f10_industry"
-_DEFAULT_YAML = Path(__file__).resolve().parents[4] / "config" / "em_industry_proxy.yaml"
+def _resolve_proxy_yaml() -> Path:
+    """Locate config/em_industry_proxy.yaml in editable checkout or installed tree.
+
+    parents[4] from site-packages points at pythonX.Y/, not the repo — walk up.
+    Override with env VMS_EM_INDUSTRY_PROXY.
+    """
+    import os
+    env = os.environ.get("VMS_EM_INDUSTRY_PROXY")
+    if env:
+        return Path(env)
+    here = Path(__file__).resolve()
+    for parent in here.parents:
+        cand = parent / "config" / "em_industry_proxy.yaml"
+        if cand.is_file():
+            return cand
+    bundled = here.parent / "em_industry_proxy.yaml"
+    if bundled.is_file():
+        return bundled
+    raise FileNotFoundError(
+        "em_industry_proxy.yaml not found; set VMS_EM_INDUSTRY_PROXY or keep "
+        "config/em_industry_proxy.yaml at the repo root"
+    )
+
+
+_DEFAULT_YAML = None  # resolved lazily
 
 
 @lru_cache(maxsize=1)
 def _proxy_table(path: str | None = None) -> dict[str, Any]:
-    p = Path(path) if path else _DEFAULT_YAML
+    p = Path(path) if path else _resolve_proxy_yaml()
     data = yaml.safe_load(p.read_text(encoding="utf-8"))
     if not isinstance(data, dict):
         raise ValueError(f"invalid industry proxy yaml: {p}")

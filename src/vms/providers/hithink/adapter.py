@@ -152,6 +152,7 @@ def fetch_bundle(
             "HITHINK-FIELD-MAP-v1",
             "EM-CA-SHAREBONUS-v1",
             "EM-SHARES-EQUITY-v1",
+            "EM-BS-LINES-v1",
             "INDUSTRY-SW-L1-PROXY-EM-v1",
             "INDUSTRY-NO-RECLASS-HISTORY-v1",
             "HITHINK-ALLOTMENT-DEFER-v1",
@@ -329,13 +330,26 @@ def fetch_bundle(
     # --- Eastmoney enrichment: CA (announce dates), shares, industry proxy ---
     from vms.providers.eastmoney import enrich_bundle
 
+    # period_end -> NOTICE date for aligning EM balance published_at (EM-BS-LINES-v1)
+    notice_by_pe = {}
+    for pe, nd in (notice_idx or {}).items():
+        # notice_idx values may be date or richer objects
+        if hasattr(nd, "year"):
+            notice_by_pe[pe] = nd
+        elif isinstance(nd, dict) and nd.get("notice_date") is not None:
+            notice_by_pe[pe] = nd["notice_date"]
+        elif hasattr(nd, "notice_date"):
+            notice_by_pe[pe] = nd.notice_date
     enr = enrich_bundle(
         thscode,
         market=market,
         prefer_local=prefer_local,
         fund_db=fdb,
+        notice_by_period_end=notice_by_pe,
     )
     market = enr.market
+    if enr.financial:
+        financial.extend(enr.financial)
     diag.enrichment = enr.diagnostics
     diag.assumptions = sorted(set(diag.assumptions) | set(enr.assumptions))
     n_ca = len(enr.corporate_actions)

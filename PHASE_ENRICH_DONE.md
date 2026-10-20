@@ -37,6 +37,10 @@ Prefer-local after first EM fill:
 - Shares stamped on market bars from equity `NOTICE_DATE` timeline
 - Future announce excluded by PIT snapshot filter (unit leakage test)
 
+
+## Shared standalone toolkit
+
+Reusable Eastmoney F10 local-first package (no VMS import): `/workspace/data/em_f10/` — same DuckDB tables (`em_sharebonus`, `em_equity_changes`, `em_industry_profile`). Skill body: `/workspace/data/em_f10/SKILL_BODY.md` (skill name **eastmoney-f10-enrich**). VMS was not refactored to import it in this task; schemas stay compatible.
 ## Limitations (blockers called out)
 
 1. **Official Shenwan L1 membership** — not available from probed public EM reports or HiThink A-share meta; proxy mapping only.

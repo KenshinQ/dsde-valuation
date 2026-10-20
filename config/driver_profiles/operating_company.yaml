@@ -1,0 +1,26 @@
+# Generic operating-company driver profile (SPEC §7.1–7.2).
+# bounds_status=placeholder: bounds below are hard sanity limits chosen by hand,
+# NOT estimated. Phase 2/3 must justify or replace them. Phase 0 only validates
+# structure (unique names, lower<upper, transform/bounds compatibility).
+profile_id: operating_company
+profile_version: "0.1.0"
+supported: true
+bounds_status: placeholder
+unsupported_industries:      # §7.2: FCFF/EV inappropriate => UNSUPPORTED_PROFILE (enforced in Phase 2)
+  - bank
+  - insurance
+  - securities_brokerage
+  - diversified_financials
+drivers:
+  - {name: revenue_growth,        family: demand,            transform: log1p,    lower: -0.8, upper: 3.0}
+  - {name: gross_margin,          family: profitability,     transform: logit,    lower: 0.0,  upper: 1.0}
+  - {name: opex_ratio,            family: profitability,     transform: logit,    lower: 0.0,  upper: 1.0}
+  - {name: ebit_margin,           family: profitability,     transform: identity, lower: -1.0, upper: 1.0}
+  - {name: effective_tax_rate,    family: profitability,     transform: logit,    lower: 0.0,  upper: 0.5}
+  - {name: receivables_to_revenue, family: working_capital,  transform: log1p,    lower: 0.0,  upper: 3.0}
+  - {name: inventory_to_cogs,     family: working_capital,   transform: log1p,    lower: 0.0,  upper: 5.0}
+  - {name: payables_to_cogs,      family: working_capital,   transform: log1p,    lower: 0.0,  upper: 3.0}
+  - {name: capex_to_revenue,      family: reinvestment,      transform: logit,    lower: 0.0,  upper: 1.0}
+  - {name: da_to_revenue,         family: reinvestment,      transform: logit,    lower: 0.0,  upper: 1.0}
+  - {name: payout_ratio,          family: capital_structure, transform: identity, lower: 0.0,  upper: 2.0}
+  - {name: diluted_share_growth,  family: capital_structure, transform: log1p,    lower: -0.2, upper: 1.0}

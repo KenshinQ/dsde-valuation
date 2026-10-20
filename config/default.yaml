@@ -1,0 +1,28 @@
+# VMS-0.1 default configuration.
+# Phase 0 validates every field below. Fields marked "(Phase N)" are not consumed
+# until that phase is implemented. Numeric values are explicit ASSUMPTIONS, not
+# calibrated estimates.
+configuration_version: "vms-default-0.1.0"
+mode: production            # production | exploratory (exploratory overrides must be recorded)
+base_currency: CNY          # internal normalisation currency (only CNY allowed)
+timezone: Asia/Shanghai     # used to interpret bare dates (e.g. --as-of 2026-06-30 => 23:59:59 CST)
+driver_profile: driver_profiles/operating_company.yaml   # relative to this file
+horizons_years: [1, 3, 5]
+
+monte_carlo:
+  default_paths: 10000
+  default_seed: 42
+  max_invalid_path_fraction: 0.05      # (Phase 4/5) fail/mark unusable above this
+
+entry_price_grid:                      # (Phase 7) multipliers of spot price
+  relative_to_spot: [0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3]
+
+terminal_value:                        # (Phase 6)
+  min_wacc_minus_g: 0.01               # require WACC - g >= this margin
+  max_terminal_growth: 0.04            # ASSUMPTION: long-run nominal growth bound, to be documented
+  tv_fraction_warning: 0.75            # warn when TV/EV exceeds this
+
+returns:                               # (Phase 7)
+  loss_thresholds: [-0.4, -0.2]
+  hurdles: [0.0, 0.08, 0.15]
+  cvar_levels: [0.95, 0.99]

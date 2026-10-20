@@ -7,11 +7,10 @@ editing `-v1`.** Superseded IDs stay listed and can no longer be cited (`cite()`
 
 Owner decisions: scope/data after Phase 1; Phase 2 follow-ups (2026-10-20); Phase 3 review (2026-10-20):
 CENTRAL-FROM-SELECTED, persistence_t selection, REGIME-CLOCK-MISMATCH, INDUSTRY-PRIORS-DEFER,
-MODEL-SELECTION-WF-v2 eval gates; Phase 6 WACC-INPUTS-v1 (same day).
+MODEL-SELECTION-WF-v2 eval gates; Phase 6 WACC-INPUTS-v1 (same day); Phase 4 follow-ups (PARAM-BOOTSTRAP-COUPLED, INVALID-PATH-FRACTION-GATE, DEP-BLOCK-BOOTSTRAP-DEFER, COVERAGE-MISCAL-NO-AUTOSWITCH) and Phase 5 PATH-STATEMENTS / FAILED-PATHS-EXCLUDED.
 
 ## Notes for later phases
-- **Phase 5:** dilution from rights issues/placements enters through share-count paths (RIGHTS-ADJ-DEFER-v1).
-  Path-wise statements consume SimulationBundle drivers.
+- **Phase 5 (done):** path-wise statements consume SimulationBundle drivers (PATH-STATEMENTS-v1); failed paths excluded (FAILED-PATHS-EXCLUDED-v1). Dilution from rights: RIGHTS-ADJ-DEFER-v1.
 - **Phase 6:** leases debt-like in the bridge (LEASE-BRIDGE-DEBTLIKE-v1); minority at book
   (MINORITY-BOOK-BRIDGE-v1); unpaid final-FY dividends (DIVIDEND-T-PLUS-1-v1); WACC-INPUTS-v1
   (10y CGB RF, ERP 6% default swept, beta vs CSI 300 2y weekly shrink-to-1).
@@ -82,5 +81,11 @@ MODEL-SELECTION-WF-v2 eval gates; Phase 6 WACC-INPUTS-v1 (same day).
 | `REGIME-CLOCK-MISMATCH-v1` | active | VMS-0.1 keeps quarterly/TTM fundamental regimes with annual driver observations (REGIME-ANNUAL-LABEL-v1). Known clock mismatch; annual-only regimes are deferred. |
 | `INDUSTRY-PRIORS-DEFER-v1` | active | Sector/industry priors need a cross-sectional panel and are out of VMS-0.1 scope. Keep global profile priors + shrinkage (PRIORS-GLOBAL-v1). |
 | `CENTRAL-FROM-SELECTED-v1` | active | Phase 4 central scenario uses the walk-forward-selected, shrunk distribution (median / q=0.5 in transformed space, inverse-transformed and clipped). Phase 2 deterministic projection still uses DRIVER-CENTRAL-MEDIAN-v1. |
-| `PATH-SAMPLER-v1` | active | Per path: (1) sample parameters from persisted bootstrap draws (or analytic fallback); (2) sample initial fundamental state from current posterior; (3) simulate annual transitions from a Dirichlet draw of the transition posterior; (4) sample correlated driver shocks conditional on state and, for persistence_t, the lagged z; (5) enforce documented bounds/accounting constraints; (6) reject invalid paths with reason codes. Process and parameter uncertainty stay separate (SPEC section 8.1). |
+| `PATH-SAMPLER-v1` | active | Per path: (1) sample a shared bootstrap index then parameters from persisted draws (PARAM-BOOTSTRAP-COUPLED-v1); (2) sample initial fundamental state from current posterior; (3) simulate annual transitions from a Dirichlet draw of the transition posterior; (4) sample correlated driver shocks conditional on state and, for persistence_t, the lagged z; (5) enforce documented bounds/accounting constraints; (6) reject invalid paths with reason codes. Process and parameter uncertainty stay separate (SPEC section 8.1). |
 | `PATH-CONSTRAINTS-v1` | active | Driver bounds from the profile. Soft repairs: clip to [lower, upper]; if ebit_margin > gross_margin set ebit_margin = gross_margin (flagged MARGIN_ORDER_REPAIRED). Hard rejects: non-finite draws, growth <= -1 after inverse, empty parameter draws (BOUND_VIOLATION, GROWTH_UNDEFINED, PARAMETER_DRAW_EMPTY, DEPENDENCE_DRAW_FAILED). |
+| `PARAM-BOOTSTRAP-COUPLED-v1` | active | Within each Monte Carlo path, a single bootstrap draw index is shared across all drivers that have nonparametric bootstrap draws (coupled parameter uncertainty). Drivers without draws keep their point estimate (flagged PARAM_POINT_ESTIMATE). |
+| `DEP-BLOCK-BOOTSTRAP-DEFER-v1` | active | Regime-conditional residual block bootstrap is a documented alternative when overlapping history is long enough. VMS-0.1 keeps Gaussian-copula + shrink (DRIVER-DEPENDENCE-v1) as the default; do not switch. |
+| `INVALID-PATH-FRACTION-GATE-v1` | active | If invalid sampling-path fraction exceeds monte_carlo.max_invalid_path_fraction: BLOCK in production (CLI exit 5). Exploratory may continue only with a recorded override reason (same pattern as quality gates). |
+| `COVERAGE-MISCAL-NO-AUTOSWITCH-v1` | active | COVERAGE_MISCALIBRATED is a warning only. Model selection stays walk-forward pinball (MODEL-SELECTION-WF-v2); never silently prefer persistence_t. |
+| `PATH-STATEMENTS-v1` | active | Phase 5: each SimulationBundle path (and the central path) is projected with the Phase 2 operating-company mechanics, using that path's year-t drivers and the same capital-allocation policy. Per-year policy driver lookups (payout, debt_to_revenue, ...) use the path year. |
+| `FAILED-PATHS-EXCLUDED-v1` | active | Paths that fail accounting invariants or are INSUFFICIENT_DATA are recorded with reason codes and excluded from FinancialPathBundle aggregates and any later valuation summary. They never enter silently. |

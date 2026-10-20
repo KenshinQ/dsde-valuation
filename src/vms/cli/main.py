@@ -6,12 +6,13 @@ Implemented commands:
   project         PIT snapshot + gate + profile + drivers + deterministic statements (Phase 2)
   estimate        PIT snapshot + gate + fundamental regimes + walk-forward + driver distributions (Phase 3)
   simulate        Phase 3 + correlated path sampler (SimulationBundle; not a valuation)
-  demo            offline SYNTHETIC smoke (snapshot, statements, regimes, distributions, paths). NO valuation.
+  project-paths   Phase 5 path-wise statements + capital allocation (FinancialPathBundle)
+  demo            offline SYNTHETIC smoke through path statements. NO valuation / DCF.
 
 Exit codes: 0 ok, 1 unexpected error, 2 invalid input/config/arguments,
             3 BLOCKED by critical data-quality errors in production mode,
             4 UNSUPPORTED_PROFILE (raw metrics written, no projection),
-            5 projection INSUFFICIENT_DATA or REJECTED (accounting invariant violated).
+            5 projection INSUFFICIENT_DATA / REJECTED, or INVALID_PATH_FRACTION_EXCEEDED in production.
             (regimes.model=hmm => exit 2: interface only, NOT IMPLEMENTED)
 """
 
@@ -38,16 +39,18 @@ from vms.schemas import ValuationRequest, format_validation_error
 from vms.schemas.config import ConfigError, LoadedConfig, load_config
 from vms.schemas.fields import FIELD_REGISTRY_VERSION
 from vms.capital_allocation.policies import POLICIES
-from vms.pipeline import Phase2Run, Phase3Run, Phase4Run, run_estimation, run_projection, run_simulation
+from vms.pipeline import (Phase2Run, Phase3Run, Phase4Run, Phase5Run, run_estimation, run_path_projection,
+                          run_projection, run_simulation)
 from vms.regimes import RegimeModelNotImplemented
+from vms.sampling import SamplingGateError
 from vms.seeding import stream_rng
 
 EXIT_OK, EXIT_ERROR, EXIT_INVALID, EXIT_BLOCKED, EXIT_UNSUPPORTED, EXIT_PROJECTION = 0, 1, 2, 3, 4, 5
-SMOKE_STATUS = "PHASE4_SMOKE_NOT_A_VALUATION"
+SMOKE_STATUS = "PHASE5_SMOKE_NOT_A_VALUATION"
 DETERMINISTIC_ARTIFACTS = ("request.json", "config_snapshot.json", "data_manifest.json",
                            "data_quality_report.json", "pit_snapshot.json", "state_posterior.json",
                            "driver_diagnostics.json", "statement_projection.json", "simulation_bundle.json",
-                           "simulation_metadata.json")
+                           "financial_path_bundle.json", "simulation_metadata.json")
 
 
 class InputError(ValueError):
@@ -408,6 +411,9 @@ def cmd_simulate(args: argparse.Namespace) -> int:
         _write_snapshot_bundle(out, stamp, load, args.input, as_of, note, snap, report, blocked=True)
         print(f"error: {e}", file=sys.stderr)
         return EXIT_BLOCKED
+    except SamplingGateError as e:
+        print(f"error: {e}", file=sys.stderr)
+        return EXIT_PROJECTION
     _write_snapshot_bundle(out, stamp, load, args.input, as_of, note, run.snapshot, run.report, blocked=False)
     _write_phase3(out, stamp, run)
     _write_phase4(out, stamp, run)
@@ -416,11 +422,89 @@ def cmd_simulate(args: argparse.Namespace) -> int:
     if run.bundle is None:
         print(f"error: {args.ticker}: UNSUPPORTED_PROFILE ({run.resolution.reason})", file=sys.stderr)
         return EXIT_UNSUPPORTED
-    if "INVALID_PATH_FRACTION_EXCEEDED" in run.bundle.diagnostics.flags:
-        print("error: invalid path fraction exceeded configured max", file=sys.stderr)
-        return EXIT_PROJECTION
     return EXIT_OK
 
+
+
+
+def _write_phase5(out: Path, stamp, run: Phase5Run) -> None:  # noqa: ANN001
+    if run.financial_paths is None:
+        write_artifact(out, "financial_path_bundle.json", {"status": "UNSUPPORTED_PROFILE", "bundle": None}, stamp)
+        return
+    fp = run.financial_paths
+    # Embed slim records (drop full projection ledger for MC paths beyond cap to keep JSON small)
+    payload = fp.model_dump(mode="json")
+    cap = 100
+    slim_paths = []
+    for i, rec in enumerate(payload["paths"]):
+        if i == 0 or i <= cap:  # central is paths[0]
+            if i > 0 and rec.get("projection"):
+                # keep violation summary only for embedded MC paths
+                proj = rec["projection"]
+                rec = dict(rec)
+                rec["projection"] = {"status": proj["status"], "violations": proj.get("violations", []),
+                                     "flags": proj.get("flags", []), "years": proj.get("years", []),
+                                     "label": proj.get("label"), "base_year": proj.get("base_year")}
+            slim_paths.append(rec)
+        else:
+            break
+    payload["paths"] = slim_paths
+    payload["paths_embedded"] = len(slim_paths)
+    payload["note"] = "Full per-path ledgers available via ValuationEngine.project_financials; CLI embeds slim MC rows"
+    write_artifact(out, "financial_path_bundle.json", payload, stamp)
+
+
+def _p5_summary(run: Phase5Run) -> dict:
+    if run.financial_paths is None:
+        return {"profile": run.resolution.status.value}
+    fp = run.financial_paths
+    y0 = str(fp.years[0]) if fp.years else None
+    agg = fp.aggregates.get("by_year", {}).get(y0 or "", {})
+    return {**_p4_summary(run),  # type: ignore[arg-type]
+            "financial_n_valid": fp.n_valid, "financial_n_failed": fp.n_failed,
+            "financial_flags": fp.flags,
+            "year1_fcff_mean": None if not agg.get("fcff") else round(agg["fcff"]["mean"], 4),
+            "year1_fcff_per_share_p50": None if not agg.get("fcff_per_share") else round(agg["fcff_per_share"]["p50"], 6),
+            "valid_path_id_hash": fp.aggregates.get("valid_path_id_hash")}
+
+
+def cmd_project_paths(args: argparse.Namespace) -> int:
+    cfg = load_config(args.config)
+    mode = _mode(args, cfg)
+    as_of, note = _as_of(args.as_of)
+    load = _load(args.input)
+    seed = cfg.config.monte_carlo.default_seed if args.seed is None else args.seed
+    paths = cfg.config.monte_carlo.default_paths if args.paths is None else args.paths
+    years = args.years
+    stamp = ArtifactStamp(run_id=content_run_id(kind="project-paths", instrument=args.ticker,
+                                                as_of=as_of.isoformat(), data=dataset_hash(load),
+                                                config=sha256_of({"c": cfg.config.model_dump(mode="json"),
+                                                                  "p": cfg.profile.model_dump(mode="json")}),
+                                                mode=mode, override=args.override_reason, seed=seed,
+                                                paths=paths, years=years, policy=args.policy))
+    out = Path(args.out)
+    try:
+        run = run_path_projection(load, instrument_id=args.ticker, as_of=as_of, loaded=cfg, seed=seed,
+                                  n_paths=paths, n_years=years, policy_id=args.policy, mode=mode,
+                                  override_reason=args.override_reason)
+    except GateError as e:
+        snap, report = assess(load, instrument_id=args.ticker, as_of=as_of, cfg=cfg.config.quality, mode=mode)
+        _write_snapshot_bundle(out, stamp, load, args.input, as_of, note, snap, report, blocked=True)
+        print(f"error: {e}", file=sys.stderr)
+        return EXIT_BLOCKED
+    except SamplingGateError as e:
+        print(f"error: {e}", file=sys.stderr)
+        return EXIT_PROJECTION
+    _write_snapshot_bundle(out, stamp, load, args.input, as_of, note, run.snapshot, run.report, blocked=False)
+    _write_phase3(out, stamp, run)
+    _write_phase4(out, stamp, run)
+    _write_phase5(out, stamp, run)
+    print(json.dumps({"run_id": stamp.run_id, "schema_version": SCHEMA_VERSION, "out": str(out), "seed": seed,
+                      **_summary(run.report), **_p5_summary(run)}, indent=2, ensure_ascii=False))
+    if run.financial_paths is None:
+        print(f"error: {args.ticker}: UNSUPPORTED_PROFILE ({run.resolution.reason})", file=sys.stderr)
+        return EXIT_UNSUPPORTED
+    return EXIT_OK
 
 
 def cmd_demo(args: argparse.Namespace) -> int:
@@ -470,20 +554,21 @@ def cmd_demo(args: argparse.Namespace) -> int:
     run3 = None
     if run is not None:
         _write_phase2(out, meta, run)
-        run4 = run_simulation(load, instrument_id=synthetic.SYNTHETIC_INSTRUMENT, as_of=as_of, loaded=loaded,
-                              seed=seed, n_paths=min(paths, 500), n_years=max(horizons), mode=mode,
-                              override_reason=args.override_reason)
-        _write_phase3(out, meta, run4, run)
-        _write_phase4(out, meta, run4)
-        run3 = run4
+        run5 = run_path_projection(load, instrument_id=synthetic.SYNTHETIC_INSTRUMENT, as_of=as_of, loaded=loaded,
+                                      seed=seed, n_paths=min(paths, 200), n_years=max(horizons),
+                                      policy_id=args.policy, mode=mode, override_reason=args.override_reason)
+        _write_phase3(out, meta, run5, run)
+        _write_phase4(out, meta, run5)
+        _write_phase5(out, meta, run5)
+        run3 = run5
+        run4 = run5
     else:
         run4 = None
     smoke = stream_rng(seed, "phase0_smoke").standard_normal(5)
     write_artifact(out, "simulation_metadata.json", {
         "status": SMOKE_STATUS,
         "implemented_phase": IMPLEMENTED_PHASE,
-        "warning": "Smoke artifact. Statements, regimes, distributions and correlated paths only; "
-                   "no DCF, WACC, or return distribution was computed.",
+        "warning": "Smoke artifact. Path-wise statements through Phase 5; no DCF, WACC, or returns.",
         "data_label": "SYNTHETIC — not real market data",
         "quality_status": report.status.value,
         "metadata": meta.model_dump(mode="json"),
@@ -501,6 +586,7 @@ def cmd_demo(args: argparse.Namespace) -> int:
                       **({} if run is None else _p2_summary(run)),
                       **({} if run3 is None else {"phase3": _p3_summary(run3)}),
                       **({} if run4 is None else {"phase4": _p4_summary(run4)}),
+                      **({} if run4 is None or not isinstance(run4, Phase5Run) else {"phase5": _p5_summary(run4)}),
                       "run_id": meta.run_id,
                       "schema_version": SCHEMA_VERSION, "out": str(out), "spot_price": spot, "seed": seed,
                       "paths": paths, "data_hash": data_hash[:16], "config_hash": meta.config_hash[:16],
@@ -521,7 +607,7 @@ def _gate_args(p: argparse.ArgumentParser) -> None:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    p = argparse.ArgumentParser(prog="vms", description="VMS-0.1 valuation engine (Phase 4: correlated paths; no DCF/WACC/returns yet)")
+    p = argparse.ArgumentParser(prog="vms", description="VMS-0.1 valuation engine (Phase 5: path-wise statements; no DCF/WACC/returns yet)")
     sub = p.add_subparsers(dest="command", required=True)
     asof_help = "YYYY-MM-DD (=> 15:00 Asia/Shanghai, rule ASOF-DATE-CLOSE-v1) or ISO-8601 with offset"
 
@@ -569,6 +655,18 @@ def build_parser() -> argparse.ArgumentParser:
     sm.add_argument("--years", type=int, help="projection years (default: max horizons_years)")
     _gate_args(sm)
     sm.set_defaults(func=cmd_simulate)
+
+    pp = sub.add_parser("project-paths", help="path-wise statements + capital allocation (Phase 5; not a valuation)")
+    pp.add_argument("--input", required=True)
+    pp.add_argument("--ticker", required=True)
+    pp.add_argument("--as-of", required=True, help=asof_help)
+    pp.add_argument("--out", required=True)
+    pp.add_argument("--seed", type=int)
+    pp.add_argument("--paths", type=int)
+    pp.add_argument("--years", type=int)
+    pp.add_argument("--policy", choices=sorted(POLICIES), help="capital-allocation policy")
+    _gate_args(pp)
+    pp.set_defaults(func=cmd_project_paths)
 
     d = sub.add_parser("demo", help="offline SYNTHETIC smoke run (no valuation)")
     d.add_argument("--policy", choices=sorted(POLICIES))

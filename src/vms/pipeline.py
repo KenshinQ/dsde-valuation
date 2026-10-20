@@ -165,7 +165,39 @@ def run_simulation(load: LoadResult, *, instrument_id: str, as_of: datetime, loa
     }
     bundle = simulate_paths(regimes=p3.regimes, distributions=p3.distributions, profile=loaded.profile,
                             n_paths=paths, n_years=years, seed=seed, mc=cfg.monte_carlo, est=cfg.estimation,
-                            base_year=base_year, provenance=prov)
+                            base_year=base_year, provenance=prov, mode=mode, override_reason=override_reason)
     return Phase4Run(p3.snapshot, p3.report, p3.resolution, p3.history, p3.regimes, p3.walk_forward,
                      p3.distributions, p3.central, bundle)
 
+
+
+@dataclass(frozen=True)
+class Phase5Run:
+    snapshot: "PITSnapshot"
+    report: "DataQualityReport"
+    resolution: "ProfileResolution"
+    history: "AnnualHistory"
+    regimes: "RegimeResult | None"
+    walk_forward: "WalkForwardReport | None"
+    distributions: "DistributionModel | None"
+    central: "DriverModel | None"
+    bundle: "SimulationBundle | None"
+    financial_paths: "FinancialPathBundle | None"
+
+
+def run_path_projection(load: LoadResult, *, instrument_id: str, as_of: datetime, loaded: LoadedConfig, seed: int,
+                        n_paths: int | None = None, n_years: int | None = None, policy_id: str | None = None,
+                        mode: Literal["production", "exploratory"] = "production",
+                        override_reason: str | None = None) -> Phase5Run:
+    from vms.statements.paths import project_financial_paths
+
+    p4 = run_simulation(load, instrument_id=instrument_id, as_of=as_of, loaded=loaded, seed=seed, n_paths=n_paths,
+                        n_years=n_years, mode=mode, override_reason=override_reason)
+    if p4.bundle is None or p4.central is None:
+        return Phase5Run(p4.snapshot, p4.report, p4.resolution, p4.history, None, None, None, None, None, None)
+    fp = project_financial_paths(
+        bundle=p4.bundle, snapshot=p4.snapshot, history=p4.history, drivers=p4.central, resolution=p4.resolution,
+        profile=loaded.profile, proj_cfg=loaded.config.projection, ca_cfg=loaded.config.capital_allocation,
+        policy_id=policy_id)
+    return Phase5Run(p4.snapshot, p4.report, p4.resolution, p4.history, p4.regimes, p4.walk_forward,
+                     p4.distributions, p4.central, p4.bundle, fp)

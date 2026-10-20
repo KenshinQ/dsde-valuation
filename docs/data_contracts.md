@@ -1,4 +1,4 @@
-# Data contracts (Phase 4)
+# Data contracts (Phase 5)
 
 Sources of truth: `src/vms/schemas/observations.py`, `src/vms/schemas/fields.py`,
 `src/vms/pit/snapshot.py`, `src/vms/quality/issues.py`. Artifact schema version: `vms-0.1.phase1`.
@@ -210,6 +210,10 @@ known period.
   (MCSE, invalid fraction, seed stability), parameter_snapshot, provenance (data/config/code hashes).
 - `paths.parquet`: full path-year driver table when embedded JSON paths are capped.
 - `simulation_metadata.json`: PATHS_ONLY_NOT_A_VALUATION / PHASE4 smoke status, sampler_version, counts.
+
+## 6d. Phase 5 artifacts (`vms project-paths`, also by `vms demo`)
+- `financial_path_bundle.json`: central + MC path records (status, shares/FCFF/FCFE/per-share series, violation codes),
+  `valid_path_ids`, `failed` summaries, `aggregates` over valid paths only (FAILED-PATHS-EXCLUDED-v1), policy, sampler_ref.
 
 ## 7. Not yet covered
 FX conversion (SCOPE-CNY-v1); non-calendar fiscal years (FISCAL-YEAR-CALENDAR-v1); suspension/price-limit flags;

@@ -173,7 +173,7 @@ ASSUMPTIONS: dict[str, str] = {
     "CENTRAL-FROM-SELECTED-v1": "Phase 4 central scenario uses the walk-forward-selected, shrunk distribution "
                                "(median / q=0.5 in transformed space, inverse-transformed and clipped). Phase 2 "
                                "deterministic projection still uses DRIVER-CENTRAL-MEDIAN-v1.",
-    "PATH-SAMPLER-v1": "Per path: (1) sample parameters from persisted bootstrap draws (or analytic fallback); "
+    "PATH-SAMPLER-v1": "Per path: (1) sample a shared bootstrap index then parameters from persisted draws (PARAM-BOOTSTRAP-COUPLED-v1); "
                        "(2) sample initial fundamental state from current posterior; (3) simulate annual transitions "
                        "from a Dirichlet draw of the transition posterior; (4) sample correlated driver shocks "
                        "conditional on state and, for persistence_t, the lagged z; (5) enforce documented bounds/"
@@ -183,7 +183,26 @@ ASSUMPTIONS: dict[str, str] = {
                            "gross_margin set ebit_margin = gross_margin (flagged MARGIN_ORDER_REPAIRED). Hard rejects: "
                            "non-finite draws, growth <= -1 after inverse, empty parameter draws "
                            "(BOUND_VIOLATION, GROWTH_UNDEFINED, PARAMETER_DRAW_EMPTY, DEPENDENCE_DRAW_FAILED).",
+    "PARAM-BOOTSTRAP-COUPLED-v1": "Within each Monte Carlo path, a single bootstrap draw index is shared across all "
+                                 "drivers that have nonparametric bootstrap draws (coupled parameter uncertainty). "
+                                 "Drivers without draws keep their point estimate (flagged PARAM_POINT_ESTIMATE).",
+    "DEP-BLOCK-BOOTSTRAP-DEFER-v1": "Regime-conditional residual block bootstrap is a documented alternative when "
+                                   "overlapping history is long enough. VMS-0.1 keeps Gaussian-copula + shrink "
+                                   "(DRIVER-DEPENDENCE-v1) as the default; do not switch.",
+    "INVALID-PATH-FRACTION-GATE-v1": "If invalid sampling-path fraction exceeds monte_carlo.max_invalid_path_fraction: "
+                                    "BLOCK in production (CLI exit 5). Exploratory may continue only with a recorded "
+                                    "override reason (same pattern as quality gates).",
+    "COVERAGE-MISCAL-NO-AUTOSWITCH-v1": "COVERAGE_MISCALIBRATED is a warning only. Model selection stays walk-forward "
+                                       "pinball (MODEL-SELECTION-WF-v2); never silently prefer persistence_t.",
+    "PATH-STATEMENTS-v1": "Phase 5: each SimulationBundle path (and the central path) is projected with the Phase 2 "
+                          "operating-company mechanics, using that path's year-t drivers and the same capital-allocation "
+                          "policy. Per-year policy driver lookups (payout, debt_to_revenue, ...) use the path year.",
+    "FAILED-PATHS-EXCLUDED-v1": "Paths that fail accounting invariants or are INSUFFICIENT_DATA are recorded with "
+                               "reason codes and excluded from FinancialPathBundle aggregates and any later valuation "
+                               "summary. They never enter silently.",
 }
+
+
 
 SUPERSEDED: dict[str, str] = {
     "PAYOUT-SAME-YEAR-v1": "DIVIDEND-T-PLUS-1-v1",

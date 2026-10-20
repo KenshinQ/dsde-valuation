@@ -1,4 +1,4 @@
-# Architecture (state at Phase 4)
+# Architecture (state at Phase 5)
 
 Target pipeline: SPEC §4 (adapters → PIT store → gates → drivers → regimes → sampler →
 statements → capital allocation → DCF/multiples → equity bridge → per-share value →
@@ -52,7 +52,7 @@ entry-price-conditioned returns → diagnostics → result bundle).
 
 ## Boundaries
 - No imports from `dsde-engine` or other legacy code; DSDE adapter is Phase 10 and optional.
-- All artifacts carry `run_id` and `schema_version` (`vms-0.1.phase4`).
+- All artifacts carry `run_id` and `schema_version` (`vms-0.1.phase5`).
 
 ## Phase 1 data flow
 ```
@@ -122,3 +122,11 @@ MCDiagnostics: key stats + MCSE + same-seed stability; provenance hashes persist
 ```
 - CLI: `vms simulate` writes `simulation_bundle.json` (+ `paths.parquet` when >500 paths) and refreshes
   `simulation_metadata.json`. Facade: `ValuationEngine.simulate_paths`.
+
+## Phase 5 flow (path-wise statements; not a valuation)
+```
+SimulationBundle.paths (+ central)
+  └─ for each path: OperatingCompanyProfile.project(..., year_drivers=path.year→drivers)
+       └─ same §9 order / Phase 2 policies / check_invariants
+            ├─ VALID → included in aggregates (fcff, shares, fcff_per_share, ...)
+            └─ REJECTED / INSUFFICIENT_DATA → recorded with reason codes; EXCLUDED_FROM_AGGREGATES

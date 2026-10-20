@@ -29,6 +29,7 @@ from vms.statements.tax import reconstruct_pool
 
 PROJECTION_VERSION = "DET-PROJ-2"   # 2: t+1 dividends, announced-dividend base deduction, revolver/cash interest
 LABEL = "DETERMINISTIC_CENTRAL_CASE_NOT_A_VALUATION"
+PATH_LABEL = "PATH_PROJECTION_NOT_A_VALUATION"
 
 REQUIRED_BASE = ("revenue", "cash", "interest_bearing_debt", "accounts_receivable", "inventory",
                  "accounts_payable", "total_assets", "total_liabilities", "total_equity")
@@ -78,7 +79,8 @@ class OperatingCompanyProfile(SectorProfile):
     required_drivers = PROJECTION_DRIVERS
 
     def project(self, *, snapshot: PITSnapshot, history: AnnualHistory, drivers: DriverModel, policy: Policy,
-                resolution: ProfileResolution, years: int, cfg: ProjectionConfig) -> ProjectionResult:
+                resolution: ProfileResolution, years: int, cfg: ProjectionConfig,
+                year_drivers: dict[int, dict[str, float]] | None = None) -> ProjectionResult:
         snap = snapshot
         flags: set[str] = set(resolution.flags)
         if not history.years:
@@ -106,8 +108,10 @@ class OperatingCompanyProfile(SectorProfile):
             missing.append("shares_outstanding@as_of")
         if missing:
             return _empty("INSUFFICIENT_DATA", snap, resolution, missing, flags)
-        d = {k: e.value for k, e in drivers.estimates.items()}
+        base_d = {k: e.value for k, e in drivers.estimates.items()}
+        d = dict(base_d)
         last = snap.market[-1]
+        path_mode = year_drivers is not None
 
         # ---- announced-but-unpaid cash dividends at the base balance-sheet date (ANNOUNCED-DIVIDEND-BASE-v1)
         fy_end = date(y0, 12, 31)
@@ -207,11 +211,20 @@ class OperatingCompanyProfile(SectorProfile):
         pending = [a.event for a in snap.corporate_actions
                    if a.status == "pending" and a.event.action_type in SHARE_CHANGING_ACTIONS]
         base_price = last.raw_close
-        tax_rate = d["effective_tax_rate"]
         yrs = list(range(y0 + 1, y0 + 1 + years))
         price_factor = 1.0
         for y in yrs:
             p = y - 1
+            if year_drivers is not None:
+                if y not in year_drivers:
+                    return _empty("INSUFFICIENT_DATA", snap, resolution, [f"missing path drivers for FY{y}"], flags)
+                d = dict(year_drivers[y])
+                missing_d = sorted(PROJECTION_DRIVERS - set(d))
+                if missing_d:
+                    return _empty("INSUFFICIENT_DATA", snap, resolution,
+                                  [f"path drivers missing {missing_d} @FY{y}"], flags)
+                policy.d = d
+            tax_rate = d["effective_tax_rate"]
             # 1. revenue
             rev = L.put("revenue", y, L.v("revenue", p) * (1 + d["revenue_growth"]), "revenue[y-1] x (1 + revenue_growth)",
                         [f"revenue@{p}", "driver:revenue_growth"])
@@ -389,6 +402,16 @@ class OperatingCompanyProfile(SectorProfile):
                         f"shares_repurchased@{y}", f"shares_issued@{y}"])
             L.put("diluted_shares", y, sh, "= shares_outstanding (no dilutive-security data)",
                   [f"shares_outstanding@{y}", "assumption:DILUTED-SHARES-BASIC-v1"])
+            # Per-share placeholders (Phase 5 proves share paths affect per-share metrics; Phase 6 adds value/share)
+            if sh <= 0:
+                flags.add("NONPOSITIVE_SHARES")
+            else:
+                L.put("fcff_per_share", y, fcff / sh, "fcff / diluted_shares",
+                      [f"fcff@{y}", f"diluted_shares@{y}"])
+                L.put("fcfe_per_share", y, L.v("fcfe", y) / sh, "fcfe / diluted_shares",
+                      [f"fcfe@{y}", f"diluted_shares@{y}"])
+                L.put("book_equity_per_share", y, L.v("total_equity", y) / sh, "total_equity / diluted_shares",
+                      [f"total_equity@{y}", f"diluted_shares@{y}"])
             if ni < 0:
                 flags.add("NEGATIVE_NET_INCOME")
             if ebit < 0:
@@ -401,22 +424,27 @@ class OperatingCompanyProfile(SectorProfile):
         for e in drivers.estimates.values():
             if e.low_confidence:
                 flags.add("LOW_CONFIDENCE_DRIVERS")
-        assumptions = cite("ANNUAL-BASE-v1", "EBIT-MARGIN-PRIMARY-v1", "ONE-OFFS-v1", "TAX-CN-LCF-5Y-v1",
-                           "TAX-LOSS-POOL-FROM-BOOK-v1", "NEGATIVE-EBIT-v1", "NWC-OPERATING-v1",
-                           "ACQUISITIONS-SEPARATE-v1", "LEASES-EXCLUDED-v1", "SBC-IN-EBIT-v1",
-                           "INTEREST-OPENING-DEBT-v2", "MINORITY-SHARE-v1", "BALANCE-PLUG-FREE-v1",
-                           "REVOLVER-MIN-CASH-v1", "BUYBACK-PRICE-v1", "DILUTED-SHARES-BASIC-v1", "PENDING-CA-v1",
-                           "DIVIDEND-T-PLUS-1-v1", "ANNOUNCED-DIVIDEND-BASE-v1", "REVOLVER-RATE-v1",
-                           "CASH-INTEREST-ZERO-v1", "BS-RESIDUAL-WARN-v1", "ANNUAL-BASE-STALENESS-v1",
-                           *drivers.assumptions, *resolution.assumptions)
+        base_assumptions = ["ANNUAL-BASE-v1", "EBIT-MARGIN-PRIMARY-v1", "ONE-OFFS-v1", "TAX-CN-LCF-5Y-v1",
+                             "TAX-LOSS-POOL-FROM-BOOK-v1", "NEGATIVE-EBIT-v1", "NWC-OPERATING-v1",
+                             "ACQUISITIONS-SEPARATE-v1", "LEASES-EXCLUDED-v1", "SBC-IN-EBIT-v1",
+                             "INTEREST-OPENING-DEBT-v2", "MINORITY-SHARE-v1", "BALANCE-PLUG-FREE-v1",
+                             "REVOLVER-MIN-CASH-v1", "BUYBACK-PRICE-v1", "DILUTED-SHARES-BASIC-v1", "PENDING-CA-v1",
+                             "DIVIDEND-T-PLUS-1-v1", "ANNOUNCED-DIVIDEND-BASE-v1", "REVOLVER-RATE-v1",
+                             "CASH-INTEREST-ZERO-v1", "BS-RESIDUAL-WARN-v1", "ANNUAL-BASE-STALENESS-v1"]
+        if path_mode:
+            base_assumptions += ["PATH-STATEMENTS-v1", "FAILED-PATHS-EXCLUDED-v1"]
+            flags.add("PATH_YEAR_DRIVERS")
+        assumptions = cite(*base_assumptions, *drivers.assumptions, *resolution.assumptions)
         violations = check_invariants(L.items, y0, yrs, tol=cfg.invariant_abs_tol,
                                       min_cash_to_revenue=cfg.min_cash_to_revenue)
-        trace_bad = unresolved_refs(L.items, drivers=set(drivers.estimates), policy=set(policy.params),
+        trace_bad = unresolved_refs(L.items, drivers=set(drivers.estimates) | set(PROJECTION_DRIVERS),
+                                    policy=set(policy.params),
                                     config=set(ProjectionConfig.model_fields), assumptions=set(ASSUMPTIONS))
         violations += [Violation(code="TRACE_UNRESOLVED", year=y0, detail=b) for b in trace_bad]
         fcff = FCFFSeries(years=yrs, values=[L.v("fcff", y) for y in yrs])
         fcfe = FCFESeries(years=yrs, values=[L.v("fcfe", y) for y in yrs])
         return ProjectionResult(
+            label=PATH_LABEL if path_mode else LABEL,
             status="REJECTED" if violations else "VALID", instrument_id=snap.instrument_id,
             as_of=snap.as_of.isoformat(), profile=resolution, policy=policy.describe(), base_year=y0, years=yrs,
             items=L.items, fcff=fcff, fcfe=fcfe, violations=violations, missing_inputs=[], flags=sorted(flags),

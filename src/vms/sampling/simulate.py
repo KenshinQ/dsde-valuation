@@ -27,6 +27,12 @@ from vms.seeding import stream_rng
 SAMPLER_VERSION = "PATH-SAMPLER-1"
 
 
+class SamplingGateError(RuntimeError):
+    """Raised when invalid-path fraction exceeds the configured max in production (INVALID-PATH-FRACTION-GATE-v1)."""
+
+
+
+
 def _hash_obj(obj: Any) -> str:
     import json
     return hashlib.sha256(json.dumps(obj, sort_keys=True, default=str).encode()).hexdigest()
@@ -50,13 +56,26 @@ def _dirichlet_rows(rng: np.random.Generator, alpha: Sequence[Sequence[float]]) 
 
 def _param_draw(dd: DriverDistribution, rng: np.random.Generator
                 ) -> tuple[float, float, int | None, list[str]]:
-    """Sample (loc, scale) for this path from persisted bootstrap draws; fall back to selected point."""
+    """Legacy independent draw (tests); production paths use _param_draw_coupled."""
     sel = dd.specs[dd.selected_spec]
     pu = dd.parameter_uncertainty
     flags: list[str] = []
     if pu.method == "nonparametric_bootstrap" and pu.draws_loc and pu.draws_scale:
         i = int(rng.integers(0, len(pu.draws_loc)))
         return float(pu.draws_loc[i]), max(float(pu.draws_scale[i]), 1e-12), i, flags
+    flags.append("PARAM_POINT_ESTIMATE")
+    return float(sel.loc), max(float(sel.scale), 1e-12), None, flags
+
+
+def _param_draw_coupled(dd: DriverDistribution, shared_i: int | None
+                        ) -> tuple[float, float, int | None, list[str]]:
+    """Use shared bootstrap index when this driver has draws; else point estimate."""
+    sel = dd.specs[dd.selected_spec]
+    pu = dd.parameter_uncertainty
+    flags: list[str] = []
+    if (shared_i is not None and pu.method == "nonparametric_bootstrap"
+            and pu.draws_loc and pu.draws_scale and shared_i < len(pu.draws_loc)):
+        return float(pu.draws_loc[shared_i]), max(float(pu.draws_scale[shared_i]), 1e-12), shared_i, flags
     flags.append("PARAM_POINT_ESTIMATE")
     return float(sel.loc), max(float(sel.scale), 1e-12), None, flags
 
@@ -176,17 +195,20 @@ def _one_path(path_i: int, *, regimes: RegimeResult, dist: DistributionModel, ye
               states: Sequence[str], chol: np.ndarray, names: Sequence[str], df: float,
               seed: int) -> PathRecord | InvalidPathSummary:
     rng = stream_rng(seed, f"path:{path_i}")
-    # --- parameter uncertainty (separate stream consumption order: params then transitions then shocks)
+    # --- parameter uncertainty: ONE shared bootstrap index across drivers (PARAM-BOOTSTRAP-COUPLED-v1)
     draw_idx: dict[str, int | None] = {}
     path_loc: dict[str, float] = {}
     path_scale: dict[str, float] = {}
     regime_shift: dict[str, dict[str, tuple[float, float]]] = {}
-    pflags: list[str] = []
+    pflags: list[str] = ["PARAM_BOOTSTRAP_COUPLED"]
+    boot_lens = [len(dd.parameter_uncertainty.draws_loc)
+                 for dd in dist.drivers.values()
+                 if dd.parameter_uncertainty.method == "nonparametric_bootstrap" and dd.parameter_uncertainty.draws_loc]
+    shared_i = int(rng.integers(0, min(boot_lens))) if boot_lens else None
+    if shared_i is None:
+        pflags.append("PARAM_POINT_ESTIMATE_ALL")
     for name, dd in dist.drivers.items():
-        loc, scale, idx, fl = _param_draw(dd, rng)
-        if idx is None and dd.parameter_uncertainty.method == "analytic_only" and not dd.observations:
-            # still allow prior; only empty bootstrap with n>=2 requested would be empty — not this case
-            pass
+        loc, scale, idx, fl = _param_draw_coupled(dd, shared_i)
         draw_idx[name] = idx
         path_loc[name] = loc
         path_scale[name] = scale
@@ -226,7 +248,8 @@ def _one_path(path_i: int, *, regimes: RegimeResult, dist: DistributionModel, ye
         path_id=f"mc:{path_i}", kind="monte_carlo", valid=True, years=out_years,
         parameter_draw_index=draw_idx, transition_seed_tag=f"path:{path_i}",
         flags=sorted(set(pflags)), assumptions=cite("PATH-SAMPLER-v1", "PATH-CONSTRAINTS-v1",
-                                                      "PARAM-UNCERTAINTY-BOOTSTRAP-v1", "DRIVER-DEPENDENCE-v1"))
+                                                      "PARAM-UNCERTAINTY-BOOTSTRAP-v1", "PARAM-BOOTSTRAP-COUPLED-v1",
+                                                      "DRIVER-DEPENDENCE-v1"))
 
 
 def _key_stats(paths: Sequence[PathRecord], names: Sequence[str]) -> dict[str, dict[str, float]]:
@@ -258,7 +281,8 @@ def _key_stats(paths: Sequence[PathRecord], names: Sequence[str]) -> dict[str, d
 def simulate_paths(*, regimes: RegimeResult, distributions: DistributionModel, profile: DriverProfile,
                    n_paths: int, n_years: int, seed: int, mc: MonteCarloConfig, est: EstimationConfig,
                    base_year: int, provenance: dict[str, Any] | None = None,
-                   check_seed_stability: bool = True) -> SimulationBundle:
+                   check_seed_stability: bool = True,
+                   mode: str = "production", override_reason: str | None = None) -> SimulationBundle:
     """Build a reproducible SimulationBundle. Independent sampling of material blocks is prohibited."""
     if n_paths <= 0 or n_years <= 0:
         raise ValueError("n_paths and n_years must be positive")
@@ -326,11 +350,30 @@ def simulate_paths(*, regimes: RegimeResult, distributions: DistributionModel, p
     flags = list(dep.flags)
     if any(d.low_confidence for d in distributions.drivers.values()):
         flags.append("DRIVER_LOW_CONFIDENCE_PRESENT")
-    return SimulationBundle(
+    override = None
+    if "INVALID_PATH_FRACTION_EXCEEDED" in dflags:
+        if mode == "production":
+            raise SamplingGateError(
+                f"invalid path fraction {frac:.4g} exceeds max_invalid_path_fraction "
+                f"{mc.max_invalid_path_fraction} (INVALID-PATH-FRACTION-GATE-v1). "
+                f"Fix the sampler/data, or rerun with --mode exploratory --override-reason '...'")
+        if not (override_reason or "").strip():
+            raise SamplingGateError(
+                "invalid path fraction exceeded: exploratory mode requires --override-reason")
+        override = override_reason.strip()
+        flags.append("INVALID_PATH_FRACTION_OVERRIDDEN")
+    bundle = SimulationBundle(
         sampler_version=SAMPLER_VERSION, seed=seed, n_paths=n_paths, n_years=n_years, base_year=base_year,
         years=years, dependence=dep, central=central, paths=valid, invalid=invalid, diagnostics=diagnostics,
         parameter_snapshot=param_snap, provenance=dict(provenance or {}),
         assumptions=cite("PATH-SAMPLER-v1", "PATH-CONSTRAINTS-v1", "DRIVER-DEPENDENCE-v1",
                          "CENTRAL-FROM-SELECTED-v1", "PARAM-UNCERTAINTY-BOOTSTRAP-v1",
-                         "REGIME-TRANSITION-DIRICHLET-v1", "REGIME-CLOCK-MISMATCH-v1"),
+                         "PARAM-BOOTSTRAP-COUPLED-v1", "DEP-BLOCK-BOOTSTRAP-DEFER-v1",
+                         "REGIME-TRANSITION-DIRICHLET-v1", "REGIME-CLOCK-MISMATCH-v1",
+                         "INVALID-PATH-FRACTION-GATE-v1", "COVERAGE-MISCAL-NO-AUTOSWITCH-v1"),
         flags=sorted(set(flags)))
+    if override is not None:
+        prov = dict(bundle.provenance)
+        prov["invalid_path_fraction_override"] = override
+        bundle = bundle.model_copy(update={"provenance": prov})
+    return bundle

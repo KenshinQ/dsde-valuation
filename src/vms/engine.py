@@ -7,12 +7,13 @@ from typing import Any, Literal
 
 from vms.data.io import LoadResult
 from vms.drivers.distributions import DistributionModel
-from vms.pipeline import Phase2Run, Phase3Run, Phase4Run, run_estimation, run_projection, run_simulation
+from vms.pipeline import (Phase2Run, Phase5Run, run_estimation, run_path_projection, run_projection, run_simulation)
 from vms.pit.snapshot import PITSnapshot
 from vms.quality.report import DataQualityReport, assess
 from vms.regimes import RegimeResult
 from vms.sampling import SimulationBundle
 from vms.schemas.config import LoadedConfig
+from vms.statements.paths import FinancialPathBundle, project_financial_paths
 
 
 class ValuationEngine:
@@ -58,7 +59,24 @@ class ValuationEngine:
             raise RuntimeError("UNSUPPORTED_PROFILE: no simulation")
         return run.bundle
 
-    def project_financials(self, load: LoadResult, *, instrument_id: str, as_of: datetime, **kw: Any) -> Phase2Run:
+    def project_financials(self, bundle: SimulationBundle, *, snapshot: PITSnapshot, history,
+                           drivers, resolution, policy_id: str | None = None) -> FinancialPathBundle:
+        """SPEC §16.1: project a SimulationBundle into a FinancialPathBundle."""
+        return project_financial_paths(
+            bundle=bundle, snapshot=snapshot, history=history, drivers=drivers, resolution=resolution,
+            profile=self.loaded.profile, proj_cfg=self.loaded.config.projection,
+            ca_cfg=self.loaded.config.capital_allocation, policy_id=policy_id)
+
+    def project_financials_from_load(self, load: LoadResult, *, instrument_id: str, as_of: datetime, seed: int,
+                                     n_paths: int | None = None, n_years: int | None = None,
+                                     policy_id: str | None = None,
+                                     mode: Literal["production", "exploratory"] = "production",
+                                     override_reason: str | None = None) -> Phase5Run:
+        return run_path_projection(load, instrument_id=instrument_id, as_of=as_of, loaded=self.loaded, seed=seed,
+                                   n_paths=n_paths, n_years=n_years, policy_id=policy_id, mode=mode,
+                                   override_reason=override_reason)
+
+    def project_central(self, load: LoadResult, *, instrument_id: str, as_of: datetime, **kw: Any) -> Phase2Run:
         return run_projection(load, instrument_id=instrument_id, as_of=as_of, loaded=self.loaded, **kw)
 
     def value_paths(self, *args: Any, **kwargs: Any) -> None:

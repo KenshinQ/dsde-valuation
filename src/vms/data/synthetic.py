@@ -15,6 +15,9 @@ built to exercise the Phase-1 PIT machinery:
   2024 bonus share in 2021–2024H1 prices — the snapshot must not use it.
 - All publications are at 18:00 Asia/Shanghai (after the 15:00 close).
 - ``minority_interest`` is explicitly missing every period.
+- Phase 2 additions: quarters run to 2025Q1. The data includes interest_expense, tax_expense,
+  non_recurring_items_pretax (a one-off gain in 2022Q3), an acquisition (2022Q2), a buyback (2023Q3),
+  and a PIT industry classification (SW2021_L1 机械设备).
 """
 
 from __future__ import annotations
@@ -25,14 +28,16 @@ from zoneinfo import ZoneInfo
 
 import numpy as np
 
-from vms.schemas import (CorporateActionEvent, FinancialObservation, MarketObservation, QualityStatus,
-                         ReportingConvention, SourceDescriptor, UnitScale, Versioning)
+from vms.schemas import (CorporateActionEvent, FinancialObservation, InstrumentClassification, MarketObservation,
+                         QualityStatus, ReportingConvention, SourceDescriptor, UnitScale, Versioning)
 from vms.seeding import stream_rng
 
 SYNTHETIC_SOURCE = "SYNTHETIC"
 SYNTHETIC_INSTRUMENT = "SYN000001.SZ"
 TZ = ZoneInfo("Asia/Shanghai")
 START_YEAR, N_YEARS = 2021, 4
+LAST_PERIOD = date(2025, 3, 31)
+INDUSTRY = ("SW2021_L1", "机械设备")
 
 RESTATED_PERIOD = date(2022, 12, 31)
 RESTATEMENT_PUBLISHED = datetime(2023, 8, 28, 18, 0, tzinfo=TZ)
@@ -46,9 +51,11 @@ DIVIDEND_REVISED_AT = datetime(2024, 7, 1, 18, 0, tzinfo=TZ)
 _BASE_SHARES = 1.0e9
 
 _FLOWS = [("income", "revenue"), ("income", "cost_of_revenue"), ("income", "gross_profit"),
-          ("income", "operating_expenses"), ("income", "ebit"), ("income", "parent_net_income"),
+          ("income", "operating_expenses"), ("income", "ebit"), ("income", "non_recurring_items_pretax"),
+          ("income", "interest_expense"), ("income", "tax_expense"), ("income", "parent_net_income"),
           ("income", "depreciation_amortization"), ("cash_flow", "cash_flow_from_operations"),
-          ("cash_flow", "capex"), ("cash_flow", "dividends_paid")]
+          ("cash_flow", "capex"), ("cash_flow", "acquisitions_net"), ("cash_flow", "dividends_paid"),
+          ("cash_flow", "share_repurchases")]
 _STOCKS = ["cash", "interest_bearing_debt", "accounts_receivable", "inventory", "accounts_payable",
            "total_assets", "total_liabilities", "total_equity"]
 
@@ -74,36 +81,51 @@ def _obs(pe, stype, name, value, pub, rev="r0", status=QualityStatus.OBSERVED) -
         revision_id=rev if value is not None else None, quality_status=status)
 
 
+def classifications() -> list[InstrumentClassification]:
+    return [InstrumentClassification(instrument_id=SYNTHETIC_INSTRUMENT, scheme=INDUSTRY[0], industry=INDUSTRY[1],
+                                     published_at=datetime(2020, 1, 1, 9, 0, tzinfo=TZ), source_id=SYNTHETIC_SOURCE)]
+
+
 def generate(seed: int) -> tuple[list[FinancialObservation], list[MarketObservation], list[CorporateActionEvent]]:
     rng = stream_rng(seed, "synthetic_data")
     fin: list[FinancialObservation] = []
     revenue_q = 50_000.0  # 万元 standalone quarter
     equity = 400_000.0
     ytd: dict[str, float] = {}
-    for year in range(START_YEAR, START_YEAR + N_YEARS):
+    debt = 20_000.0
+    for year in range(START_YEAR, LAST_PERIOD.year + 1):
         ytd = {name: 0.0 for _, name in _FLOWS}
         for month in (3, 6, 9, 12):
             pe = date(year, month, calendar.monthrange(year, month)[1])
+            if pe > LAST_PERIOD:
+                break
             pub = _publication(pe)
             revenue_q *= 1.0 + rng.normal(0.02, 0.04)
             gm = float(np.clip(rng.normal(0.32, 0.02), 0.05, 0.8))
             opex = revenue_q * float(rng.normal(0.18, 0.015))
             q = {"revenue": revenue_q, "cost_of_revenue": revenue_q * (1 - gm), "gross_profit": revenue_q * gm,
                  "operating_expenses": opex}
-            q["ebit"] = q["gross_profit"] - opex
-            q["parent_net_income"] = q["ebit"] * 0.75
+            q["non_recurring_items_pretax"] = 3_000.0 if pe == date(2022, 9, 30) else 0.0
+            q["ebit"] = q["gross_profit"] - opex + q["non_recurring_items_pretax"]
+            q["interest_expense"] = debt * 0.01
+            pretax = q["ebit"] - q["interest_expense"]
+            q["tax_expense"] = 0.25 * max(pretax, 0.0)
+            q["parent_net_income"] = (pretax - q["tax_expense"]) * 0.95
             q["depreciation_amortization"] = revenue_q * float(rng.uniform(0.03, 0.05))
             q["cash_flow_from_operations"] = q["parent_net_income"] + q["depreciation_amortization"]
             q["capex"] = revenue_q * float(rng.uniform(0.04, 0.07))
+            q["acquisitions_net"] = 15_000.0 if pe == date(2022, 6, 30) else 0.0
             q["dividends_paid"] = revenue_q * 0.1 if month == 6 else 0.0
+            q["share_repurchases"] = 2_000.0 if pe == date(2023, 9, 30) else 0.0
             for k in ytd:
                 ytd[k] += q[k]
             for stype, name in _FLOWS:
                 fin.append(_obs(pe, stype, name, ytd[name], pub))
-            equity += q["parent_net_income"] - q["dividends_paid"]
+            equity += q["parent_net_income"] - q["dividends_paid"] - q["share_repurchases"]
+            debt = revenue_q * float(rng.uniform(0.3, 0.5))
             liabilities = revenue_q * float(rng.uniform(2.0, 2.4))
             stocks = {"cash": revenue_q * float(rng.uniform(0.8, 1.2)),
-                      "interest_bearing_debt": revenue_q * float(rng.uniform(0.3, 0.5)),
+                      "interest_bearing_debt": debt,
                       "accounts_receivable": revenue_q * float(rng.uniform(0.5, 0.7)),
                       "inventory": revenue_q * float(rng.uniform(0.4, 0.6)),
                       "accounts_payable": revenue_q * float(rng.uniform(0.3, 0.5)),

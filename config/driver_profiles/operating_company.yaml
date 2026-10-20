@@ -1,26 +1,32 @@
-# Generic operating-company driver profile (SPEC §7.1–7.2).
-# bounds_status=placeholder: bounds below are hard sanity limits chosen by hand,
-# NOT estimated. Phase 2/3 must justify or replace them. Phase 0 only validates
-# structure (unique names, lower<upper, transform/bounds compatibility).
+# Generic operating-company driver profile (SPEC §7.1–7.2), profile v0.2.0.
+# bounds_status=placeholder: bounds and priors are hand-set sanity values (DRIVER-PRIORS-PLACEHOLDER-v1),
+# NOT estimates. Central values come from snapshot history (DRIVER-CENTRAL-MEDIAN-v1); priors are used only
+# when no history exists (flagged LOW_CONFIDENCE). Industry support is configured in default.yaml `industry`.
 profile_id: operating_company
-profile_version: "0.1.0"
+profile_version: "0.2.0"
 supported: true
 bounds_status: placeholder
-unsupported_industries:      # §7.2: FCFF/EV inappropriate => UNSUPPORTED_PROFILE (enforced in Phase 2)
-  - bank
-  - insurance
-  - securities_brokerage
-  - diversified_financials
 drivers:
-  - {name: revenue_growth,        family: demand,            transform: log1p,    lower: -0.8, upper: 3.0}
-  - {name: gross_margin,          family: profitability,     transform: logit,    lower: 0.0,  upper: 1.0}
-  - {name: opex_ratio,            family: profitability,     transform: logit,    lower: 0.0,  upper: 1.0}
-  - {name: ebit_margin,           family: profitability,     transform: identity, lower: -1.0, upper: 1.0}
-  - {name: effective_tax_rate,    family: profitability,     transform: logit,    lower: 0.0,  upper: 0.5}
-  - {name: receivables_to_revenue, family: working_capital,  transform: log1p,    lower: 0.0,  upper: 3.0}
-  - {name: inventory_to_cogs,     family: working_capital,   transform: log1p,    lower: 0.0,  upper: 5.0}
-  - {name: payables_to_cogs,      family: working_capital,   transform: log1p,    lower: 0.0,  upper: 3.0}
-  - {name: capex_to_revenue,      family: reinvestment,      transform: logit,    lower: 0.0,  upper: 1.0}
-  - {name: da_to_revenue,         family: reinvestment,      transform: logit,    lower: 0.0,  upper: 1.0}
-  - {name: payout_ratio,          family: capital_structure, transform: identity, lower: 0.0,  upper: 2.0}
-  - {name: diluted_share_growth,  family: capital_structure, transform: log1p,    lower: -0.2, upper: 1.0}
+  # demand
+  - {name: revenue_growth,             family: demand,            transform: log1p,    lower: -0.8, upper: 3.0, prior: 0.05}
+  # profitability
+  - {name: gross_margin,               family: profitability,     transform: logit,    lower: 0.0,  upper: 1.0, prior: 0.30}
+  - {name: ebit_margin,                family: profitability,     transform: identity, lower: -1.0, upper: 1.0, prior: 0.08}
+  - {name: opex_ratio,                 family: profitability,     transform: logit,    lower: 0.0,  upper: 1.0, prior: 0.20, role: diagnostic}
+  - {name: effective_tax_rate,         family: profitability,     transform: logit,    lower: 0.0,  upper: 0.5, prior: 0.25}
+  - {name: parent_share_of_net_income, family: profitability,     transform: logit,    lower: 0.0,  upper: 1.0, prior: 1.0}
+  # working capital
+  - {name: receivables_to_revenue,     family: working_capital,   transform: log1p,    lower: 0.0,  upper: 3.0, prior: 0.20}
+  - {name: inventory_to_cogs,          family: working_capital,   transform: log1p,    lower: 0.0,  upper: 5.0, prior: 0.20}
+  - {name: payables_to_cogs,           family: working_capital,   transform: log1p,    lower: 0.0,  upper: 3.0, prior: 0.15}
+  # reinvestment
+  - {name: capex_to_revenue,           family: reinvestment,      transform: logit,    lower: 0.0,  upper: 1.0, prior: 0.05}
+  - {name: da_to_revenue,              family: reinvestment,      transform: logit,    lower: 0.0,  upper: 1.0, prior: 0.04}
+  - {name: acquisitions_to_revenue,    family: reinvestment,      transform: identity, lower: -0.5, upper: 1.0, prior: 0.0}
+  # capital structure / allocation
+  - {name: cost_of_debt,               family: capital_structure, transform: logit,    lower: 0.0,  upper: 0.3, prior: 0.04}
+  - {name: debt_to_revenue,            family: capital_structure, transform: log1p,    lower: 0.0,  upper: 10.0, prior: 0.10}
+  - {name: payout_ratio,               family: capital_structure, transform: identity, lower: 0.0,  upper: 2.0, prior: 0.30}
+  - {name: repurchases_to_net_income,  family: capital_structure, transform: identity, lower: 0.0,  upper: 2.0, prior: 0.0}
+  - {name: diluted_share_growth,       family: capital_structure, transform: log1p,    lower: -0.2, upper: 1.0, prior: 0.0}
+  - {name: cash_to_revenue,            family: capital_structure, transform: log1p,    lower: 0.0,  upper: 10.0, prior: 0.20, role: diagnostic}

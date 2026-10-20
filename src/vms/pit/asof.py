@@ -1,6 +1,6 @@
 """Decision-timestamp (as_of) parsing.
 
-Versioned assumption ASOF-DATE-CLOSE-1: a date-only as_of means **15:00:00 Asia/Shanghai**
+Versioned assumption ASOF-DATE-CLOSE-v1: a date-only as_of means **15:00:00 Asia/Shanghai**
 (A-share continuous-auction close) on that date. Announcements published after the close
 (typically evenings) are therefore excluded until the next date's as_of. Explicit tz-aware
 datetimes are used as given; naive datetimes are rejected.

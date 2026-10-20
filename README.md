@@ -2,9 +2,12 @@
 
 Standalone valuation & conditional return engine for China A-shares. Spec: [SPEC.md](SPEC.md).
 
-**Status: Phases 0–1 done.** Phase 0: contracts, config, run metadata, seeding. Phase 1: PIT data
-and integrity gates. There is **no valuation logic yet**; `vms demo` output is labeled
-`PHASE1_SMOKE_NOT_A_VALUATION`. See [PHASE0_DONE.md](PHASE0_DONE.md) and [PHASE1_DONE.md](PHASE1_DONE.md).
+**Status: Phases 0–2 done.** Phase 0: contracts, config, run metadata, seeding. Phase 1: PIT data
+and integrity gates. Phase 2: drivers, sector profiles, deterministic central-case statements,
+capital-allocation policies, and accounting invariants. There is **no valuation yet** (no WACC, DCF,
+paths, or returns). Projections are labeled `DETERMINISTIC_CENTRAL_CASE_NOT_A_VALUATION`, and `vms demo` is
+`PHASE2_SMOKE_NOT_A_VALUATION`. See PHASE0_DONE.md–PHASE2_DONE.md and the assumption register
+[docs/assumptions.md](docs/assumptions.md).
 
 Fully standalone: does not import `dsde-engine` or any legacy PIT/FTD/DV1/Monte-Carlo code
 (enforced by `tests/unit/test_no_legacy_imports.py`).
@@ -41,16 +44,21 @@ scipy is locked but not yet imported (first use expected in Phase 3/4 distributi
 ```bash
 vms validate-data --input <dir> [--as-of 2026-06-30] [--ticker ID]       # schema; + PIT/quality gates with --as-of
 vms build-snapshot --input <dir> --ticker 000001.SZ --as-of 2026-06-30 --out runs/snap
-vms demo --out runs/demo --seed 42 [--format csv|parquet] [--as-of ...]  # SYNTHETIC smoke, no valuation
-# gate options on all three: --mode production|exploratory  --override-reason "..."  --config path
+vms project --input <dir> --ticker 000001.SZ --as-of 2026-06-30 --out runs/proj [--years 5] [--policy ID]
+vms demo --out runs/demo --seed 42 [--format csv|parquet] [--as-of ...] [--policy ID]  # SYNTHETIC smoke, no valuation
+# gate options: --mode production|exploratory  --override-reason "..."  --config path
 ```
-Date-only `--as-of` = 15:00:00 Asia/Shanghai (rule ASOF-DATE-CLOSE-1).
+Date-only `--as-of` = 15:00:00 Asia/Shanghai (rule ASOF-DATE-CLOSE-v1).
 Exit codes: `0` ok, `1` unexpected error, `2` invalid input/config/args, `3` BLOCKED by critical
-data-quality errors in production mode.
+data-quality errors in production mode, `4` UNSUPPORTED_PROFILE (e.g. banks/non-bank financials),
+`5` projection INSUFFICIENT_DATA or REJECTED by an accounting invariant.
+Policies: `conservative_baseline` (default), `historical_continuation`, `fixed_payout`, `target_leverage`,
+`min_cash_excess_distribution` (config `capital_allocation`).
 `value`, `sensitivity`, `evaluate` (SPEC §16.2) are not registered until their phases are implemented.
 
 Leakage mutation check: `scripts/leakage_mutation_check.sh`. It injects 4 PIT-filter leaks and
-requires `tests/leakage` to fail on each.
+requires `tests/leakage` to fail on each. Invariant mutation check: `scripts/invariant_mutation_check.sh`.
+It injects 6 typical modelling bugs into the projection engine and requires each one to be REJECTED.
 
 ## Layout
 `src/vms/<module>/` follows SPEC §17. Modules for later phases exist as empty packages whose

@@ -2,7 +2,7 @@
 
 **SYNTHETIC DATA: no real company, no investment meaning.**
 
-- Instrument `SYN000001.SZ` (fictitious). 16 quarters 2021Q1–2024Q4, CNY, unit `ten_thousand` (万元).
+- Instrument `SYN000001.SZ` (fictitious). 17 quarters 2021Q1–2025Q1, CNY, unit `ten_thousand` (万元).
   Monthly closes from 2021-01 to 2025-06.
 - Source `SYNTHETIC` is declared in `sources.yaml` as `CN_CUMULATIVE_YTD` + `FULL_HISTORY`.
   Flows are cumulative YTD; stocks are quarter-end balances.
@@ -15,11 +15,14 @@
   - **Vendor adjusted_close** is 前复权 to the dataset end, so it embeds the future bonus share.
     Snapshots ignore it and recompute `pit_adjusted_close`.
   - `minority_interest` is explicitly missing every period.
+  - Phase 2 extras: one-off pre-tax gain in 2022Q3 (`non_recurring_items_pretax`), interest, tax at 25%,
+    an acquisition in 2022Q2, a buyback in 2023Q3, and a SW2021_L1 classification `机械设备` (`instrument_classification.csv`).
 - Seeded via `vms.seeding.stream_rng(seed, "synthetic_data")`; the same seed gives identical records.
 
 ```bash
 python examples/synthetic_operating_company/generate_data.py --seed 42 --out /tmp/syn [--format parquet]
-vms validate-data --input /tmp/syn --as-of 2024-05-15      # PASS_WITH_WARNINGS (MISSING_QUARTER 2023Q4)
+vms validate-data --input /tmp/syn --as-of 2024-05-15      # PASS_WITH_WARNINGS (MISSING_QUARTER 2023Q4, STALE_FINANCIALS FY2023 not yet published)
 vms build-snapshot --input /tmp/syn --ticker SYN000001.SZ --as-of 2024-07-05 --out /tmp/snap
+vms project --input /tmp/syn --ticker SYN000001.SZ --as-of 2025-06-30 --out /tmp/proj   # VALID, exit 0
 vms demo --out /tmp/vms_demo --seed 42
 ```

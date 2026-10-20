@@ -21,7 +21,8 @@ def main() -> None:
     p.add_argument("--format", choices=["csv", "parquet"], default="csv")
     a = p.parse_args()
     fin, mkt, ca = synthetic.generate(a.seed)
-    write_directory(a.out, fin, mkt, ca, synthetic.source_descriptors(), fmt=a.format)
+    write_directory(a.out, fin, mkt, ca, synthetic.source_descriptors(), fmt=a.format,
+                    classifications=synthetic.classifications())
     print(f"SYNTHETIC data written to {a.out}: {len(fin)} financial, {len(mkt)} market, "
           f"{len(ca)} corporate-action records (seed={a.seed})")
 

@@ -48,6 +48,21 @@ def _quarters_between(a: date, b: date) -> list[date]:
             m, y = 3, y + 1
 
 
+def required_periods(as_of_date: date) -> list[date]:
+    """Most recent periods whose CN statutory deadline has passed (STALENESS-CN-DEADLINE-v1).
+
+    Annual (Y-1) and Q1 (Y) by Apr 30; H1 by Aug 31; Q3 by Oct 31. 'Passed' = as_of date after the deadline.
+    """
+    y = as_of_date.year
+    if as_of_date > date(y, 10, 31):
+        return [date(y, 9, 30)]
+    if as_of_date > date(y, 8, 31):
+        return [date(y, 6, 30)]
+    if as_of_date > date(y, 4, 30):
+        return [date(y - 1, 12, 31), date(y, 3, 31)]
+    return [date(y - 1, 9, 30)]
+
+
 def run_checks(snap: PITSnapshot, *, known_market: list[MarketObservation],
                known_actions: list[CorporateActionEvent], corporate_actions_provided: bool,
                cfg: QualityConfig, ic: IssueCollector) -> None:
@@ -96,6 +111,10 @@ def run_checks(snap: PITSnapshot, *, known_market: list[MarketObservation],
         for q in _quarters_between(regular[0], regular[-1]):
             if q not in regular:
                 ic.add("MISSING_QUARTER", str(q))
+    if reported:
+        for req in required_periods(local_date(snap.as_of)):
+            if req not in periods and req > periods[0]:
+                ic.add("STALE_FINANCIALS", f"{req} required by {local_date(snap.as_of)} but not known")
     for f in reported:
         first_pub = min(v.published_at for v in f.version_history)
         if (local_date(first_pub) - f.period_end).days > cfg.late_publication_days:

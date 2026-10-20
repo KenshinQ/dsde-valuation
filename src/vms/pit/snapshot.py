@@ -29,10 +29,11 @@ from vms.pit.asof import AS_OF_DATE_RULE
 from vms.quality.issues import IssueCollector
 from vms.reporting.metadata import canonical_json
 from vms.schemas import (BASE_CURRENCY, PRICE_ADJUSTING_ACTIONS, CorporateActionEvent, FinancialObservation,
-                         MarketObservation, QualityStatus, ReportingConvention, SourceDescriptor)
+                         InstrumentClassification, MarketObservation, QualityStatus, ReportingConvention,
+                         SourceDescriptor, Versioning)
 from vms.schemas.fields import FIELD_REGISTRY_VERSION, get_field
 
-SNAPSHOT_VERSION = "PIT-SNAPSHOT-1"
+SNAPSHOT_VERSION = "PIT-SNAPSHOT-2"  # v2: + pit_complete, classification
 CN_TZ = ZoneInfo("Asia/Shanghai")
 Basis = Literal["cumulative_ytd", "standalone_quarter", "unknown_basis", "balance", "unclassified"]
 _QUARTER_ENDS = {(3, 31), (6, 30), (9, 30), (12, 31)}
@@ -95,6 +96,9 @@ class PITSnapshot(_M):
     as_of: datetime
     base_currency: str = BASE_CURRENCY
     sources: dict[str, SourceDescriptor | None]
+    pit_complete: bool = Field(description="all used sources declared FULL_HISTORY (PIT-INCOMPLETE-v1: Phase 9 "
+                               "must exclude snapshots with pit_complete=false from unbiased metrics)")
+    classification: InstrumentClassification | None = Field(description="latest classification known at as_of")
     financials: list[SnapshotFinancial]
     market: list[SnapshotMarket]
     corporate_actions: list[SnapshotCorporateAction]
@@ -307,7 +311,9 @@ def _build_market(obs: list[MarketObservation], actions: list[SnapshotCorporateA
 # ------------------------------------------------------------------ entry point
 def build_snapshot(*, instrument_id: str, as_of: datetime, financial: list[FinancialObservation],
                    market: list[MarketObservation], corporate_actions: list[CorporateActionEvent],
-                   sources: dict[str, SourceDescriptor]) -> tuple[PITSnapshot, BuildStats, IssueCollector]:
+                   sources: dict[str, SourceDescriptor],
+                   classifications: list[InstrumentClassification] | None = None,
+                   ) -> tuple[PITSnapshot, BuildStats, IssueCollector]:
     if as_of.tzinfo is None or as_of.utcoffset() is None:
         raise ValueError("as_of must be timezone-aware")
     ic = IssueCollector()
@@ -321,8 +327,13 @@ def build_snapshot(*, instrument_id: str, as_of: datetime, financial: list[Finan
                                             "corporate_actions": len(ca_i) - len(ca_k)})
     actions = _build_actions(ca_k, as_of, ic)
     used_sources = sorted({o.source_id for o in fin_k} | {o.source_id for o in mkt_k} | {e.source_id for e in ca_k})
-    snap = PITSnapshot(instrument_id=instrument_id, as_of=as_of,
-                       sources={s: sources.get(s) for s in used_sources},
+    cls_k = sorted((c for c in (classifications or []) if c.instrument_id == instrument_id and c.published_at <= as_of),
+                   key=lambda c: (c.published_at, c.source_id))
+    src_map = {s: sources.get(s) for s in used_sources}
+    snap = PITSnapshot(instrument_id=instrument_id, as_of=as_of, sources=src_map,
+                       pit_complete=all(sd is not None and sd.versioning is Versioning.FULL_HISTORY
+                                        for sd in src_map.values()),
+                       classification=cls_k[-1] if cls_k else None,
                        financials=_build_financials(fin_k, sources, ic),
                        market=_build_market(mkt_k, actions, ic), corporate_actions=actions)
     return snap, stats, ic

@@ -18,7 +18,8 @@ from vms.data.io import write_directory
 
 REPO = Path(__file__).resolve().parents[2]
 INST = synthetic.SYNTHETIC_INSTRUMENT
-DATA_FILES = ["financial_observations.csv", "market_observations.csv", "corporate_actions.csv", "sources.yaml"]
+DATA_FILES = ["financial_observations.csv", "market_observations.csv", "corporate_actions.csv", "sources.yaml",
+              "instrument_classification.csv"]
 
 
 def _hashes(d: Path) -> dict[str, str]:
@@ -57,7 +58,8 @@ def test_demo_via_console_script(tmp_path):
         art = json.loads((out / name).read_text())
         assert art["run_id"] == summary["run_id"] and art["schema_version"] == summary["schema_version"]
     meta = json.loads((out / "simulation_metadata.json").read_text())
-    assert "No valuation" in meta["warning"] and meta["metadata"]["seed"] == 42
+    assert "no valuation" in meta["warning"].lower() and meta["metadata"]["seed"] == 42
+    assert summary["projection_status"] == "VALID" and summary["violations"] == []
     req = json.loads((out / "request.json").read_text())
     assert req["request"]["as_of"] == "2025-06-30T15:00:00+08:00" and req["as_of_rule"]["id"] == "ASOF-DATE-CLOSE"
 
@@ -116,11 +118,12 @@ def test_build_snapshot_ok(tmp_path, data_dir):
     assert p.returncode == 0, p.stderr
     s = json.loads(p.stdout)
     assert s["status"] == "PASS_WITH_WARNINGS" and "MISSING_QUARTER" in s["issues"]
+    assert "STALE_FINANCIALS" in s["issues"]   # FY2023 annual report overdue (published 2024-06-20)
     for n in ("data_manifest.json", "data_quality_report.json", "pit_snapshot.json"):
         art = json.loads((out / n).read_text())
         assert art["run_id"] == s["run_id"] and art["schema_version"] == s["schema_version"]
     man = json.loads((out / "data_manifest.json").read_text())
-    assert man["as_of"] == "2024-05-15T15:00:00+08:00" and man["field_registry_version"] == "FIELDS-1"
+    assert man["as_of"] == "2024-05-15T15:00:00+08:00" and man["field_registry_version"] == "FIELDS-2"
     assert man["excluded_post_as_of"]["financial"] > 0 and len(man["snapshot_hash"]) == 64
     rep = json.loads((out / "data_quality_report.json").read_text())
     assert {c["check"]: c["status"] for c in rep["checks"]}["EV_BRIDGE"] == "DEFERRED"

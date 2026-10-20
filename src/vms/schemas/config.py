@@ -48,6 +48,8 @@ class DriverSpec(_Strict):
     transform: DriverTransform
     lower: float
     upper: float
+    role: Literal["projection", "diagnostic"] = "projection"
+    prior: float | None = Field(default=None, description="fallback central value (placeholder) when no history")
     description: str = ""
 
     @model_validator(mode="after")
@@ -63,6 +65,8 @@ class DriverSpec(_Strict):
             )
         if self.transform is DriverTransform.LOG1P and self.lower <= -1.0:
             raise ValueError(f"driver '{self.name}': transform 'log1p' requires lower > -1, got {self.lower}")
+        if self.prior is not None and not (self.lower <= self.prior <= self.upper):
+            raise ValueError(f"driver '{self.name}': prior={self.prior} outside bounds [{self.lower}, {self.upper}]")
         return self
 
 
@@ -73,7 +77,6 @@ class DriverProfile(_Strict):
     bounds_status: Literal["placeholder", "calibrated"] = Field(
         description="'placeholder' until Phase 2/3 estimation justifies the bounds"
     )
-    unsupported_industries: list[str] = Field(default_factory=list)
     drivers: list[DriverSpec] = Field(min_length=1)
 
     @field_validator("drivers")
@@ -158,6 +161,79 @@ class QualityConfig(_Strict):
     late_publication_days: int = Field(gt=0, description="published more than this many days after period_end => INFO")
 
 
+class IndustryConfig(_Strict):
+    """Profile resolution by industry (INDUSTRY-SW-L1-v1). No sector logic lives in code."""
+
+    scheme: str = Field(min_length=1)
+    unsupported: list[str] = Field(description="industries => UNSUPPORTED_PROFILE (no generic FCFF/DCF)")
+    caution: list[str] = Field(default_factory=list, description="supported but flagged PROFILE_CAUTION")
+    profile_map: dict[str, str] = Field(default_factory=dict,
+                                        description="industry -> registered dedicated profile_id (none yet)")
+    default_profile: str = "operating_company"
+
+    @model_validator(mode="after")
+    def _disjoint(self) -> "IndustryConfig":
+        overlap = set(self.unsupported) & (set(self.caution) | set(self.profile_map))
+        if overlap:
+            raise ValueError(f"industries listed both as unsupported and caution/mapped: {sorted(overlap)}")
+        return self
+
+
+class ProjectionConfig(_Strict):
+    default_years: int = Field(ge=1, le=30)
+    driver_history_years: int = Field(ge=1, le=20, description="max annual observations for central values")
+    min_history_years: int = Field(ge=1, le=20, description="fewer => LOW_CONFIDENCE flag")
+    statutory_tax_rate: float = Field(ge=0, lt=1, description="TAX-CN-STATUTORY-25-v1 fallback")
+    tax_loss_carryforward_years: int = Field(ge=0, le=20, description="TAX-CN-LCF-5Y-v1")
+    min_cash_to_revenue: float = Field(ge=0, lt=5, description="REVOLVER-MIN-CASH-v1 floor")
+    invariant_abs_tol: float = Field(gt=0, description="CNY tolerance for accounting identities")
+
+
+class ConservativeBaseline(_Strict):
+    version: Literal["1"] = "1"
+
+
+class HistoricalContinuation(_Strict):
+    version: Literal["1"] = "1"
+
+
+class FixedPayout(_Strict):
+    version: Literal["1"] = "1"
+    payout_ratio: float = Field(ge=0, le=2)
+
+
+class TargetLeverage(_Strict):
+    version: Literal["1"] = "1"
+    debt_to_ebitda_min: float = Field(ge=0)
+    debt_to_ebitda_max: float = Field(gt=0)
+
+    @model_validator(mode="after")
+    def _range(self) -> "TargetLeverage":
+        if self.debt_to_ebitda_min > self.debt_to_ebitda_max:
+            raise ValueError(f"debt_to_ebitda_min={self.debt_to_ebitda_min} > debt_to_ebitda_max={self.debt_to_ebitda_max}")
+        return self
+
+
+class MinCashExcessDistribution(_Strict):
+    version: Literal["1"] = "1"
+    min_cash_to_revenue: float = Field(ge=0, lt=5)
+    dividend_share: float = Field(ge=0, le=1, description="share of excess paid as dividends; rest bought back")
+
+
+class PolicyParams(_Strict):
+    conservative_baseline: ConservativeBaseline
+    historical_continuation: HistoricalContinuation
+    fixed_payout: FixedPayout
+    target_leverage: TargetLeverage
+    min_cash_excess_distribution: MinCashExcessDistribution
+
+
+class CapitalAllocationConfig(_Strict):
+    default_policy: Literal["conservative_baseline", "historical_continuation", "fixed_payout", "target_leverage",
+                            "min_cash_excess_distribution"]
+    policies: PolicyParams
+
+
 class VMSConfig(_Strict):
     configuration_version: str = Field(min_length=1)
     mode: Literal["production", "exploratory"]
@@ -170,6 +246,9 @@ class VMSConfig(_Strict):
     terminal_value: TerminalValueConfig
     returns: ReturnsConfig
     quality: QualityConfig
+    industry: IndustryConfig
+    projection: ProjectionConfig
+    capital_allocation: CapitalAllocationConfig
 
     @field_validator("timezone")
     @classmethod

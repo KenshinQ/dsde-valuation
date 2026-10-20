@@ -267,6 +267,21 @@ class CorporateActionEvent(_Base):
         return self
 
 
+class InstrumentClassification(_Base):
+    """Industry classification, known from ``published_at`` (PIT; reclassifications get new rows)."""
+
+    instrument_id: str = Field(min_length=1)
+    scheme: str = Field(min_length=1, description="e.g. SW2021_L1")
+    industry: str = Field(min_length=1, description="e.g. 机械设备 (SW2021_L1 name)")
+    published_at: datetime
+    source_id: str = Field(min_length=1)
+
+    @field_validator("published_at")
+    @classmethod
+    def _tz(cls, v):  # noqa: ANN001
+        return _require_tz(v, "published_at")
+
+
 class ValuationRequest(_Base):
     instrument_id: str = Field(min_length=1)
     as_of: datetime

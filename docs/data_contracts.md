@@ -1,4 +1,4 @@
-# Data contracts (Phase 1)
+# Data contracts (Phase 2)
 
 Sources of truth: `src/vms/schemas/observations.py`, `src/vms/schemas/fields.py`,
 `src/vms/pit/snapshot.py`, `src/vms/quality/issues.py`. Artifact schema version: `vms-0.1.phase1`.
@@ -15,13 +15,13 @@ All models are pydantic v2, `extra="forbid"`, frozen.
 - Numbers must be finite. Missing data is `null` + `quality_status ∈ {missing, not_applicable}`;
   it is never filled.
 
-## 2. as_of rule (versioned assumption ASOF-DATE-CLOSE-1)
+## 2. as_of rule (versioned assumption ASOF-DATE-CLOSE-v1)
 A date-only as_of (`--as-of 2026-06-30`) means **2026-06-30T15:00:00+08:00** (A-share close).
 Announcements published after the close (e.g. 18:00) are excluded until the next date's as_of.
 Explicit tz-aware datetimes are used as given. The rule id/version is written into
 `request.json`, `data_manifest.json` and `pit_snapshot.json`.
 
-## 3. Canonical field vocabulary — registry `FIELDS-1`
+## 3. Canonical field vocabulary — registry `FIELDS-2`
 - **kind**: `flow` (period amount; eligible for cumulative→standalone conversion) or
   `stock` (point-in-time balance; **never** converted).
 - **unit**: all fields are currency amounts (CNY yuan after normalisation).
@@ -49,6 +49,7 @@ Explicit tz-aware datetimes are used as given. The rule id/version is written in
 | `tax_expense` | income | flow | signed | Income tax expense; negative = tax benefit |
 | `parent_net_income` | income | flow | signed | Net income attributable to parent (归母净利润) |
 | `depreciation_amortization` | income | flow | positive_magnitude | D&A, stored positive |
+| `non_recurring_items_pretax` | income | flow | signed | Pre-tax non-recurring items included in EBIT (非经常性损益, pre-tax); positive = gain |
 | `cash_flow_from_operations` | cash_flow | flow | signed | Net CFO; negative = net operating outflow |
 | `capex` | cash_flow | flow | positive_magnitude | Purchases of PP&E/intangibles, stored as positive outflow magnitude |
 | `acquisitions_net` | cash_flow | flow | signed | Acquisitions net of disposals; positive = net cash OUTflow |
@@ -81,6 +82,11 @@ Directory with one file per table, either `.csv` or `.parquet` (both present →
 | `market_observations` | yes | `timestamp` (a close is known at its own timestamp) |
 | `corporate_actions` | no (absence → `CORPORATE_ACTIONS_UNAVAILABLE` warning) | `announced_at` |
 | `sources.yaml` | no (absence → every source undeclared → PIT_INCOMPLETE) | — |
+| `instrument_classification` | no (absence → INDUSTRY_UNCLASSIFIED, generic profile) | `published_at` |
+
+`instrument_classification` columns: `instrument_id`, `scheme` (e.g. `SW2021_L1`), `industry` (scheme name, e.g.
+`机械设备`), `published_at` (tz-aware), `source_id`. The snapshot uses the latest classification with
+`published_at ≤ as_of`.
 
 CSV: an empty cell means null; errors are reported as `file:line N`. Parquet: timestamps must be
 tz-aware; errors are reported as `file:row N`.
@@ -124,7 +130,10 @@ sources:
     fiscal_year_end: "12-31"                  # only calendar fiscal years are supported
 ```
 
-## 5. PIT snapshot (`pit_snapshot.json`, PIT-SNAPSHOT-1)
+## 5. PIT snapshot (`pit_snapshot.json`, PIT-SNAPSHOT-2)
+- **PIT-SNAPSHOT-2 additions:** `pit_complete` is true only if every used source is declared `FULL_HISTORY`.
+  Phase 9 must exclude `pit_complete == false` from unbiased metrics (PIT-INCOMPLETE-v1). `classification` holds the
+  latest known industry classification, or null.
 - A record is included only if its known-at time ≤ as_of. The snapshot is a pure function of the
   records known at as_of. Information known later (new periods, restatements, prices, corporate
   actions, action revisions) cannot change it. tests/leakage proves this, and
@@ -162,6 +171,22 @@ PERIOD_COVERAGE, CUMULATIVE_CONVERSION, BALANCE_SHEET_IDENTITY, CASH_FLOW_SIGN_U
 SHARE_COUNT_CORPORATE_ACTIONS, PRICE_ADJUSTMENT, PROVENANCE, PIT_VERSIONING, RESTATEMENTS: **RUN**.
 EV_BRIDGE: **DEFERRED to Phase 6**.
 
+**Staleness (STALENESS-CN-DEADLINE-v1):** `STALE_FINANCIALS` (WARNING) is raised when the period required by the CN
+statutory deadlines is not known at as_of. After Oct 31 the required period is Q3 (09-30). After Aug 31 it is H1.
+After Apr 30 it is both the prior FY and Q1. Otherwise it is the prior year's Q3. A period is only required if it is later than the first
+known period.
+
+## 6a. Phase 2 artifacts
+- `driver_diagnostics.json`: profile resolution (status, profile_id, industry, flags), the annual history used, and
+  each driver's definition, formula, transform, bounds, observations, central value, method, and flags
+  (`PRIOR_FALLBACK`, `LOW_CONFIDENCE`, `CLIPPED_TO_BOUND`, `OBS_OUT_OF_BOUNDS`, definition flags).
+- `statement_projection.json` (DET-PROJ-1): `status` (VALID / REJECTED / INSUFFICIENT_DATA /
+  UNSUPPORTED_PROFILE), `label`, `base_year`, `years`, `policy` (id, version, params), `items`
+  (`item@year` → value/formula/inputs), typed `fcff` / `fcfe`, `violations` (reason codes, see
+  `vms.statements.invariants.REASON_CODES`), `flags`, `missing_inputs`, and cited `assumptions`.
+
 ## 7. Not yet covered
-FX conversion; non-calendar fiscal years; suspension/price-limit flags; price corrections by vendors
-(market rows have no revision field); staleness of last price; per-record reporting-convention overrides.
+FX conversion (SCOPE-CNY-v1); non-calendar fiscal years (FISCAL-YEAR-CALENDAR-v1); suspension/price-limit flags;
+price corrections by vendors (PRICE-REVISION-DEFER-v1: market rows have no revision field); rights-issue/placement
+price adjustment (RIGHTS-ADJ-DEFER-v1); configurable source priority (SOURCE-CONFLICT-BLOCK-v1); staleness of last
+price; per-record reporting-convention overrides.

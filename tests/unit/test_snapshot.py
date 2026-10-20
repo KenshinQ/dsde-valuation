@@ -155,3 +155,20 @@ def test_naive_as_of_rejected():
     with pytest.raises(ValueError, match="timezone-aware"):
         build_snapshot(instrument_id=INST, as_of=datetime(2024, 1, 1), financial=[], market=[],
                        corporate_actions=[], sources={})
+
+
+# ---------------------------------------------------------------- Phase 2 additions
+def test_pit_complete_flag_and_classification():
+    from datetime import datetime, timedelta, timezone
+
+    from vms.schemas import InstrumentClassification
+    fin = [fobs("2024-03-31", "revenue", 100, "2024-04-28")]
+    assert snap(fin)[0].pit_complete is True
+    assert snap(fin, sources=[src(versioning="LATEST_ONLY")])[0].pit_complete is False   # PIT-INCOMPLETE-v1
+    cst = timezone(timedelta(hours=8))
+    cls = [InstrumentClassification(instrument_id=INST, scheme="SW2021_L1", industry=ind, source_id="S",
+                                    published_at=datetime(*d, 18, tzinfo=cst))
+           for ind, d in [("机械设备", (2020, 1, 1)), ("电子", (2024, 12, 31)), ("计算机", (2025, 2, 1))]]
+    s, _, _ = build_snapshot(instrument_id=INST, as_of=ts("2025-01-01", 15), financial=fin, market=[],
+                             corporate_actions=[], sources={"S": src()}, classifications=cls)
+    assert s.classification.industry == "电子"         # latest known; future reclassification invisible

@@ -1,4 +1,4 @@
-"""Canonical financial field vocabulary (SPEC §5.2). Registry version: FIELDS-1.
+"""Canonical financial field vocabulary (SPEC §5.2). Registry version: FIELDS-2 (FIELDS-1 + non_recurring_items_pretax).
 
 Every canonical field declares:
 - statement_type: income | cash_flow | balance_sheet
@@ -19,7 +19,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Literal
 
-FIELD_REGISTRY_VERSION = "FIELDS-1"
+FIELD_REGISTRY_VERSION = "FIELDS-2"
 
 Kind = Literal["flow", "stock"]
 Sign = Literal["positive_magnitude", "nonnegative", "signed"]
@@ -48,6 +48,8 @@ FIELDS: tuple[CanonicalField, ...] = (
     _F("tax_expense", "income", "flow", "signed", "Income tax expense; negative = tax benefit"),
     _F("parent_net_income", "income", "flow", "signed", "Net income attributable to parent (归母净利润)"),
     _F("depreciation_amortization", "income", "flow", "positive_magnitude", "D&A, stored positive"),
+    _F("non_recurring_items_pretax", "income", "flow", "signed",
+       "Pre-tax non-recurring items included in EBIT (非经常性损益, pre-tax); positive = gain"),
     # ---- cash flow statement (flows)
     _F("cash_flow_from_operations", "cash_flow", "flow", "signed", "Net CFO; negative = net operating outflow"),
     _F("capex", "cash_flow", "flow", "positive_magnitude",

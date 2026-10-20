@@ -7,7 +7,7 @@ from vms.schemas.fields import FIELD_REGISTRY_VERSION, FIELDS, REGISTRY
 
 
 def test_registry_consistency():
-    assert FIELD_REGISTRY_VERSION == "FIELDS-1"
+    assert FIELD_REGISTRY_VERSION == "FIELDS-2" and "non_recurring_items_pretax" in REGISTRY
     for f in FIELDS:
         assert (f.kind == "stock") == (f.statement_type == "balance_sheet"), f.name
         assert f.unit == "currency"

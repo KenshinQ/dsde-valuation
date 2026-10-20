@@ -3,10 +3,13 @@
 Implemented commands:
   validate-data   schema validation; with --as-of also PIT snapshot + quality gate per instrument
   build-snapshot  PIT snapshot + data_quality_report.json + data_manifest.json for one instrument
-  demo            offline SYNTHETIC smoke run through the Phase-1 gate. NO valuation is computed.
+  project         PIT snapshot + gate + profile + drivers + deterministic statements (Phase 2)
+  demo            offline SYNTHETIC smoke run (snapshot, gate, deterministic statements). NO valuation.
 
 Exit codes: 0 ok, 1 unexpected error, 2 invalid input/config/arguments,
-            3 BLOCKED by critical data-quality errors in production mode.
+            3 BLOCKED by critical data-quality errors in production mode,
+            4 UNSUPPORTED_PROFILE (raw metrics written, no projection),
+            5 projection INSUFFICIENT_DATA or REJECTED (accounting invariant violated).
 """
 
 from __future__ import annotations
@@ -31,12 +34,15 @@ from vms.reporting.metadata import (ArtifactStamp, content_run_id, hash_models, 
 from vms.schemas import ValuationRequest, format_validation_error
 from vms.schemas.config import ConfigError, LoadedConfig, load_config
 from vms.schemas.fields import FIELD_REGISTRY_VERSION
+from vms.capital_allocation.policies import POLICIES
+from vms.pipeline import Phase2Run, run_projection
 from vms.seeding import stream_rng
 
-EXIT_OK, EXIT_ERROR, EXIT_INVALID, EXIT_BLOCKED = 0, 1, 2, 3
-SMOKE_STATUS = "PHASE1_SMOKE_NOT_A_VALUATION"
+EXIT_OK, EXIT_ERROR, EXIT_INVALID, EXIT_BLOCKED, EXIT_UNSUPPORTED, EXIT_PROJECTION = 0, 1, 2, 3, 4, 5
+SMOKE_STATUS = "PHASE2_SMOKE_NOT_A_VALUATION"
 DETERMINISTIC_ARTIFACTS = ("request.json", "config_snapshot.json", "data_manifest.json",
-                           "data_quality_report.json", "pit_snapshot.json", "simulation_metadata.json")
+                           "data_quality_report.json", "pit_snapshot.json", "driver_diagnostics.json",
+                           "statement_projection.json", "simulation_metadata.json")
 
 
 class InputError(ValueError):
@@ -51,7 +57,8 @@ def _default_config_path() -> Path:
 
 
 def dataset_hash(load: LoadResult) -> str:
-    return sha256_of({"records": hash_models([*load.financial, *load.market, *load.corporate_actions]),
+    return sha256_of({"records": hash_models([*load.financial, *load.market, *load.corporate_actions,
+                                              *load.classifications]),
                       "sources": {k: v.model_dump(mode="json") for k, v in sorted(load.sources.items())},
                       "corporate_actions_provided": load.corporate_actions_provided})
 
@@ -115,6 +122,38 @@ def _summary(report: DataQualityReport) -> dict:
             "issues": {i.code: i.count for i in report.issues}, "excluded_post_as_of": report.excluded_post_as_of}
 
 
+def _write_phase2(out: Path, stamp, run: Phase2Run) -> None:  # noqa: ANN001
+    write_artifact(out, "driver_diagnostics.json", {
+        "profile_resolution": run.resolution.model_dump(mode="json"),
+        "annual_history": run.history.model_dump(mode="json"),
+        "drivers": None if run.drivers is None else run.drivers.model_dump(mode="json"),
+        "note": ("UNSUPPORTED_PROFILE: raw annual metrics only; generic drivers/DCF not applicable"
+                 if run.drivers is None else "deterministic central values (Phase 2); distributions are Phase 3"),
+    }, stamp)
+    write_artifact(out, "statement_projection.json", run.projection.model_dump(mode="json"), stamp)
+
+
+def _projection_exit(run: Phase2Run) -> int:
+    st = run.projection.status
+    if st == "UNSUPPORTED_PROFILE":
+        print(f"error: {run.snapshot.instrument_id}: UNSUPPORTED_PROFILE ({run.resolution.reason})", file=sys.stderr)
+        return EXIT_UNSUPPORTED
+    if st != "VALID":
+        detail = run.projection.missing_inputs or sorted({v.code for v in run.projection.violations})
+        print(f"error: projection {st}: {detail}", file=sys.stderr)
+        return EXIT_PROJECTION
+    return EXIT_OK
+
+
+def _p2_summary(run: Phase2Run) -> dict:
+    p = run.projection
+    return {"profile": run.resolution.status.value, "profile_id": run.resolution.profile_id,
+            "industry": run.resolution.industry, "projection_status": p.status, "base_year": p.base_year,
+            "years": p.years, "policy": (p.policy or {}).get("policy_id"),
+            "violations": sorted({v.code for v in p.violations}), "flags": p.flags,
+            "fcff": None if p.fcff is None else [round(v) for v in p.fcff.values]}
+
+
 # ------------------------------------------------------------------ commands
 def cmd_validate_data(args: argparse.Namespace) -> int:
     res = load_directory(args.input)
@@ -172,6 +211,36 @@ def cmd_build_snapshot(args: argparse.Namespace) -> int:
     return EXIT_OK
 
 
+def cmd_project(args: argparse.Namespace) -> int:
+    cfg = load_config(args.config)
+    mode = _mode(args, cfg)
+    as_of, note = _as_of(args.as_of)
+    load = _load(args.input)
+    if args.years is not None and args.years <= 0:
+        raise InputError(f"--years must be > 0 (got {args.years})")
+    stamp = ArtifactStamp(run_id=content_run_id(kind="project", instrument=args.ticker, as_of=as_of.isoformat(),
+                                                data=dataset_hash(load),
+                                                config=sha256_of({"c": cfg.config.model_dump(mode="json"),
+                                                                  "p": cfg.profile.model_dump(mode="json")}),
+                                                mode=mode, override=args.override_reason, policy=args.policy,
+                                                years=args.years))
+    out = Path(args.out)
+    try:
+        run = run_projection(load, instrument_id=args.ticker, as_of=as_of, loaded=cfg, policy_id=args.policy,
+                             years=args.years, mode=mode, override_reason=args.override_reason)
+    except GateError as e:
+        snap, report = assess(load, instrument_id=args.ticker, as_of=as_of, cfg=cfg.config.quality, mode=mode)
+        _write_snapshot_bundle(out, stamp, load, args.input, as_of, note, snap, report, blocked=True)
+        print(f"error: {e}", file=sys.stderr)
+        return EXIT_BLOCKED
+    _write_snapshot_bundle(out, stamp, load, args.input, as_of, note, run.snapshot, run.report, blocked=False)
+    _write_phase2(out, stamp, run)
+    print(json.dumps({"run_id": stamp.run_id, "schema_version": SCHEMA_VERSION, "out": str(out),
+                      "label": run.projection.label, **_summary(run.report), **_p2_summary(run)},
+                     indent=2, ensure_ascii=False))
+    return _projection_exit(run)
+
+
 def cmd_demo(args: argparse.Namespace) -> int:
     loaded = load_config(args.config)
     cfg = loaded.config
@@ -189,11 +258,15 @@ def cmd_demo(args: argparse.Namespace) -> int:
     out = Path(args.out)
     data_dir = out / "data"
     fin, mkt, actions = synthetic.generate(seed)
-    write_directory(data_dir, fin, mkt, actions, synthetic.source_descriptors(), fmt=args.format)
+    write_directory(data_dir, fin, mkt, actions, synthetic.source_descriptors(), fmt=args.format,
+                    classifications=synthetic.classifications())
     load = _load(str(data_dir))  # round-trip through the same ingestion users get
     snap, report = assess(load, instrument_id=synthetic.SYNTHETIC_INSTRUMENT, as_of=as_of, cfg=cfg.quality,
                           mode=mode, override_reason=args.override_reason)
     blocked = report.status is QualityState.BLOCKED and mode == "production"
+    run = None if blocked else run_projection(load, instrument_id=synthetic.SYNTHETIC_INSTRUMENT, as_of=as_of,
+                                              loaded=loaded, policy_id=args.policy, years=max(horizons), mode=mode,
+                                              override_reason=args.override_reason)
     if not snap.market:
         raise InputError(f"no synthetic market observation at or before as_of={as_of.isoformat()}")
     spot = snap.market[-1].raw_close
@@ -212,11 +285,14 @@ def cmd_demo(args: argparse.Namespace) -> int:
                                          "as_of_interpretation": as_of_note, "as_of_rule": AS_OF_DATE_RULE}, meta)
     write_artifact(out, "config_snapshot.json", config_snapshot, meta)
     _write_snapshot_bundle(out, meta, load, None, as_of, as_of_note, snap, report, blocked)
+    if run is not None:
+        _write_phase2(out, meta, run)
     smoke = stream_rng(seed, "phase0_smoke").standard_normal(5)
     write_artifact(out, "simulation_metadata.json", {
         "status": SMOKE_STATUS,
         "implemented_phase": IMPLEMENTED_PHASE,
-        "warning": "Smoke artifact. No valuation, no paths, no return distribution was computed.",
+        "warning": "Smoke artifact. Deterministic central-case statements only; no valuation, no paths, "
+                   "no return distribution was computed.",
         "data_label": "SYNTHETIC — not real market data",
         "quality_status": report.status.value,
         "metadata": meta.model_dump(mode="json"),
@@ -225,7 +301,8 @@ def cmd_demo(args: argparse.Namespace) -> int:
     }, meta)
     write_artifact(out, "run_context.json", {"created_at": datetime.now(ZoneInfo(cfg.timezone)).isoformat(),
                                              "deterministic_artifacts": list(DETERMINISTIC_ARTIFACTS)}, meta)
-    print(json.dumps({"status": SMOKE_STATUS, "quality_status": report.status.value, "run_id": meta.run_id,
+    print(json.dumps({"status": SMOKE_STATUS, "quality_status": report.status.value,
+                      **({} if run is None else _p2_summary(run)), "run_id": meta.run_id,
                       "schema_version": SCHEMA_VERSION, "out": str(out), "spot_price": spot, "seed": seed,
                       "paths": paths, "data_hash": data_hash[:16], "config_hash": meta.config_hash[:16],
                       "git_sha": meta.code_version["git_sha"][:12]}, indent=2))
@@ -234,7 +311,7 @@ def cmd_demo(args: argparse.Namespace) -> int:
     except GateError as e:
         print(f"error: {e}", file=sys.stderr)
         return EXIT_BLOCKED
-    return EXIT_OK
+    return _projection_exit(run)
 
 
 # ------------------------------------------------------------------ parser
@@ -245,9 +322,9 @@ def _gate_args(p: argparse.ArgumentParser) -> None:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    p = argparse.ArgumentParser(prog="vms", description="VMS-0.1 valuation engine (Phase 1: PIT data & gates)")
+    p = argparse.ArgumentParser(prog="vms", description="VMS-0.1 valuation engine (Phase 2: drivers & deterministic statements)")
     sub = p.add_subparsers(dest="command", required=True)
-    asof_help = "YYYY-MM-DD (=> 15:00 Asia/Shanghai, rule ASOF-DATE-CLOSE-1) or ISO-8601 with offset"
+    asof_help = "YYYY-MM-DD (=> 15:00 Asia/Shanghai, rule ASOF-DATE-CLOSE-v1) or ISO-8601 with offset"
 
     v = sub.add_parser("validate-data", help="schema validation; with --as-of also PIT + quality gates")
     v.add_argument("--input", required=True, help="directory with canonical CSV/Parquet tables")
@@ -264,7 +341,18 @@ def build_parser() -> argparse.ArgumentParser:
     _gate_args(b)
     b.set_defaults(func=cmd_build_snapshot)
 
+    pj = sub.add_parser("project", help="deterministic central-case statements (Phase 2; not a valuation)")
+    pj.add_argument("--input", required=True)
+    pj.add_argument("--ticker", required=True)
+    pj.add_argument("--as-of", required=True, help=asof_help)
+    pj.add_argument("--out", required=True)
+    pj.add_argument("--years", type=int, help="projection years (default: config projection.default_years)")
+    pj.add_argument("--policy", choices=sorted(POLICIES), help="capital-allocation policy (default: config)")
+    _gate_args(pj)
+    pj.set_defaults(func=cmd_project)
+
     d = sub.add_parser("demo", help="offline SYNTHETIC smoke run (no valuation)")
+    d.add_argument("--policy", choices=sorted(POLICIES))
     d.add_argument("--out", required=True)
     d.add_argument("--seed", type=int)
     d.add_argument("--paths", type=int)

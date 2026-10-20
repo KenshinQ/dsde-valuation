@@ -34,3 +34,28 @@ quality:                               # (Phase 1) integrity-gate thresholds —
   unit_jump_ratio: 100                 # >=100x jump between versions / consecutive stock periods
   max_capex_to_revenue: 5.0            # same-period capex/revenue above this => suspected unit error
   late_publication_days: 120           # A-share annual deadline is Apr 30 (~120d after FY end)
+
+industry:                              # (Phase 2) INDUSTRY-SW-L1-v1 — labeled assumption
+  scheme: SW2021_L1                    # Shenwan 2021 level-1 names
+  unsupported: [银行, 非银金融]          # => UNSUPPORTED_PROFILE (generic FCFF/EV inappropriate)
+  caution: [房地产, 公用事业]            # supported, flagged PROFILE_CAUTION (presales / regulated returns)
+  profile_map: {}                      # industry -> dedicated registered profile (none implemented)
+  default_profile: operating_company
+
+projection:                            # (Phase 2) deterministic central case
+  default_years: 5
+  driver_history_years: 5
+  min_history_years: 3
+  statutory_tax_rate: 0.25             # TAX-CN-STATUTORY-25-v1
+  tax_loss_carryforward_years: 5       # TAX-CN-LCF-5Y-v1
+  min_cash_to_revenue: 0.05            # REVOLVER-MIN-CASH-v1
+  invariant_abs_tol: 1.0               # CNY yuan
+
+capital_allocation:                    # (Phase 2) versioned policies (spec §10)
+  default_policy: conservative_baseline
+  policies:
+    conservative_baseline: {version: "1"}          # payout driver; no buyback/acquisition/issuance; debt flat
+    historical_continuation: {version: "1"}        # historical payout/buyback/acquisition/debt-to-revenue
+    fixed_payout: {version: "1", payout_ratio: 0.30}
+    target_leverage: {version: "1", debt_to_ebitda_min: 0.5, debt_to_ebitda_max: 2.5}
+    min_cash_excess_distribution: {version: "1", min_cash_to_revenue: 0.15, dividend_share: 0.5}

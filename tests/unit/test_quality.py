@@ -21,7 +21,7 @@ def run(fin=BASE_FIN, mkt=BASE_MKT, acts=(), sources=None, as_of="2024-12-31", q
 
 
 def test_clean_passes(qcfg):
-    _, rep, issues = run(qcfg=qcfg)
+    _, rep, issues = run(qcfg=qcfg, as_of="2024-05-15")
     assert rep.status is QualityState.PASS, issues
     assert rep.pit_complete and rep.usable_for_production
 
@@ -161,3 +161,15 @@ def test_restatement_and_late_publication_info(qcfg):
                       fobs("2023-12-31", "revenue", 400, "2024-06-20")]
     _, rep, issues = run(fin=fin, qcfg=qcfg)
     assert issues["RESTATEMENT_KNOWN"].count == 1 and "LATE_PUBLICATION" in issues
+
+
+def test_stale_financials_warning_cn_deadlines(qcfg):
+    from datetime import date
+    from vms.quality.checks import required_periods
+    assert required_periods(date(2024, 4, 30)) == [date(2023, 9, 30)]
+    assert required_periods(date(2024, 5, 1)) == [date(2023, 12, 31), date(2024, 3, 31)]
+    assert required_periods(date(2024, 9, 1)) == [date(2024, 6, 30)]
+    assert required_periods(date(2024, 11, 1)) == [date(2024, 9, 30)]
+    _, rep, issues = run(qcfg=qcfg, as_of="2024-12-31")   # only Q1-2024 known; Q3 deadline Oct 31 passed
+    assert issues["STALE_FINANCIALS"].severity.value == "WARNING"
+    assert rep.status is QualityState.PASS_WITH_WARNINGS and rep.usable_for_production  # warning, not block

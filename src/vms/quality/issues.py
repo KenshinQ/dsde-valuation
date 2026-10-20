@@ -65,6 +65,8 @@ CODES: dict[str, tuple[Severity, str, str]] = {
     "SOURCE_UNDECLARED": (P, "PIT_VERSIONING", "source not declared in sources.yaml; versioning unknown"),
     "SOURCE_NOT_FULL_HISTORY": (P, "PIT_VERSIONING", "source does not preserve full version history"),
     "RESTATEMENT_KNOWN": (I, "RESTATEMENTS", "keys with more than one published version known at as_of"),
+    "STALE_FINANCIALS": (W, "PERIOD_COVERAGE",
+                         "a period required by CN statutory deadlines (STALENESS-CN-DEADLINE-v1) is not known at as_of"),
     "LATE_PUBLICATION": (I, "PERIOD_COVERAGE", "published later than late_publication_days after period_end"),
     "EXPLICIT_MISSING_VALUE": (I, "PROVENANCE", "values explicitly recorded as missing/not_applicable (kept null)"),
     "PROVENANCE_INCOMPLETE": (C, "PROVENANCE", "derived value lacks formula/inputs (internal invariant)"),

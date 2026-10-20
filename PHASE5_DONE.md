@@ -24,7 +24,7 @@ Not started: Phase 6 (DCF / WACC / multiples).
 - Tests: `test_phase4_followups.py` (3), `test_path_statements.py` (9), `test_cli_project_paths.py` (1)
 
 ## Tests
-- **420 passed** (~150 s box; clean-clone py3.11 noted below).
+- **420 passed** (~150 s box; clean clone + uv/py3.11 + lock: 420 passed in 163 s; `vms project-paths` exit 0, financial_n_valid=50).
 - Leakage 6/6 KILLED; invariant 7/7 KILLED.
 
 ## Acceptance evidence

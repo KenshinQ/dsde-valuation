@@ -1,1 +1,1 @@
-Walk-forward evaluation tests start in Phase 9. Intentionally empty in Phase 0.
+Walk-forward evaluation tests: see `tests/unit/test_evaluation.py`, `tests/unit/test_phase11_acceptance.py`, `tests/leakage/test_eval_weight_freeze.py`, and `tests/integration/test_cli_phase11.py` (VMS-0.2 Phase 11 / SPEC §17).

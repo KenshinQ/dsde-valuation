@@ -220,6 +220,15 @@ ASSUMPTIONS: dict[str, str] = {
     "TV-GORDON-v1": "Terminal value TV = FCFF[n]*(1+g)/(WACC-g) with g = valuation.terminal_growth, bounded by "
                     "terminal_value.max_terminal_growth. Require WACC-g >= min_wacc_minus_g; else reject path "
                     "(WACC_G_MARGIN_FAIL). No silent denominator repair. Report PV(TV)/EV; warn above tv_fraction_warning.",
+    "FCFE-DCF-v1": "EquityValue = PV(FCFE forecast) + PV(Gordon TV on FCFE[n]*(1+g)) discounted at cost of equity. "
+                   "Net borrowing must reconcile with debt/cash paths. Never substitute WACC. No EV-equity bridge "
+                   "after computing equity value (reconciliation-only checks allowed).",
+    "COST-OF-EQUITY-DISCOUNT-v1": "FCFE and DDM discount at cost of equity (ke = rf + beta*erp or explicit override). "
+                                 "WACC is forbidden as a substitute. Enforce ke - g >= min_wacc_minus_g; reject "
+                                 "(KE_G_MARGIN_FAIL) with no silent denominator repair.",
+    "DDM-v1": "Dividends are policy-dependent path distributions. Gordon terminal only under stability constraints "
+              "(positive last dividend; ke > g + margin; payout modelable). Absent/erratic payout => INELIGIBLE "
+              "(PAYOUT_NOT_MODELABLE / ABSENT_DIVIDENDS / ERRATIC_PAYOUT); never invent a convenient dividend stream.",
     "EXIT-MULTIPLE-SEPARATE-v1": "Exit-multiple cross-check (normalized EBIT or EBITDA x multiple) is reported "
                                 "separately from DCF. Peer multiples from explicit config/synthetic peers with robust "
                                 "location + shrink. Composite with DCF only if valuation.composite_weights is set "

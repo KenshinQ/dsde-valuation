@@ -5,7 +5,7 @@ Spec: [SPEC.md](SPEC.md) (VMS-0.2). Archived VMS-0.1: [SPEC_VMS-0.1.md](SPEC_VMS
 
 **Status: VMS-0.2 Phase 12 complete (docs / five offline examples / bundle validation; `0.2.0rc1`).**
 Schema contract: `vms-0.2.phase12`. Package: `0.2.0rc1` (pre-release; `CALIBRATION_INSUFFICIENT`).
-Phase report: [PHASE12_DONE.md](PHASE12_DONE.md) (see also [PHASE11_DONE.md](PHASE11_DONE.md)…[PHASE0_DONE.md](PHASE0_DONE.md)).
+Phase report: [PHASE12_DONE.md](PHASE12_DONE.md), [PHASE_R1_BANK_RIM_DONE.md](PHASE_R1_BANK_RIM_DONE.md) (see also [PHASE11_DONE.md](PHASE11_DONE.md)…[PHASE0_DONE.md](PHASE0_DONE.md)).
 Labels always include `INVESTMENT_VALUE_NOT_ESTABLISHED` on synthetic (no alpha claim).
 
 Phase 6 methods live under `vms.methods.rim` / `nav` / `sotp`; multiples under `vms.methods.multiples`;
@@ -53,6 +53,8 @@ vms phase3 --out /tmp/vms_phase3 --seed 42 --paths 80   # path bundle; NOT a val
 vms phase4 --out /tmp/vms_phase4 --seed 42 --paths 40   # FCFF/FCFE/DDM via router; NOT investment advice
 vms phase5 --out /tmp/vms_phase5 --seed 42 --multiples-only  # P/E P/B EV/* + PIT peers; NOT investment advice
 vms phase6 --out /tmp/vms_phase6 --seed 42 --fixture financial  # RIM/NAV/SOTP; NOT investment advice
+vms value-rim --input /tmp/vms_000001 --ticker 000001.SZ --as-of 2025-06-30 \
+  --out /tmp/vms_000001_rim --mode exploratory --override-reason 'R1 smoke'  # real PIT→RIM
 vms phase7 --out /tmp/vms_phase7 --seed 42 --fixture mature     # router + disagreement; NOT investment advice
 vms compare-methods --out /tmp/vms_compare --fixture mature     # method_comparison.json; no blend
 vms phase8 --out /tmp/vms_phase8 --seed 42 --fixture mature     # ensemble PRIOR_ONLY + L1O; NOT investment advice

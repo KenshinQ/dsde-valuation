@@ -36,6 +36,15 @@ Anti-patterns (SPEC §22): no universal FCFF default; no averaging unlike object
 vms route --fixture examples/profile_fixtures/mature_operating.json --target FUNDAMENTAL_VALUE_CURRENT
 vms phase4 ...   # cash-flow via router
 vms phase5 ...   # multiples + PIT peers
-vms phase6 ...   # RIM / NAV / SOTP
+vms phase6 ...   # RIM / NAV / SOTP (synthetic)
+vms value-rim --input … --ticker 000001.SZ --as-of 2025-06-30  # R1 real PIT→RIM
 vms compare-methods --fixture mature
 ```
+
+## R1 real PIT → RIM
+
+`vms value-rim` bridges a real A-share PIT snapshot to `residual_income` without lifting
+`industry.unsupported`. Legacy `vms project` / `vms value` remain `UNSUPPORTED_PROFILE` for
+configured unsupported industries. NI forecast is constant last-FY parent NI (ASSUMPTION);
+missing OCI/net_issuance require `zeros_explicit` (`CLEAN_SURPLUS_ZEROS_ASSUMED`).
+Label: `INVESTMENT_VALUE_NOT_ESTABLISHED`. See `PHASE_R1_BANK_RIM_DONE.md`.

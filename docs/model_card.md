@@ -30,7 +30,7 @@ Intended consumers: quantitative research engineers integrating with a decision 
 |---|---|---|
 | `MATURE_OPERATING` | Supported (synthetic paths) | FCFF/FCFE/DDM; EV/EBIT, EV/EBITDA, P/E when peers pass |
 | `GROWTH_OR_REINVESTMENT_HEAVY` | Partial | Routing + relative (e.g. EV/Sales) candidates; trailing P/E often ineligible |
-| `FINANCIAL_INSTITUTION` | Supported (RIM path) | Residual income / P/B-style; **industrial FCFF/EV-EBITDA defaults disabled** |
+| `FINANCIAL_INSTITUTION` | Supported (RIM path) | Residual income / P/B-style; **industrial FCFF/EV-EBITDA defaults disabled**. Real PIT via `vms value-rim` (R1; ASSUMPTION ke/g/NI; engineering smoke only) |
 | `CYCLICAL_OPERATING` | Routing supported | Unnormalized trailing P/E downgraded; mid-cycle normalization required for meaningful multiples |
 | `HOLDING_OR_CONGLOMERATE` | Partial | SOTP/NAV when segment/asset schedules present; otherwise explicit data-gap / unsupported |
 | Distressed / turnaround / opaque | Unsupported | Hard-gated; no silent default DCF |

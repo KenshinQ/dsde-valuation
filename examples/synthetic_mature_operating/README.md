@@ -10,7 +10,7 @@ vms phase0 --out /tmp/vms_phase0 --seed 42
 python examples/synthetic_mature_operating/run_phase0.py --out /tmp/vms_phase0 --seed 42
 ```
 
-Emits contracts-only result bundle (`schema_version=vms-0.2.phase4`); methods all `NOT_RUN`.
+Emits contracts-only result bundle (`schema_version=vms-0.2.phase5`); Phase 0 still does not run valuation math.
 
 ## Phase 3 — driver / regime / path bundle
 
@@ -46,5 +46,17 @@ vms phase4 --out /tmp/vms_phase4 --seed 42 --paths 40 --years 4
 python examples/synthetic_mature_operating/run_phase4.py --out /tmp/vms_phase4 --seed 42
 ```
 
-Emits router + `method_results.json` (`schema_version=vms-0.2.phase4`). Label:
-`INVESTMENT_VALUE_NOT_ESTABLISHED`. No ensemble / exit-price / multiples.
+Emits router + `method_results.json` (cash-flow methods). Label:
+`INVESTMENT_VALUE_NOT_ESTABLISHED`. No ensemble / exit-price.
+
+## Phase 5 — relative multiples + PIT peers
+
+```bash
+vms phase5 --out /tmp/vms_phase5 --seed 42 --multiples-only
+# or:
+python examples/synthetic_mature_operating/run_phase5.py --out /tmp/vms_phase5 --seed 42
+```
+
+Emits `method_results.json` + `peer_diagnostics.json` (`schema_version=vms-0.2.phase5`)
+for P/E, P/B, EV/EBIT, EV/EBITDA, EV/Sales. PIT exclusions persisted with reasons.
+Label: `INVESTMENT_VALUE_NOT_ESTABLISHED`. No RIM/NAV/SOTP / ensemble / exit-price.

@@ -16,8 +16,10 @@ Implemented commands:
   phase4          VMS-0.2 Phase 4 FCFF/FCFE/DDM via router (synthetic; NOT investment advice)
   phase5          VMS-0.2 Phase 5 relative multiples + PIT peers (synthetic; NOT investment advice)
   phase6          VMS-0.2 Phase 6 RIM/NAV/SOTP (synthetic; NOT investment advice)
+  phase7          VMS-0.2 Phase 7 router hardening + method comparison (synthetic; NOT investment advice)
+  compare-methods VMS-0.2 Phase 7 method disagreement report (synthetic; NOT investment advice)
   profile         VMS-0.2 Phase 2 economic-profile classifier (NOT a valuation)
-  route           VMS-0.2 Phase 2 hard-gate candidates only (no method computation)
+  route           VMS-0.2 Phase 7 routing log + soft suitability (no method computation by default)
   demo            offline SYNTHETIC smoke (legacy 0.1 pipeline retained; evaluate + optional DSDE adapter).
 
 Exit codes: 0 ok, 1 unexpected error, 2 invalid input/config/arguments,
@@ -56,11 +58,13 @@ from vms.reporting.phase5_bundle import (PHASE5_STATUS, Phase5BundleError, build
                                         dump_summary as dump_phase5_summary)
 from vms.reporting.phase6_bundle import (PHASE6_STATUS, Phase6BundleError, build_phase6_bundle,
                                         dump_summary as dump_phase6_summary)
+from vms.reporting.phase7_bundle import (PHASE7_STATUS, Phase7BundleError, build_phase7_bundle,
+                                        dump_summary as dump_phase7_summary)
 from vms.schemas.contracts import ValuationTarget
 from vms.profiles import classify_profile, load_overrides
 from vms.profiles.fixtures import FixtureError, features_from_fixture, load_fixture
 from vms.methods import build_registry_from_config
-from vms.router import route_methods
+from vms.router import method_eligibility_payload, route_methods
 from vms.schemas import ValuationRequest, format_validation_error
 from vms.schemas.config import ConfigError, LoadedConfig, load_config
 from vms.schemas.fields import FIELD_REGISTRY_VERSION
@@ -1020,6 +1024,11 @@ def cmd_route(args: argparse.Namespace) -> int:
             json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
         (out / "profile_report.json").write_text(
             json.dumps(profile.model_dump(mode="json"), indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+        elig = method_eligibility_payload(report)
+        elig["schema_version"] = SCHEMA_VERSION
+        elig["implemented_phase"] = IMPLEMENTED_PHASE
+        (out / "method_eligibility.json").write_text(
+            json.dumps(elig, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     # Prove no fabricated values
     for run in report.attempted_runs:
         if run.values:
@@ -1032,6 +1041,8 @@ def cmd_route(args: argparse.Namespace) -> int:
         "coverage_status": report.coverage_status,
         "candidates": report.candidates,
         "eligible_count": sum(1 for e in report.eligibility if e.eligible),
+        "considerations": len(report.considerations),
+        "routing_deterministic": report.routing_deterministic,
         "method_status": [
             {"method_id": m.method_id, "status": m.status.value, "reason": m.reason}
             for m in report.method_status
@@ -1222,6 +1233,71 @@ def cmd_phase6(args: argparse.Namespace) -> int:
         return EXIT_INVALID
     print(dump_phase6_summary(summary), end="")
     assert summary["status"] == PHASE6_STATUS
+    return EXIT_OK
+
+
+def cmd_phase7(args: argparse.Namespace) -> int:
+    """Synthetic router hardening + method comparison. NOT investment advice."""
+    try:
+        target = ValuationTarget(args.target) if args.target else None
+    except ValueError as e:
+        allowed = ", ".join(tv.value for tv in ValuationTarget)
+        raise InputError(f"--target {args.target!r} is not a ValuationTarget; expected one of: {allowed}") from e
+    out = Path(args.out)
+    seed = 42 if args.seed is None else int(args.seed)
+    try:
+        summary = build_phase7_bundle(
+            out,
+            config_path=args.config,
+            seed=seed,
+            as_of=args.as_of,
+            fixture=args.fixture,
+            target=target,
+            force_no_eligible=bool(args.force_no_eligible),
+            request_blend=bool(args.request_blend),
+        )
+    except Phase7BundleError as e:
+        raise InputError(str(e)) from e
+    print(dump_phase7_summary(summary), end="")
+    assert summary["status"] == PHASE7_STATUS
+    return EXIT_OK
+
+
+def cmd_compare_methods(args: argparse.Namespace) -> int:
+    """Emit method_comparison.json (disagreement; no calibrated blend)."""
+    try:
+        target = ValuationTarget(args.target) if args.target else None
+    except ValueError as e:
+        allowed = ", ".join(tv.value for tv in ValuationTarget)
+        raise InputError(f"--target {args.target!r} is not a ValuationTarget; expected one of: {allowed}") from e
+    out = Path(args.out)
+    seed = 42 if args.seed is None else int(args.seed)
+    try:
+        summary = build_phase7_bundle(
+            out,
+            config_path=args.config,
+            seed=seed,
+            as_of=args.as_of,
+            fixture=args.fixture,
+            target=target,
+            force_no_eligible=False,
+            request_blend=bool(args.request_blend),
+        )
+    except Phase7BundleError as e:
+        raise InputError(str(e)) from e
+    print(json.dumps({
+        "status": PHASE7_STATUS,
+        "schema_version": summary["schema_version"],
+        "implemented_phase": summary["implemented_phase"],
+        "investment_value": summary["investment_value"],
+        "run_id": summary["run_id"],
+        "out": summary["out"],
+        "coverage_status": summary["coverage_status"],
+        "disagreement": summary["disagreement"],
+        "ensemble_status": summary["ensemble_status"],
+        "combined_value": summary["combined_value"],
+        "incompatible_demo_compatible": summary["incompatible_demo_compatible"],
+    }, indent=2, sort_keys=True))
     return EXIT_OK
 
 
@@ -1542,10 +1618,10 @@ def build_parser() -> argparse.ArgumentParser:
                     help="config path (used to locate sibling profile_overrides.yaml)")
     pr.set_defaults(func=cmd_profile)
 
-    rt = sub.add_parser("route", help="VMS-0.2 Phase 2 hard-gate candidates (no method computation)")
+    rt = sub.add_parser("route", help="VMS-0.2 Phase 7 routing log + soft suitability (no method math by default)")
     rt.add_argument("--fixture", required=True, help="path to profile fixture JSON")
     rt.add_argument("--target", default=ValuationTarget.FUNDAMENTAL_VALUE_CURRENT.value)
-    rt.add_argument("--out", help="optional directory for route_report.json")
+    rt.add_argument("--out", help="optional directory for route_report.json + method_eligibility.json")
     rt.add_argument("--attempt-stubs", action="store_true",
                     help="invoke stub value_paths to prove hard refusal (still no values)")
     rt.add_argument("--config", default=str(_default_config_path()))
@@ -1619,6 +1695,37 @@ def build_parser() -> argparse.ArgumentParser:
     )
     p6.set_defaults(func=cmd_phase6)
 
+    p7 = sub.add_parser("phase7", help="VMS-0.2 Phase 7 router hardening + method comparison (synthetic; NOT investment advice)")
+    p7.add_argument("--out", required=True)
+    p7.add_argument("--config", default=str(_default_config_path()))
+    p7.add_argument("--seed", type=int, default=None)
+    p7.add_argument("--as-of", dest="as_of", default=None)
+    p7.add_argument(
+        "--fixture",
+        default="mature",
+        choices=["mature", "financial", "holding", "hybrid_gap"],
+        help="synthetic profile fixture for routing log",
+    )
+    p7.add_argument("--target", default=None, help="ValuationTarget override")
+    p7.add_argument("--force-no-eligible", action="store_true",
+                    help="strip available fields to demonstrate INSUFFICIENT_METHOD_COVERAGE")
+    p7.add_argument("--request-blend", action="store_true",
+                    help="request a blend; still returns ENSEMBLE_UNCALIBRATED (no combined value)")
+    p7.set_defaults(func=cmd_phase7)
+
+    cm = sub.add_parser("compare-methods", help="VMS-0.2 Phase 7 method disagreement (synthetic; NOT investment advice)")
+    cm.add_argument("--out", required=True)
+    cm.add_argument("--config", default=str(_default_config_path()))
+    cm.add_argument("--seed", type=int, default=None)
+    cm.add_argument("--as-of", dest="as_of", default=None)
+    cm.add_argument(
+        "--fixture",
+        default="mature",
+        choices=["mature", "financial", "holding", "hybrid_gap"],
+    )
+    cm.add_argument("--target", default=None)
+    cm.add_argument("--request-blend", action="store_true")
+    cm.set_defaults(func=cmd_compare_methods)
 
     d = sub.add_parser("demo", help="offline SYNTHETIC smoke (legacy 0.1 pipeline; through returns/sensitivity)")
     d.add_argument("--policy", choices=sorted(POLICIES))

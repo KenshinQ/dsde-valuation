@@ -16,6 +16,7 @@ Implemented commands:
   phase4          VMS-0.2 Phase 4 FCFF/FCFE/DDM via router (synthetic; NOT investment advice)
   phase5          VMS-0.2 Phase 5 relative multiples + PIT peers (synthetic; NOT investment advice)
   phase6          VMS-0.2 Phase 6 RIM/NAV/SOTP (synthetic; NOT investment advice)
+  value-rim       R1 real A-share FINANCIAL_INSTITUTION → RIM via PIT bridge (NOT investment advice)
   phase7          VMS-0.2 Phase 7 router hardening + method comparison (synthetic; NOT investment advice)
   compare-methods VMS-0.2 Phase 7 method disagreement report (synthetic; NOT investment advice)
   phase8          VMS-0.2 Phase 8 ensemble + model uncertainty (synthetic; NOT investment advice)
@@ -64,6 +65,8 @@ from vms.reporting.phase5_bundle import (PHASE5_STATUS, Phase5BundleError, build
                                         dump_summary as dump_phase5_summary)
 from vms.reporting.phase6_bundle import (PHASE6_STATUS, Phase6BundleError, build_phase6_bundle,
                                         dump_summary as dump_phase6_summary)
+from vms.reporting.value_rim_bundle import (VALUE_RIM_STATUS, ValueRimBundleError, build_value_rim_bundle,
+                                           dump_value_rim_summary)
 from vms.reporting.phase7_bundle import (PHASE7_STATUS, Phase7BundleError, build_phase7_bundle,
                                         dump_summary as dump_phase7_summary)
 from vms.reporting.phase8_bundle import (PHASE8_STATUS, Phase8BundleError, build_phase8_bundle,
@@ -1219,6 +1222,53 @@ def cmd_phase5(args: argparse.Namespace) -> int:
     return EXIT_OK
 
 
+
+def cmd_value_rim(args: argparse.Namespace) -> int:
+    """Real PIT → residual income (R1 FINANCIAL_INSTITUTION bridge). NOT investment advice."""
+    cfg = load_config(args.config)
+    mode = _mode(args, cfg)
+    as_of, note = _as_of(args.as_of)
+    load = _load(args.input)
+    years = args.years
+    zeros_explicit = bool(getattr(args, "zeros_explicit", True))
+    if getattr(args, "no_zeros_explicit", False):
+        zeros_explicit = False
+    target = None
+    if args.target:
+        try:
+            target = ValuationTarget(args.target)
+        except ValueError as e:
+            allowed = ", ".join(t.value for t in ValuationTarget)
+            raise InputError(
+                f"--target {args.target!r} is not a ValuationTarget; expected one of: {allowed}"
+            ) from e
+    try:
+        summary = build_value_rim_bundle(
+            out_dir=args.out,
+            load=load,
+            input_dir=args.input,
+            instrument_id=args.ticker,
+            as_of=as_of,
+            as_of_note=note,
+            loaded=cfg,
+            mode=mode,
+            override_reason=args.override_reason,
+            years=years,
+            zeros_explicit=zeros_explicit,
+            target=target,
+        )
+    except GateError as e:
+        print(f"error: {e}", file=sys.stderr)
+        return EXIT_BLOCKED
+    except ValueRimBundleError as e:
+        print(f"error: {e}", file=sys.stderr)
+        return EXIT_INVALID
+    print(dump_value_rim_summary(summary), end="")
+    assert summary["status"] == VALUE_RIM_STATUS
+    assert summary["investment_value"] == "INVESTMENT_VALUE_NOT_ESTABLISHED"
+    return EXIT_OK
+
+
 def cmd_phase6(args: argparse.Namespace) -> int:
     """Synthetic RIM/NAV/SOTP via router. NOT investment advice."""
     as_of = None
@@ -1919,6 +1969,23 @@ def build_parser() -> argparse.ArgumentParser:
     )
     p6.set_defaults(func=cmd_phase6)
 
+    vr = sub.add_parser(
+        "value-rim",
+        help="R1 real A-share FINANCIAL_INSTITUTION → RIM via PIT bridge (NOT investment advice; leaves industrial UNSUPPORTED)",
+    )
+    vr.add_argument("--input", required=True, help="directory with canonical CSV/Parquet tables")
+    vr.add_argument("--ticker", required=True, help="instrument_id, e.g. 000001.SZ")
+    vr.add_argument("--as-of", required=True, help=asof_help)
+    vr.add_argument("--out", required=True, help="output directory for rim artifacts + RUN_REPORT.md")
+    vr.add_argument("--years", type=int, default=None, help="forecast horizon (default: config projection.default_years)")
+    vr.add_argument("--zeros-explicit", action="store_true", default=True,
+                    help="allow explicit zero OCI/net_issuance (flag CLEAN_SURPLUS_ZEROS_ASSUMED); default on")
+    vr.add_argument("--no-zeros-explicit", action="store_true",
+                    help="refuse missing OCI/net_issuance (structured error; never silent zeros)")
+    vr.add_argument("--target", default=None, help="ValuationTarget (default FUNDAMENTAL_VALUE_CURRENT)")
+    _gate_args(vr)
+    vr.set_defaults(func=cmd_value_rim)
+
     p7 = sub.add_parser("phase7", help="VMS-0.2 Phase 7 router hardening + method comparison (synthetic; NOT investment advice)")
     p7.add_argument("--out", required=True)
     p7.add_argument("--config", default=str(_default_config_path()))
@@ -2048,7 +2115,7 @@ def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     try:
         return args.func(args)
-    except (ConfigError, InputError, Phase0BundleError, Phase3BundleError, Phase8BundleError, Phase9BundleError, Phase10BundleError, Phase11BundleError, Phase12BundleError, FixtureError, RegimeModelNotImplemented, RandomSplitProhibitedError) as e:
+    except (ConfigError, InputError, Phase0BundleError, Phase3BundleError, Phase8BundleError, Phase9BundleError, Phase10BundleError, Phase11BundleError, Phase12BundleError, ValueRimBundleError, FixtureError, RegimeModelNotImplemented, RandomSplitProhibitedError) as e:
         print(f"error: {e}", file=sys.stderr)
         return EXIT_INVALID
 

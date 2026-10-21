@@ -11,6 +11,7 @@ from vms.schemas.config import ConfigError, load_config, load_driver_profile
 
 
 def _write_cfg(tmp_path: Path, repo: Path, mutate=None, profile_mutate=None) -> Path:
+    import shutil
     cfg = yaml.safe_load((repo / "config/default.yaml").read_text())
     prof = yaml.safe_load((repo / "config/driver_profiles/operating_company.yaml").read_text())
     if mutate:
@@ -19,6 +20,8 @@ def _write_cfg(tmp_path: Path, repo: Path, mutate=None, profile_mutate=None) -> 
         profile_mutate(prof)
     (tmp_path / "driver_profiles").mkdir()
     (tmp_path / "driver_profiles/operating_company.yaml").write_text(yaml.safe_dump(prof))
+    for name in ("method_registry.yaml", "router.yaml", "profiles.yaml"):
+        shutil.copy(repo / "config" / name, tmp_path / name)
     p = tmp_path / "default.yaml"
     p.write_text(yaml.safe_dump(cfg))
     return p
@@ -29,6 +32,9 @@ def test_shipped_configs_valid(repo):
     assert lc.config.base_currency == "CNY"
     assert lc.profile.profile_id == "operating_company" and lc.profile.supported
     assert lc.profile.bounds_status == "placeholder"
+    assert lc.method_registry.methods == []
+    assert lc.router.require_hard_gates is True
+    assert len(lc.profiles_catalog.profiles) >= 8
 
 
 @pytest.mark.parametrize("mutate,needles", [
@@ -92,3 +98,26 @@ def test_missing_profile_file(tmp_path, repo):
     p = _write_cfg(tmp_path, repo, mutate=lambda c: c.update(driver_profile="missing.yaml"))
     with pytest.raises(ConfigError, match="missing.yaml"):
         load_config(p)
+
+
+@pytest.mark.parametrize("mutate,needles", [
+    (lambda c: c.update(method_registry_file="nope.yaml"), ["nope.yaml"]),
+])
+def test_missing_registry_sidecar(tmp_path, repo, mutate, needles):
+    p = _write_cfg(tmp_path, repo, mutate=mutate)
+    with pytest.raises(ConfigError) as ei:
+        load_config(p)
+    msg = str(ei.value)
+    for n in needles:
+        assert n in msg, msg
+
+
+def test_fake_enabled_method_in_registry_file(tmp_path, repo):
+    p = _write_cfg(tmp_path, repo)
+    (tmp_path / "method_registry.yaml").write_text(
+        "registry_version: t\nmethods:\n"
+        "  - method_id: fcff_dcf\n    enabled: true\n    implementation_status: NOT_IMPLEMENTED\n"
+    )
+    with pytest.raises(ConfigError) as ei:
+        load_config(p)
+    assert "enabled=true" in str(ei.value) and "IMPLEMENTED" in str(ei.value)

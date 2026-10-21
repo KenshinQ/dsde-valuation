@@ -1,0 +1,36 @@
+# VMS-0.2 economic profile catalog (SPEC §7.2 / §10.3 guidance only).
+# Not a classifier: Phase 2 implements classification. Phase 0 validates the catalog.
+catalog_version: "vms-profiles-0.2.phase0"
+profiles:
+  - label: MATURE_OPERATING
+    description: "Mature operating company with forecastable unlevered cash flows"
+    candidate_method_ids: [fcff_dcf, fcfe_dcf, pe, ev_ebit, ev_ebitda, ddm]
+    default_exclusions: []
+  - label: GROWTH_OR_REINVESTMENT_HEAVY
+    description: "High reinvestment / currently weak or negative FCF"
+    candidate_method_ids: [fcff_dcf, ev_sales, pe]
+    default_exclusions: []
+  - label: CYCLICAL_OPERATING
+    description: "Cyclical producer; trailing multiples need normalization"
+    candidate_method_ids: [fcff_dcf, ev_ebitda, pe]
+    default_exclusions: []
+  - label: FINANCIAL_INSTITUTION
+    description: "Bank / insurer / broker-like; industrial FCFF defaults disabled later"
+    candidate_method_ids: [residual_income, pb, fcfe_dcf, ddm, pe]
+    default_exclusions: [fcff_dcf, ev_ebitda]
+  - label: ASSET_HEAVY_OR_RESOURCE
+    description: "Resource / property / asset-centric"
+    candidate_method_ids: [nav, sotp, fcff_dcf, ev_ebitda]
+    default_exclusions: []
+  - label: HOLDING_OR_CONGLOMERATE
+    description: "Holding / multi-segment; needs SOTP/NAV inputs"
+    candidate_method_ids: [sotp, nav]
+    default_exclusions: []
+  - label: DISTRESSED_OR_TURNAROUND
+    description: "Going-concern DCF/multiples often invalid"
+    candidate_method_ids: [nav]
+    default_exclusions: [fcff_dcf, pe, ev_ebit]
+  - label: HYBRID_OR_UNCLEAR
+    description: "Run only methods whose local gates pass; report coverage gaps"
+    candidate_method_ids: []
+    default_exclusions: []

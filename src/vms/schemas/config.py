@@ -16,6 +16,11 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 import yaml
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator, model_validator
 
+from vms.schemas.contracts import (
+    MethodRegistryConfig,
+    ProfilesCatalogConfig,
+    RouterConfig,
+)
 from vms.schemas.errors import format_validation_error
 
 
@@ -400,6 +405,12 @@ class SensitivityConfig(_Strict):
 
 class VMSConfig(_Strict):
     configuration_version: str = Field(min_length=1)
+    method_registry_file: str = Field(
+        default="method_registry.yaml",
+        description="path relative to the config file; empty registry is valid in Phase 0",
+    )
+    router_file: str = Field(default="router.yaml")
+    profiles_file: str = Field(default="profiles.yaml")
     mode: Literal["production", "exploratory"]
     base_currency: Literal["CNY"]
     timezone: str
@@ -439,12 +450,18 @@ class VMSConfig(_Strict):
 
 
 class LoadedConfig(_Strict):
-    """Validated config plus its resolved driver profile."""
+    """Validated config plus resolved driver profile and Phase-0 declarative catalogs."""
 
     config: VMSConfig
     profile: DriverProfile
     config_path: str
     profile_path: str
+    method_registry: MethodRegistryConfig
+    router: RouterConfig
+    profiles_catalog: ProfilesCatalogConfig
+    method_registry_path: str
+    router_path: str
+    profiles_path: str
 
 
 def _read_yaml(path: Path) -> dict:
@@ -468,6 +485,26 @@ def load_driver_profile(path: str | Path) -> DriverProfile:
         raise ConfigError(f"invalid driver profile\n{format_validation_error(e, str(path))}") from None
 
 
+def _load_sidecar(path: Path, model: type, label: str):
+    data = _read_yaml(path)
+    try:
+        return model.model_validate(data)
+    except ValidationError as e:
+        raise ConfigError(f"invalid {label}\n{format_validation_error(e, str(path))}") from None
+
+
+def load_method_registry(path: str | Path) -> MethodRegistryConfig:
+    return _load_sidecar(Path(path), MethodRegistryConfig, "method registry")
+
+
+def load_router(path: str | Path) -> RouterConfig:
+    return _load_sidecar(Path(path), RouterConfig, "router config")
+
+
+def load_profiles_catalog(path: str | Path) -> ProfilesCatalogConfig:
+    return _load_sidecar(Path(path), ProfilesCatalogConfig, "profiles catalog")
+
+
 def load_config(path: str | Path) -> LoadedConfig:
     path = Path(path).resolve()
     data = _read_yaml(path)
@@ -477,4 +514,18 @@ def load_config(path: str | Path) -> LoadedConfig:
         raise ConfigError(f"invalid config\n{format_validation_error(e, str(path))}") from None
     profile_path = (path.parent / cfg.driver_profile).resolve()
     profile = load_driver_profile(profile_path)
-    return LoadedConfig(config=cfg, profile=profile, config_path=str(path), profile_path=str(profile_path))
+    registry_path = (path.parent / cfg.method_registry_file).resolve()
+    router_path = (path.parent / cfg.router_file).resolve()
+    profiles_path = (path.parent / cfg.profiles_file).resolve()
+    return LoadedConfig(
+        config=cfg,
+        profile=profile,
+        config_path=str(path),
+        profile_path=str(profile_path),
+        method_registry=load_method_registry(registry_path),
+        router=load_router(router_path),
+        profiles_catalog=load_profiles_catalog(profiles_path),
+        method_registry_path=str(registry_path),
+        router_path=str(router_path),
+        profiles_path=str(profiles_path),
+    )

@@ -10,7 +10,7 @@ Implemented commands:
   value           Phase 6 FCFF DCF + exit-multiple + EV-equity bridge
   returns         Phase 7 entry-price-conditioned multi-horizon returns
   sensitivity     Phase 8 sensitivity & uncertainty attribution
-  evaluate        Phase 9 chronological walk-forward evaluation
+  evaluate        Phase 11 chronological walk-forward evaluation (SPEC §17)
   phase0          VMS-0.2 Phase 0 contracts baseline (synthetic; NOT a valuation)
   phase3          VMS-0.2 Phase 3 path bundle (synthetic; NOT a valuation)
   phase4          VMS-0.2 Phase 4 FCFF/FCFE/DDM via router (synthetic; NOT investment advice)
@@ -21,6 +21,7 @@ Implemented commands:
   phase8          VMS-0.2 Phase 8 ensemble + model uncertainty (synthetic; NOT investment advice)
   phase9          VMS-0.2 Phase 9 market-pricing regime + exit-price engine (synthetic; NOT investment advice)
   phase10         VMS-0.2 Phase 10 Track B return distributions + DSDE contract (synthetic; NOT investment advice)
+  phase11         VMS-0.2 Phase 11 walk-forward calibration + sensitivity (synthetic; NOT investment advice)
   profile         VMS-0.2 Phase 2 economic-profile classifier (NOT a valuation)
   route           VMS-0.2 Phase 7 routing log + soft suitability (no method computation by default)
   demo            offline SYNTHETIC smoke (legacy 0.1 pipeline retained; evaluate + optional DSDE adapter).
@@ -69,6 +70,8 @@ from vms.reporting.phase9_bundle import (PHASE9_STATUS, Phase9BundleError, build
                                         dump_summary as dump_phase9_summary)
 from vms.reporting.phase10_bundle import (PHASE10_STATUS, Phase10BundleError, build_phase10_bundle,
                                          dump_summary as dump_phase10_summary)
+from vms.reporting.phase11_bundle import (PHASE11_STATUS, Phase11BundleError, build_phase11_bundle,
+                                         dump_summary as dump_phase11_summary)
 from vms.schemas.contracts import ValuationTarget
 from vms.profiles import classify_profile, load_overrides
 from vms.profiles.fixtures import FixtureError, features_from_fixture, load_fixture
@@ -945,8 +948,8 @@ def cmd_evaluate(args: argparse.Namespace) -> int:
     rep_path.write_text(json.dumps(body, sort_keys=True, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     write_artifact(out, "simulation_metadata.json", {
         "status": "WALK_FORWARD_EVALUATION",
-        "implemented_phase": "PHASE_9",
-        "warning": "Walk-forward evaluation only; no DSDE adapter (Phase 10).",
+        "implemented_phase": IMPLEMENTED_PHASE,
+        "warning": "Walk-forward evaluation (Phase 11); synthetic => CALIBRATION_INSUFFICIENT / INVESTMENT_VALUE_NOT_ESTABLISHED.",
         "labels": report.labels,
         "content_hash": report.content_hash,
         "n_scored": report.n_scored,
@@ -1422,6 +1425,42 @@ def cmd_phase10(args: argparse.Namespace) -> int:
     assert summary["pathwise_higher_p0_cannot_improve"] is True
     return EXIT_OK
 
+
+def cmd_phase11(args: argparse.Namespace) -> int:
+    """Synthetic walk-forward + sensitivity. NOT investment advice."""
+    from datetime import date as date_cls
+    out = Path(args.out)
+    seed = 42 if args.seed is None else int(args.seed)
+    start = date_cls.fromisoformat(args.start) if args.start else date_cls(2018, 1, 1)
+    end = date_cls.fromisoformat(args.end) if args.end else date_cls(2022, 12, 31)
+    if end < start:
+        raise InputError("--end must be >= --start")
+    uni = args.universe
+    sens_paths = 20 if args.paths is None else int(args.paths)
+    try:
+        summary = build_phase11_bundle(
+            out_dir=out,
+            config_path=args.config,
+            universe_path=uni,
+            start=start,
+            end=end,
+            seed=seed,
+            sensitivity_paths=sens_paths,
+            sensitivity_years=int(args.years) if args.years is not None else 3,
+            skip_sensitivity=bool(getattr(args, "skip_sensitivity", False)),
+        )
+    except Phase11BundleError as e:
+        raise InputError(str(e)) from e
+    print(dump_phase11_summary(summary), end="")
+    assert summary["status"] == PHASE11_STATUS
+    assert summary["investment_value"] == "INVESTMENT_VALUE_NOT_ESTABLISHED"
+    assert summary["labels"]["ENSEMBLE_CALIBRATED"] is False
+    assert (out / "evaluation_report.json").is_file()
+    if not getattr(args, "skip_sensitivity", False):
+        assert (out / "sensitivity_report.json").is_file()
+    return EXIT_OK
+
+
 def cmd_demo(args: argparse.Namespace) -> int:
     loaded = load_config(args.config)
     cfg = loaded.config
@@ -1668,7 +1707,7 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 
-    evl = sub.add_parser("evaluate", help="chronological walk-forward evaluation (Phase 9)")
+    evl = sub.add_parser("evaluate", help="chronological walk-forward evaluation (Phase 11 / SPEC §17)")
     evl.add_argument("--universe", required=True, help="universe YAML (e.g. config/universe.synthetic.yaml)")
     evl.add_argument("--start", required=True, help="YYYY-MM-DD")
     evl.add_argument("--end", required=True, help="YYYY-MM-DD")
@@ -1896,6 +1935,18 @@ def build_parser() -> argparse.ArgumentParser:
                     help="attempt optional DSDE notify (no-op when DSDE absent)")
     p10.set_defaults(func=cmd_phase10)
 
+    p11 = sub.add_parser("phase11", help="VMS-0.2 Phase 11 walk-forward + sensitivity (synthetic; NOT investment advice)")
+    p11.add_argument("--out", required=True)
+    p11.add_argument("--config", default=str(_default_config_path()))
+    p11.add_argument("--universe", default=None, help="universe YAML (default: config/universe.synthetic.yaml)")
+    p11.add_argument("--start", default="2018-01-01")
+    p11.add_argument("--end", default="2022-12-31")
+    p11.add_argument("--seed", type=int, default=None)
+    p11.add_argument("--paths", type=int, default=None, help="sensitivity MC paths (default 20)")
+    p11.add_argument("--years", type=int, default=None, help="sensitivity projection years (default 3)")
+    p11.add_argument("--skip-sensitivity", dest="skip_sensitivity", action="store_true",
+                    help="write evaluation_report only (skip sensitivity_report)")
+    p11.set_defaults(func=cmd_phase11)
 
     d = sub.add_parser("demo", help="offline SYNTHETIC smoke (legacy 0.1 pipeline; through returns/sensitivity)")
     d.add_argument("--policy", choices=sorted(POLICIES))
@@ -1914,7 +1965,7 @@ def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     try:
         return args.func(args)
-    except (ConfigError, InputError, Phase0BundleError, Phase3BundleError, Phase8BundleError, Phase9BundleError, Phase10BundleError, FixtureError, RegimeModelNotImplemented, RandomSplitProhibitedError) as e:
+    except (ConfigError, InputError, Phase0BundleError, Phase3BundleError, Phase8BundleError, Phase9BundleError, Phase10BundleError, Phase11BundleError, FixtureError, RegimeModelNotImplemented, RandomSplitProhibitedError) as e:
         print(f"error: {e}", file=sys.stderr)
         return EXIT_INVALID
 

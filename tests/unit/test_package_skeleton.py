@@ -17,21 +17,21 @@ def test_module_importable(m):
     importlib.import_module(f"vms.{m}")
 
 
-def test_phase3_core_modules_importable_without_future_stubs():
-    """Phase 3 ships drivers/regimes/paths + market_pricing schemas; ensemble/estimator deferred."""
+def test_phase4_core_modules_importable_without_future_stubs():
+    """Phase 4 ships cash-flow methods + prior modules; ensemble/estimator deferred."""
     import importlib
     for m in ("vms.schemas.contracts", "vms.reporting.phase0_bundle", "vms.reporting.phase3_bundle",
               "vms.profiles", "vms.methods", "vms.router", "vms.market_pricing",
               "vms.drivers", "vms.regimes", "vms.sampling", "vms.statements",
-              "vms.capital_allocation"):
+              "vms.capital_allocation", "vms.methods.cash_flow", "vms.reporting.phase4_bundle"):
         importlib.import_module(m)
     # Ensemble and exit-price *estimator* remain Phase 8/9 — package may exist for schemas only
     with pytest.raises(ModuleNotFoundError):
         importlib.import_module("vms.ensemble")
 
 
-def test_schema_version_is_phase3_contract():
+def test_schema_version_is_phase4_contract():
     from vms import IMPLEMENTED_PHASE, SCHEMA_VERSION, __version__
-    assert SCHEMA_VERSION == "vms-0.2.phase3"
-    assert IMPLEMENTED_PHASE == "PHASE_3"
+    assert SCHEMA_VERSION == "vms-0.2.phase4"
+    assert IMPLEMENTED_PHASE == "PHASE_4"
     assert __version__ == "0.2.0a0"

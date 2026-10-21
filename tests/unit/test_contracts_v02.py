@@ -61,7 +61,7 @@ def test_profile_catalog_covers_baseline_labels(repo):
 
 def test_method_registry_loads_declared_unimplemented(repo):
     reg = load_method_registry(repo / "config/method_registry.yaml")
-    assert len(reg.methods) >= 8 and reg.enabled_methods == []
+    assert len(reg.methods) >= 8 and {m.method_id for m in reg.enabled_methods} == {"fcff_dcf", "fcfe_dcf", "ddm"}
     assert all(m.failure_codes and m.output_basis and m.supported_targets for m in reg.methods)
     assert load_router(repo / "config/router.yaml").require_hard_gates is True
 

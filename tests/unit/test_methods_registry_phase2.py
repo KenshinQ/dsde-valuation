@@ -28,17 +28,21 @@ from pydantic import ValidationError
 def test_every_registered_method_declares_targets_units_fields_failure_codes(repo):
     reg = load_method_registry(repo / "config/method_registry.yaml")
     assert len(reg.methods) >= 8
-    assert reg.enabled_methods == []
+    enabled_ids = {m.method_id for m in reg.enabled_methods}
+    assert enabled_ids == {"fcff_dcf", "fcfe_dcf", "ddm"}
     for m in reg.methods:
         assert m.version
         assert m.supported_targets, m.method_id
         assert m.output_basis, m.method_id
         assert all(isinstance(b, OutputBasis) for b in m.output_basis)
         assert m.failure_codes, m.method_id
-        assert m.implementation_status is MethodImplementationStatus.NOT_IMPLEMENTED
-        assert m.enabled is False
-        # required_fields may be empty for some methods but must be declared (list present)
         assert isinstance(m.required_fields, list)
+        if m.method_id in enabled_ids:
+            assert m.implementation_status is MethodImplementationStatus.IMPLEMENTED
+            assert m.enabled is True
+        else:
+            assert m.implementation_status is MethodImplementationStatus.NOT_IMPLEMENTED
+            assert m.enabled is False
 
 
 def test_enabled_not_implemented_still_rejected():
@@ -55,27 +59,44 @@ def test_enabled_not_implemented_still_rejected():
 
 
 def test_no_method_runs_before_hard_eligibility_gates(repo):
+    """Hard gates still gate computation; empty path shell must not fabricate values."""
     loaded = load_config(repo / "config/default.yaml")
     registry = build_registry_from_config(loaded.method_registry)
     data = load_fixture(fixtures_dir() / "mature_operating.json")
     profile = classify_profile(features_from_fixture(data))
+    # Missing required fields → ineligible; no fabricated values
     report = route_methods(
         registry=registry,
         profile=profile,
         target=ValuationTarget.FUNDAMENTAL_VALUE_CURRENT,
-        available_fields=frozenset(data["available_fields"]),
+        available_fields=frozenset(),
         attempt_value_paths=True,
     )
     assert report.coverage_status == "INSUFFICIENT_METHOD_COVERAGE"
     assert sum(1 for e in report.eligibility if e.eligible) == 0
     assert report.attempted_runs
     for run in report.attempted_runs:
-        assert run.status is MethodEligibilityStatus.INELIGIBLE
-        assert "METHOD_NOT_IMPLEMENTED" in run.reason_codes or run.values == {}
         assert run.values == {}
-    # No silent default DCF
-    assert not any(r.method_id == "fcff_dcf" and r.status is MethodEligibilityStatus.VALID
-                   for r in report.method_status)
+        assert run.status is not MethodEligibilityStatus.VALID or not run.values
+    # With fields but placeholder paths: eligible may be true, but no statement bundle → no values
+    report2 = route_methods(
+        registry=registry,
+        profile=profile,
+        target=ValuationTarget.FUNDAMENTAL_VALUE_CURRENT,
+        available_fields=frozenset(data["available_fields"]),
+        attempt_value_paths=True,
+    )
+    assert sum(1 for e in report2.eligibility if e.eligible) >= 1
+    for run in report2.attempted_runs:
+        if run.method_id in {"fcff_dcf", "fcfe_dcf", "ddm"}:
+            # Placeholder FinancialPathBundle must not unlock fabricated values
+            assert run.values == {} or "PATH_BUNDLE_REQUIRED" in run.reason_codes
+            if run.values:
+                raise AssertionError("fabricated values without statement paths")
+            assert run.status in {
+                MethodEligibilityStatus.INELIGIBLE,
+                MethodEligibilityStatus.FAILED,
+            }
 
 
 def test_bank_fixture_excludes_industrial_fcff_on_profile_gate(repo):
@@ -96,14 +117,14 @@ def test_bank_fixture_excludes_industrial_fcff_on_profile_gate(repo):
     elig = evaluate_hard_gates(entry, ctx)
     assert elig.eligible is False
     codes = {r.code for r in elig.reasons if not r.passed}
-    assert "METHOD_IMPLEMENTED_AND_ENABLED" in codes
-    # Profile exclusion also recorded when evaluated
+    # Phase 4: fcff is implemented — profile exclusion is the hard fail for banks
+    assert "PROFILE_ELIGIBLE" in codes or "PROFILE_EXCLUSION" in codes
     assert any(r.code in {"PROFILE_ELIGIBLE", "PROFILE_EXCLUSION"} and not r.passed for r in elig.reasons)
 
 
 def test_refuse_unimplemented_does_not_fabricate_value(repo):
     loaded = load_config(repo / "config/default.yaml")
-    entry = loaded.method_registry.methods[0]
+    entry = next(m for m in loaded.method_registry.methods if m.method_id == "residual_income")
     data = load_fixture(fixtures_dir() / "mature_operating.json")
     profile = classify_profile(features_from_fixture(data))
     ctx = ValuationContext(

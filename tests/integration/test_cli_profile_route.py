@@ -1,4 +1,4 @@
-"""CLI: vms profile / vms route (Phase 2)."""
+"""CLI: vms profile / vms route (Phase 2+4)."""
 
 from __future__ import annotations
 
@@ -6,8 +6,6 @@ import json
 import subprocess
 import sys
 from pathlib import Path
-
-import pytest
 
 REPO = Path(__file__).resolve().parents[2]
 FIX = REPO / "examples" / "profile_fixtures"
@@ -30,10 +28,11 @@ def test_cli_profile_mature():
     assert out["rule_hit_ids"]
 
 
-def test_cli_route_insufficient_coverage(tmp_path):
+def test_cli_route_holding_asset_nav_insufficient_coverage(tmp_path):
+    """Holding + ASSET_NAV: NAV/SOTP still NOT_IMPLEMENTED → coverage gap, no default DCF."""
     p = _run([
-        "route", "--fixture", str(FIX / "bank.json"),
-        "--target", "FUNDAMENTAL_VALUE_CURRENT",
+        "route", "--fixture", str(FIX / "holding.json"),
+        "--target", "ASSET_NAV",
         "--attempt-stubs", "--out", str(tmp_path / "route_out"),
     ])
     assert p.returncode == 0, p.stderr
@@ -43,4 +42,21 @@ def test_cli_route_insufficient_coverage(tmp_path):
     assert (tmp_path / "route_out" / "route_report.json").is_file()
     bundle = json.loads((tmp_path / "route_out" / "route_report.json").read_text())
     for run in bundle.get("attempted_runs", []):
-        assert run.get("values") in ({}, None) or run["values"] == {}
+        assert not run.get("values")
+
+
+def test_cli_route_bank_no_fabricated_values(tmp_path):
+    """Bank may make DDM eligible (Phase 4) but placeholder paths must not fabricate values."""
+    p = _run([
+        "route", "--fixture", str(FIX / "bank.json"),
+        "--target", "FUNDAMENTAL_VALUE_CURRENT",
+        "--attempt-stubs", "--out", str(tmp_path / "route_bank"),
+    ])
+    assert p.returncode == 0, p.stderr
+    out = json.loads(p.stdout)
+    # Industrial FCFF must not be the silent default for banks
+    statuses = {m["method_id"]: m for m in out["method_status"]}
+    assert statuses["fcff_dcf"]["status"] == "INELIGIBLE"
+    bundle = json.loads((tmp_path / "route_bank" / "route_report.json").read_text())
+    for run in bundle.get("attempted_runs", []):
+        assert not run.get("values"), run

@@ -358,6 +358,31 @@ ASSUMPTIONS: dict[str, str] = {
                            "docs/data_contracts.md). Outflows use positive magnitudes. Unmapped columns ignored "
                            "with optional warning count. pay_dividends_profits_interest_cash → dividends_paid "
                            "as low_confidence (mixed interest).",
+    # ---- VMS-0.2 Phase 9: market-pricing regime + exit-price engine (SPEC §14 / §20)
+    "MARKET-PRICING-SCHEMA-v1": "Market-pricing states use COMPRESSED / NORMAL / EXPANDED / DISLOCATION. "
+                               "These are a distinct vocabulary from fundamental regimes "
+                               "(GROWTH/STABLE/DETERIORATING/RECOVERY/DISTRESS) and must not collapse (SPEC §22.14).",
+    "MARKET-PRICING-INDEPENDENT-v1": "Market-pricing state posteriors and transitions are estimated independently "
+                                    "from fundamental regimes unless an explicitly estimated dependence is configured. "
+                                    "Do not infer multiple expansion solely from fundamental improvement.",
+    "MARKET-PRICING-FALLBACK-PRIOR-v1": "When market data are insufficient for state inference, mark the posterior "
+                                       "UNAVAILABLE (or AVAILABLE only as labeled FALLBACK) and use an explicitly "
+                                       "configured low-confidence prior over COMPRESSED/NORMAL/EXPANDED/DISLOCATION.",
+    "MARKET-PRICING-ESTIMATOR-PHASE9-v1": "VMS-0.2 Phase 9 implements the market-pricing state estimator and exit-price "
+                                         "engine (SPEC §14). Short series must not invent precise mean-reversion rates.",
+    "MARKET-PRICING-PERSISTENCE-BASELINE-v1": "Constant/current-state persistence is always available as the baseline "
+                                             "transition model even when empirical mean-reversion estimation is unsupported.",
+    "MARKET-PRICING-NO-SILENT-INTRINSIC-EXIT-v1": "Default exit-price generation must not set future market price equal "
+                                                 "to current or future intrinsic/fundamental value. Anchoring to "
+                                                 "fundamental value is allowed only as an explicitly named convergence "
+                                                 "scenario with its own stochastic rate, labeled separately.",
+    "EXIT-PRICE-TERMINAL-MULTIPLE-v1": "Exit prices are formed as terminal_multiple × future metric, then EV↔equity "
+                                      "bridge and share-count/dilution as required by the metric family "
+                                      "(P/E, P/B, EV/EBIT, EV/EBITDA, EV/Sales).",
+    "EXIT-PRICE-LINEAGE-v1": "Every exit-price path stores metric id, terminal multiple, market-pricing state, "
+                            "bridge components, diluted share count, reason codes and scenario_kind for audit.",
+    "CONVERGENCE-SCENARIO-EXPLICIT-v1": "Optional CONVERGENCE_TO_INTRINSIC scenarios mix exit price toward a supplied "
+                                       "intrinsic path with an explicit stochastic convergence rate; never the default.",
 }
 
 
@@ -382,3 +407,4 @@ def cite(*ids: str) -> list[str]:
     if old:
         raise KeyError(f"superseded assumption ids {old}; cite {[SUPERSEDED[i] for i in old]}")
     return sorted(set(ids))
+

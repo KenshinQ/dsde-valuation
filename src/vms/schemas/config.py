@@ -13,6 +13,8 @@ from pathlib import Path
 from typing import Literal
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
+from vms.market_pricing.config import MarketPricingConfig
+
 import yaml
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator, model_validator
 
@@ -333,7 +335,7 @@ class RegimeConfig(_Strict):
     transition_prior: TransitionPrior
     min_state_support: float = Field(gt=0, description="effective transitions per state row below => LOW_SUPPORT")
     market_regime_source: Literal["none"] = Field(
-        description="no market-pricing estimator until Phase 9 => UNAVAILABLE (never inferred from fundamentals; see vms.market_pricing)")
+        description="legacy carrier source; Phase 9 estimator lives in vms.market_pricing (never inferred from fundamentals)")
 
     @field_validator("states")
     @classmethod
@@ -456,6 +458,10 @@ class VMSConfig(_Strict):
     valuation: ValuationConfig
     multiples: MultiplesConfig = Field(default_factory=MultiplesConfig)
     sensitivity: SensitivityConfig = Field(default_factory=SensitivityConfig)
+    market_pricing: MarketPricingConfig = Field(
+        default_factory=MarketPricingConfig,
+        description="Phase 9 market-pricing regime + exit-price engine (SPEC §14)",
+    )
 
     @field_validator("timezone")
     @classmethod

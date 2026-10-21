@@ -12,7 +12,23 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from vms.regimes.schemas import validate_probabilities
+from vms.assumptions import cite
+def validate_probabilities(
+    probabilities: dict[str, float],
+    states: list[str],
+    label: str,
+    *,
+    tol: float = 1e-8,
+) -> None:
+    """Local copy — avoid importing vms.regimes (circular with schemas.config)."""
+    if set(probabilities) != set(states):
+        raise ValueError(f"{label}: probability keys {sorted(probabilities)} != states {states}")
+    if any((not isinstance(v, (int, float))) or v < -tol for v in probabilities.values()):
+        raise ValueError(f"{label}: probabilities must be non-negative finite")
+    s = float(sum(probabilities.values()))
+    if abs(s - 1.0) > tol:
+        raise ValueError(f"{label}: probabilities sum to {s}, not 1")
+
 
 MARKET_PRICING_STATES = ("COMPRESSED", "NORMAL", "EXPANDED", "DISLOCATION")
 
@@ -37,9 +53,13 @@ class MarketPricingStatePosterior(BaseModel):
     probabilities: dict[str, float] | None = None
     source: str | None = None
     reason: str | None = None
-    estimator_phase: Literal["PHASE_9_DEFERRED"] = "PHASE_9_DEFERRED"
+    estimator_phase: Literal["PHASE_9", "PHASE_9_DEFERRED"] = "PHASE_9"
+    confidence: Literal["HIGH", "MEDIUM", "LOW", "NONE"] = "NONE"
     flags: list[str] = Field(default_factory=list)
     assumptions: list[str] = Field(default_factory=list)
+    # Explicit dependence hook — None means independent of fundamentals (default).
+    dependence_on_fundamentals: Literal["NONE", "CONFIGURED"] = "NONE"
+    diagnostics: dict = Field(default_factory=dict)
 
     @model_validator(mode="after")
     def _consistent(self) -> "MarketPricingStatePosterior":
@@ -59,14 +79,49 @@ class MarketPricingStatePosterior(BaseModel):
 
 
 def unavailable_market_pricing(*, reason: str | None = None) -> MarketPricingStatePosterior:
-    """Phase-3 stub: estimator not implemented (Phase 9). Never inferred from fundamentals."""
+    """Estimator unavailable — never inferred from fundamentals (SPEC §14.3)."""
     return MarketPricingStatePosterior(
         status="UNAVAILABLE",
         reason=reason
         or (
-            "market-pricing state estimator deferred to Phase 9 "
-            "(SPEC §14 / §20); not inferred from fundamental regimes"
+            "market-pricing state estimator unavailable / insufficient market data "
+            "(SPEC §14.3); not inferred from fundamental regimes"
         ),
-        flags=["MARKET_PRICING_ESTIMATOR_NOT_IMPLEMENTED", "LOW_CONFIDENCE"],
-        assumptions=["MARKET-PRICING-SCHEMA-v1", "MARKET-PRICING-ESTIMATOR-PHASE9-v1"],
+        estimator_phase="PHASE_9",
+        confidence="NONE",
+        flags=["MARKET_PRICING_ESTIMATOR_UNAVAILABLE", "LOW_CONFIDENCE"],
+        assumptions=cite(
+            "MARKET-PRICING-SCHEMA-v1",
+            "MARKET-PRICING-INDEPENDENT-v1",
+            "MARKET-PRICING-ESTIMATOR-PHASE9-v1",
+        ),
+        dependence_on_fundamentals="NONE",
+    )
+
+
+def fallback_market_pricing_prior(
+    probabilities: dict[str, float],
+    *,
+    reason: str,
+    source: str = "configured_fallback_prior",
+) -> MarketPricingStatePosterior:
+    """Explicit low-confidence fallback distribution when estimation is unsupported."""
+    states = [s for s in MARKET_PRICING_STATES if s in probabilities]
+    return MarketPricingStatePosterior(
+        status="AVAILABLE",
+        states=states,
+        probabilities={s: float(probabilities[s]) for s in states},
+        source=source,
+        reason=reason,
+        estimator_phase="PHASE_9",
+        confidence="LOW",
+        flags=["MARKET_PRICING_FALLBACK_PRIOR", "LOW_CONFIDENCE", "ESTIMATION_UNSUPPORTED"],
+        assumptions=cite(
+            "MARKET-PRICING-SCHEMA-v1",
+            "MARKET-PRICING-FALLBACK-PRIOR-v1",
+            "MARKET-PRICING-INDEPENDENT-v1",
+            "MARKET-PRICING-ESTIMATOR-PHASE9-v1",
+        ),
+        dependence_on_fundamentals="NONE",
+        diagnostics={"fallback": True},
     )

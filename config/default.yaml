@@ -1,8 +1,8 @@
-# VMS-0.2 default configuration (Phase 8 ensemble; Phase 7 router/compare; Phase 6 RIM/NAV/SOTP + Phase 5 multiples + Phase 4 cash-flow; Phase 0–3 retained).
+# VMS-0.2 default configuration (Phase 9 market-pricing/exit; Phase 8 ensemble; Phase 7 router/compare; Phase 6 RIM/NAV/SOTP + Phase 5 multiples + Phase 4 cash-flow; Phase 0–3 retained).
 # Phase 0 validates every field below. Fields marked "(Phase N)" are not consumed
 # until that VMS-0.2 phase is implemented. Numeric values are explicit ASSUMPTIONS,
 # not calibrated estimates. Legacy 0.1 modules may still read these keys.
-configuration_version: "vms-default-0.2.phase8"
+configuration_version: "vms-default-0.2.phase9"
 method_registry_file: method_registry.yaml   # relative to this file; empty registry OK
 router_file: router.yaml
 profiles_file: profiles.yaml
@@ -165,3 +165,34 @@ sensitivity:                           # (Phase 8) labeled shocks — not calibr
   posterior_tilt_state: GROWTH
   posterior_tilt: 0.15
   transition_stay_boost: 0.5
+
+market_pricing:                        # (Phase 9) exit-price / market-pricing regime — ASSUMPTIONS, not calibrated
+  version: "vms-market-pricing-0.2.phase9"
+  default_metric_id: ev_ebitda
+  min_history_obs_for_estimation: 12
+  fallback_prior:
+    COMPRESSED: 0.15
+    NORMAL: 0.55
+    EXPANDED: 0.25
+    DISLOCATION: 0.05
+  state_scales:
+    COMPRESSED: 0.75
+    NORMAL: 1.0
+    EXPANDED: 1.30
+    DISLOCATION: 0.55
+  mean_reversion:
+    enabled: false
+    estimation_status: UNSUPPORTED
+    slow_reversion_rate: 0.10
+    fast_reversion_rate: 0.35
+    normal_stay: 0.80
+  convergence:
+    enabled: false
+    scenario_id: CONVERGENCE_TO_INTRINSIC
+    stochastic_rate: 0.25
+    blend_weight: 0.5
+  dependence:
+    mode: NONE
+  lease_debt_like: 0.0
+  other_senior_claims: 0.0
+  minority_interest_book: 0.0

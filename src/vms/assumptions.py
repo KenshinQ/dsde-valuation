@@ -251,6 +251,18 @@ ASSUMPTIONS: dict[str, str] = {
     "RIM-GOODWILL-HAIRCUT-v1": "Material goodwill on book equity is flagged. An optional "
                               "goodwill_haircut (0..1) may reduce opening book; default is no "
                               "haircut with GOODWILL_UNHAIRCUTTED when goodwill > 0.",
+    "RIM-NI-CONSTANT-LAST-FY-v1": "Real-bank RIM bridge (R1): net-income forecast defaults to "
+                                 "constant last complete FY parent_net_income for N years "
+                                 "(P1). Labeled ASSUMPTION; not a calibrated earnings model.",
+    "RIM-CS-ZEROS-EXPLICIT-v1": "When OCI / net_issuance (and optionally dividends) are absent "
+                               "from PIT annual history, RIM may proceed only with "
+                               "zeros_explicit=true and flag CLEAN_SURPLUS_ZEROS_ASSUMED. "
+                               "Silent zero-fill is forbidden.",
+    "RIM-REAL-PIT-BRIDGE-v1": "vms value-rim builds rim_inputs from PITSnapshot annual history "
+                             "(book_equity_0 = last FY total_equity). Does not lift "
+                             "industry.unsupported; legacy project/value still UNSUPPORTED "
+                             "for 银行/非银金融. Engineering smoke only; "
+                             "INVESTMENT_VALUE_NOT_ESTABLISHED.",
     "NAV-EXPLICIT-FAIR-v1": "NAV values each material asset and claim with an explicit fair_value, "
                            "optional haircut, and non-empty justification (appraisal/market/yield/"
                            "replacement/reserve/impairment/configured). Corporate overhead and "

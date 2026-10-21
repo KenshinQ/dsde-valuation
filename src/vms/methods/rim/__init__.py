@@ -1,5 +1,12 @@
-"""Residual income method (VMS-0.2 Phase 6, SPEC §12.4)."""
+"""Residual income method (VMS-0.2 Phase 6, SPEC §12.4) + R1 PIT bridge."""
 
+from vms.methods.rim.from_snapshot import (
+    BOOK_EQUITY_TE_RULE,
+    RimBridgeError,
+    RimBridgeResult,
+    features_from_snapshot,
+    rim_inputs_from_snapshot,
+)
 from vms.methods.rim.math import (
     CleanSurplusReport,
     RimPathResult,
@@ -9,9 +16,14 @@ from vms.methods.rim.math import (
 from vms.methods.rim.plugin import ResidualIncomeMethod
 
 __all__ = [
+    "BOOK_EQUITY_TE_RULE",
     "CleanSurplusReport",
+    "RimBridgeError",
+    "RimBridgeResult",
     "RimPathResult",
-    "assess_clean_surplus",
-    "residual_income_value",
     "ResidualIncomeMethod",
+    "assess_clean_surplus",
+    "features_from_snapshot",
+    "residual_income_value",
+    "rim_inputs_from_snapshot",
 ]

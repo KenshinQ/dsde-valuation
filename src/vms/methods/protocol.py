@@ -40,6 +40,9 @@ class ValuationContext(BaseModel):
     # Optional history for DDM payout gates when path bundle is not yet available
     dividend_history: tuple[float, ...] = ()
     net_income_history: tuple[float, ...] = ()
+    # Phase 5: subject fundamentals + PIT peer rows for relative multiples
+    subject_metrics: dict[str, Any] = Field(default_factory=dict)
+    peer_observations: tuple[Any, ...] = Field(default_factory=tuple)
 
 
 class MethodConfig(BaseModel):

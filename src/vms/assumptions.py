@@ -229,6 +229,18 @@ ASSUMPTIONS: dict[str, str] = {
     "DDM-v1": "Dividends are policy-dependent path distributions. Gordon terminal only under stability constraints "
               "(positive last dividend; ke > g + margin; payout modelable). Absent/erratic payout => INELIGIBLE "
               "(PAYOUT_NOT_MODELABLE / ABSENT_DIVIDENDS / ERRATIC_PAYOUT); never invent a convenient dividend stream.",
+    "PEER-MULTIPLE-RELATIVE-v1": "Relative multiples (P/E, P/B, EV/EBIT, EV/EBITDA, EV/Sales) use PIT-eligible "
+                                "peer samples only (peer_known_at). Aggregation is median / winsorized / trimmed "
+                                "(never blind arithmetic mean). Peer included/excluded names and reasons are "
+                                "persisted. Negative/near-zero denominators => INELIGIBLE_DENOMINATOR. "
+                                "EV/Sales is RELATIVE_PRICING_ONLY unless margins/reinvestment are modeled. "
+                                "Not a calibrated intrinsic-value claim; INVESTMENT_VALUE_NOT_ESTABLISHED.",
+    "NO-DOUBLE-EV-BRIDGE-v1": "Equity-side methods (P/E, P/B, FCFE, DDM, RIM) must not receive an EV→equity bridge. "
+                             "EV-side methods (EV/EBIT, EV/EBITDA, EV/Sales, FCFF) apply bridge_ev_to_equity exactly "
+                             "once after estimating EV. No cross-bridging or double-counting of claims.",
+    "CYCLE-NORMALIZE-FLAG-v1": "Cyclical / HIGH_CYCLICALITY names do not treat trailing earnings as sustainable by "
+                              "default. When mid-cycle denominator is unavailable, mark CYCLE_ESTIMATE_LOW_CONFIDENCE "
+                              "and TRAILING_DENOMINATOR_UNQUALIFIED_RISK (SPEC §12.6). Full cycle model may be minimal.",
     "EXIT-MULTIPLE-SEPARATE-v1": "Exit-multiple cross-check (normalized EBIT or EBITDA x multiple) is reported "
                                 "separately from DCF. Peer multiples from explicit config/synthetic peers with robust "
                                 "location + shrink. Composite with DCF only if valuation.composite_weights is set "

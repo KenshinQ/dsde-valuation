@@ -96,6 +96,7 @@ class ClaimStatus(str, Enum):
     CALIBRATION_PASS = "CALIBRATION_PASS"
     CALIBRATION_INSUFFICIENT = "CALIBRATION_INSUFFICIENT"
     ENSEMBLE_CALIBRATED = "ENSEMBLE_CALIBRATED"
+    ENSEMBLE_UNCALIBRATED = "ENSEMBLE_UNCALIBRATED"
     INVESTMENT_VALUE_NOT_ESTABLISHED = "INVESTMENT_VALUE_NOT_ESTABLISHED"
     INVESTMENT_VALUE_SUPPORTED = "INVESTMENT_VALUE_SUPPORTED"
 
@@ -200,7 +201,7 @@ class RouterConfig(_Strict):
     allow_ensemble_without_calibration: bool = False
     min_eligible_methods_for_coverage: int = Field(default=1, ge=0)
     default_target: ValuationTarget = ValuationTarget.FUNDAMENTAL_VALUE_CURRENT
-    notes: str = "Phase 2: hard-gate routing skeleton; no method computation"
+    notes: str = "Phase 7: hard gates + soft suitability + disagreement; no calibrated ensemble"
 
 
 class ProfileCatalogEntry(_Strict):

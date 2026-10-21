@@ -36,7 +36,10 @@ class EligibilityResult(BaseModel):
     reasons: list[GateReason] = Field(default_factory=list)
     soft_suitability: dict[str, float] = Field(
         default_factory=dict,
-        description="Phase 2: empty or conceptual-fit only; not ensemble weights",
+        description=(
+            "Soft suitability dimension map (SPEC §11.3). Router attaches the full "
+            "7-dimension vector after hard gates pass. Not ensemble weights."
+        ),
     )
 
 

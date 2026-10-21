@@ -88,7 +88,7 @@ def test_consumer_view_from_minimal_result():
         unsupported=True,
         flags=["UNIT_STUB"],
     )
-    assert result.schema_version == SCHEMA_VERSION == "vms-0.2.phase10"
+    assert result.schema_version == SCHEMA_VERSION == "vms-0.2.phase11"
     assert result.labels["investment_value"] == "INVESTMENT_VALUE_NOT_ESTABLISHED"
     view = consumer_view_from_result(result)
     assert view.schema_kind == "DSDEConsumerView"
@@ -114,4 +114,4 @@ def test_adapter_module_has_no_static_dsde_import():
 def test_import_vms_alone():
     importlib.invalidate_caches()
     m = importlib.import_module("vms")
-    assert m.SCHEMA_VERSION == "vms-0.2.phase10"
+    assert m.SCHEMA_VERSION == "vms-0.2.phase11"

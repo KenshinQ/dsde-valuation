@@ -19,8 +19,8 @@ def test_cli_phase10_smoke(tmp_path, capsys):
     assert rc == 0
     summ = json.loads((out / "phase10_summary.json").read_text())
     assert summ["status"] == PHASE10_STATUS
-    assert summ["schema_version"] == SCHEMA_VERSION == "vms-0.2.phase10"
-    assert summ["implemented_phase"] == IMPLEMENTED_PHASE == "PHASE_10"
+    assert summ["schema_version"] == SCHEMA_VERSION
+    assert summ["implemented_phase"] == IMPLEMENTED_PHASE
     assert summ["investment_value"] == "INVESTMENT_VALUE_NOT_ESTABLISHED"
     assert summ["pathwise_higher_p0_cannot_improve"] is True
     assert summ["dsde_present"] is False

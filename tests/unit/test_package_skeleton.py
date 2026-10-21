@@ -36,6 +36,6 @@ def test_phase9_core_modules_importable():
 
 def test_schema_version_is_phase9_contract():
     from vms import IMPLEMENTED_PHASE, SCHEMA_VERSION, __version__
-    assert SCHEMA_VERSION == "vms-0.2.phase10"
-    assert IMPLEMENTED_PHASE == "PHASE_10"
+    assert SCHEMA_VERSION == "vms-0.2.phase11"
+    assert IMPLEMENTED_PHASE == "PHASE_11"
     assert __version__ == "0.2.0a0"

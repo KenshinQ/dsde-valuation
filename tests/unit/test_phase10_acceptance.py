@@ -237,5 +237,5 @@ def test_ac5_core_without_dsde_and_public_contract(path_and_exit):
 
 
 def test_schema_version_phase10_contract():
-    assert SCHEMA_VERSION == "vms-0.2.phase10"
-    assert IMPLEMENTED_PHASE == "PHASE_10"
+    assert SCHEMA_VERSION == "vms-0.2.phase11"
+    assert IMPLEMENTED_PHASE == "PHASE_11"

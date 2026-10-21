@@ -240,5 +240,5 @@ def test_soft_suitability_requires_all_dimensions_no_opaque_score(repo):
 
 
 def test_schema_version_tracks_current_phase_contract():
-    assert SCHEMA_VERSION == "vms-0.2.phase10"
-    assert IMPLEMENTED_PHASE == "PHASE_10"
+    assert SCHEMA_VERSION == "vms-0.2.phase11"
+    assert IMPLEMENTED_PHASE == "PHASE_11"

@@ -1,7 +1,7 @@
-# VMS-0.2 router policy placeholders (SPEC §11). Validated in Phase 0; logic in Phase 2+.
-router_version: "vms-router-0.2.phase1"
+# VMS-0.2 router policy (SPEC §11). Phase 2: hard-gate skeleton; no method computation.
+router_version: "vms-router-0.2.phase2"
 require_hard_gates: true
 allow_ensemble_without_calibration: false
 min_eligible_methods_for_coverage: 1
 default_target: FUNDAMENTAL_VALUE_CURRENT
-notes: "Phase 0 placeholder; deterministic routing is Phase 2+"
+notes: "Phase 2 hard-gate routing lists candidates only; value_paths never called here"

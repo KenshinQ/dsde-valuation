@@ -1,5 +1,195 @@
 # VMS-0.2 method registry (SPEC §11.1 / §19).
-# Phase 0: declarative catalog only. No method is enabled or IMPLEMENTED.
-# Adding enabled:true without a real plugin is a config error (no fake valuers).
-registry_version: "vms-method-registry-0.2.phase1"
-methods: []
+# Phase 2: declarative plugin catalog. All methods are declared but NOT_IMPLEMENTED;
+# enabled must stay false until a real plugin exists (config error otherwise).
+# Hard gates refuse running these; no default DCF.
+registry_version: "vms-method-registry-0.2.phase2"
+methods:
+  - method_id: fcff_dcf
+    version: "0.2.0-decl"
+    family: fcff_dcf
+    display_name: "FCFF DCF"
+    owner_module: "vms.methods.fcff"
+    implementation_status: NOT_IMPLEMENTED
+    enabled: false
+    supported_targets: [FUNDAMENTAL_VALUE_CURRENT, FUNDAMENTAL_VALUE_HORIZON]
+    output_basis: [EV, EQUITY, PER_SHARE]
+    eligible_profiles: [MATURE_OPERATING, GROWTH_OR_REINVESTMENT_HEAVY, CYCLICAL_OPERATING, ASSET_HEAVY_OR_RESOURCE]
+    exclusion_conditions:
+      - "profile_in:FINANCIAL_INSTITUTION"
+      - "profile_in:DISTRESSED_OR_TURNAROUND"
+      - "missing_required_fields"
+    required_fields: [revenue, ebit, cash_flow_from_operations, capex, total_equity, interest_bearing_debt, cash]
+    quality_minimums: {critical_accounting: "PASS_OR_WARN"}
+    assumption_schema_ids: [wacc_v1, terminal_growth_v1]
+    failure_codes: [METHOD_NOT_IMPLEMENTED, INELIGIBLE_PROFILE, MISSING_REQUIRED_FIELDS, INVALID_WACC_G, PATH_FAILURE]
+    notes: "Declared for Phase 4; industrial FCFF not for banks by default."
+
+  - method_id: fcfe_dcf
+    version: "0.2.0-decl"
+    family: fcfe_dcf
+    display_name: "FCFE DCF"
+    owner_module: "vms.methods.fcfe"
+    implementation_status: NOT_IMPLEMENTED
+    enabled: false
+    supported_targets: [FUNDAMENTAL_VALUE_CURRENT, FUNDAMENTAL_VALUE_HORIZON]
+    output_basis: [EQUITY, PER_SHARE]
+    eligible_profiles: [MATURE_OPERATING, GROWTH_OR_REINVESTMENT_HEAVY, FINANCIAL_INSTITUTION, CYCLICAL_OPERATING]
+    exclusion_conditions: ["missing_required_fields", "incoherent_net_borrowing"]
+    required_fields: [parent_net_income, cash_flow_from_operations, interest_bearing_debt, dividends_paid]
+    quality_minimums: {critical_accounting: "PASS_OR_WARN"}
+    assumption_schema_ids: [cost_of_equity_v1, terminal_growth_v1]
+    failure_codes: [METHOD_NOT_IMPLEMENTED, INELIGIBLE_PROFILE, MISSING_REQUIRED_FIELDS, INVALID_COST_OF_EQUITY, PATH_FAILURE]
+    notes: "Declared for Phase 4."
+
+  - method_id: ddm
+    version: "0.2.0-decl"
+    family: ddm
+    display_name: "Dividend Discount Model"
+    owner_module: "vms.methods.ddm"
+    implementation_status: NOT_IMPLEMENTED
+    enabled: false
+    supported_targets: [FUNDAMENTAL_VALUE_CURRENT]
+    output_basis: [EQUITY, PER_SHARE]
+    eligible_profiles: [MATURE_OPERATING, FINANCIAL_INSTITUTION]
+    exclusion_conditions: ["payout_not_modelable", "flag:CURRENT_FCF_NEGATIVE"]
+    required_fields: [dividends_paid, parent_net_income]
+    quality_minimums: {}
+    assumption_schema_ids: [cost_of_equity_v1, payout_policy_v1]
+    failure_codes: [METHOD_NOT_IMPLEMENTED, INELIGIBLE_PROFILE, PAYOUT_NOT_MODELABLE, MISSING_REQUIRED_FIELDS]
+    notes: "Declared for Phase 4; needs modelable payout."
+
+  - method_id: residual_income
+    version: "0.2.0-decl"
+    family: residual_income
+    display_name: "Residual Income Model"
+    owner_module: "vms.methods.rim"
+    implementation_status: NOT_IMPLEMENTED
+    enabled: false
+    supported_targets: [FUNDAMENTAL_VALUE_CURRENT]
+    output_basis: [EQUITY, PER_SHARE]
+    eligible_profiles: [FINANCIAL_INSTITUTION, MATURE_OPERATING]
+    exclusion_conditions: ["clean_surplus_unassessable", "missing_book_equity"]
+    required_fields: [total_equity, parent_net_income]
+    quality_minimums: {}
+    assumption_schema_ids: [cost_of_equity_v1, clean_surplus_v1]
+    failure_codes: [METHOD_NOT_IMPLEMENTED, INELIGIBLE_PROFILE, CLEAN_SURPLUS_FAIL, MISSING_REQUIRED_FIELDS]
+    notes: "Declared for Phase 6; primary for banks."
+
+  - method_id: pe
+    version: "0.2.0-decl"
+    family: pe
+    display_name: "P/E multiple"
+    owner_module: "vms.methods.multiples"
+    implementation_status: NOT_IMPLEMENTED
+    enabled: false
+    supported_targets: [RELATIVE_VALUE_CURRENT, MARKET_EXIT_PRICE]
+    output_basis: [EQUITY, PER_SHARE, MARKET_PRICE]
+    eligible_profiles: [MATURE_OPERATING, CYCLICAL_OPERATING, GROWTH_OR_REINVESTMENT_HEAVY, FINANCIAL_INSTITUTION]
+    exclusion_conditions: ["negative_or_near_zero_earnings", "flag:EARNINGS_NEGATIVE_OR_UNSTABLE"]
+    required_fields: [parent_net_income]
+    quality_minimums: {peer_min_count: "5"}
+    assumption_schema_ids: [peer_multiple_v1]
+    failure_codes: [METHOD_NOT_IMPLEMENTED, INELIGIBLE_DENOMINATOR, PEER_DATA_INSUFFICIENT, MISSING_REQUIRED_FIELDS]
+    notes: "Declared for Phase 5."
+
+  - method_id: pb
+    version: "0.2.0-decl"
+    family: pb
+    display_name: "P/B multiple"
+    owner_module: "vms.methods.multiples"
+    implementation_status: NOT_IMPLEMENTED
+    enabled: false
+    supported_targets: [RELATIVE_VALUE_CURRENT, MARKET_EXIT_PRICE]
+    output_basis: [EQUITY, PER_SHARE, MARKET_PRICE]
+    eligible_profiles: [FINANCIAL_INSTITUTION, ASSET_HEAVY_OR_RESOURCE, MATURE_OPERATING]
+    exclusion_conditions: ["negative_book_equity"]
+    required_fields: [total_equity]
+    quality_minimums: {peer_min_count: "5"}
+    assumption_schema_ids: [peer_multiple_v1]
+    failure_codes: [METHOD_NOT_IMPLEMENTED, INELIGIBLE_DENOMINATOR, PEER_DATA_INSUFFICIENT, MISSING_REQUIRED_FIELDS]
+    notes: "Declared for Phase 5; primary for banks."
+
+  - method_id: ev_ebit
+    version: "0.2.0-decl"
+    family: ev_ebit
+    display_name: "EV/EBIT multiple"
+    owner_module: "vms.methods.multiples"
+    implementation_status: NOT_IMPLEMENTED
+    enabled: false
+    supported_targets: [RELATIVE_VALUE_CURRENT, MARKET_EXIT_PRICE]
+    output_basis: [EV, EQUITY]
+    eligible_profiles: [MATURE_OPERATING, CYCLICAL_OPERATING, GROWTH_OR_REINVESTMENT_HEAVY]
+    exclusion_conditions: ["profile_in:FINANCIAL_INSTITUTION", "negative_or_near_zero_ebit"]
+    required_fields: [ebit, interest_bearing_debt, cash]
+    quality_minimums: {peer_min_count: "5"}
+    assumption_schema_ids: [peer_multiple_v1, ev_equity_bridge_v1]
+    failure_codes: [METHOD_NOT_IMPLEMENTED, INELIGIBLE_PROFILE, INELIGIBLE_DENOMINATOR, PEER_DATA_INSUFFICIENT]
+    notes: "Declared for Phase 5; disabled for banks by default."
+
+  - method_id: ev_ebitda
+    version: "0.2.0-decl"
+    family: ev_ebitda
+    display_name: "EV/EBITDA multiple"
+    owner_module: "vms.methods.multiples"
+    implementation_status: NOT_IMPLEMENTED
+    enabled: false
+    supported_targets: [RELATIVE_VALUE_CURRENT, MARKET_EXIT_PRICE]
+    output_basis: [EV, EQUITY]
+    eligible_profiles: [MATURE_OPERATING, CYCLICAL_OPERATING, ASSET_HEAVY_OR_RESOURCE]
+    exclusion_conditions: ["profile_in:FINANCIAL_INSTITUTION", "negative_or_near_zero_ebitda"]
+    required_fields: [ebit, depreciation_amortization, interest_bearing_debt, cash]
+    quality_minimums: {peer_min_count: "5"}
+    assumption_schema_ids: [peer_multiple_v1, ev_equity_bridge_v1]
+    failure_codes: [METHOD_NOT_IMPLEMENTED, INELIGIBLE_PROFILE, INELIGIBLE_DENOMINATOR, PEER_DATA_INSUFFICIENT]
+    notes: "Declared for Phase 5; industrial only by default."
+
+  - method_id: ev_sales
+    version: "0.2.0-decl"
+    family: ev_sales
+    display_name: "EV/Sales multiple"
+    owner_module: "vms.methods.multiples"
+    implementation_status: NOT_IMPLEMENTED
+    enabled: false
+    supported_targets: [RELATIVE_VALUE_CURRENT, MARKET_EXIT_PRICE]
+    output_basis: [EV, EQUITY]
+    eligible_profiles: [GROWTH_OR_REINVESTMENT_HEAVY, MATURE_OPERATING]
+    exclusion_conditions: ["profile_in:FINANCIAL_INSTITUTION", "near_zero_revenue"]
+    required_fields: [revenue, interest_bearing_debt, cash]
+    quality_minimums: {peer_min_count: "5"}
+    assumption_schema_ids: [peer_multiple_v1, ev_equity_bridge_v1]
+    failure_codes: [METHOD_NOT_IMPLEMENTED, INELIGIBLE_PROFILE, INELIGIBLE_DENOMINATOR, PEER_DATA_INSUFFICIENT]
+    notes: "Declared for Phase 5; useful when earnings negative."
+
+  - method_id: nav
+    version: "0.2.0-decl"
+    family: nav
+    display_name: "Net Asset Value"
+    owner_module: "vms.methods.nav"
+    implementation_status: NOT_IMPLEMENTED
+    enabled: false
+    supported_targets: [ASSET_NAV, FUNDAMENTAL_VALUE_CURRENT]
+    output_basis: [NAV, EQUITY]
+    eligible_profiles: [ASSET_HEAVY_OR_RESOURCE, HOLDING_OR_CONGLOMERATE, DISTRESSED_OR_TURNAROUND]
+    exclusion_conditions: ["missing_asset_fair_value_inputs"]
+    required_fields: [total_assets, total_liabilities]
+    quality_minimums: {}
+    assumption_schema_ids: [asset_haircut_v1]
+    failure_codes: [METHOD_NOT_IMPLEMENTED, MISSING_ASSET_INPUTS, INELIGIBLE_PROFILE]
+    notes: "Declared for Phase 6; book assets ≠ fair value without haircuts."
+
+  - method_id: sotp
+    version: "0.2.0-decl"
+    family: sotp
+    display_name: "Sum of the Parts"
+    owner_module: "vms.methods.sotp"
+    implementation_status: NOT_IMPLEMENTED
+    enabled: false
+    supported_targets: [FUNDAMENTAL_VALUE_CURRENT, ASSET_NAV, RELATIVE_VALUE_CURRENT]
+    output_basis: [EQUITY, EV, NAV]
+    eligible_profiles: [HOLDING_OR_CONGLOMERATE, ASSET_HEAVY_OR_RESOURCE]
+    exclusion_conditions: ["missing_segment_inputs"]
+    required_fields: [total_equity, interest_bearing_debt]
+    quality_minimums: {}
+    assumption_schema_ids: [holding_discount_v1, segment_method_v1]
+    failure_codes: [METHOD_NOT_IMPLEMENTED, MISSING_SEGMENT_INPUTS, INELIGIBLE_PROFILE]
+    notes: "Declared for Phase 6; needs segment/asset inputs."

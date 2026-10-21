@@ -1,8 +1,9 @@
 """VMS-0.2 Phase 0 domain contracts (SPEC §§6.1, 7.2, 10.1, 11, 16.3, 17.4).
 
 These enums and lightweight models establish the Adaptive Multi-Method vocabulary
-without implementing profile classification, routing, or valuation methods.
-Empty method registries are valid; no method here claims to produce a value.
+Phase 0–2 vocabulary. Profile classification and declarative registry live in
+Phase 2; empty registries remain valid. No method claims to produce a value until
+implementation_status=IMPLEMENTED and hard gates pass.
 """
 
 from __future__ import annotations
@@ -124,19 +125,39 @@ class MethodImplementationStatus(str, Enum):
     DISABLED = "DISABLED"
 
 
-class MethodRegistryEntry(_Strict):
-    """Declarative method plugin stub in config/method_registry.yaml.
+class OutputBasis(str, Enum):
+    """Units / claim object of a method result (SPEC §11.1)."""
 
-    Phase 0: entries may exist only as documentation of intended ids; computation
-    interfaces arrive in later phases. enabled=True with NOT_IMPLEMENTED is rejected.
+    EV = "EV"
+    EQUITY = "EQUITY"
+    NAV = "NAV"
+    PER_SHARE = "PER_SHARE"
+    MARKET_PRICE = "MARKET_PRICE"
+
+
+class MethodRegistryEntry(_Strict):
+    """Declarative method plugin declaration (SPEC §11.1).
+
+    Phase 2: every registered method must declare targets, output basis (units),
+    required fields and failure codes even when ``IMPLEMENTED=false``. Enabling a
+    method that is not IMPLEMENTED is rejected (no fake valuers).
     """
 
     method_id: str = Field(min_length=1)
+    version: str = Field(min_length=1, description="semantic version of the method declaration")
     family: MethodFamilyId | None = None
     display_name: str = ""
+    owner_module: str = Field(default="", description="intended Python module path")
     implementation_status: MethodImplementationStatus = MethodImplementationStatus.NOT_IMPLEMENTED
     enabled: bool = False
-    supported_targets: list[ValuationTarget] = Field(default_factory=list)
+    supported_targets: list[ValuationTarget] = Field(min_length=1)
+    output_basis: list[OutputBasis] = Field(min_length=1)
+    eligible_profiles: list[ProfileLabel] = Field(default_factory=list)
+    exclusion_conditions: list[str] = Field(default_factory=list)
+    required_fields: list[str] = Field(default_factory=list)
+    quality_minimums: dict[str, str] = Field(default_factory=dict)
+    assumption_schema_ids: list[str] = Field(default_factory=list)
+    failure_codes: list[str] = Field(min_length=1)
     notes: str = ""
 
     @model_validator(mode="after")
@@ -144,7 +165,7 @@ class MethodRegistryEntry(_Strict):
         if self.enabled and self.implementation_status is not MethodImplementationStatus.IMPLEMENTED:
             raise ValueError(
                 f"method_id={self.method_id!r}: enabled=true requires implementation_status=IMPLEMENTED; "
-                f"got {self.implementation_status.value} (Phase 0 forbids fake valuing methods)"
+                f"got {self.implementation_status.value} (forbids fake valuing methods)"
             )
         if self.implementation_status is MethodImplementationStatus.IMPLEMENTED and not self.supported_targets:
             raise ValueError(
@@ -179,7 +200,7 @@ class RouterConfig(_Strict):
     allow_ensemble_without_calibration: bool = False
     min_eligible_methods_for_coverage: int = Field(default=1, ge=0)
     default_target: ValuationTarget = ValuationTarget.FUNDAMENTAL_VALUE_CURRENT
-    notes: str = "Phase 0 placeholder; routing logic is Phase 2+"
+    notes: str = "Phase 2: hard-gate routing skeleton; no method computation"
 
 
 class ProfileCatalogEntry(_Strict):
@@ -238,6 +259,7 @@ __all__ = [
     "ClaimStatus",
     "MethodFamilyId",
     "MethodImplementationStatus",
+    "OutputBasis",
     "MethodRegistryEntry",
     "MethodRegistryConfig",
     "RouterConfig",

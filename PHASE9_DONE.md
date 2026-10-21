@@ -1,57 +1,77 @@
-# Phase 9 — Walk-forward evaluation: DONE
+# Phase 9 — Market-pricing regime and exit-price engine: DONE (VMS-0.2 §20 / §24)
 
-Completed later: see PHASE10_DONE.md.
+Date: 2026-10-21 (Asia/Shanghai). Repo: local git only, no remote. Branch: `master`.
+Prior freeze tag: `vms-0.1`. Spec: `SPEC.md` (VMS-0.2). Prior: [PHASE8_DONE.md](PHASE8_DONE.md).
 
-## Decisions recorded
-| ID | Decision |
-|---|---|
-| EVAL-CHRONOLOGICAL-ONLY-v1 | Only chronological origins; random splits raise RandomSplitProhibitedError |
-| EVAL-FORECAST-BEFORE-OUTCOME-v1 | Persist forecasts with outcomes=null before realization |
-| EVAL-TARGETS-SEPARATE-v1 | CF / intrinsic / price / TSR scored separately; IV not judged by price alone |
-| EVAL-INVESTMENT-LABEL-v1 | Synthetic => INVESTMENT_VALUE_NOT_ESTABLISHED always |
-| PIT-INCOMPLETE-v1 | Exclude pit_complete=false from unbiased metrics |
+Status: **all Phase 9 acceptance criteria pass** for independent market-state estimation,
+conditional terminal-multiple exit prices, persistence baseline when MR is unsupported,
+lineage preservation, and persistence vs mean-reversion sensitivity. Label:
+`ENGINEERING_PASS` for Phase 9 only; `INVESTMENT_VALUE_NOT_ESTABLISHED`.
+This is **not** investment advice and does **not** claim investment value.
+**No** `INVESTMENT_VALUE_SUPPORTED`. Phases 10+ (return-grid polish / walk-forward) are **not** claimed done.
 
-## Changed / new files
-- `src/vms/evaluation/{protocol,baselines,outcomes,metrics,labels,universe,run,errors}.py`
-- `config/universe.synthetic.yaml`
-- `ValuationEngine.evaluate`; `vms evaluate --universe --start --end`
-- assumptions + docs + CI
-- Tests: `test_evaluation.py`, `test_cli_evaluate.py`
+> Note: an older VMS-0.1 `PHASE9_DONE.md` (walk-forward evaluation under 0.1 numbering) is
+> superseded by this VMS-0.2 Phase 9 report. The 0.1 evaluation work remains in `vms.evaluation`
+> / CLI `vms evaluate` and is covered by retained evaluation suites. Under VMS-0.2 numbering,
+> walk-forward calibration is Phase 11.
 
-## Tests
-- **453 passed** (~224 s box; clean clone uv/py3.11: **453 passed** in 254 s; `vms evaluate` exit 0, labels ENGINEERING_PASS + DATA_QUALITY_PASS + INVESTMENT_VALUE_NOT_ESTABLISHED).
-- Leakage **6/6 KILLED**; invariant **7/7 KILLED**.
+## Changed / added files (VMS-0.2 Phase 9)
+```
+src/vms/__init__.py                         SCHEMA_VERSION=vms-0.2.phase9, PHASE_9
+src/vms/assumptions.py                      MARKET-PRICING-* / EXIT-PRICE-* / CONVERGENCE-* IDs
+src/vms/market_pricing/schemas.py           estimator_phase=PHASE_9; fallback prior helper
+src/vms/market_pricing/config.py            NEW: MarketPricingConfig (+ families, MR, convergence)
+src/vms/market_pricing/estimator.py         NEW: independent z-score / fallback estimator
+src/vms/market_pricing/transitions.py       NEW: persistence baseline + configured slow/fast MR
+src/vms/market_pricing/terminal_multiples.py NEW: state-conditional terminal multiple draws
+src/vms/market_pricing/path_metrics.py      NEW: horizon metric extraction from financial paths
+src/vms/market_pricing/exit_prices.py       NEW: ExitPriceBundle / generate_exit_prices (§14.4)
+src/vms/market_pricing/convergence.py       NEW: explicit CONVERGENCE_TO_INTRINSIC only
+src/vms/market_pricing/sensitivity.py       NEW: persistence vs MR sensitivity report
+src/vms/market_pricing/__init__.py          lazy exports (avoid config circular import)
+src/vms/schemas/config.py                   market_pricing: MarketPricingConfig on VMSConfig
+src/vms/reporting/phase9_bundle.py          NEW: offline emitter
+src/vms/cli/main.py                         `vms phase9`
+config/default.yaml (+ sidecars)            versions → phase9; market_pricing block
+tests/unit/test_phase9_acceptance.py        NEW (§20 AC1–AC5)
+tests/property/test_exit_price_properties.py NEW (§21.2 no silent intrinsic→exit)
+tests/integration/test_cli_phase9.py        NEW
+PHASE9_DONE.md / README.md / docs/assumptions.md
+```
 
-## Acceptance evidence
+## Commands executed
+| Environment | Command | Result |
+|---|---|---|
+| Repo `.venv` (Python 3.13) | `python -m pytest` | **630 passed** (Phase 8 was **615**; +15) |
+| CLI | `vms phase9 --out /tmp/vms_phase9_smoke --seed 42 --paths 20 --years 3 --horizons 1,3` | `PHASE9_MARKET_PRICING_EXIT_NOT_INVESTMENT_ADVICE`; default_silent_intrinsic_copy_detected=false; persistence baseline; MR=UNSUPPORTED |
 
-1. **Random row-level splits prohibited.**
-   - `test_refuse_random_splits` / CLI `--split-mode random` => exit 2 / RandomSplitProhibitedError.
+## Acceptance criterion → evidence (§20 Phase 9 / §24)
 
-2. **Forecasts persisted before outcomes.**
-   - `persisted_before_outcomes: true`; first write has `outcomes: null`.
+| # | Criterion (SPEC §20 Phase 9) | Evidence |
+|---|---|---|
+| 1 | Fundamental and market pricing states evolve independently unless an explicitly estimated dependence is configured | Estimator takes only market multiples (no fundamental regimes). `dependence_on_fundamentals="NONE"` by default; `apply_configured_dependence` is opt-in. Vocabularies disjoint. `test_ac1_*` |
+| 2 | Constant-state / current-state persistence baseline runs even when mean-reversion estimation is unsupported | `constant_state_persistence()` always available; `mean_reversion.estimation_status=UNSUPPORTED` still yields valid exit bundle via `compare_persistence_vs_mean_reversion`. `test_ac2_*` |
+| 3 | Current intrinsic value is not silently copied to future market price | Default `scenario_kind=TERMINAL_MULTIPLE_DEFAULT` ignores intrinsic map (`intrinsic_value_used=False`, reason `NO_SILENT_INTRINSIC_COPY`). Convergence only via explicit `CONVERGENCE_TO_INTRINSIC`. `test_ac3_*`; property `test_property_fundamental_value_cannot_silently_become_exit` |
+| 4 | Exit-price paths preserve metric/multiple/bridge/share-count lineage | `ExitPricePath.lineage` + fields for metric_id, terminal_multiple, denominator, bridge, diluted_shares; CLI `exit_price_path_lineage.json`. `test_ac4_*` |
+| 5 | Persistence versus mean-reversion sensitivity is reported | `PersistenceSensitivityReport` with baseline + slow/fast MR and `delta_median_vs_baseline`. `test_ac5_*`; CLI `market_pricing_report.json` |
 
-3. **Historical information sets reconstructed.**
-   - `reconstruct_pit` / `assess` at each origin_as_of (past-only).
+## Example artifact summary
+```text
+vms phase9 --out /tmp/vms_phase9_smoke --seed 42 --paths 20 --horizons 1,3
+→ status=PHASE9_MARKET_PRICING_EXIT_NOT_INVESTMENT_ADVICE
+→ schema_version=vms-0.2.phase9  implemented_phase=PHASE_9
+→ default_forbids_intrinsic_copy=true
+→ fundamental_regimes_used_for_estimation=false
+→ persistence_baseline_model=CONSTANT_STATE_PERSISTENCE
+→ mean_reversion_estimation_status=UNSUPPORTED
+→ investment_value=INVESTMENT_VALUE_NOT_ESTABLISHED
+→ artifacts: market_pricing_report.json, exit_price_summary.json, exit_price_path_lineage.json
+```
 
-4. **Targets evaluated separately.**
-   - `scores_unbiased` has distinct blocks; `intrinsic_value.price_mae_forbidden`.
-
-5. **Baselines side-by-side.**
-   - central_dcf, historical_median, no_regime, constant_growth_dcf, exit_multiple, dcf_only, dcf_plus_multiple.
-
-6. **No unsupported alpha claim.**
-   - Labels always `INVESTMENT_VALUE_NOT_ESTABLISHED` on SYNTHETIC (even if predeclared_oos_alpha=True).
-
-Also: PIT_INCOMPLETE exclusion; ENGINEERING/DATA_QUALITY/CALIBRATION labels; `vms evaluate` artifacts.
-
-## Limitations
-1. Offline synthetic panel is annual (not full quarterly richness of demo SYN000001).
-2. Point forecasts dominate; distributional CF quantiles optional/not filled by default.
-3. Intrinsic stability vs later-origin VPS not yet backfilled (field reserved).
-4. Calibration may be INCONCLUSIVE with few origins.
-5. Demo smoke does not auto-run evaluate (use `vms evaluate`).
-
-## New questions
-1. Expand demo to call evaluate with a fixed window?
-2. Persist distributional return forecasts at each origin (heavier)?
-3. Formal CALIBRATION_PASS thresholds for production universes?
+## Known gaps (honest)
+- Return-distribution grid polish / DSDE-facing return contract is **Phase 10** (exit prices only smoked here).
+- Walk-forward calibration of market-pricing transitions / terminal multiples is **Phase 11**; MR rates are configured placeholders (`UNSUPPORTED` estimation), not fit from short series.
+- Z-score market-state classifier is an explicit labeled heuristic — **not calibrated**.
+- Convergence scenario is demo-only; disabled by default in config.
+- Synthetic offline paths; no claim that exit-price distributions are investment-relevant.
+- Legacy 0.1 `vms returns` / `vms evaluate` remain importable but are not the VMS-0.2 adaptive Track B+return path.

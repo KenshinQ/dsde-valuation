@@ -260,5 +260,5 @@ def test_ineligible_method_never_enters_mixture():
 
 
 def test_schema_version_phase8_contract():
-    assert SCHEMA_VERSION == "vms-0.2.phase8"
-    assert IMPLEMENTED_PHASE == "PHASE_8"
+    assert SCHEMA_VERSION == "vms-0.2.phase9"
+    assert IMPLEMENTED_PHASE == "PHASE_9"

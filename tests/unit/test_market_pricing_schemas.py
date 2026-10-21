@@ -10,6 +10,7 @@ from vms.market_pricing import (
     MarketPricingState,
     MarketPricingStatePosterior,
     unavailable_market_pricing,
+    fallback_market_pricing_prior,
 )
 from vms.regimes.schemas import FundamentalRegimePosterior, MarketRegimePosterior
 from vms.schemas.config import FUNDAMENTAL_STATES
@@ -23,7 +24,7 @@ def test_vocabularies_disjoint():
 def test_schemas_cannot_cross_validate():
     mp = unavailable_market_pricing()
     assert mp.kind == "MARKET_PRICING" and mp.status == "UNAVAILABLE"
-    assert mp.estimator_phase == "PHASE_9_DEFERRED"
+    assert mp.estimator_phase == "PHASE_9"
     fund = FundamentalRegimePosterior(
         model_id="X", model_version="1", states=["GROWTH", "STABLE"],
         probabilities={"GROWTH": 0.4, "STABLE": 0.6}, period_end=None,
@@ -65,3 +66,14 @@ def test_unavailable_rejects_embedded_probabilities():
             status="UNAVAILABLE", reason="x",
             states=["NORMAL"], probabilities={"NORMAL": 1.0},
         )
+
+
+def test_fallback_prior_is_low_confidence_available():
+    fb = fallback_market_pricing_prior(
+        {"COMPRESSED": 0.15, "NORMAL": 0.55, "EXPANDED": 0.25, "DISLOCATION": 0.05},
+        reason="unit-test",
+    )
+    assert fb.status == "AVAILABLE"
+    assert fb.confidence == "LOW"
+    assert "MARKET_PRICING_FALLBACK_PRIOR" in fb.flags
+    assert fb.dependence_on_fundamentals == "NONE"

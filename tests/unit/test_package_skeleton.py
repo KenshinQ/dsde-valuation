@@ -17,8 +17,8 @@ def test_module_importable(m):
     importlib.import_module(f"vms.{m}")
 
 
-def test_phase8_core_modules_importable_without_future_stubs():
-    """Phase 8 ships ensemble; exit-price estimator deferred to Phase 9."""
+def test_phase9_core_modules_importable():
+    """Phase 9 ships market-pricing estimator + exit-price engine."""
     import importlib
     for m in ("vms.schemas.contracts", "vms.reporting.phase0_bundle", "vms.reporting.phase3_bundle",
               "vms.profiles", "vms.methods", "vms.router", "vms.market_pricing", "vms.ensemble",
@@ -27,13 +27,15 @@ def test_phase8_core_modules_importable_without_future_stubs():
               "vms.methods.rim", "vms.methods.nav", "vms.methods.sotp", "vms.methods.asset_based",
               "vms.reporting.phase4_bundle", "vms.reporting.phase5_bundle",
               "vms.reporting.phase6_bundle", "vms.reporting.phase7_bundle",
-              "vms.reporting.phase8_bundle",
+              "vms.reporting.phase8_bundle", "vms.reporting.phase9_bundle",
+              "vms.market_pricing.estimator", "vms.market_pricing.exit_prices",
+              "vms.market_pricing.transitions", "vms.market_pricing.sensitivity",
               "vms.router.suitability", "vms.router.compatibility", "vms.router.compare"):
         importlib.import_module(m)
 
 
-def test_schema_version_is_phase8_contract():
+def test_schema_version_is_phase9_contract():
     from vms import IMPLEMENTED_PHASE, SCHEMA_VERSION, __version__
-    assert SCHEMA_VERSION == "vms-0.2.phase8"
-    assert IMPLEMENTED_PHASE == "PHASE_8"
+    assert SCHEMA_VERSION == "vms-0.2.phase9"
+    assert IMPLEMENTED_PHASE == "PHASE_9"
     assert __version__ == "0.2.0a0"

@@ -22,6 +22,8 @@ Implemented commands:
   phase9          VMS-0.2 Phase 9 market-pricing regime + exit-price engine (synthetic; NOT investment advice)
   phase10         VMS-0.2 Phase 10 Track B return distributions + DSDE contract (synthetic; NOT investment advice)
   phase11         VMS-0.2 Phase 11 walk-forward calibration + sensitivity (synthetic; NOT investment advice)
+  phase12         VMS-0.2 Phase 12 offline release examples (synthetic; NOT investment advice)
+  validate-bundle Validate a result-bundle directory against a PHASE_CLI subset / §16.3
   profile         VMS-0.2 Phase 2 economic-profile classifier (NOT a valuation)
   route           VMS-0.2 Phase 7 routing log + soft suitability (no method computation by default)
   demo            offline SYNTHETIC smoke (legacy 0.1 pipeline retained; evaluate + optional DSDE adapter).
@@ -72,6 +74,10 @@ from vms.reporting.phase10_bundle import (PHASE10_STATUS, Phase10BundleError, bu
                                          dump_summary as dump_phase10_summary)
 from vms.reporting.phase11_bundle import (PHASE11_STATUS, Phase11BundleError, build_phase11_bundle,
                                          dump_summary as dump_phase11_summary)
+from vms.reporting.phase12_bundle import (PHASE12_STATUS, Phase12BundleError, ALL_PATTERNS,
+                                         build_phase12_pattern, build_phase12_release,
+                                         dump_summary as dump_phase12_summary)
+from vms.reporting.bundle_validation import PHASE_CLI_SUBSETS, validate_result_bundle
 from vms.schemas.contracts import ValuationTarget
 from vms.profiles import classify_profile, load_overrides
 from vms.profiles.fixtures import FixtureError, features_from_fixture, load_fixture
@@ -1461,6 +1467,64 @@ def cmd_phase11(args: argparse.Namespace) -> int:
     return EXIT_OK
 
 
+def cmd_phase12(args: argparse.Namespace) -> int:
+    """Five-pattern offline release examples. NOT investment advice."""
+    out = Path(args.out)
+    seed = 42 if args.seed is None else int(args.seed)
+    paths = 20 if args.paths is None else int(args.paths)
+    years = 3 if args.years is None else int(args.years)
+    pattern = getattr(args, "pattern", None)
+    try:
+        if pattern:
+            if pattern not in ALL_PATTERNS:
+                raise InputError(f"--pattern must be one of {ALL_PATTERNS}")
+            summary = build_phase12_pattern(
+                out_dir=out,
+                pattern=pattern,
+                config_path=args.config,
+                seed=seed,
+                paths=paths,
+                years=years,
+                spot_price=None if args.spot is None else float(args.spot),
+            )
+        else:
+            selected = None
+            if getattr(args, "patterns", None):
+                selected = [p.strip() for p in args.patterns.split(",") if p.strip()]
+                bad = [p for p in selected if p not in ALL_PATTERNS]
+                if bad:
+                    raise InputError(f"unknown patterns {bad}; choose from {ALL_PATTERNS}")
+            summary = build_phase12_release(
+                out_dir=out,
+                config_path=args.config,
+                seed=seed,
+                paths=paths,
+                years=years,
+                patterns=selected,
+            )
+    except Phase12BundleError as e:
+        raise InputError(str(e)) from e
+    print(dump_phase12_summary(summary), end="")
+    assert summary["status"] == PHASE12_STATUS
+    assert summary["investment_value"] == "INVESTMENT_VALUE_NOT_ESTABLISHED"
+    assert summary["labels"]["ENSEMBLE_CALIBRATED"] is False
+    assert summary["labels"]["INVESTMENT_VALUE_SUPPORTED"] is False
+    return EXIT_OK
+
+
+def cmd_validate_bundle(args: argparse.Namespace) -> int:
+    """Validate a result-bundle directory (SPEC §16.3 subsets)."""
+    root = Path(args.path)
+    subset = args.subset or "phase12"
+    if subset != "section_16_3" and subset not in PHASE_CLI_SUBSETS:
+        raise InputError(
+            f"unknown --subset {subset!r}; known={sorted(PHASE_CLI_SUBSETS)} or section_16_3"
+        )
+    res = validate_result_bundle(root, subset=subset)
+    print(json.dumps(res.to_dict(), indent=2, sort_keys=True))
+    return EXIT_OK if res.ok else EXIT_INVALID
+
+
 def cmd_demo(args: argparse.Namespace) -> int:
     loaded = load_config(args.config)
     cfg = loaded.config
@@ -1948,6 +2012,25 @@ def build_parser() -> argparse.ArgumentParser:
                     help="write evaluation_report only (skip sensitivity_report)")
     p11.set_defaults(func=cmd_phase11)
 
+    p12 = sub.add_parser("phase12", help="VMS-0.2 Phase 12 offline release examples (synthetic; NOT investment advice)")
+    p12.add_argument("--out", required=True)
+    p12.add_argument("--config", default=str(_default_config_path()))
+    p12.add_argument("--seed", type=int, default=None)
+    p12.add_argument("--paths", type=int, default=None, help="MC paths for mature Track A/B (default 20)")
+    p12.add_argument("--years", type=int, default=None, help="projection years (default 3)")
+    p12.add_argument("--pattern", default=None, choices=list(ALL_PATTERNS),
+                    help="run a single pattern; default runs all five into out/<pattern>/")
+    p12.add_argument("--patterns", default=None,
+                    help="comma-separated subset of patterns when running the release layout")
+    p12.add_argument("--spot", type=float, default=None, help="entry spot for mature Track B (optional)")
+    p12.set_defaults(func=cmd_phase12)
+
+    vb = sub.add_parser("validate-bundle", help="Validate result-bundle against PHASE_CLI subset / §16.3")
+    vb.add_argument("--path", required=True, help="run directory to validate")
+    vb.add_argument("--subset", default="phase12",
+                    help=f"one of {sorted(PHASE_CLI_SUBSETS)} or section_16_3")
+    vb.set_defaults(func=cmd_validate_bundle)
+
     d = sub.add_parser("demo", help="offline SYNTHETIC smoke (legacy 0.1 pipeline; through returns/sensitivity)")
     d.add_argument("--policy", choices=sorted(POLICIES))
     d.add_argument("--out", required=True)
@@ -1965,7 +2048,7 @@ def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     try:
         return args.func(args)
-    except (ConfigError, InputError, Phase0BundleError, Phase3BundleError, Phase8BundleError, Phase9BundleError, Phase10BundleError, Phase11BundleError, FixtureError, RegimeModelNotImplemented, RandomSplitProhibitedError) as e:
+    except (ConfigError, InputError, Phase0BundleError, Phase3BundleError, Phase8BundleError, Phase9BundleError, Phase10BundleError, Phase11BundleError, Phase12BundleError, FixtureError, RegimeModelNotImplemented, RandomSplitProhibitedError) as e:
         print(f"error: {e}", file=sys.stderr)
         return EXIT_INVALID
 

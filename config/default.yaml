@@ -1,8 +1,8 @@
-# VMS-0.2 default configuration (Phase 4 cash-flow methods; Phase 0–3 retained).
+# VMS-0.2 default configuration (Phase 5 relative multiples + Phase 4 cash-flow; Phase 0–3 retained).
 # Phase 0 validates every field below. Fields marked "(Phase N)" are not consumed
 # until that VMS-0.2 phase is implemented. Numeric values are explicit ASSUMPTIONS,
 # not calibrated estimates. Legacy 0.1 modules may still read these keys.
-configuration_version: "vms-default-0.2.phase4"
+configuration_version: "vms-default-0.2.phase5"
 method_registry_file: method_registry.yaml   # relative to this file; empty registry OK
 router_file: router.yaml
 profiles_file: profiles.yaml
@@ -53,6 +53,25 @@ valuation:                             # (Phase 6) WACC / multiple / bridge — 
     shrink_strength: 2.0
     normalize_years: 1
   composite_weights: null              # keep DCF and exit-multiple separate
+
+multiples:                             # (Phase 5) relative valuation / PIT peers
+  near_zero_eps: 1.0e-6
+  peer_min_count: 5
+  peer_warn_count: 8
+  aggregator: median                   # median | winsorized_mean | trimmed_mean — never blind mean
+  winsor_pct: 0.10
+  trim_pct: 0.10
+  max_dispersion_ratio: 2.0
+  shrink_prior: null
+  shrink_strength: 0.0
+  filters:
+    require_same_profile: false
+    max_size_ratio: null
+    max_abs_growth_diff: null
+    max_abs_profitability_diff: null
+    max_abs_leverage_diff: null
+    exclude_subject_self: true
+
 
 returns:                               # (Phase 7)
   loss_thresholds: [-0.4, -0.2]

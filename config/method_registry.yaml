@@ -1,7 +1,8 @@
 # VMS-0.2 method registry (SPEC §11.1 / §19).
-# Phase 4: fcff_dcf / fcfe_dcf / ddm are IMPLEMENTED+enabled. Others remain
-# NOT_IMPLEMENTED (multiples Phase 5, RIM/NAV/SOTP Phase 6). No default DCF bypass.
-registry_version: "vms-method-registry-0.2.phase4"
+# Phase 4: fcff_dcf / fcfe_dcf / ddm IMPLEMENTED+enabled.
+# Phase 5: pe / pb / ev_ebit / ev_ebitda / ev_sales IMPLEMENTED+enabled.
+# RIM/NAV/SOTP remain NOT_IMPLEMENTED (Phase 6). No default DCF bypass / no ensemble.
+registry_version: "vms-method-registry-0.2.phase5"
 methods:
   - method_id: fcff_dcf
     version: "0.2.0"
@@ -75,12 +76,12 @@ methods:
     notes: "Declared for Phase 6; primary for banks."
 
   - method_id: pe
-    version: "0.2.0-decl"
+    version: "0.2.0"
     family: pe
     display_name: "P/E multiple"
-    owner_module: "vms.methods.multiples"
-    implementation_status: NOT_IMPLEMENTED
-    enabled: false
+    owner_module: "vms.methods.multiples.plugin_base"
+    implementation_status: IMPLEMENTED
+    enabled: true
     supported_targets: [RELATIVE_VALUE_CURRENT, MARKET_EXIT_PRICE]
     output_basis: [EQUITY, PER_SHARE, MARKET_PRICE]
     eligible_profiles: [MATURE_OPERATING, CYCLICAL_OPERATING, GROWTH_OR_REINVESTMENT_HEAVY, FINANCIAL_INSTITUTION]
@@ -88,16 +89,16 @@ methods:
     required_fields: [parent_net_income]
     quality_minimums: {peer_min_count: "5"}
     assumption_schema_ids: [peer_multiple_v1]
-    failure_codes: [METHOD_NOT_IMPLEMENTED, INELIGIBLE_DENOMINATOR, PEER_DATA_INSUFFICIENT, MISSING_REQUIRED_FIELDS]
-    notes: "Declared for Phase 5."
+    failure_codes: [INELIGIBLE_DENOMINATOR, PEER_DATA_INSUFFICIENT, MISSING_REQUIRED_FIELDS]
+    notes: "Phase 5 implemented; equity-side; negative/near-zero earnings gated."
 
   - method_id: pb
-    version: "0.2.0-decl"
+    version: "0.2.0"
     family: pb
     display_name: "P/B multiple"
-    owner_module: "vms.methods.multiples"
-    implementation_status: NOT_IMPLEMENTED
-    enabled: false
+    owner_module: "vms.methods.multiples.plugin_base"
+    implementation_status: IMPLEMENTED
+    enabled: true
     supported_targets: [RELATIVE_VALUE_CURRENT, MARKET_EXIT_PRICE]
     output_basis: [EQUITY, PER_SHARE, MARKET_PRICE]
     eligible_profiles: [FINANCIAL_INSTITUTION, ASSET_HEAVY_OR_RESOURCE, MATURE_OPERATING]
@@ -105,16 +106,16 @@ methods:
     required_fields: [total_equity]
     quality_minimums: {peer_min_count: "5"}
     assumption_schema_ids: [peer_multiple_v1]
-    failure_codes: [METHOD_NOT_IMPLEMENTED, INELIGIBLE_DENOMINATOR, PEER_DATA_INSUFFICIENT, MISSING_REQUIRED_FIELDS]
-    notes: "Declared for Phase 5; primary for banks."
+    failure_codes: [INELIGIBLE_DENOMINATOR, PEER_DATA_INSUFFICIENT, MISSING_REQUIRED_FIELDS]
+    notes: "Phase 5 implemented; equity-side; negative book equity gated."
 
   - method_id: ev_ebit
-    version: "0.2.0-decl"
+    version: "0.2.0"
     family: ev_ebit
     display_name: "EV/EBIT multiple"
-    owner_module: "vms.methods.multiples"
-    implementation_status: NOT_IMPLEMENTED
-    enabled: false
+    owner_module: "vms.methods.multiples.plugin_base"
+    implementation_status: IMPLEMENTED
+    enabled: true
     supported_targets: [RELATIVE_VALUE_CURRENT, MARKET_EXIT_PRICE]
     output_basis: [EV, EQUITY]
     eligible_profiles: [MATURE_OPERATING, CYCLICAL_OPERATING, GROWTH_OR_REINVESTMENT_HEAVY]
@@ -122,16 +123,16 @@ methods:
     required_fields: [ebit, interest_bearing_debt, cash]
     quality_minimums: {peer_min_count: "5"}
     assumption_schema_ids: [peer_multiple_v1, ev_equity_bridge_v1]
-    failure_codes: [METHOD_NOT_IMPLEMENTED, INELIGIBLE_PROFILE, INELIGIBLE_DENOMINATOR, PEER_DATA_INSUFFICIENT]
-    notes: "Declared for Phase 5; disabled for banks by default."
+    failure_codes: [INELIGIBLE_PROFILE, INELIGIBLE_DENOMINATOR, PEER_DATA_INSUFFICIENT]
+    notes: "Phase 5 implemented; EV then single bridge; banks excluded."
 
   - method_id: ev_ebitda
-    version: "0.2.0-decl"
+    version: "0.2.0"
     family: ev_ebitda
     display_name: "EV/EBITDA multiple"
-    owner_module: "vms.methods.multiples"
-    implementation_status: NOT_IMPLEMENTED
-    enabled: false
+    owner_module: "vms.methods.multiples.plugin_base"
+    implementation_status: IMPLEMENTED
+    enabled: true
     supported_targets: [RELATIVE_VALUE_CURRENT, MARKET_EXIT_PRICE]
     output_basis: [EV, EQUITY]
     eligible_profiles: [MATURE_OPERATING, CYCLICAL_OPERATING, ASSET_HEAVY_OR_RESOURCE]
@@ -139,16 +140,16 @@ methods:
     required_fields: [ebit, depreciation_amortization, interest_bearing_debt, cash]
     quality_minimums: {peer_min_count: "5"}
     assumption_schema_ids: [peer_multiple_v1, ev_equity_bridge_v1]
-    failure_codes: [METHOD_NOT_IMPLEMENTED, INELIGIBLE_PROFILE, INELIGIBLE_DENOMINATOR, PEER_DATA_INSUFFICIENT]
-    notes: "Declared for Phase 5; industrial only by default."
+    failure_codes: [INELIGIBLE_PROFILE, INELIGIBLE_DENOMINATOR, PEER_DATA_INSUFFICIENT]
+    notes: "Phase 5 implemented; EV then single bridge; industrial default."
 
   - method_id: ev_sales
-    version: "0.2.0-decl"
+    version: "0.2.0"
     family: ev_sales
     display_name: "EV/Sales multiple"
-    owner_module: "vms.methods.multiples"
-    implementation_status: NOT_IMPLEMENTED
-    enabled: false
+    owner_module: "vms.methods.multiples.plugin_base"
+    implementation_status: IMPLEMENTED
+    enabled: true
     supported_targets: [RELATIVE_VALUE_CURRENT, MARKET_EXIT_PRICE]
     output_basis: [EV, EQUITY]
     eligible_profiles: [GROWTH_OR_REINVESTMENT_HEAVY, MATURE_OPERATING]
@@ -156,8 +157,8 @@ methods:
     required_fields: [revenue, interest_bearing_debt, cash]
     quality_minimums: {peer_min_count: "5"}
     assumption_schema_ids: [peer_multiple_v1, ev_equity_bridge_v1]
-    failure_codes: [METHOD_NOT_IMPLEMENTED, INELIGIBLE_PROFILE, INELIGIBLE_DENOMINATOR, PEER_DATA_INSUFFICIENT]
-    notes: "Declared for Phase 5; useful when earnings negative."
+    failure_codes: [INELIGIBLE_PROFILE, INELIGIBLE_DENOMINATOR, PEER_DATA_INSUFFICIENT]
+    notes: "Phase 5 implemented; labeled RELATIVE_PRICING_ONLY; useful when earnings negative."
 
   - method_id: nav
     version: "0.2.0-decl"

@@ -1,6 +1,6 @@
 """Method plugin contract and declarative registry (VMS-0.2, SPEC §11).
 
-Phase 4 enables FCFF/FCFE/DDM plugins. Other methods remain NOT_IMPLEMENTED.
+Phase 4 enables FCFF/FCFE/DDM; Phase 5 enables pe/pb/ev_ebit/ev_ebitda/ev_sales. RIM/NAV/SOTP remain NOT_IMPLEMENTED.
 Hard eligibility gates must pass before value_paths; no default DCF / ensemble.
 """
 

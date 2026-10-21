@@ -14,6 +14,7 @@ from vms.schemas.contracts import (
 )
 
 _PHASE4_PLUGIN_IDS = frozenset({"fcff_dcf", "fcfe_dcf", "ddm"})
+_PHASE5_PLUGIN_IDS = frozenset({"pe", "pb", "ev_ebit", "ev_ebitda", "ev_sales"})
 
 
 def _build_plugin(entry: MethodRegistryEntry) -> ValuationMethod:
@@ -31,6 +32,25 @@ def _build_plugin(entry: MethodRegistryEntry) -> ValuationMethod:
         if entry.method_id == "ddm":
             from vms.methods.cash_flow.ddm_plugin import DdmMethod
             return DdmMethod(entry)
+    if (
+        entry.implementation_status is MethodImplementationStatus.IMPLEMENTED
+        and entry.enabled
+        and entry.method_id in _PHASE5_PLUGIN_IDS
+    ):
+        from vms.methods.multiples.plugin_base import (
+            EvEbitdaMethod,
+            EvEbitMethod,
+            EvSalesMethod,
+            PbMethod,
+            PeMethod,
+        )
+        return {
+            "pe": PeMethod,
+            "pb": PbMethod,
+            "ev_ebit": EvEbitMethod,
+            "ev_ebitda": EvEbitdaMethod,
+            "ev_sales": EvSalesMethod,
+        }[entry.method_id](entry)
     return DeclaredStubMethod(entry)
 
 

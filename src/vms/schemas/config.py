@@ -403,6 +403,33 @@ class SensitivityConfig(_Strict):
     transition_stay_boost: float = Field(default=0.5, ge=0, le=5.0, description="Dirichlet stay pseudo-count add-on")
 
 
+
+class MultiplesPeerFilterConfig(_Strict):
+    """Comparability filters for PIT peer universe (SPEC §12.5)."""
+
+    require_same_profile: bool = False
+    max_size_ratio: float | None = Field(default=None, gt=1.0)
+    max_abs_growth_diff: float | None = Field(default=None, ge=0.0)
+    max_abs_profitability_diff: float | None = Field(default=None, ge=0.0)
+    max_abs_leverage_diff: float | None = Field(default=None, ge=0.0)
+    exclude_subject_self: bool = True
+
+
+class MultiplesConfig(_Strict):
+    """Relative multiples settings (SPEC §12.5–12.6). Phase 5."""
+
+    near_zero_eps: float = Field(default=1e-6, gt=0, lt=1.0)
+    peer_min_count: int = Field(default=5, ge=1, le=100)
+    peer_warn_count: int = Field(default=8, ge=1, le=200)
+    aggregator: Literal["median", "winsorized_mean", "trimmed_mean"] = "median"
+    winsor_pct: float = Field(default=0.10, ge=0.0, lt=0.5)
+    trim_pct: float = Field(default=0.10, ge=0.0, lt=0.5)
+    max_dispersion_ratio: float = Field(default=2.0, gt=0)
+    shrink_prior: float | None = Field(default=None, gt=0)
+    shrink_strength: float = Field(default=0.0, ge=0)
+    filters: MultiplesPeerFilterConfig = Field(default_factory=MultiplesPeerFilterConfig)
+
+
 class VMSConfig(_Strict):
     configuration_version: str = Field(min_length=1)
     method_registry_file: str = Field(
@@ -427,6 +454,7 @@ class VMSConfig(_Strict):
     regimes: RegimeConfig
     estimation: EstimationConfig
     valuation: ValuationConfig
+    multiples: MultiplesConfig = Field(default_factory=MultiplesConfig)
     sensitivity: SensitivityConfig = Field(default_factory=SensitivityConfig)
 
     @field_validator("timezone")

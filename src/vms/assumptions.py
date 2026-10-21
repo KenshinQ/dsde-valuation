@@ -311,6 +311,29 @@ ASSUMPTIONS: dict[str, str] = {
     "EVAL-INVESTMENT-LABEL-v1": "Every evaluation report carries ENGINEERING_PASS, DATA_QUALITY_PASS, CALIBRATION_PASS "
                                "(or INCONCLUSIVE), and investment_value. Synthetic / no predeclared leakage-safe OOS "
                                "evidence => INVESTMENT_VALUE_NOT_ESTABLISHED; never SUPPORTED on synthetic demos.",
+    # ---- VMS-0.2 Phase 10: Track B exit-price conditioned returns + DSDE contract
+    "TRACK-B-EXIT-RETURN-v1": "VMS-0.2 Phase 10 total shareholder return uses Track B future market exit "
+                              "prices (ExitPriceBundle), not Track A intrinsic/horizon-equity as a silent "
+                              "future price: R=(TerminalPrice_H + ShareholderDistributions_H - P0)/P0. "
+                              "TerminalPrice comes from market-pricing exit engine (SPEC §14/§15).",
+    "SHAREHOLDER-DIST-CASH-DPS-ONLY-v1": "ShareholderDistributions_H = cumulative cash DPS over years 1..H "
+                                        "(dividends[y]/diluted_shares[y]), no reinvestment "
+                                        "(extends DIVIDEND-NO-REINVEST-v1). Buybacks and issuance affect "
+                                        "share counts / cash / exit metrics only — their cash is NOT added "
+                                        "again as a per-share distribution. Splits/bonus shares are reflected "
+                                        "in the share path; entry and exit prices must share the same "
+                                        "price-series convention (no double-count of CA).",
+    "NO-DOUBLE-COUNT-CA-v1": "Corporate actions, buybacks, issuance and splits must not be double-counted "
+                             "across TerminalPrice, ShareholderDistributions, and share counts "
+                             "(SPEC §15.1 / anti-pattern 11).",
+    "RETURN-RECOMPUTE-ON-POSTERIOR-CHANGE-v1": "If fundamental or market-pricing posterior/state distributions "
+                                              "change, all affected exit-price and return distributions must be "
+                                              "recomputed jointly. Entry-price alone never alters fundamental odds "
+                                              "(extends PRICE-REGIME-INVARIANT-v1).",
+    "PHASE10-DSDE-PUBLIC-CONTRACT-v1": "Optional DSDE adapter exports only versioned public contracts "
+                                      "(DSDEConsumerView / ReturnDistributionExport). VMS core never requires "
+                                      "DSDE installed; no static import of dsde* or legacy PIT/FTD/DV1.",
+
     # ---- real A-share HiThink + Eastmoney NOTICE adapter (2026-10-20)
     "HITHINK-PIT-NOTICE-v1": "PIT published_at for HiThink statements = Eastmoney NOTICE_DATE joined by "
                             "(thscode/security_code, period_end ↔ EM REPORTDATE). Date-only NOTICE → "

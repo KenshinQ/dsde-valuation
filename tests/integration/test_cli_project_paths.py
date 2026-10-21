@@ -22,7 +22,7 @@ def test_project_paths_artifacts(tmp_path, capsys):
     assert rc == 0
     summ = json.loads(capsys.readouterr().out)
     fp = json.loads((out / "financial_path_bundle.json").read_text())
-    assert fp["run_id"] == summ["run_id"] and fp["schema_version"] == "vms-0.2.phase0"
+    assert fp["run_id"] == summ["run_id"] and fp["schema_version"] == "vms-0.2.phase1"
     assert fp["n_valid"] == 40 and fp["n_failed"] == 0
     assert fp["central"]["status"] == "VALID" and fp["aggregates"]["n"] == 40
     assert (out / "simulation_bundle.json").exists()

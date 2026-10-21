@@ -182,8 +182,14 @@ Production mode + BLOCKED → CLI exit **3**, and `pit_snapshot.json` is not wri
 The full issue catalogue (code → severity, check, message) is in `src/vms/quality/issues.py::CODES`.
 Checks: DATA_AVAILABILITY, DUPLICATES_CONFLICTS, FIELD_VOCABULARY, UNIT_CURRENCY, POST_AS_OF,
 PERIOD_COVERAGE, CUMULATIVE_CONVERSION, BALANCE_SHEET_IDENTITY, CASH_FLOW_SIGN_UNIT,
-SHARE_COUNT_CORPORATE_ACTIONS, PRICE_ADJUSTMENT, PROVENANCE, PIT_VERSIONING, RESTATEMENTS: **RUN**.
+SHARE_COUNT_CORPORATE_ACTIONS, PRICE_ADJUSTMENT, PROVENANCE, PIT_VERSIONING, RESTATEMENTS,
+PEER_CONTAMINATION: **RUN**.
 EV_BRIDGE: **DEFERRED to Phase 6**.
+
+**Peers (VMS-0.2 Phase 1):** optional `peer_observations.{csv,parquet}` rows (`PeerObservation`) enter
+`PITSnapshot.peers` only when `published_at <= as_of`, membership covers the as_of date, and
+`metric_timestamp` (if set) is `<= as_of`. Future reconstitutions and future peer metrics cannot change
+earlier snapshots (see `tests/leakage/test_peer_leakage.py`). Relative-valuation use of peers is Phase 5.
 
 **Staleness (STALENESS-CN-DEADLINE-v1):** `STALE_FINANCIALS` (WARNING) is raised when the period required by the CN
 statutory deadlines is not known at as_of. After Oct 31 the required period is Q3 (09-30). After Aug 31 it is H1.

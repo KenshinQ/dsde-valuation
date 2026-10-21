@@ -27,8 +27,8 @@ def test_phase0_core_modules_importable_without_method_stubs():
             importlib.import_module(m)
 
 
-def test_schema_version_is_phase0_contract():
+def test_schema_version_is_phase1_contract():
     from vms import IMPLEMENTED_PHASE, SCHEMA_VERSION, __version__
-    assert SCHEMA_VERSION == "vms-0.2.phase0"
-    assert IMPLEMENTED_PHASE == "PHASE_0"
+    assert SCHEMA_VERSION == "vms-0.2.phase1"
+    assert IMPLEMENTED_PHASE == "PHASE_1"
     assert __version__ == "0.2.0a0"

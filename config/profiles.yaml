@@ -1,6 +1,6 @@
 # VMS-0.2 economic profile catalog (SPEC §7.2 / §10.3 guidance only).
 # Not a classifier: Phase 2 implements classification. Phase 0 validates the catalog.
-catalog_version: "vms-profiles-0.2.phase0"
+catalog_version: "vms-profiles-0.2.phase1"
 profiles:
   - label: MATURE_OPERATING
     description: "Mature operating company with forecastable unlevered cash flows"

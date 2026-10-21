@@ -4,7 +4,7 @@ Adaptive Multi-Method valuation & conditional return engine for China A-shares.
 Spec: [SPEC.md](SPEC.md) (VMS-0.2). Archived VMS-0.1: [SPEC_VMS-0.1.md](SPEC_VMS-0.1.md), tag `vms-0.1`.
 
 **Status: VMS-0.2 Phase 0 complete (contracts + deterministic baseline).**
-Schema contract: `vms-0.2.phase0`. Package: `0.2.0a0`. Phase report: [PHASE0_DONE.md](PHASE0_DONE.md).
+Schema contract: `vms-0.2.phase1`. Package: `0.2.0a0`. Phase report: [PHASE1_DONE.md](PHASE1_DONE.md) (see also [PHASE0_DONE.md](PHASE0_DONE.md)).
 Labels always include `INVESTMENT_VALUE_NOT_ESTABLISHED` on synthetic (no alpha claim).
 
 Legacy VMS-0.1 modules (PIT → DCF → returns → evaluate → DSDE adapter) remain in-tree for

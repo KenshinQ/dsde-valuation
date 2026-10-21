@@ -1,135 +1,78 @@
-# Phase 1: PIT data and integrity gates (completion report; VMS-0.1 §18, reported per §21)
+# Phase 1 — completion report (VMS-0.2 §20 / §24)
 
-Date: 2026-10-20 (Asia/Shanghai). Local git only, no remote. Phase 2 not started.
-Status: **all Phase 1 acceptance criteria pass.** This is engineering evidence on SYNTHETIC data
-only; it says nothing about investment value.
+Date: 2026-10-21 (Asia/Shanghai). Repo: local git only, no remote. Branch: `master`.
+Prior freeze tag: `vms-0.1`. Spec: `SPEC.md` (VMS-0.2). Prior contracts: [PHASE0_DONE.md](PHASE0_DONE.md).
 
-## Decisions implemented (from kenshin, 2026-10-20)
-- Date-only as_of means 15:00:00 Asia/Shanghai. This is versioned rule **ASOF-DATE-CLOSE-1** (`vms.pit.asof`),
-  recorded in request/manifest/snapshot. Explicit tz-aware datetimes are still allowed; naive ones are rejected.
-- Canonical field vocabulary **FIELDS-1** (31 fields): `vms.schemas.fields` plus a table in
-  docs/data_contracts.md, kept in sync by test. Each field declares flow/stock, unit, and sign convention.
-  capex, dividends_paid, share_repurchases (and other outflows) are stored as positive magnitudes.
-- Cumulative → standalone conversion only for sources declared `CN_CUMULATIVE_YTD` in `sources.yaml`.
-  Otherwise flows are kept as reported and flagged. Never applied to stocks.
-- No provider adapters: CSV/Parquet ingestion of the canonical schema only.
-- The synthetic generator emits cumulative YTD flows, a restatement, a late annual report, a bonus share
-  and a cash dividend with a later revision, and vendor 前复权 prices that embed the future action.
+Status: **all Phase 1 acceptance criteria pass** for the PIT data layer and accounting gates.
+Label: `ENGINEERING_PASS` for Phase 1 only; `INVESTMENT_VALUE_NOT_ESTABLISHED`.
+This is **not** a valuation and does **not** claim investment value. Phases 2+ (profile/router/methods) are **not** claimed done.
 
-## Changed files
-New:
+## Changed / added files (VMS-0.2 Phase 1)
 ```
-src/vms/schemas/fields.py            canonical field registry FIELDS-1
-src/vms/pit/asof.py                  ASOF-DATE-CLOSE-1 parsing
-src/vms/pit/snapshot.py              PIT snapshot builder
-src/vms/quality/issues.py            issue catalogue (code → severity/check/message) + collector
-src/vms/quality/checks.py            §6.1 checks + check catalogue (EV_BRIDGE DEFERRED)
-src/vms/quality/report.py            DataQualityReport, status precedence, assess(), gate()
-scripts/leakage_mutation_check.sh    injects 4 leaks; leakage suite must fail on each
-tests/factories.py
-tests/unit/{test_fields_asof,test_schemas_phase1,test_io,test_snapshot,test_quality,test_docs_sync}.py
-tests/leakage/test_leakage.py        (replaces README placeholder)
-PHASE1_DONE.md
-```
-Modified:
-```
-pyproject.toml, requirements.lock    + pyarrow (Parquet; justified in README)
-config/default.yaml                  + quality thresholds block; timezone comment updated
-src/vms/__init__.py                  SCHEMA_VERSION vms-0.1.phase1, IMPLEMENTED_PHASE PHASE_1
-src/vms/schemas/observations.py      + CorporateActionEvent, SourceDescriptor, ReportingConvention, Versioning
-src/vms/schemas/__init__.py, schemas/config.py (+QualityConfig)
-src/vms/data/io.py                   CSV/Parquet, corporate_actions, sources.yaml, file hashes
-src/vms/data/synthetic.py            Phase-1 scenarios
-src/vms/reporting/metadata.py        instant-normalised data hash, content_run_id, ArtifactStamp
-src/vms/cli/main.py                  build-snapshot; validate-data --as-of runs real PIT+gates; demo goes through gate; exit 3
-src/vms/pit/__init__.py, quality/__init__.py (now implemented)
-tests/conftest.py, tests/unit/{test_config,test_package_skeleton}.py, tests/property/test_properties.py,
-tests/integration/test_cli.py
-docs/architecture.md, docs/data_contracts.md, README.md, .github/workflows/ci.yml,
-examples/synthetic_operating_company/{README.md,generate_data.py}
+src/vms/__init__.py                    SCHEMA_VERSION=vms-0.2.phase1, IMPLEMENTED_PHASE=PHASE_1
+src/vms/schemas/observations.py        QualityStatus §6.1 uppercase aliases; optional
+                                       source_document_id / derivation_rule_id; NEW PeerObservation
+src/vms/schemas/__init__.py            export PeerObservation
+src/vms/data/io.py                     peer_observations.{csv,parquet} load/write; LoadResult.peers
+src/vms/pit/snapshot.py                PIT-SNAPSHOT-3 + peers; peer_known_at(); excluded_post_as_of.peers
+src/vms/quality/issues.py              PEER_* issue codes under PEER_CONTAMINATION
+src/vms/quality/checks.py              PEER_CONTAMINATION in CHECK_CATALOGUE (RUN)
+src/vms/quality/report.py              pass load.peers into build_snapshot
+config/default.yaml (+ sidecars)       configuration/registry/router/profiles → *.phase1
+docs/data_contracts.md                 PEER_CONTAMINATION + peer PIT rules
+scripts/leakage_mutation_check.sh      peer published_at filter mutation (400d)
+tests/conftest.py                      make_load(..., peers=())
+tests/unit/test_peers_phase1.py        NEW (schema aliases, PeerObservation, IO, snapshot filter)
+tests/leakage/test_peer_leakage.py     NEW (membership, survivorship, metrics, invariant)
+tests/*/…                              schema_version assertions → vms-0.2.phase1
+PHASE1_DONE.md                         this report (replaces VMS-0.1 Phase 1 narrative)
+README.md / examples/…                 schema contract pointer
 ```
 
-## Tests executed
+Migrated (unchanged behaviour, still green): VMS-0.1 PIT/quality suite under
+`src/vms/{pit,quality,data}` — post-as_of exclusion, restatement vintages, CN_CUMULATIVE_YTD
+conversion, unit/currency and balance-sheet gates, production BLOCK, exploratory override.
+
+Empty `vms.methods` / `vms.router` / `vms.profiles` packages were **not** created (SPEC §22/§24).
+
+## Commands executed
 | Environment | Command | Result |
 |---|---|---|
-| Fresh `git clone` → new `.venv` Python 3.11.17 → `uv pip sync requirements.lock` → `-e . --no-deps` | `python -m pytest` | **218 passed** (unit 181, integration 22, property 3, leakage 12) |
-| same | `scripts/leakage_mutation_check.sh` | 4/4 injected leaks **KILLED** |
-| Repo `.venv` Python 3.13.5 | `python -m pytest` | 218 passed |
+| Repo `.venv` (Python 3.13) | `python -m pytest` | **522 passed** (Phase 0 was 509; +8 unit peers +5 peer leakage) |
+| Offline contracts demo | `vms phase0 --out /tmp/vms_phase0_p1 --seed 42 --paths 50` | exit 0; `schema_version=vms-0.2.phase1`, `implemented_phase=PHASE_1`, status still `PHASE0_CONTRACTS_BASELINE_NOT_A_VALUATION` |
+| Mutation | `scripts/leakage_mutation_check.sh` | **7/7 injected leaks KILLED** (financial published_at, market timestamp, CA announced_at, **peer published_at**, ex_date adjust, walk-forward, pipeline regimes) |
 
-Hypothesis leakage properties run 40 + 25 random as_of values (2021–2025, any hour).
+## Acceptance criterion → evidence
 
-## Evidence per Phase 1 acceptance criterion
-1. **Post-as_of observations are excluded.**
-   `build_snapshot` filters financials by `published_at`, prices by `timestamp`, and actions by
-   `announced_at` before any processing.
-   - Tests: `test_every_snapshot_input_known_at_as_of` (property; also covers `version_history`),
-     `test_future_publication_excluded_late_annual_report`, `test_date_only_as_of_excludes_evening_publication_same_day`
-     (2023-04-28 excludes the 18:00 Q1 report; 2023-04-29 includes it),
-     `test_prices_after_as_of_excluded_close_at_as_of_included` (14:59 vs 15:00), `test_corporate_action_not_known_before_announcement`.
-   - CLI: `build-snapshot --as-of 2024-05-15` → `excluded_post_as_of.financial=93` records and `MISSING_QUARTER` (2023Q4 annual report not yet published).
-2. **Later restatements cannot change earlier snapshots.**
-   - `test_snapshot_invariant_to_information_after_as_of` (property): a snapshot from the full data equals
-     one from only the known records, and all quality findings except the post-as_of count are equal too.
-   - `test_future_restatement_excluded`: FY2022 is r0 at 2023-08-28 15:00 and r1 at 2023-08-29.
-     The derived Q4 standalone uses only the known versions.
-   - `test_injected_future_restatement_of_old_period_does_not_change_old_snapshot` (10× value, r9, published 2025).
-   - `test_restatement_latest_known_version_used_history_kept`.
-   - Mutation script: widening any of the 3 filters by 30 days, or applying unannounced/ineffective
-     adjustments, makes the suite fail.
-3. **Quarterly cumulative flows are converted only when reporting rules are known.**
-   - `test_cn_cumulative_ytd_converted_to_standalone` (100/250/330/500 → 100/150/80/170, with formula and derived_from).
-   - `test_no_conversion_without_declared_convention` + `test_cumulative_unknown_flagged` (`CUMULATIVE_CONVENTION_UNKNOWN`).
-   - `test_standalone_convention_not_converted`, `test_stocks_never_converted`, `test_irregular_period_not_converted`.
-4. **Missing/derived values preserve provenance.**
-   - Derived records carry `quality_status=derived|low_confidence`, `formula`, `derived_from` (source:field@period#rev@published_at),
-     and `published_at = max(inputs)`.
-   - Underivable values become `missing` with a reason flag (`test_prior_missing_yields_missing_with_provenance`,
-     `test_null_input_propagates_missing`, `test_low_confidence_input_propagates`).
-   - Explicit nulls stay null with their source and status (`test_missing_values_preserved_and_reported`).
-   - Reported value/unit/currency and `version_history` are kept. The `PROVENANCE` check raises CRITICAL if a derived record lacks inputs.
-5. **Critical errors block production-mode valuation.**
-   - `test_critical_blocks` (sign violation in capex/revenue/cash, non-CNY, statement-type mismatch, conflicting versions),
-     `test_no_market_or_financial_data_blocks`, `test_market_currency_not_cny`.
-   - CLI: production mode → exit **3**, report + manifest written, **no pit_snapshot.json**
-     (`test_build_snapshot_blocked_production_exit_3_no_snapshot`, `test_validate_data_as_of_blocked_exit_3`).
-   - Exploratory requires `--override-reason`. The report keeps `status=BLOCKED, usable_for_production=false` and records
-     `override.reason` + `overridden_critical_codes` (`test_exploratory_override_recorded`, `test_build_snapshot_exploratory_override_recorded`).
-   ```
-   $ vms build-snapshot --input data --ticker SYN000001.SZ --as-of 2024-12-31 --out s2    # capex sign corrupted
-   error: SYN000001.SZ as_of 2024-12-31T15:00:00+08:00: BLOCKED by critical data-quality errors ['SIGN_CONVENTION_VIOLATION']. ...   exit=3
-   ```
-6. **Leakage tests cover financials, prices and corporate actions.** `tests/leakage/test_leakage.py` (12 tests):
-   - financials: future publication, same-day evening publication, future restatement, injected restatement
-   - prices: post-as_of closes; vendor 前复权 `adjusted_close` never enters the snapshot, and before the
-     announcement `pit_adjusted_close == raw_close` while the vendor value embeds the 1.3 factor
-   - corporate actions: unknown before announcement; pending actions do not adjust prices; a revision after as_of is
-     invisible; effective actions adjust only earlier prices; a future action cannot explain a past share change
-   - plus the two property tests above. Mutation evidence: `scripts/leakage_mutation_check.sh`.
+| # | Criterion (SPEC §20 Phase 1) | Evidence |
+|---|---|---|
+| 1 | Observations published after `as_of` are excluded | `build_snapshot` filters financials by `published_at`, prices by `timestamp`, actions by `announced_at`, peers by `peer_known_at`. Tests: `tests/leakage/test_leakage.py::test_every_snapshot_input_known_at_as_of`, `test_future_publication_excluded_late_annual_report`, `test_date_only_as_of_excludes_evening_publication_same_day`, `tests/unit/test_peers_phase1.py::test_snapshot_excludes_future_peers`. |
+| 2 | Later revisions do not change earlier snapshots | `test_snapshot_invariant_to_information_after_as_of`, `test_future_restatement_excluded`, `test_injected_future_restatement_of_old_period_does_not_change_old_snapshot`, `test_peer_snapshot_invariant_to_information_after_as_of`, `test_survivors_only_reconstitution_does_not_drop_historical_peer`. |
+| 3 | Cumulative quarterly flows converted only under identified reporting convention | `tests/unit/test_snapshot.py` CN_CUMULATIVE_YTD → standalone; `CUMULATIVE_CONVENTION_UNKNOWN` when undeclared; stocks never converted (`test_stocks_never_converted` and related). Convention id: `ReportingConvention.CN_CUMULATIVE_YTD` in `sources.yaml`. |
+| 4 | Unit/currency and balance-sheet/accounting discrepancies are surfaced | `UNIT_CURRENCY` / `BALANCE_SHEET_IDENTITY` checks in `vms.quality.checks`; tests in `tests/unit/test_quality.py` (currency not CNY CRITICAL; balance-sheet fail WARNING; sign violations CRITICAL). |
+| 5 | Critical errors block production-mode calculation | `vms.quality.report.gate` + CLI exit 3; `test_critical_blocks`, `test_build_snapshot_blocked_production_exit_3_no_snapshot`; exploratory requires `--override-reason` (`test_exploratory_override_recorded`). |
+| 6 | Leakage tests cover financials, peer data, prices and corporate actions | Financials/prices/CA: `tests/leakage/test_leakage.py` (12). Peers: `tests/leakage/test_peer_leakage.py` (5) — future membership publication, future membership_start, survivors-only reconstitution, future peer metric/price, full invariant. Mutation evidence above. |
 
-### §6.1 check coverage (`data_quality_report.json` → `checks`)
-RUN: DATA_AVAILABILITY, DUPLICATES_CONFLICTS, FIELD_VOCABULARY, UNIT_CURRENCY, POST_AS_OF, PERIOD_COVERAGE,
-CUMULATIVE_CONVERSION, BALANCE_SHEET_IDENTITY, CASH_FLOW_SIGN_UNIT, SHARE_COUNT_CORPORATE_ACTIONS,
-PRICE_ADJUSTMENT, PROVENANCE, PIT_VERSIONING, RESTATEMENTS. **DEFERRED: EV_BRIDGE (Phase 6).**
-Each check has at least one positive test in `tests/unit/test_quality.py`.
+## Example artifact summary
+```text
+vms phase0 --out /tmp/vms_phase0_p1 --seed 42 --paths 50
+→ status=PHASE0_CONTRACTS_BASELINE_NOT_A_VALUATION
+→ schema_version=vms-0.2.phase1  implemented_phase=PHASE_1
+→ investment_value=INVESTMENT_VALUE_NOT_ESTABLISHED
+```
 
-## Known limitations
-- **No FX:** any non-CNY amount BLOCKS (by design, rather than silently dropping it).
-- **Calendar fiscal years only** (`fiscal_year_end: "12-31"`; others are rejected by the schema).
-- Reporting convention is per source, not per record or per field.
-- Market rows have no revision/published field, so vendor price corrections cannot be versioned.
-  A close is assumed known at its own timestamp.
-- Vendor `adjusted_close` is excluded from snapshots. The PRICE_ADJUSTMENT audit check still reads it for known
-  rows, so a vendor's later re-adjustment could change that warning (not the snapshot).
-- `pit_adjusted_close` adjusts only for bonus_share/stock_split. Dividends are distributions (Phase 7).
-  share_issuance/cancellation are not price-adjusted.
-- Thresholds (balance-sheet tolerance 0.5%, share change 1%, unit-jump 100×, capex/revenue 5, late 120d) are
-  hand-set assumptions in config.
-- `MISSING_QUARTER` only checks gaps between the first and last known periods. There is no staleness check
-  (latest period vs as_of), no stale-price/suspension check, and no price-limit flags.
-- Balance-sheet identity is a WARNING (spec: "subject to source definitions"), not a block.
-- `PIT_INCOMPLETE` does not block. It marks data unfit for unbiased-history claims.
-- Status precedence BLOCKED > PIT_INCOMPLETE > PASS_WITH_WARNINGS hides warnings in the status field
-  (they remain in `issues`/`severity_counts`).
-- Single-instrument snapshot per call; `validate-data --as-of` loops instruments.
-- Unit-jump detection is heuristic (≥100× between versions or consecutive balance periods).
-- CI workflow file is untested remotely (no remote).
+PIT peer sample is exercised in unit/leakage tests (not in the Phase 0 contracts demo).
+
+## Known gaps (honest)
+- No profile classifier, method registry population beyond Phase 0 placeholders, FCFF rewrite, router, ensemble, or market-pricing engine (Phases 2–9).
+- `PeerObservation` is the PIT **data** contract only; relative-valuation peer universes / multiples remain Phase 5.
+- Observation `QualityStatus` still **serialises lowercase** (`observed`, …) for CSV compatibility; SPEC §6.1 uppercase is accepted at parse time. `ObservationQualityStatus` keeps uppercase spellings.
+- Optional `source_document_id` / `derivation_rule_id` are schema-ready but not required on legacy rows.
+- No FX: non-CNY amounts still BLOCK (including peer metrics).
+- Vendor `adjusted_close` still excluded from snapshots; audit-only.
+- `PIT_INCOMPLETE` does not block production; it marks data unfit for unbiased-history claims.
+- Real A-share providers remain for regression; Phase 1 acceptance is on synthetic/offline evidence.
+- Engineering pass ≠ investment alpha.
+
+## Failed criteria
+None. No criterion was weakened.

@@ -1,5 +1,5 @@
 # VMS-0.2 method registry (SPEC §11.1 / §19).
 # Phase 0: declarative catalog only. No method is enabled or IMPLEMENTED.
 # Adding enabled:true without a real plugin is a config error (no fake valuers).
-registry_version: "vms-method-registry-0.2.phase0"
+registry_version: "vms-method-registry-0.2.phase1"
 methods: []

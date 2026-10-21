@@ -32,7 +32,7 @@ def test_shipped_configs_valid(repo):
     assert lc.config.base_currency == "CNY"
     assert lc.profile.profile_id == "operating_company" and lc.profile.supported
     assert lc.profile.bounds_status == "placeholder"
-    assert lc.method_registry.methods == []
+    assert len(lc.method_registry.methods) >= 8 and lc.method_registry.enabled_methods == []
     assert lc.router.require_hard_gates is True
     assert len(lc.profiles_catalog.profiles) >= 8
 
@@ -116,7 +116,11 @@ def test_fake_enabled_method_in_registry_file(tmp_path, repo):
     p = _write_cfg(tmp_path, repo)
     (tmp_path / "method_registry.yaml").write_text(
         "registry_version: t\nmethods:\n"
-        "  - method_id: fcff_dcf\n    enabled: true\n    implementation_status: NOT_IMPLEMENTED\n"
+        "  - method_id: fcff_dcf\n    version: '1'\n    enabled: true\n"
+        "    implementation_status: NOT_IMPLEMENTED\n"
+        "    supported_targets: [FUNDAMENTAL_VALUE_CURRENT]\n"
+        "    output_basis: [EV]\n"
+        "    failure_codes: [METHOD_NOT_IMPLEMENTED]\n"
     )
     with pytest.raises(ConfigError) as ei:
         load_config(p)

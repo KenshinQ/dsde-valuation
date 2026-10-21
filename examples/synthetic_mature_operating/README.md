@@ -9,7 +9,7 @@ It reuses the same seeded generator as `examples/synthetic_operating_company/`
 - validates default config + empty method registry + router + profiles catalog
 - writes `request.json`, `config_snapshot.json`, `data_manifest.json`,
   `method_eligibility.json` (all `NOT_RUN`), `validation_report.json`,
-  `simulation_metadata.json` with `schema_version=vms-0.2.phase1` and
+  `simulation_metadata.json` with `schema_version=vms-0.2.phase2` and
   `INVESTMENT_VALUE_NOT_ESTABLISHED`
 - does **not** classify profiles, route methods, or run DCF/returns
 

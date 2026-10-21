@@ -12,6 +12,8 @@ Implemented commands:
   sensitivity     Phase 8 sensitivity & uncertainty attribution
   evaluate        Phase 9 chronological walk-forward evaluation
   phase0          VMS-0.2 Phase 0 contracts baseline (synthetic; NOT a valuation)
+  profile         VMS-0.2 Phase 2 economic-profile classifier (NOT a valuation)
+  route           VMS-0.2 Phase 2 hard-gate candidates only (no method computation)
   demo            offline SYNTHETIC smoke (legacy 0.1 pipeline retained; evaluate + optional DSDE adapter).
 
 Exit codes: 0 ok, 1 unexpected error, 2 invalid input/config/arguments,
@@ -43,6 +45,10 @@ from vms.reporting.metadata import (ArtifactStamp, content_run_id, hash_models, 
 from vms.reporting.phase0_bundle import (PHASE0_STATUS, Phase0BundleError, build_phase0_bundle,
                                         dump_summary)
 from vms.schemas.contracts import ValuationTarget
+from vms.profiles import classify_profile, load_overrides
+from vms.profiles.fixtures import FixtureError, features_from_fixture, load_fixture
+from vms.methods import build_registry_from_config
+from vms.router import route_methods
 from vms.schemas import ValuationRequest, format_validation_error
 from vms.schemas.config import ConfigError, LoadedConfig, load_config
 from vms.schemas.fields import FIELD_REGISTRY_VERSION
@@ -930,6 +936,103 @@ def cmd_evaluate(args: argparse.Namespace) -> int:
     return EXIT_OK
 
 
+
+def cmd_profile(args: argparse.Namespace) -> int:
+    """Classify economic profile from a Phase-2 fixture (or JSON features file).
+
+    Engineering diagnostic only — INVESTMENT_VALUE_NOT_ESTABLISHED.
+    """
+    data = load_fixture(args.fixture)
+    features = features_from_fixture(data)
+    overrides = None
+    if args.overrides:
+        overrides = load_overrides(args.overrides)
+    elif args.config:
+        ov_path = Path(args.config).resolve().parent / "profile_overrides.yaml"
+        if ov_path.is_file():
+            overrides = load_overrides(ov_path)
+    report = classify_profile(features, overrides=overrides)
+    payload = report.model_dump(mode="json")
+    if args.out:
+        out = Path(args.out)
+        out.mkdir(parents=True, exist_ok=True)
+        (out / "profile_report.json").write_text(
+            json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    print(json.dumps({
+        "instrument_id": report.instrument_id,
+        "primary_profile": report.primary_profile.value,
+        "confidence": report.confidence,
+        "low_confidence": report.low_confidence,
+        "flags": [f.value for f in report.flags],
+        "rule_hit_ids": [h.rule_id for h in report.rule_hits],
+        "missing_fields": report.missing_fields,
+        "manual_override_applied": report.manual_override.applied,
+        "classifier_version": report.classifier_version,
+        "schema_version": SCHEMA_VERSION,
+        "implemented_phase": IMPLEMENTED_PHASE,
+        "investment_value": report.investment_value,
+        "out": str(args.out) if args.out else None,
+    }, indent=2, ensure_ascii=False))
+    return EXIT_OK
+
+
+def cmd_route(args: argparse.Namespace) -> int:
+    """List method candidates and hard-gate outcomes without computing values."""
+    try:
+        target = ValuationTarget(args.target)
+    except ValueError as e:
+        allowed = ", ".join(t.value for t in ValuationTarget)
+        raise InputError(f"--target {args.target!r} is not a ValuationTarget; expected one of: {allowed}") from e
+    data = load_fixture(args.fixture)
+    features = features_from_fixture(data)
+    overrides = None
+    ov_path = Path(args.config).resolve().parent / "profile_overrides.yaml"
+    if ov_path.is_file():
+        overrides = load_overrides(ov_path)
+    profile = classify_profile(features, overrides=overrides)
+    loaded = load_config(args.config)
+    registry = build_registry_from_config(loaded.method_registry)
+    available = frozenset(data.get("available_fields") or [])
+    report = route_methods(
+        registry=registry,
+        profile=profile,
+        target=target,
+        available_fields=available,
+        attempt_value_paths=bool(args.attempt_stubs),
+    )
+    payload = report.model_dump(mode="json")
+    if args.out:
+        out = Path(args.out)
+        out.mkdir(parents=True, exist_ok=True)
+        (out / "route_report.json").write_text(
+            json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+        (out / "profile_report.json").write_text(
+            json.dumps(profile.model_dump(mode="json"), indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    # Prove no fabricated values
+    for run in report.attempted_runs:
+        if run.values:
+            raise RuntimeError(f"router produced values for {run.method_id}; forbidden in Phase 2")
+    print(json.dumps({
+        "instrument_id": report.instrument_id,
+        "target": report.target.value,
+        "profile_primary": report.profile_primary,
+        "profile_low_confidence": report.profile_low_confidence,
+        "coverage_status": report.coverage_status,
+        "candidates": report.candidates,
+        "eligible_count": sum(1 for e in report.eligibility if e.eligible),
+        "method_status": [
+            {"method_id": m.method_id, "status": m.status.value, "reason": m.reason}
+            for m in report.method_status
+        ],
+        "schema_version": SCHEMA_VERSION,
+        "implemented_phase": IMPLEMENTED_PHASE,
+        "investment_value": report.investment_value,
+        "notes": report.notes,
+        "out": str(args.out) if args.out else None,
+    }, indent=2, ensure_ascii=False))
+    return EXIT_OK
+
+
 def cmd_phase0(args: argparse.Namespace) -> int:
     """VMS-0.2 Phase 0 offline demo: validate contracts and emit a provenance bundle.
 
@@ -1277,6 +1380,24 @@ def build_parser() -> argparse.ArgumentParser:
     ih.add_argument("--end", help="optional YYYY-MM-DD filter / price window end")
     ih.set_defaults(func=cmd_ingest_hithink)
 
+    
+    pr = sub.add_parser("profile", help="VMS-0.2 Phase 2 economic-profile classifier (NOT a valuation)")
+    pr.add_argument("--fixture", required=True, help="path to profile fixture JSON")
+    pr.add_argument("--out", help="optional directory for profile_report.json")
+    pr.add_argument("--overrides", help="optional profile_overrides.yaml")
+    pr.add_argument("--config", default=str(_default_config_path()),
+                    help="config path (used to locate sibling profile_overrides.yaml)")
+    pr.set_defaults(func=cmd_profile)
+
+    rt = sub.add_parser("route", help="VMS-0.2 Phase 2 hard-gate candidates (no method computation)")
+    rt.add_argument("--fixture", required=True, help="path to profile fixture JSON")
+    rt.add_argument("--target", default=ValuationTarget.FUNDAMENTAL_VALUE_CURRENT.value)
+    rt.add_argument("--out", help="optional directory for route_report.json")
+    rt.add_argument("--attempt-stubs", action="store_true",
+                    help="invoke stub value_paths to prove hard refusal (still no values)")
+    rt.add_argument("--config", default=str(_default_config_path()))
+    rt.set_defaults(func=cmd_route)
+
     p0 = sub.add_parser("phase0", help="VMS-0.2 Phase 0 contracts baseline (synthetic; NOT a valuation)")
     p0.add_argument("--out", required=True)
     p0.add_argument("--seed", type=int)
@@ -1306,7 +1427,7 @@ def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     try:
         return args.func(args)
-    except (ConfigError, InputError, Phase0BundleError, RegimeModelNotImplemented, RandomSplitProhibitedError) as e:
+    except (ConfigError, InputError, Phase0BundleError, FixtureError, RegimeModelNotImplemented, RandomSplitProhibitedError) as e:
         print(f"error: {e}", file=sys.stderr)
         return EXIT_INVALID
 

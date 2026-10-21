@@ -3,8 +3,8 @@
 Adaptive Multi-Method valuation & conditional return engine for China A-shares.
 Spec: [SPEC.md](SPEC.md) (VMS-0.2). Archived VMS-0.1: [SPEC_VMS-0.1.md](SPEC_VMS-0.1.md), tag `vms-0.1`.
 
-**Status: VMS-0.2 Phase 0 complete (contracts + deterministic baseline).**
-Schema contract: `vms-0.2.phase1`. Package: `0.2.0a0`. Phase report: [PHASE1_DONE.md](PHASE1_DONE.md) (see also [PHASE0_DONE.md](PHASE0_DONE.md)).
+**Status: VMS-0.2 Phase 2 complete (profile classifier + declarative method registry).**
+Schema contract: `vms-0.2.phase2`. Package: `0.2.0a0`. Phase report: [PHASE2_DONE.md](PHASE2_DONE.md) (see also [PHASE1_DONE.md](PHASE1_DONE.md), [PHASE0_DONE.md](PHASE0_DONE.md)).
 Labels always include `INVESTMENT_VALUE_NOT_ESTABLISHED` on synthetic (no alpha claim).
 
 Legacy VMS-0.1 modules (PIT → DCF → returns → evaluate → DSDE adapter) remain in-tree for
@@ -53,6 +53,17 @@ python examples/synthetic_mature_operating/run_phase0.py --out /tmp/vms_phase0 -
 
 Writes a provenance bundle (`request.json`, `config_snapshot.json`, `method_eligibility.json`
 with all methods `NOT_RUN`, `simulation_metadata.json`, …). **Not a valuation.**
+
+## Phase 2 profile / route (NOT a valuation)
+
+```bash
+vms profile --fixture examples/profile_fixtures/mature_operating.json
+vms route --fixture examples/profile_fixtures/bank.json --target FUNDAMENTAL_VALUE_CURRENT --attempt-stubs
+```
+
+Five synthetic fixtures under `examples/profile_fixtures/` exercise mature, growth/neg-FCF,
+bank, cyclical and holding profiles. Router lists hard-gate outcomes only; no method math.
+Labels: `INVESTMENT_VALUE_NOT_ESTABLISHED`.
 
 ## Real A-share ingest (optional HiThink + Eastmoney NOTICE)
 

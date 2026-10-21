@@ -59,9 +59,10 @@ def test_profile_catalog_covers_baseline_labels(repo):
     assert {p.label for p in cat.profiles} == set(ProfileLabel)
 
 
-def test_empty_method_registry_loads(repo):
+def test_method_registry_loads_declared_unimplemented(repo):
     reg = load_method_registry(repo / "config/method_registry.yaml")
-    assert reg.methods == [] and reg.enabled_methods == []
+    assert len(reg.methods) >= 8 and reg.enabled_methods == []
+    assert all(m.failure_codes and m.output_basis and m.supported_targets for m in reg.methods)
     assert load_router(repo / "config/router.yaml").require_hard_gates is True
 
 
@@ -77,8 +78,12 @@ def test_enabled_not_implemented_method_rejected():
     with pytest.raises(ValidationError) as ei:
         MethodRegistryEntry(
             method_id="fcff_dcf",
+            version="1",
             implementation_status=MethodImplementationStatus.NOT_IMPLEMENTED,
             enabled=True,
+            supported_targets=[ValuationTarget.FUNDAMENTAL_VALUE_CURRENT],
+            output_basis=["EV"],
+            failure_codes=["METHOD_NOT_IMPLEMENTED"],
         )
     msg = format_validation_error(ei.value)
     assert "enabled=true" in msg and "IMPLEMENTED" in msg
@@ -88,15 +93,22 @@ def test_implemented_requires_targets():
     with pytest.raises(ValidationError) as ei:
         MethodRegistryEntry(
             method_id="fcff_dcf",
+            version="1",
             implementation_status=MethodImplementationStatus.IMPLEMENTED,
             enabled=True,
             supported_targets=[],
+            output_basis=["EV"],
+            failure_codes=["X"],
         )
     assert "supported_targets" in format_validation_error(ei.value)
 
 
 def test_duplicate_method_ids_rejected():
-    entry = dict(method_id="x", implementation_status="NOT_IMPLEMENTED", enabled=False)
+    entry = dict(
+        method_id="x", version="1", implementation_status="NOT_IMPLEMENTED", enabled=False,
+        supported_targets=["FUNDAMENTAL_VALUE_CURRENT"], output_basis=["EV"],
+        failure_codes=["METHOD_NOT_IMPLEMENTED"],
+    )
     with pytest.raises(ValidationError) as ei:
         MethodRegistryConfig(registry_version="t", methods=[entry, entry])
     assert "duplicate method_id" in format_validation_error(ei.value)

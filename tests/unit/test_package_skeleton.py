@@ -27,15 +27,15 @@ def test_phase9_core_modules_importable():
               "vms.methods.rim", "vms.methods.nav", "vms.methods.sotp", "vms.methods.asset_based",
               "vms.reporting.phase4_bundle", "vms.reporting.phase5_bundle",
               "vms.reporting.phase6_bundle", "vms.reporting.phase7_bundle",
-              "vms.reporting.phase8_bundle", "vms.reporting.phase9_bundle",
+              "vms.reporting.phase8_bundle", "vms.reporting.phase9_bundle", "vms.reporting.phase12_bundle", "vms.reporting.bundle_validation",
               "vms.market_pricing.estimator", "vms.market_pricing.exit_prices",
               "vms.market_pricing.transitions", "vms.market_pricing.sensitivity",
               "vms.router.suitability", "vms.router.compatibility", "vms.router.compare"):
         importlib.import_module(m)
 
 
-def test_schema_version_is_phase9_contract():
+def test_schema_version_is_phase12_contract():
     from vms import IMPLEMENTED_PHASE, SCHEMA_VERSION, __version__
-    assert SCHEMA_VERSION == "vms-0.2.phase11"
-    assert IMPLEMENTED_PHASE == "PHASE_11"
-    assert __version__ == "0.2.0a0"
+    assert SCHEMA_VERSION == "vms-0.2.phase12"
+    assert IMPLEMENTED_PHASE == "PHASE_12"
+    assert __version__ == "0.2.0rc1"

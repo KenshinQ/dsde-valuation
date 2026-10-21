@@ -19,8 +19,8 @@ def test_cli_phase9_smoke(tmp_path, capsys):
     assert rc == 0
     summ = json.loads((out / "phase9_summary.json").read_text())
     assert summ["status"] == PHASE9_STATUS
-    assert summ["schema_version"] == SCHEMA_VERSION == "vms-0.2.phase11"
-    assert summ["implemented_phase"] == IMPLEMENTED_PHASE == "PHASE_11"
+    assert summ["schema_version"] == SCHEMA_VERSION == "vms-0.2.phase12"
+    assert summ["implemented_phase"] == IMPLEMENTED_PHASE == "PHASE_12"
     assert summ["investment_value"] == "INVESTMENT_VALUE_NOT_ESTABLISHED"
     assert summ["default_forbids_intrinsic_copy"] is True
     assert summ["default_silent_intrinsic_copy_detected"] is False

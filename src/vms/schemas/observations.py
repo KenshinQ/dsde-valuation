@@ -14,6 +14,8 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
+from vms.schemas.contracts import ValuationTarget
+
 # ISO-4217 codes accepted at ingestion. Internal base currency is CNY (§5.2);
 # conversion to CNY is a Phase 1 concern and requires explicit FX data.
 SUPPORTED_CURRENCIES: frozenset[str] = frozenset({"CNY", "HKD", "USD"})
@@ -290,6 +292,9 @@ class ValuationRequest(_Base):
     monte_carlo_paths: int = Field(gt=0, le=10_000_000)
     random_seed: int = Field(ge=0, lt=2**63)
     configuration_version: str = Field(min_length=1)
+    # VMS-0.2 §10.1: every router/value call names exactly one target.
+    # Default preserves VMS-0.1 call sites until callers migrate.
+    target: ValuationTarget = Field(default=ValuationTarget.FUNDAMENTAL_VALUE_CURRENT)
 
     @field_validator("as_of")
     @classmethod

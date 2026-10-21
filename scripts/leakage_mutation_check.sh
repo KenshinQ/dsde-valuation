@@ -35,6 +35,7 @@ done <<EOF2
 src/vms/pit/snapshot.py	o.published_at <= as_of]	o.published_at <= as_of + $D(days=30)]
 src/vms/pit/snapshot.py	o.timestamp <= as_of]	o.timestamp <= as_of + $D(days=30)]
 src/vms/pit/snapshot.py	e.announced_at <= as_of]	e.announced_at <= as_of + $D(days=30)]
+src/vms/pit/snapshot.py	if p.published_at > as_of:	if p.published_at > as_of + $D(days=400):
 src/vms/pit/snapshot.py	if e.ex_date > d:	if e.ex_date > d or True:
 src/vms/drivers/walk_forward.py	so, _, _ = build_snapshot(instrument_id=instrument_id, as_of=t,	so, _, _ = build_snapshot(instrument_id=instrument_id, as_of=t + $D(days=400),	assert all(f.published_at <= t for f in so.financials), "walk-forward origin saw post-origin data"	pass	if len(ho.years) < wf.min_train_years or max(ho.years, default=0) > y:	if len(ho.years) < wf.min_train_years:	if any(o.year > y for o in obs):	if False:
 src/vms/pipeline.py	regimes = infer_regimes(snap.financials,	regimes = infer_regimes(__import__("vms.pit.snapshot", fromlist=["b"]).build_snapshot(instrument_id=instrument_id, as_of=snap.as_of + $D(days=400), financial=load.financial, market=[], corporate_actions=[], sources=load.sources)[0].financials,

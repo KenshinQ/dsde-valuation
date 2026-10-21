@@ -1,12 +1,13 @@
 """ValuationMethod plugin protocol (SPEC §11.1).
 
-Phase 2 defines the contract. Declared stubs raise structured failures if
-``value_paths`` is invoked before implementation (hard-gate enforcement).
+Phase 2 defined the contract with stubs. Phase 4 plugins compute values only
+after hard eligibility gates pass. Placeholder ``FinancialPathBundle`` remains
+for stub refusal; real methods require ``statements.paths.FinancialPathBundle``.
 """
 
 from __future__ import annotations
 
-from typing import Any, Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -17,11 +18,15 @@ from vms.schemas.contracts import (
     ValuationTarget,
 )
 
+if TYPE_CHECKING:
+    from vms.methods.eligibility import EligibilityResult
+    from vms.schemas.config import LoadedConfig
+
 
 class ValuationContext(BaseModel):
-    """Minimal routing context for eligibility (Phase 2; no financial paths yet)."""
+    """Routing / eligibility context. ``loaded`` carries WACC/TV assumptions for Phase 4+."""
 
-    model_config = ConfigDict(extra="forbid", frozen=True)
+    model_config = ConfigDict(extra="forbid", frozen=True, arbitrary_types_allowed=True)
 
     instrument_id: str
     as_of: str
@@ -30,6 +35,11 @@ class ValuationContext(BaseModel):
     available_fields: frozenset[str] = Field(default_factory=frozenset)
     peer_count: int = 0
     data_quality_blocked: bool = False
+    # Phase 4: optional LoadedConfig for discount-rate / TV assumptions (not serialized as claim)
+    loaded: Any = Field(default=None, description="LoadedConfig | None; not part of investment claim")
+    # Optional history for DDM payout gates when path bundle is not yet available
+    dividend_history: tuple[float, ...] = ()
+    net_income_history: tuple[float, ...] = ()
 
 
 class MethodConfig(BaseModel):
@@ -40,7 +50,7 @@ class MethodConfig(BaseModel):
 
 
 class MethodResult(BaseModel):
-    """Placeholder result shell — Phase 2 never produces values."""
+    """Method-specific result. Empty ``values`` when ineligible/failed — never a fabricated estimate."""
 
     model_config = ConfigDict(extra="forbid", frozen=True)
 
@@ -50,6 +60,7 @@ class MethodResult(BaseModel):
     detail: str = ""
     output_basis: list[OutputBasis] = Field(default_factory=list)
     values: dict[str, Any] = Field(default_factory=dict)
+    diagnostics: dict[str, Any] = Field(default_factory=dict)
 
 
 class MethodDiagnostics(BaseModel):
@@ -60,7 +71,10 @@ class MethodDiagnostics(BaseModel):
 
 
 class FinancialPathBundle(BaseModel):
-    """Opaque placeholder until Phase 3+; presence alone must not unlock valuation."""
+    """Placeholder until a statements path bundle is supplied (Phase 3+).
+
+    Presence of this empty shell must not unlock valuation math.
+    """
 
     model_config = ConfigDict(extra="forbid", frozen=True)
 
@@ -73,20 +87,13 @@ class ValuationMethod(Protocol):
     method_id: str
     version: str
 
-    def eligibility(self, context: ValuationContext) -> "EligibilityResult": ...
+    def eligibility(self, context: ValuationContext) -> EligibilityResult: ...
 
     def value_paths(
         self,
         context: ValuationContext,
-        financial_paths: FinancialPathBundle,
+        financial_paths: Any,
         config: MethodConfig,
     ) -> MethodResult: ...
 
     def diagnostics(self, result: MethodResult) -> MethodDiagnostics: ...
-
-
-# Forward ref resolved after eligibility import in registry; keep name for type checkers
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from vms.methods.eligibility import EligibilityResult

@@ -13,12 +13,32 @@ from vms.schemas.contracts import (
     ValuationTarget,
 )
 
+_PHASE4_PLUGIN_IDS = frozenset({"fcff_dcf", "fcfe_dcf", "ddm"})
+
+
+def _build_plugin(entry: MethodRegistryEntry) -> ValuationMethod:
+    if (
+        entry.implementation_status is MethodImplementationStatus.IMPLEMENTED
+        and entry.enabled
+        and entry.method_id in _PHASE4_PLUGIN_IDS
+    ):
+        if entry.method_id == "fcff_dcf":
+            from vms.methods.cash_flow.fcff_plugin import FcffDcfMethod
+            return FcffDcfMethod(entry)
+        if entry.method_id == "fcfe_dcf":
+            from vms.methods.cash_flow.fcfe_plugin import FcfeDcfMethod
+            return FcfeDcfMethod(entry)
+        if entry.method_id == "ddm":
+            from vms.methods.cash_flow.ddm_plugin import DdmMethod
+            return DdmMethod(entry)
+    return DeclaredStubMethod(entry)
+
 
 class MethodRegistry:
     def __init__(self, config: MethodRegistryConfig) -> None:
         self.config = config
         self._plugins: dict[str, ValuationMethod] = {
-            e.method_id: DeclaredStubMethod(e) for e in config.methods
+            e.method_id: _build_plugin(e) for e in config.methods
         }
 
     @property
@@ -38,7 +58,14 @@ class MethodRegistry:
         return [e for e in self.config.methods if target in e.supported_targets]
 
     def evaluate_all(self, context: ValuationContext) -> list[EligibilityResult]:
-        return [evaluate_hard_gates(e, context) for e in self.for_target(context.target)]
+        out: list[EligibilityResult] = []
+        for e in self.for_target(context.target):
+            plugin = self._plugins.get(e.method_id)
+            if plugin is not None and hasattr(plugin, "eligibility"):
+                out.append(plugin.eligibility(context))
+            else:
+                out.append(evaluate_hard_gates(e, context))
+        return out
 
     def coverage_status(
         self, results: list[EligibilityResult],
@@ -46,7 +73,7 @@ class MethodRegistry:
         """Return gate status code and per-method status rows.
 
         If no method is eligible-and-implemented, returns INSUFFICIENT_METHOD_COVERAGE
-        (SPEC §11.4 / Phase 2 acceptance) — never a default DCF.
+        (SPEC §11.4) — never a default DCF.
         """
         rows: list[MethodStatusRecord] = []
         any_eligible = False
@@ -65,11 +92,7 @@ class MethodRegistry:
 
 
 def build_registry_from_config(config: MethodRegistryConfig) -> MethodRegistry:
-    # Validate Phase-2 declaration completeness (already enforced by pydantic on load)
     for e in config.methods:
         if not e.supported_targets or not e.output_basis or not e.failure_codes or not e.version:
             raise ValueError(f"method {e.method_id!r} incomplete Phase-2 declaration")
-        if e.implementation_status is MethodImplementationStatus.IMPLEMENTED and not e.enabled:
-            # Allowed (disabled implemented) but unusual; leave as-is
-            pass
     return MethodRegistry(config)

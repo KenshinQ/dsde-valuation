@@ -1,6 +1,8 @@
-"""Routing procedure steps 1–5 / 8 / 10 of SPEC §11.4 (no method computation)."""
+"""Routing procedure (SPEC §11.4). Phase 4: may run eligible implemented methods; never averages."""
 
 from __future__ import annotations
+
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -42,11 +44,14 @@ def route_methods(
     peer_count: int = 0,
     data_quality_blocked: bool = False,
     attempt_value_paths: bool = False,
+    context_loaded: Any = None,
+    financial_paths: Any = None,
 ) -> RouteReport:
-    """Enumerate target methods, apply hard gates, optionally attempt stub runs.
+    """Enumerate target methods, apply hard gates, optionally attempt value_paths.
 
-    When ``attempt_value_paths`` is True, each candidate's stub ``value_paths`` is
-    invoked to prove it refuses — still no fabricated values.
+    When ``attempt_value_paths`` is True without a statements path bundle, plugins
+    must refuse with structured codes (never fabricate). With a real bundle and
+    ``context_loaded``, eligible Phase-4 methods may return values — still no ensemble.
     """
     ctx = ValuationContext(
         instrument_id=profile.instrument_id,
@@ -56,11 +61,20 @@ def route_methods(
         available_fields=frozenset(available_fields or ()),
         peer_count=peer_count,
         data_quality_blocked=data_quality_blocked,
+        loaded=context_loaded,
     )
     candidates = [e.method_id for e in registry.for_target(target)]
     eligibility = registry.evaluate_all(ctx)
+    # Prefer plugin.eligibility when it adds method-specific gates (e.g. DDM payout)
+    refined: list[EligibilityResult] = []
+    for e in registry.for_target(target):
+        plugin = registry.plugin(e.method_id)
+        if plugin is not None and hasattr(plugin, "eligibility"):
+            refined.append(plugin.eligibility(ctx))
+        else:
+            refined.append(next(r for r in eligibility if r.method_id == e.method_id))
+    eligibility = refined
     coverage, rows = registry.coverage_status(eligibility)
-    # Attach target onto status rows
     rows = [
         MethodStatusRecord(
             method_id=r.method_id, status=r.status, reason=r.reason, target=target,
@@ -71,19 +85,24 @@ def route_methods(
     attempted: list[MethodResult] = []
     if attempt_value_paths:
         from vms.methods.protocol import FinancialPathBundle, MethodConfig
+        paths = financial_paths if financial_paths is not None else FinancialPathBundle()
         for e in registry.for_target(target):
             plugin = registry.plugin(e.method_id)
             assert plugin is not None
             attempted.append(
                 plugin.value_paths(
                     ctx,
-                    FinancialPathBundle(),
+                    paths,
                     MethodConfig(method_id=e.method_id),
                 )
             )
-            # Invariant: no stub may return VALID with values
             last = attempted[-1]
-            if last.status is MethodEligibilityStatus.VALID and last.values:
+            # Anti-pattern: stub/unimplemented must not return VALID with values
+            if (
+                e.implementation_status.value != "IMPLEMENTED"
+                and last.status is MethodEligibilityStatus.VALID
+                and last.values
+            ):
                 raise RuntimeError(
                     f"anti-pattern: method {e.method_id} returned values before implementation"
                 )

@@ -227,7 +227,7 @@ def build_phase0_bundle(
         "config_hash": meta.config_hash[:16],
         "git_sha": meta.code_version["git_sha"][:12],
         "investment_value": labels.investment_value,
-        "enabled_methods": 0,
+        "enabled_methods": len(loaded.method_registry.enabled_methods),
         "method_status_rows": len(eligibility),
     }
 

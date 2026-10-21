@@ -1,7 +1,7 @@
-"""Method plugin contract and declarative registry (VMS-0.2 Phase 2, SPEC §11).
+"""Method plugin contract and declarative registry (VMS-0.2, SPEC §11).
 
-Phase 2 registers declared methods as NOT_IMPLEMENTED. Hard eligibility gates
-must refuse running them; no default DCF is fabricated.
+Phase 4 enables FCFF/FCFE/DDM plugins. Other methods remain NOT_IMPLEMENTED.
+Hard eligibility gates must pass before value_paths; no default DCF / ensemble.
 """
 
 from vms.methods.eligibility import (

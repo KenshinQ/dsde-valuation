@@ -300,7 +300,7 @@ class CapitalAllocationConfig(_Strict):
     policies: PolicyParams
 
 
-FUNDAMENTAL_STATES = ("GROWTH", "STABLE", "DETERIORATING", "RECOVERY")
+FUNDAMENTAL_STATES = ("GROWTH", "STABLE", "DETERIORATING", "RECOVERY", "DISTRESS")  # DISTRESS optional (§8.2)
 
 
 class RegimeRules(_Strict):
@@ -333,7 +333,7 @@ class RegimeConfig(_Strict):
     transition_prior: TransitionPrior
     min_state_support: float = Field(gt=0, description="effective transitions per state row below => LOW_SUPPORT")
     market_regime_source: Literal["none"] = Field(
-        description="no market-regime model in VMS-0.1 => market dimension UNAVAILABLE (never inferred from fundamentals)")
+        description="no market-pricing estimator until Phase 9 => UNAVAILABLE (never inferred from fundamentals; see vms.market_pricing)")
 
     @field_validator("states")
     @classmethod

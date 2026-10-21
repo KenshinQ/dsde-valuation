@@ -74,8 +74,11 @@ class RuleBasedClassifier(RegimeModel):
         else:
             weak = min(1.0, prev.get("DETERIORATING", 0.0) + r.recovery_carry * prev.get("RECOVERY", 0.0))
         raw = {"GROWTH": (1 - weak) * (1 - det) * g_hi, "STABLE": (1 - weak) * (1 - det) * (1 - g_hi),
-               "DETERIORATING": det, "RECOVERY": weak * (1 - det)}
+               "DETERIORATING": det, "RECOVERY": weak * (1 - det),
+               "DISTRESS": 0.0}  # optional; rule mass reserved (DISTRESS_RULE_NOT_ACTIVE)
         assert set(raw) == set(FUNDAMENTAL_STATES)
+        if "DISTRESS" in self.states:
+            flags.append("DISTRESS_RULE_NOT_ACTIVE")
         p = self._merge(raw)
         return PeriodPosterior(period_end=row.period_end, probabilities=p,
                                memberships={"growth_high": g_hi, "contraction": g_neg, "margin_compression": m_down,

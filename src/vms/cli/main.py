@@ -15,6 +15,7 @@ Implemented commands:
   phase3          VMS-0.2 Phase 3 path bundle (synthetic; NOT a valuation)
   phase4          VMS-0.2 Phase 4 FCFF/FCFE/DDM via router (synthetic; NOT investment advice)
   phase5          VMS-0.2 Phase 5 relative multiples + PIT peers (synthetic; NOT investment advice)
+  phase6          VMS-0.2 Phase 6 RIM/NAV/SOTP (synthetic; NOT investment advice)
   profile         VMS-0.2 Phase 2 economic-profile classifier (NOT a valuation)
   route           VMS-0.2 Phase 2 hard-gate candidates only (no method computation)
   demo            offline SYNTHETIC smoke (legacy 0.1 pipeline retained; evaluate + optional DSDE adapter).
@@ -53,6 +54,8 @@ from vms.reporting.phase4_bundle import (PHASE4_STATUS, Phase4BundleError, build
                                         dump_summary as dump_phase4_summary)
 from vms.reporting.phase5_bundle import (PHASE5_STATUS, Phase5BundleError, build_phase5_bundle,
                                         dump_summary as dump_phase5_summary)
+from vms.reporting.phase6_bundle import (PHASE6_STATUS, Phase6BundleError, build_phase6_bundle,
+                                        dump_summary as dump_phase6_summary)
 from vms.schemas.contracts import ValuationTarget
 from vms.profiles import classify_profile, load_overrides
 from vms.profiles.fixtures import FixtureError, features_from_fixture, load_fixture
@@ -1187,6 +1190,41 @@ def cmd_phase5(args: argparse.Namespace) -> int:
     return EXIT_OK
 
 
+def cmd_phase6(args: argparse.Namespace) -> int:
+    """Synthetic RIM/NAV/SOTP via router. NOT investment advice."""
+    as_of = None
+    if args.as_of:
+        as_of, _ = _as_of(args.as_of)
+    seed = args.seed
+    loaded = load_config(args.config)
+    if seed is None:
+        seed = loaded.config.monte_carlo.default_seed
+    target = None
+    if args.target:
+        try:
+            target = ValuationTarget(args.target)
+        except ValueError as e:
+            allowed = ", ".join(t.value for t in ValuationTarget)
+            raise InputError(
+                f"--target {args.target!r} is not a ValuationTarget; expected one of: {allowed}"
+            ) from e
+    try:
+        summary = build_phase6_bundle(
+            out_dir=args.out,
+            config_path=args.config,
+            seed=seed,
+            as_of=as_of,
+            fixture=args.fixture,
+            target=target,
+        )
+    except Phase6BundleError as e:
+        print(f"error: {e}", file=sys.stderr)
+        return EXIT_INVALID
+    print(dump_phase6_summary(summary), end="")
+    assert summary["status"] == PHASE6_STATUS
+    return EXIT_OK
+
+
 def cmd_demo(args: argparse.Namespace) -> int:
     loaded = load_config(args.config)
     cfg = loaded.config
@@ -1562,6 +1600,24 @@ def build_parser() -> argparse.ArgumentParser:
     p5.add_argument("--multiples-only", action="store_true",
                     help="skip Phase-4 cash-flow companion run")
     p5.set_defaults(func=cmd_phase5)
+
+    p6 = sub.add_parser("phase6", help="VMS-0.2 Phase 6 RIM/NAV/SOTP (synthetic; NOT investment advice)")
+    p6.add_argument("--out", required=True)
+    p6.add_argument("--config", default=str(_default_config_path()))
+    p6.add_argument("--seed", type=int, default=None)
+    p6.add_argument("--as-of", dest="as_of", default=None)
+    p6.add_argument(
+        "--fixture",
+        default="financial",
+        choices=["financial", "holding", "holding_gap"],
+        help="synthetic profile fixture: financial (RIM), holding (NAV+SOTP), holding_gap (data-gap)",
+    )
+    p6.add_argument(
+        "--target",
+        default=None,
+        help="ValuationTarget override (default depends on fixture)",
+    )
+    p6.set_defaults(func=cmd_phase6)
 
 
     d = sub.add_parser("demo", help="offline SYNTHETIC smoke (legacy 0.1 pipeline; through returns/sensitivity)")

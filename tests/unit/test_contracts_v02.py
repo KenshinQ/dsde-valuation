@@ -59,9 +59,9 @@ def test_profile_catalog_covers_baseline_labels(repo):
     assert {p.label for p in cat.profiles} == set(ProfileLabel)
 
 
-def test_method_registry_loads_declared_unimplemented(repo):
+def test_method_registry_loads_with_phase5_enabled_and_phase6_stubs(repo):
     reg = load_method_registry(repo / "config/method_registry.yaml")
-    assert len(reg.methods) >= 8 and {m.method_id for m in reg.enabled_methods} == {"fcff_dcf", "fcfe_dcf", "ddm"}
+    assert len(reg.methods) >= 8 and {m.method_id for m in reg.enabled_methods} == {"fcff_dcf", "fcfe_dcf", "ddm", "pe", "pb", "ev_ebit", "ev_ebitda", "ev_sales"}
     assert all(m.failure_codes and m.output_basis and m.supported_targets for m in reg.methods)
     assert load_router(repo / "config/router.yaml").require_hard_gates is True
 

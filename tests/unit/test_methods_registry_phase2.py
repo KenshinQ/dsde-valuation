@@ -29,7 +29,7 @@ def test_every_registered_method_declares_targets_units_fields_failure_codes(rep
     reg = load_method_registry(repo / "config/method_registry.yaml")
     assert len(reg.methods) >= 8
     enabled_ids = {m.method_id for m in reg.enabled_methods}
-    assert enabled_ids == {"fcff_dcf", "fcfe_dcf", "ddm"}
+    assert enabled_ids == {"fcff_dcf", "fcfe_dcf", "ddm", "pe", "pb", "ev_ebit", "ev_ebitda", "ev_sales"}
     for m in reg.methods:
         assert m.version
         assert m.supported_targets, m.method_id

@@ -36,10 +36,10 @@ def test_phase0_via_console_script(tmp_path):
     assert p.returncode == 0, p.stderr
     summary = json.loads(p.stdout)
     assert summary["status"] == PHASE0_STATUS
-    assert summary["schema_version"] == SCHEMA_VERSION == "vms-0.2.phase4"
-    assert summary["implemented_phase"] == IMPLEMENTED_PHASE == "PHASE_4"
+    assert summary["schema_version"] == SCHEMA_VERSION == "vms-0.2.phase5"
+    assert summary["implemented_phase"] == IMPLEMENTED_PHASE == "PHASE_5"
     assert summary["investment_value"] == "INVESTMENT_VALUE_NOT_ESTABLISHED"
-    assert summary["enabled_methods"] == 3
+    assert summary["enabled_methods"] == 8
     for name in [*PHASE0_DETERMINISTIC, "run_context.json"]:
         art = json.loads((out / name).read_text())
         assert art["run_id"] == summary["run_id"]
@@ -49,7 +49,7 @@ def test_phase0_via_console_script(tmp_path):
     assert meta["labels"]["investment_value"] == "INVESTMENT_VALUE_NOT_ESTABLISHED"
     assert meta["metadata"]["seed"] == 42
     elig = json.loads((out / "method_eligibility.json").read_text())
-    assert elig["enabled_method_count"] == 3
+    assert elig["enabled_method_count"] == 8
     assert elig["methods"] and all(m["status"] == "NOT_RUN" for m in elig["methods"])
     val = json.loads((out / "validation_report.json").read_text())
     assert val["status"] == "PASS"

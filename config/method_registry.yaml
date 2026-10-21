@@ -1,8 +1,8 @@
 # VMS-0.2 method registry (SPEC §11.1 / §19).
 # Phase 4: fcff_dcf / fcfe_dcf / ddm IMPLEMENTED+enabled.
 # Phase 5: pe / pb / ev_ebit / ev_ebitda / ev_sales IMPLEMENTED+enabled.
-# RIM/NAV/SOTP remain NOT_IMPLEMENTED (Phase 6). No default DCF bypass / no ensemble.
-registry_version: "vms-method-registry-0.2.phase5"
+# Phase 6: residual_income / nav / sotp IMPLEMENTED+enabled. No default DCF bypass / no ensemble.
+registry_version: "vms-method-registry-0.2.phase6"
 methods:
   - method_id: fcff_dcf
     version: "0.2.0"
@@ -59,12 +59,12 @@ methods:
     notes: "Phase 4 implemented; ineligible payout returns structured reason."
 
   - method_id: residual_income
-    version: "0.2.0-decl"
+    version: "0.2.0"
     family: residual_income
     display_name: "Residual Income Model"
     owner_module: "vms.methods.rim"
-    implementation_status: NOT_IMPLEMENTED
-    enabled: false
+    implementation_status: IMPLEMENTED
+    enabled: true
     supported_targets: [FUNDAMENTAL_VALUE_CURRENT]
     output_basis: [EQUITY, PER_SHARE]
     eligible_profiles: [FINANCIAL_INSTITUTION, MATURE_OPERATING]
@@ -72,8 +72,8 @@ methods:
     required_fields: [total_equity, parent_net_income]
     quality_minimums: {}
     assumption_schema_ids: [cost_of_equity_v1, clean_surplus_v1]
-    failure_codes: [METHOD_NOT_IMPLEMENTED, INELIGIBLE_PROFILE, CLEAN_SURPLUS_FAIL, MISSING_REQUIRED_FIELDS]
-    notes: "Declared for Phase 6; primary for banks."
+    failure_codes: [INELIGIBLE_PROFILE, CLEAN_SURPLUS_FAIL, CLEAN_SURPLUS_UNASSESSABLE, MISSING_BOOK_EQUITY, NEGATIVE_BOOK_EQUITY, MISSING_NET_INCOME_FORECAST, KE_G_MARGIN_FAIL, MISSING_REQUIRED_FIELDS, MISSING_COST_OF_EQUITY]
+    notes: "Phase 6 implemented; primary for banks; clean-surplus gated."
 
   - method_id: pe
     version: "0.2.0"
@@ -161,12 +161,12 @@ methods:
     notes: "Phase 5 implemented; labeled RELATIVE_PRICING_ONLY; useful when earnings negative."
 
   - method_id: nav
-    version: "0.2.0-decl"
+    version: "0.2.0"
     family: nav
     display_name: "Net Asset Value"
     owner_module: "vms.methods.nav"
-    implementation_status: NOT_IMPLEMENTED
-    enabled: false
+    implementation_status: IMPLEMENTED
+    enabled: true
     supported_targets: [ASSET_NAV, FUNDAMENTAL_VALUE_CURRENT]
     output_basis: [NAV, EQUITY]
     eligible_profiles: [ASSET_HEAVY_OR_RESOURCE, HOLDING_OR_CONGLOMERATE, DISTRESSED_OR_TURNAROUND]
@@ -174,16 +174,16 @@ methods:
     required_fields: [total_assets, total_liabilities]
     quality_minimums: {}
     assumption_schema_ids: [asset_haircut_v1]
-    failure_codes: [METHOD_NOT_IMPLEMENTED, MISSING_ASSET_INPUTS, INELIGIBLE_PROFILE]
-    notes: "Declared for Phase 6; book assets ≠ fair value without haircuts."
+    failure_codes: [MISSING_ASSET_INPUTS, EMPTY_ASSET_SCHEDULE, BOOK_AS_FAIR_UNJUSTIFIED, INELIGIBLE_PROFILE, MISSING_REQUIRED_FIELDS]
+    notes: "Phase 6 implemented; book assets ≠ fair value without explicit FV lines."
 
   - method_id: sotp
-    version: "0.2.0-decl"
+    version: "0.2.0"
     family: sotp
     display_name: "Sum of the Parts"
     owner_module: "vms.methods.sotp"
-    implementation_status: NOT_IMPLEMENTED
-    enabled: false
+    implementation_status: IMPLEMENTED
+    enabled: true
     supported_targets: [FUNDAMENTAL_VALUE_CURRENT, ASSET_NAV, RELATIVE_VALUE_CURRENT]
     output_basis: [EQUITY, EV, NAV]
     eligible_profiles: [HOLDING_OR_CONGLOMERATE, ASSET_HEAVY_OR_RESOURCE]
@@ -191,5 +191,5 @@ methods:
     required_fields: [total_equity, interest_bearing_debt]
     quality_minimums: {}
     assumption_schema_ids: [holding_discount_v1, segment_method_v1]
-    failure_codes: [METHOD_NOT_IMPLEMENTED, MISSING_SEGMENT_INPUTS, INELIGIBLE_PROFILE]
-    notes: "Declared for Phase 6; needs segment/asset inputs."
+    failure_codes: [MISSING_SEGMENT_INPUTS, EMPTY_SEGMENT_SCHEDULE, INTER_SEGMENT_UNRECONCILED, HOLDING_DISCOUNT_UNDECLARED_PLUG, INELIGIBLE_PROFILE, MISSING_REQUIRED_FIELDS]
+    notes: "Phase 6 implemented; missing segments ⇒ data-gap / unsupported."

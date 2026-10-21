@@ -43,6 +43,10 @@ class ValuationContext(BaseModel):
     # Phase 5: subject fundamentals + PIT peer rows for relative multiples
     subject_metrics: dict[str, Any] = Field(default_factory=dict)
     peer_observations: tuple[Any, ...] = Field(default_factory=tuple)
+    # Phase 6: RIM / NAV / SOTP structured inputs (schedules; never inferred from book alone)
+    rim_inputs: dict[str, Any] = Field(default_factory=dict)
+    nav_inputs: dict[str, Any] = Field(default_factory=dict)
+    sotp_inputs: dict[str, Any] = Field(default_factory=dict)
 
 
 class MethodConfig(BaseModel):

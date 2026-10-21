@@ -15,6 +15,7 @@ from vms.schemas.contracts import (
 
 _PHASE4_PLUGIN_IDS = frozenset({"fcff_dcf", "fcfe_dcf", "ddm"})
 _PHASE5_PLUGIN_IDS = frozenset({"pe", "pb", "ev_ebit", "ev_ebitda", "ev_sales"})
+_PHASE6_PLUGIN_IDS = frozenset({"residual_income", "nav", "sotp"})
 
 
 def _build_plugin(entry: MethodRegistryEntry) -> ValuationMethod:
@@ -51,6 +52,20 @@ def _build_plugin(entry: MethodRegistryEntry) -> ValuationMethod:
             "ev_ebitda": EvEbitdaMethod,
             "ev_sales": EvSalesMethod,
         }[entry.method_id](entry)
+    if (
+        entry.implementation_status is MethodImplementationStatus.IMPLEMENTED
+        and entry.enabled
+        and entry.method_id in _PHASE6_PLUGIN_IDS
+    ):
+        if entry.method_id == "residual_income":
+            from vms.methods.rim.plugin import ResidualIncomeMethod
+            return ResidualIncomeMethod(entry)
+        if entry.method_id == "nav":
+            from vms.methods.nav.plugin import NavMethod
+            return NavMethod(entry)
+        if entry.method_id == "sotp":
+            from vms.methods.sotp.plugin import SotpMethod
+            return SotpMethod(entry)
     return DeclaredStubMethod(entry)
 
 

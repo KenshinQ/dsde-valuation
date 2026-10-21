@@ -23,13 +23,32 @@ BASE_CURRENCY = "CNY"
 
 
 class QualityStatus(str, Enum):
-    """Per-observation quality status (§5.1)."""
+    """Per-observation quality status.
+
+    Canonical stored values remain lowercase for VMS-0.1 CSV compatibility.
+    SPEC §6.1 uppercase spellings (OBSERVED, …) and case-insensitive aliases are
+    accepted at parse time via ``_missing_``; serialisation still emits lowercase.
+    See also ``ObservationQualityStatus`` in contracts.py for the §6.1 enum.
+    """
 
     OBSERVED = "observed"
     DERIVED = "derived"
     MISSING = "missing"
     NOT_APPLICABLE = "not_applicable"
     LOW_CONFIDENCE = "low_confidence"
+
+    @classmethod
+    def _missing_(cls, value):  # noqa: ANN001
+        if isinstance(value, str):
+            key = value.strip()
+            by_name = {m.name: m for m in cls}
+            if key in by_name:
+                return by_name[key]
+            low = key.lower()
+            for m in cls:
+                if m.value == low or m.name.lower() == low:
+                    return m
+        return None
 
 
 class UnitScale(str, Enum):
@@ -104,6 +123,9 @@ class FinancialObservation(_Base):
     source_id: str = Field(min_length=1)
     revision_id: str | None = None
     quality_status: QualityStatus
+    # SPEC §6.1 optional provenance (absent in legacy CSVs => None; not invented).
+    source_document_id: str | None = None
+    derivation_rule_id: str | None = None
 
     @field_validator("published_at", "ingested_at")
     @classmethod
@@ -265,6 +287,96 @@ class CorporateActionEvent(_Base):
         if self.ex_date < self.announced_at.date():
             raise ValueError(
                 f"{self.action_id}: ex_date={self.ex_date} precedes announced_at={self.announced_at.isoformat()}"
+            )
+        return self
+
+
+
+class PeerObservation(_Base):
+    """PIT peer membership and/or peer metric (SPEC §6.2, §21.3).
+
+    A row may enter a historical peer sample for ``subject_instrument_id`` at ``as_of`` only when:
+    - ``published_at <= as_of`` (membership/metric known);
+    - ``membership_start`` is null or ``<= as_of`` date;
+    - ``membership_end`` is null or ``>= as_of`` date;
+    - ``metric_timestamp`` is null or ``<= as_of`` (peer prices/metrics cannot leak from the future).
+
+    Survivorship: a peer known at ``as_of`` remains in that snapshot even if a later reconstitution
+    drops it. A peer that appears only in a post-``as_of`` reconstitution is excluded.
+    """
+
+    subject_instrument_id: str = Field(min_length=1)
+    peer_instrument_id: str = Field(min_length=1)
+    published_at: datetime
+    membership_start: date | None = None
+    membership_end: date | None = None
+    delisted_at: datetime | None = None
+    field_name: str | None = Field(default=None, description="metric name (e.g. ev_ebitda); None = membership-only")
+    value: float | None = None
+    currency: str | None = None
+    unit_scale: UnitScale | None = None
+    metric_timestamp: datetime | None = Field(
+        default=None, description="when the metric/price was observed; must be <= as_of to enter PIT sample")
+    source_id: str = Field(min_length=1)
+    revision_id: str | None = None
+    quality_status: QualityStatus
+    source_document_id: str | None = None
+
+    @field_validator("published_at", "delisted_at", "metric_timestamp")
+    @classmethod
+    def _tz(cls, v: datetime | None, info):  # noqa: ANN001
+        return None if v is None else _require_tz(v, info.field_name)
+
+    @field_validator("value")
+    @classmethod
+    def _finite(cls, v):  # noqa: ANN001
+        return _require_finite(v, "value")
+
+    @field_validator("currency")
+    @classmethod
+    def _currency(cls, v):  # noqa: ANN001
+        return None if v is None else _validate_currency(v)
+
+    @field_validator("unit_scale", mode="before")
+    @classmethod
+    def _unit_alias(cls, v):  # noqa: ANN001
+        if v is None:
+            return None
+        if isinstance(v, str) and v.strip() in _UNIT_ALIASES:
+            return _UNIT_ALIASES[v.strip()]
+        return v
+
+    @model_validator(mode="after")
+    def _cross_field(self) -> "PeerObservation":
+        if self.peer_instrument_id == self.subject_instrument_id:
+            raise ValueError(
+                f"peer_instrument_id={self.peer_instrument_id!r} must differ from subject_instrument_id"
+            )
+        if self.membership_start and self.membership_end and self.membership_end < self.membership_start:
+            raise ValueError(
+                f"membership_end={self.membership_end} precedes membership_start={self.membership_start}"
+            )
+        if self.field_name is None and self.value is not None:
+            raise ValueError("metric value requires field_name; use field_name=None only for membership-only rows")
+        if self.value is None and self.field_name is not None and self.quality_status not in _MISSING_STATUSES:
+            raise ValueError(
+                f"peer metric {self.field_name}: value is null but quality_status="
+                f"'{self.quality_status.value}'; use missing/not_applicable"
+            )
+        if self.value is not None and self.quality_status in _MISSING_STATUSES:
+            raise ValueError(
+                f"peer metric {self.field_name}: quality_status='{self.quality_status.value}' but value={self.value}"
+            )
+        if self.value is not None:
+            if self.currency is None or self.unit_scale is None:
+                raise ValueError("peer metric with value requires currency and unit_scale")
+        if self.metric_timestamp is not None and self.metric_timestamp < self.published_at:
+            # metric may be observed before the membership publication only if membership was known earlier;
+            # allow metric_timestamp >= membership economic time but require published_at as the PIT gate.
+            pass
+        if self.delisted_at is not None and self.published_at > self.delisted_at:
+            raise ValueError(
+                f"published_at={self.published_at.isoformat()} is after delisted_at={self.delisted_at.isoformat()}"
             )
         return self
 

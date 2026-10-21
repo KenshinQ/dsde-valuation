@@ -85,7 +85,8 @@ def assess(load: LoadResult, *, instrument_id: str, as_of: datetime, cfg: Qualit
         raise ValueError("exploratory mode requires an explicit override reason (--override-reason)")
     snap, stats, ic = build_snapshot(instrument_id=instrument_id, as_of=as_of, financial=load.financial,
                                      market=load.market, corporate_actions=load.corporate_actions,
-                                     sources=load.sources, classifications=load.classifications)
+                                     sources=load.sources, classifications=load.classifications,
+                                     peers=load.peers)
     known_market = [m for m in load.market if m.instrument_id == instrument_id and m.timestamp <= as_of]
     known_actions = [e for e in load.corporate_actions if e.instrument_id == instrument_id and e.announced_at <= as_of]
     checks_ic = IssueCollector()

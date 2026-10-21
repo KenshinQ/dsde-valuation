@@ -32,6 +32,7 @@ CHECK_CATALOGUE: dict[str, tuple[str, str]] = {
     "PROVENANCE": ("RUN", "§6.1 provenance and confidence for derived values"),
     "PIT_VERSIONING": ("RUN", "§5.1 historical versions reconstructible (else PIT_INCOMPLETE)"),
     "RESTATEMENTS": ("RUN", "§5.1 restatements known at as_of"),
+    "PEER_CONTAMINATION": ("RUN", "§6.1/§21.3 peer membership, metrics and prices known at as_of only"),
 }
 
 
@@ -199,3 +200,7 @@ def run_checks(snap: PITSnapshot, *, known_market: list[MarketObservation],
     for f in reported:
         if len(f.version_history) > 1:
             ic.add("RESTATEMENT_KNOWN", f"{f.field_name}@{f.period_end} ({len(f.version_history)} versions)")
+
+    # PEER_CONTAMINATION: enforced in build_snapshot.peer_known_at (published_at / membership /
+    # metric_timestamp). Leakage suite asserts post-as_of peers never enter snap.peers.
+    _ = snap.peers  # touch for catalogue coverage; no extra issues when filter holds

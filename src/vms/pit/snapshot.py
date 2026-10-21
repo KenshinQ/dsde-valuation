@@ -29,11 +29,11 @@ from vms.pit.asof import AS_OF_DATE_RULE
 from vms.quality.issues import IssueCollector
 from vms.reporting.metadata import canonical_json
 from vms.schemas import (BASE_CURRENCY, PRICE_ADJUSTING_ACTIONS, CorporateActionEvent, FinancialObservation,
-                         InstrumentClassification, MarketObservation, QualityStatus, ReportingConvention,
-                         SourceDescriptor, Versioning)
+                         InstrumentClassification, MarketObservation, PeerObservation, QualityStatus,
+                         ReportingConvention, SourceDescriptor, Versioning)
 from vms.schemas.fields import FIELD_REGISTRY_VERSION, get_field
 
-SNAPSHOT_VERSION = "PIT-SNAPSHOT-2"  # v2: + pit_complete, classification
+SNAPSHOT_VERSION = "PIT-SNAPSHOT-3"  # v3: + peers (PIT membership/metrics)
 CN_TZ = ZoneInfo("Asia/Shanghai")
 Basis = Literal["cumulative_ytd", "standalone_quarter", "unknown_basis", "balance", "unclassified"]
 _QUARTER_ENDS = {(3, 31), (6, 30), (9, 30), (12, 31)}
@@ -88,6 +88,28 @@ class SnapshotCorporateAction(_M):
     known_versions: int
 
 
+
+class SnapshotPeer(_M):
+    """Peer membership/metric known at as_of (post-as_of reconstitutions and future metrics excluded)."""
+
+    subject_instrument_id: str
+    peer_instrument_id: str
+    published_at: datetime
+    membership_start: date | None = None
+    membership_end: date | None = None
+    delisted_at: datetime | None = None
+    field_name: str | None = None
+    value_cny: float | None = None
+    quality_status: QualityStatus
+    source_id: str
+    revision_id: str | None = None
+    metric_timestamp: datetime | None = None
+    reported_value: float | None = None
+    reported_currency: str | None = None
+    reported_unit_scale: str | None = None
+    flags: list[str] = Field(default_factory=list)
+
+
 class PITSnapshot(_M):
     snapshot_version: str = SNAPSHOT_VERSION
     field_registry_version: str = FIELD_REGISTRY_VERSION
@@ -102,6 +124,7 @@ class PITSnapshot(_M):
     financials: list[SnapshotFinancial]
     market: list[SnapshotMarket]
     corporate_actions: list[SnapshotCorporateAction]
+    peers: list[SnapshotPeer] = Field(default_factory=list)
 
     def get(self, field_name: str, period_end: date, basis: str | None = None) -> SnapshotFinancial | None:
         for f in self.financials:
@@ -308,11 +331,53 @@ def _build_market(obs: list[MarketObservation], actions: list[SnapshotCorporateA
     return out
 
 
+
+def peer_known_at(p: PeerObservation, as_of: datetime) -> bool:
+    """True iff the peer row is eligible for a PIT peer sample at as_of (SPEC §21.3)."""
+    if p.published_at > as_of:
+        return False
+    as_of_d = local_date(as_of)
+    if p.membership_start is not None and p.membership_start > as_of_d:
+        return False
+    if p.membership_end is not None and p.membership_end < as_of_d:
+        return False
+    if p.metric_timestamp is not None and p.metric_timestamp > as_of:
+        return False
+    return True
+
+
+def _peer_value_cny(p: PeerObservation) -> float | None:
+    if p.value is None or p.currency != BASE_CURRENCY or p.unit_scale is None:
+        return None
+    return p.value * p.unit_scale.multiplier
+
+
+def _build_peers(obs: list[PeerObservation], ic: IssueCollector) -> list[SnapshotPeer]:
+    out: list[SnapshotPeer] = []
+    for p in sorted(obs, key=lambda x: (x.peer_instrument_id, x.published_at, x.field_name or "", x.revision_id or "")):
+        flags: list[str] = []
+        if p.delisted_at is not None:
+            flags.append("DELISTED_KNOWN")
+        if p.currency is not None and p.currency != BASE_CURRENCY:
+            flags.append("CURRENCY_NOT_CNY")
+            ic.add("CURRENCY_NOT_CNY", f"peer {p.peer_instrument_id} {p.currency}")
+        out.append(SnapshotPeer(
+            subject_instrument_id=p.subject_instrument_id, peer_instrument_id=p.peer_instrument_id,
+            published_at=p.published_at, membership_start=p.membership_start, membership_end=p.membership_end,
+            delisted_at=p.delisted_at, field_name=p.field_name, value_cny=_peer_value_cny(p),
+            quality_status=p.quality_status, source_id=p.source_id, revision_id=p.revision_id,
+            metric_timestamp=p.metric_timestamp, reported_value=p.value,
+            reported_currency=p.currency, reported_unit_scale=None if p.unit_scale is None else p.unit_scale.value,
+            flags=flags))
+    return out
+
+
 # ------------------------------------------------------------------ entry point
 def build_snapshot(*, instrument_id: str, as_of: datetime, financial: list[FinancialObservation],
                    market: list[MarketObservation], corporate_actions: list[CorporateActionEvent],
                    sources: dict[str, SourceDescriptor],
                    classifications: list[InstrumentClassification] | None = None,
+                   peers: list[PeerObservation] | None = None,
                    ) -> tuple[PITSnapshot, BuildStats, IssueCollector]:
     if as_of.tzinfo is None or as_of.utcoffset() is None:
         raise ValueError("as_of must be timezone-aware")
@@ -320,13 +385,17 @@ def build_snapshot(*, instrument_id: str, as_of: datetime, financial: list[Finan
     fin_i = [o for o in financial if o.instrument_id == instrument_id]
     mkt_i = [o for o in market if o.instrument_id == instrument_id]
     ca_i = [e for e in corporate_actions if e.instrument_id == instrument_id]
+    peer_i = [p for p in (peers or []) if p.subject_instrument_id == instrument_id]
     fin_k = [o for o in fin_i if o.published_at <= as_of]
     mkt_k = [o for o in mkt_i if o.timestamp <= as_of]
     ca_k = [e for e in ca_i if e.announced_at <= as_of]
+    peer_k = [p for p in peer_i if peer_known_at(p, as_of)]
     stats = BuildStats(excluded_post_as_of={"financial": len(fin_i) - len(fin_k), "market": len(mkt_i) - len(mkt_k),
-                                            "corporate_actions": len(ca_i) - len(ca_k)})
+                                            "corporate_actions": len(ca_i) - len(ca_k),
+                                            "peers": len(peer_i) - len(peer_k)})
     actions = _build_actions(ca_k, as_of, ic)
-    used_sources = sorted({o.source_id for o in fin_k} | {o.source_id for o in mkt_k} | {e.source_id for e in ca_k})
+    used_sources = sorted({o.source_id for o in fin_k} | {o.source_id for o in mkt_k} | {e.source_id for e in ca_k}
+                          | {p.source_id for p in peer_k})
     cls_k = sorted((c for c in (classifications or []) if c.instrument_id == instrument_id and c.published_at <= as_of),
                    key=lambda c: (c.published_at, c.source_id))
     src_map = {s: sources.get(s) for s in used_sources}
@@ -335,5 +404,6 @@ def build_snapshot(*, instrument_id: str, as_of: datetime, financial: list[Finan
                                         for sd in src_map.values()),
                        classification=cls_k[-1] if cls_k else None,
                        financials=_build_financials(fin_k, sources, ic),
-                       market=_build_market(mkt_k, actions, ic), corporate_actions=actions)
+                       market=_build_market(mkt_k, actions, ic), corporate_actions=actions,
+                       peers=_build_peers(peer_k, ic))
     return snap, stats, ic

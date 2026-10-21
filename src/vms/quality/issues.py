@@ -73,6 +73,12 @@ CODES: dict[str, tuple[Severity, str, str]] = {
     "LATE_PUBLICATION": (I, "PERIOD_COVERAGE", "published later than late_publication_days after period_end"),
     "EXPLICIT_MISSING_VALUE": (I, "PROVENANCE", "values explicitly recorded as missing/not_applicable (kept null)"),
     "PROVENANCE_INCOMPLETE": (C, "PROVENANCE", "derived value lacks formula/inputs (internal invariant)"),
+    "PEER_POST_AS_OF_EXCLUDED": (I, "PEER_CONTAMINATION",
+                                 "peer membership/metric not known at as_of excluded from PIT peer sample"),
+    "PEER_FUTURE_MEMBERSHIP": (I, "PEER_CONTAMINATION",
+                                "peer with membership_start after as_of excluded (future reconstitution)"),
+    "PEER_FUTURE_METRIC": (I, "PEER_CONTAMINATION",
+                             "peer metric_timestamp after as_of excluded (future price/metric leakage)"),
 }
 
 MAX_EXAMPLES = 25

@@ -5,6 +5,7 @@ Directory layout (one format per table; both present => error):
   market_observations.{csv,parquet}      required
   corporate_actions.{csv,parquet}        optional (absence is flagged by the quality gate)
   instrument_classification.{csv,parquet} optional (absence => INDUSTRY_UNCLASSIFIED)
+  peer_observations.{csv,parquet}       optional (PIT peer membership/metrics; Phase 1 leakage gate)
   sources.yaml                           optional (absence => sources undeclared => PIT_INCOMPLETE)
 
 No provider-specific adapters live here: inputs must already be in the canonical schema.
@@ -25,22 +26,25 @@ import yaml
 from pydantic import BaseModel, ValidationError
 
 from vms.schemas import (CorporateActionEvent, FinancialObservation, InstrumentClassification, MarketObservation,
-                         SourceDescriptor, format_validation_error)
+                         PeerObservation, SourceDescriptor, format_validation_error)
 
 FINANCIAL = "financial_observations"
 MARKET = "market_observations"
 CORPORATE_ACTIONS = "corporate_actions"
 CLASSIFICATION = "instrument_classification"
+PEERS = "peer_observations"
 SOURCES_FILE = "sources.yaml"
 FINANCIAL_FILE = f"{FINANCIAL}.csv"   # back-compat names for default CSV output
 MARKET_FILE = f"{MARKET}.csv"
 TABLES: dict[str, type[BaseModel]] = {FINANCIAL: FinancialObservation, MARKET: MarketObservation,
                                       CORPORATE_ACTIONS: CorporateActionEvent,
-                                      CLASSIFICATION: InstrumentClassification}
+                                      CLASSIFICATION: InstrumentClassification,
+                                      PEERS: PeerObservation}
 _ATTR = {FINANCIAL: "financial", MARKET: "market", CORPORATE_ACTIONS: "corporate_actions",
-         CLASSIFICATION: "classifications"}
+         CLASSIFICATION: "classifications", PEERS: "peers"}
 REQUIRED_TABLES = (FINANCIAL, MARKET)
-_DATETIME_FIELDS = {"published_at", "ingested_at", "timestamp", "announced_at"}
+_DATETIME_FIELDS = {"published_at", "ingested_at", "timestamp", "announced_at",
+                   "delisted_at", "metric_timestamp"}
 
 M = TypeVar("M", bound=BaseModel)
 
@@ -51,6 +55,7 @@ class LoadResult:
     market: list[MarketObservation] = field(default_factory=list)
     corporate_actions: list[CorporateActionEvent] = field(default_factory=list)
     classifications: list[InstrumentClassification] = field(default_factory=list)
+    peers: list[PeerObservation] = field(default_factory=list)
     sources: dict[str, SourceDescriptor] = field(default_factory=dict)
     corporate_actions_provided: bool = False
     sources_provided: bool = False
@@ -186,7 +191,7 @@ def _to_frame(models: list[BaseModel], model: type[BaseModel], fmt: str) -> pd.D
     for c in cols:
         if c in _DATETIME_FIELDS:
             df[c] = pd.to_datetime(df[c], utc=True).dt.tz_convert("Asia/Shanghai")
-        elif c in ("period_end", "ex_date"):
+        elif c in ("period_end", "ex_date", "membership_start", "membership_end"):
             df[c] = pd.to_datetime(df[c]).dt.date
     return df
 
@@ -194,7 +199,8 @@ def _to_frame(models: list[BaseModel], model: type[BaseModel], fmt: str) -> pd.D
 def write_directory(out_dir: str | Path, financial: list[FinancialObservation], market: list[MarketObservation],
                     corporate_actions: list[CorporateActionEvent] | None = None,
                     sources: list[SourceDescriptor] | None = None, fmt: str = "csv",
-                    classifications: list[InstrumentClassification] | None = None) -> None:
+                    classifications: list[InstrumentClassification] | None = None,
+                    peers: list[PeerObservation] | None = None) -> None:
     if fmt not in ("csv", "parquet"):
         raise ValueError(f"fmt must be 'csv' or 'parquet', got {fmt!r}")
     d = Path(out_dir)
@@ -204,6 +210,8 @@ def write_directory(out_dir: str | Path, financial: list[FinancialObservation], 
         tables.append((CORPORATE_ACTIONS, corporate_actions, CorporateActionEvent))
     if classifications is not None:
         tables.append((CLASSIFICATION, classifications, InstrumentClassification))
+    if peers is not None:
+        tables.append((PEERS, peers, PeerObservation))
     for name, models, model in tables:
         df = _to_frame(list(models), model, fmt)
         if fmt == "csv":

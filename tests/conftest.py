@@ -50,11 +50,12 @@ def default_classifications(fin, mkt):
                                      published_at=datetime(2000, 1, 1, tzinfo=CST), source_id="TEST") for i in ids]
 
 
-def make_load(fin, mkt, ca=(), sources=None, ca_provided=True, classifications=None) -> LoadResult:
+def make_load(fin, mkt, ca=(), sources=None, ca_provided=True, classifications=None, peers=()) -> LoadResult:
     srcs = {s.source_id: s for s in (synthetic.source_descriptors() if sources is None else sources)}
     cls = default_classifications(fin, mkt) if classifications is None else list(classifications)
     return LoadResult(financial=list(fin), market=list(mkt), corporate_actions=list(ca), sources=srcs,
-                      corporate_actions_provided=ca_provided, sources_provided=True, classifications=cls)
+                      corporate_actions_provided=ca_provided, sources_provided=True, classifications=cls,
+                      peers=list(peers))
 
 
 @pytest.fixture(scope="session")

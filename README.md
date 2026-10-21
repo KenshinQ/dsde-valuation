@@ -3,8 +3,8 @@
 Adaptive Multi-Method valuation & conditional return engine for China A-shares.
 Spec: [SPEC.md](SPEC.md) (VMS-0.2). Archived VMS-0.1: [SPEC_VMS-0.1.md](SPEC_VMS-0.1.md), tag `vms-0.1`.
 
-**Status: VMS-0.2 Phase 2 complete (profile classifier + declarative method registry).**
-Schema contract: `vms-0.2.phase2`. Package: `0.2.0a0`. Phase report: [PHASE2_DONE.md](PHASE2_DONE.md) (see also [PHASE1_DONE.md](PHASE1_DONE.md), [PHASE0_DONE.md](PHASE0_DONE.md)).
+**Status: VMS-0.2 Phase 3 complete (drivers, fundamental regimes, correlated paths, statements, capital allocation).**
+Schema contract: `vms-0.2.phase3`. Package: `0.2.0a0`. Phase report: [PHASE3_DONE.md](PHASE3_DONE.md) (see also [PHASE2_DONE.md](PHASE2_DONE.md), [PHASE1_DONE.md](PHASE1_DONE.md), [PHASE0_DONE.md](PHASE0_DONE.md)).
 Labels always include `INVESTMENT_VALUE_NOT_ESTABLISHED` on synthetic (no alpha claim).
 
 Legacy VMS-0.1 modules (PIT → DCF → returns → evaluate → DSDE adapter) remain in-tree for
@@ -47,6 +47,7 @@ scipy is used from Phase 3 (Student-t quantiles in `vms.drivers.distributions`).
 
 ```bash
 vms phase0 --out /tmp/vms_phase0 --seed 42
+vms phase3 --out /tmp/vms_phase3 --seed 42 --paths 80   # path bundle; NOT a valuation
 # or:
 python examples/synthetic_mature_operating/run_phase0.py --out /tmp/vms_phase0 --seed 42
 ```

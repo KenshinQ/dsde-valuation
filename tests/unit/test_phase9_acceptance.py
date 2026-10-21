@@ -231,8 +231,8 @@ def test_ac5_persistence_vs_mr_sensitivity_reported(path_bundle):
 
 
 def test_schema_version_phase9_contract():
-    assert SCHEMA_VERSION == "vms-0.2.phase9"
-    assert IMPLEMENTED_PHASE == "PHASE_9"
+    assert SCHEMA_VERSION == "vms-0.2.phase10"
+    assert IMPLEMENTED_PHASE == "PHASE_10"
 
 
 def test_unavailable_helper_phase9():

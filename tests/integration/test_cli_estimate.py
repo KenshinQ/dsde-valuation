@@ -34,7 +34,7 @@ def test_estimate_artifacts_and_provenance(tmp_path, capsys):
     sp = json.loads((out / "state_posterior.json").read_text())
     dd = json.loads((out / "driver_diagnostics.json").read_text())
     for art in (sp, dd):
-        assert art["run_id"] == summ["run_id"] and art["schema_version"] == "vms-0.2.phase9"
+        assert art["run_id"] == summ["run_id"] and art["schema_version"] == "vms-0.2.phase10"
     # distinct schemas; market UNAVAILABLE
     assert sp["fundamental"]["kind"] == "FUNDAMENTAL" and sp["fundamental"]["inputs"] == "PIT_FUNDAMENTALS_ONLY"
     assert sp["market"] == {**sp["market"], "kind": "MARKET", "status": "UNAVAILABLE", "probabilities": None}

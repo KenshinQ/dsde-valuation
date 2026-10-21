@@ -1,5 +1,5 @@
 # Versioned manual economic-profile overrides (SPEC §7.3).
 # Empty by default. Each entry must include a reason; applied overrides are
 # recorded on ProfileReport.manual_override.
-override_version: "vms-profile-overrides-0.2.phase9"
+override_version: "vms-profile-overrides-0.2.phase10"
 overrides: []

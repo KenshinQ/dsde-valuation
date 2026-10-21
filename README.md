@@ -3,14 +3,14 @@
 Adaptive Multi-Method valuation & conditional return engine for China A-shares.
 Spec: [SPEC.md](SPEC.md) (VMS-0.2). Archived VMS-0.1: [SPEC_VMS-0.1.md](SPEC_VMS-0.1.md), tag `vms-0.1`.
 
-**Status: VMS-0.2 Phase 9 complete (market-pricing regime + exit-price engine; Phase 8 ensemble retained).**
-Schema contract: `vms-0.2.phase9`. Package: `0.2.0a0`. Phase report: [PHASE9_DONE.md](PHASE9_DONE.md) (see also [PHASE8_DONE.md](PHASE8_DONE.md)…[PHASE0_DONE.md](PHASE0_DONE.md)).
+**Status: VMS-0.2 Phase 10 complete (Track B return distributions + DSDE public contract; Phase 9 exit prices retained).**
+Schema contract: `vms-0.2.phase10`. Package: `0.2.0a0`. Phase report: [PHASE10_DONE.md](PHASE10_DONE.md) (see also [PHASE9_DONE.md](PHASE9_DONE.md)…[PHASE0_DONE.md](PHASE0_DONE.md)).
 Labels always include `INVESTMENT_VALUE_NOT_ESTABLISHED` on synthetic (no alpha claim).
 
 Phase 6 methods live under `vms.methods.rim` / `nav` / `sotp`; multiples under `vms.methods.multiples`;
 cash-flow under `vms.methods.cash_flow`. Legacy `vms value` (0.1 FCFF pipeline) remains importable
 but is **not** the adaptive path. Ensemble lives under `vms.ensemble` (PRIOR_ONLY research
-mixture only — never `ENSEMBLE_CALIBRATED` without OOS). Exit-price engine is Phase 9; return-grid polish is Phase 10.
+mixture only — never `ENSEMBLE_CALIBRATED` without OOS). Exit-price engine is Phase 9; Track B entry-price returns + optional DSDE adapter are Phase 10. Walk-forward calibration is Phase 11.
 Older `PHASE*_DONE.md` from VMS-0.1 numbering are historical only where superseded.
 
 Fully standalone: does not import `dsde-engine` or any legacy PIT/FTD/DV1/Monte-Carlo code
@@ -56,6 +56,7 @@ vms phase7 --out /tmp/vms_phase7 --seed 42 --fixture mature     # router + disag
 vms compare-methods --out /tmp/vms_compare --fixture mature     # method_comparison.json; no blend
 vms phase8 --out /tmp/vms_phase8 --seed 42 --fixture mature     # ensemble PRIOR_ONLY + L1O; NOT investment advice
 vms phase9 --out /tmp/vms_phase9 --seed 42 --paths 40           # market-pricing + exit prices; NOT investment advice
+vms phase10 --out /tmp/vms_phase10 --seed 42 --paths 40 --spot 10  # Track B returns + DSDE export; NOT investment advice
 # or:
 python examples/synthetic_mature_operating/run_phase0.py --out /tmp/vms_phase0 --seed 42
 ```

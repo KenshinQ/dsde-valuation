@@ -1,7 +1,7 @@
 """VMS-0.2 Phase 12 offline release examples (SPEC §19 / §20 Phase 12).
 
 Five synthetic economic patterns:
-  mature_operating, growth_negative_fcf, bank, cyclical, holding
+  mature_operating, growth_negative_fcf, financial_institution, cyclical, holding
 
 Each pattern writes profile + router diagnostics. Mature also runs Track A
 cash-flow methods and Track B exit/return distributions. Other patterns reuse
@@ -44,7 +44,7 @@ INVESTMENT_LABEL = ClaimStatus.INVESTMENT_VALUE_NOT_ESTABLISHED.value
 PatternId = Literal[
     "mature_operating",
     "growth_negative_fcf",
-    "bank",
+    "financial_institution",
     "cyclical",
     "holding",
 ]
@@ -52,7 +52,7 @@ PatternId = Literal[
 ALL_PATTERNS: tuple[PatternId, ...] = (
     "mature_operating",
     "growth_negative_fcf",
-    "bank",
+    "financial_institution",
     "cyclical",
     "holding",
 )
@@ -60,7 +60,7 @@ ALL_PATTERNS: tuple[PatternId, ...] = (
 _FIXTURE_FILE: dict[PatternId, str] = {
     "mature_operating": "mature_operating.json",
     "growth_negative_fcf": "growth_negative_fcf.json",
-    "bank": "financial_institution.json",
+    "financial_institution": "financial_institution.json",
     "cyclical": "cyclical.json",
     "holding": "holding.json",
 }
@@ -68,7 +68,7 @@ _FIXTURE_FILE: dict[PatternId, str] = {
 _EXPECTED_PRIMARY: dict[PatternId, str] = {
     "mature_operating": "MATURE_OPERATING",
     "growth_negative_fcf": "GROWTH_OR_REINVESTMENT_HEAVY",
-    "bank": "FINANCIAL_INSTITUTION",
+    "financial_institution": "FINANCIAL_INSTITUTION",
     "cyclical": "CYCLICAL_OPERATING",
     "holding": "HOLDING_OR_CONGLOMERATE",
 }
@@ -110,7 +110,7 @@ def _route_pattern(
         profile=profile,
         target=tgt,
         available_fields=available_fields,
-        peer_count=peer_count if pattern != "bank" else 0,
+        peer_count=peer_count if pattern != "financial_institution" else 0,
         data_quality_blocked=False,
         attempt_value_paths=False,
         context_loaded=loaded,
@@ -241,7 +241,7 @@ def build_phase12_pattern(
         "coverage_status": route.coverage_status,
         "n_eligible": sum(1 for e in route.eligibility if e.eligible),
         "profile_notes": notes,
-        "industrial_fcff_disabled_for_bank": pattern == "bank",
+        "industrial_fcff_disabled_for_financial": pattern == "financial_institution",
     }
 
     # --- pattern-specific method / Track B work ---
@@ -317,7 +317,7 @@ def build_phase12_pattern(
             "use vms phase10 on operating paths for Track B smoke."
         )
 
-    elif pattern == "bank":
+    elif pattern == "financial_institution":
         method_outcome = "RIM"
         bdir = out / "rim"
         build_phase6_bundle(
@@ -338,9 +338,9 @@ def build_phase12_pattern(
                     break
         diagnostics["fcff_dcf_row"] = fcff
         diagnostics["expected"] = "industrial FCFF disabled / ineligible for FINANCIAL_INSTITUTION"
-        track_b_outcome = "NOT_APPLICABLE_BANK_PROFILE"
+        track_b_outcome = "NOT_APPLICABLE_FINANCIAL_PROFILE"
         write_artifact(out, "diagnostics.json", {
-            "status": "BANK_RIM_ROUTE",
+            "status": "FINANCIAL_RIM_ROUTE",
             "investment_value": INVESTMENT_LABEL,
             **diagnostics,
         }, stamp)

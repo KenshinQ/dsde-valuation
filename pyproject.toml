@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "dsde-valuation"
-version = "0.2.0a0"
-description = "VMS-0.2 Adaptive Multi-Method valuation engine (Phase 3 drivers/regimes/path baseline; method math deferred)"
+version = "0.2.0rc1"
+description = "VMS-0.2 Adaptive Multi-Method valuation engine (Phase 12 docs/examples release; calibration insufficient)"
 requires-python = ">=3.11"
 dependencies = [
   "numpy>=1.26",

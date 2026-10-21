@@ -8,6 +8,7 @@ from datetime import datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
+from vms import SCHEMA_VERSION
 from vms.adapters import dsde
 from vms.adapters.dsde import (DSDEConsumerView, consumer_view_from_result, dsde_availability,
                                try_notify_dsde)
@@ -87,7 +88,7 @@ def test_consumer_view_from_minimal_result():
         unsupported=True,
         flags=["UNIT_STUB"],
     )
-    assert result.schema_version == "vms-0.1.0"
+    assert result.schema_version == SCHEMA_VERSION == "vms-0.2.phase0"
     assert result.labels["investment_value"] == "INVESTMENT_VALUE_NOT_ESTABLISHED"
     view = consumer_view_from_result(result)
     assert view.schema_kind == "DSDEConsumerView"
@@ -113,4 +114,4 @@ def test_adapter_module_has_no_static_dsde_import():
 def test_import_vms_alone():
     importlib.invalidate_caches()
     m = importlib.import_module("vms")
-    assert m.SCHEMA_VERSION == "vms-0.1.0"
+    assert m.SCHEMA_VERSION == "vms-0.2.phase0"

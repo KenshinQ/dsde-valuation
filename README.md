@@ -1,15 +1,16 @@
-# dsde-valuation — VMS-0.1
+# dsde-valuation — VMS-0.2
 
-Standalone valuation & conditional return engine for China A-shares. Spec: [SPEC.md](SPEC.md).
+Adaptive Multi-Method valuation & conditional return engine for China A-shares.
+Spec: [SPEC.md](SPEC.md) (VMS-0.2). Archived VMS-0.1: [SPEC_VMS-0.1.md](SPEC_VMS-0.1.md), tag `vms-0.1`.
 
-**Status: Phases 0–10 complete (VMS-0.1.0 release packaging on synthetic).** Full pipeline:
-contracts → PIT/quality → drivers/regimes → correlated paths → path-wise statements →
-FCFF DCF + exit multiple → entry-price returns (DIVIDEND-NO-REINVEST) → sensitivity →
-chronological walk-forward evaluation → optional DSDE consumer adapter.
-Schema contract: `vms-0.1.0`. Labels always include `INVESTMENT_VALUE_NOT_ESTABLISHED` on
-synthetic (no alpha claim). See [docs/model_card.md](docs/model_card.md),
-[PHASE10_DONE.md](PHASE10_DONE.md), [RELEASE_NOTES.md](RELEASE_NOTES.md), and
-[docs/assumptions.md](docs/assumptions.md).
+**Status: VMS-0.2 Phase 0 complete (contracts + deterministic baseline).**
+Schema contract: `vms-0.2.phase0`. Package: `0.2.0a0`. Phase report: [PHASE0_DONE.md](PHASE0_DONE.md).
+Labels always include `INVESTMENT_VALUE_NOT_ESTABLISHED` on synthetic (no alpha claim).
+
+Legacy VMS-0.1 modules (PIT → DCF → returns → evaluate → DSDE adapter) remain in-tree for
+continuity until rewritten under the adaptive method registry/router. They are **not**
+claimed as completed VMS-0.2 Phases 1–12. See older `PHASE1_DONE.md`…`PHASE10_DONE.md`
+for the frozen 0.1 evidence.
 
 Fully standalone: does not import `dsde-engine` or any legacy PIT/FTD/DV1/Monte-Carlo code
 (enforced by `tests/unit/test_no_legacy_imports.py`).
@@ -41,6 +42,17 @@ Dev deps: pytest, **hypothesis** — justification: SPEC §19 mandates property-
 is test-only and never imported by `src/`.
 scipy is used from Phase 3 (Student-t quantiles in `vms.drivers.distributions`).
 
+
+## Offline Phase 0 demo (VMS-0.2 contracts)
+
+```bash
+vms phase0 --out /tmp/vms_phase0 --seed 42
+# or:
+python examples/synthetic_mature_operating/run_phase0.py --out /tmp/vms_phase0 --seed 42
+```
+
+Writes a provenance bundle (`request.json`, `config_snapshot.json`, `method_eligibility.json`
+with all methods `NOT_RUN`, `simulation_metadata.json`, …). **Not a valuation.**
 
 ## Real A-share ingest (optional HiThink + Eastmoney NOTICE)
 

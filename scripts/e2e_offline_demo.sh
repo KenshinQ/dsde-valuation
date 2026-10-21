@@ -76,7 +76,7 @@ if missing:
 ret_sum = out / "ret" / "return_distribution_summary.json"
 assert ret_sum.is_file(), ret_sum
 ret = json.loads(ret_sum.read_text())
-assert str(ret.get("schema_version", "")).startswith("vms-0.1"), ret.get("schema_version")
+assert str(ret.get("schema_version", "")).startswith("vms-0.2"), ret.get("schema_version")
 
 lab_path = out / "eval" / "evaluation_report.json"
 assert lab_path.is_file(), lab_path
@@ -85,7 +85,7 @@ labels = rep["labels"]
 assert labels["investment_value"] == "INVESTMENT_VALUE_NOT_ESTABLISHED"
 assert "ENGINEERING_PASS" in labels
 assert "DATA_QUALITY_PASS" in labels
-assert rep.get("schema_version", "").startswith("vms-0.1")
+assert rep.get("schema_version", "").startswith("vms-0.2")
 
 # Adapter import must work with DSDE absent
 from vms.adapters.dsde import consumer_view_from_result, dsde_availability

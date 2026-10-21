@@ -20,7 +20,9 @@ jobs:
           uv pip install --python .venv/bin/python --no-deps -e .
       - name: Tests
         run: .venv/bin/python -m pytest -q
-      - name: Offline synthetic smoke demo
+      - name: Offline VMS-0.2 Phase 0 contracts demo
+        run: .venv/bin/vms phase0 --out /tmp/vms_phase0 --seed 42
+      - name: Offline synthetic smoke demo (legacy 0.1 pipeline)
         run: .venv/bin/vms demo --out /tmp/vms_demo --seed 42
       - name: PIT snapshot on synthetic data
         run: .venv/bin/vms build-snapshot --input /tmp/vms_demo/data --ticker SYN000001.SZ --as-of 2024-05-15 --out /tmp/vms_snap

@@ -52,4 +52,4 @@ def test_hash_models_order_independent(fin_kwargs):
 def test_code_version_shape():
     cv = code_version()
     assert set(cv) == {"package_version", "git_sha", "src_dirty"}
-    assert SCHEMA_VERSION.startswith("vms-0.1")
+    assert SCHEMA_VERSION.startswith("vms-0.2")

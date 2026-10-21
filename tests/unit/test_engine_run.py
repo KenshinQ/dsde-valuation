@@ -30,7 +30,7 @@ def test_engine_run_full_pipeline():
         mode="exploratory", override_reason="phase10_unit_engine_run",
     )
     assert isinstance(result, ValuationRunResult)
-    assert result.schema_version == SCHEMA_VERSION == "vms-0.1.0"
+    assert result.schema_version == SCHEMA_VERSION == "vms-0.2.phase0"
     assert result.run_id.startswith("vms-")
     assert result.labels["investment_value"] == "INVESTMENT_VALUE_NOT_ESTABLISHED"
     assert "ENGINEERING_PASS" in result.labels
@@ -55,4 +55,4 @@ def test_engine_run_signature_accepts_none_config():
         configuration_version=L.config.configuration_version,
     )
     result = eng.run(req, load, None, mode="exploratory", override_reason="phase10_none_config")
-    assert result.schema_version == "vms-0.1.0"
+    assert result.schema_version == SCHEMA_VERSION

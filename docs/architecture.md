@@ -1,70 +1,70 @@
-# Architecture (VMS-0.1 / Phase 10 release)
+# Architecture (VMS-0.2 Phase 12)
 
-Target pipeline: SPEC §4 (adapters → PIT store → gates → drivers → regimes → sampler →
-statements → capital allocation → DCF/multiples → equity bridge → per-share value →
-entry-price-conditioned returns → diagnostics → result bundle → optional DSDE consumer view).
+Adaptive Multi-Method valuation engine. Spec: [SPEC.md](../SPEC.md). Model card: [model_card.md](model_card.md).
+
+**Engineering pass ≠ investment alpha.** Synthetic runs always label `INVESTMENT_VALUE_NOT_ESTABLISHED`.
 
 ## End-to-end flow
 
 ```
-CSV/Parquet (+ SYNTHETIC)
+CSV/Parquet (+ SYNTHETIC) / optional HiThink NOTICE
   → load_directory → LoadResult
-  → assess / PITSnapshot + DataQualityReport
-  → sector profile resolve (UNSUPPORTED_PROFILE short-circuit)
-  → regimes + driver distributions (walk-forward selection)
-  → SimulationBundle (Gaussian copula)
-  → FinancialPathBundle (path-wise statements + capital allocation)
-  → ValuationBundle (FCFF DCF + exit multiple + EV-equity bridge)
-  → ReturnDistributionBundle (entry-price × horizon × regime mixture)
-  → optional SensitivityReport
-  → ValuationRunResult (schema_version=vms-0.1.0)
-  → optional DSDEConsumerView (vms.adapters.dsde)  [DSDE package NOT required]
+  → PIT snapshot + data-quality gates
+  → economic profile classifier (multi-label + confidence)
+  → method registry + hard-gate router (no silent default DCF)
+  → driver / regime / path simulation (fundamental track)
+  → method-specific distributions (cash-flow / multiples / RIM / NAV / SOTP)
+  → method comparison (disagreement preserved; ensemble only if calibrated)
+  → independent market-pricing state → exit-price paths (Track B)
+  → entry-price-conditioned return distributions
+  → diagnostics / sensitivity / walk-forward evaluation
+  → versioned result bundle (+ optional DSDE consumer view)
 ```
 
-Facade: `ValuationEngine.run(request, data_bundle, config) -> ValuationRunResult`.
+Facade: `ValuationEngine` (SPEC §18.1). CLI: `vms` (phase0…phase12, validate-bundle, evaluate, …).
 
-CLI path (offline demo): `scripts/e2e_offline_demo.sh` runs
-validate → snapshot → estimate → simulate → project-paths → value → returns →
-sensitivity → evaluate with lightweight path counts.
+## Module map
 
-## Component status (all Phases 0–10)
-
-| Component | Location | Status |
+| Area | Package | Notes |
 |---|---|---|
-| Data contracts | `vms.schemas.*` | Implemented |
-| Config + profiles | `vms.schemas.config` | Implemented |
-| Ingestion + SYNTHETIC | `vms.data` | Implemented; **no live provider adapter** |
-| PIT + quality gates | `vms.pit`, `vms.quality` | Implemented |
-| Drivers / regimes / WF | `vms.drivers`, `vms.regimes` | Implemented (HMM deferred) |
-| Sampler | `vms.sampling` | Implemented |
-| Statements + capital alloc | `vms.statements`, `vms.capital_allocation` | Implemented |
-| Valuation + equity bridge | `vms.valuation`, `vms.equity_bridge` | Implemented |
-| Returns | `vms.returns` | Implemented (DIVIDEND-NO-REINVEST) |
-| Diagnostics | `vms.diagnostics` | Implemented |
+| Contracts / config | `vms.schemas` | Typed; versioned |
+| PIT + quality | `vms.pit`, `vms.quality` | `as_of` integrity |
+| Profiles | `vms.profiles` | Rule-based classifier |
+| Drivers / regimes / sampling | `vms.drivers`, `vms.regimes`, `vms.sampling` | HMM deferred |
+| Statements / capital alloc | `vms.statements`, `vms.capital_allocation` | Accounting invariants |
+| Methods | `vms.methods.*` | Plugin registry |
+| Router / ensemble | `vms.router`, `vms.ensemble` | Compatibility before blend |
+| Market pricing / returns | `vms.market_pricing`, `vms.returns` | Intrinsic ≠ exit by default |
 | Evaluation | `vms.evaluation` | Chronological only |
-| Reporting / seeding | `vms.reporting`, `vms.seeding` | Implemented |
-| Optional DSDE adapter | `vms.adapters.dsde` | Implemented; DSDE absent = no-op |
-| Real A-share HiThink+EM NOTICE | `vms.providers.hithink` | Optional; DuckDB local-first; LATEST_ONLY → pit_complete=false |
-| Public run result | `vms.result.ValuationRunResult` | Implemented |
-| Facade | `vms.engine.ValuationEngine` | Full `run` orchestration |
+| Reporting | `vms.reporting` | Phase bundles + §16.3 validation |
+| DSDE adapter | `vms.adapters.dsde` | Optional; core never imports DSDE |
 
-## Supported vs unsupported profiles
+## Result bundle (§16.3)
 
-**Supported:** `operating_company` (generic non-financial FCFF).
+Full aspirational tree is listed in SPEC §16.3. Phase CLIs emit **documented subsets** —
+see `vms.reporting.bundle_validation.PHASE_CLI_SUBSETS` and `vms validate-bundle`.
 
-**Unsupported (config `sector_profiles.unsupported`):** banks, insurance, brokerages, and any
-industry listed as unsupported → `UNSUPPORTED_PROFILE` (no projection/DCF). Documented in
-`docs/model_card.md`.
+Phase 12 mature offline example aims at: profile + eligibility + method_results +
+market_pricing_report + exit_price_summary + return_distribution_summary + diagnostics +
+validation_report.
 
-## Reproducibility (§8.3)
+## Offline examples (Phase 12)
 
-- PCG64 SeedSequence named sub-streams; content-addressed `run_id`.
-- Artifacts stamped with `run_id` + `schema_version` (`vms-0.1.0`).
-- Leakage + invariant mutation checks in `scripts/`.
+| Pattern | Directory | Behavior |
+|---|---|---|
+| Mature operating | `examples/synthetic_mature_operating/` | Full Track A + Track B smoke |
+| Growth / neg-FCF | `examples/synthetic_growth_company/` | Routing + multiples attempt / diagnosis |
+| Bank | `examples/synthetic_bank/` | RIM; industrial FCFF disabled |
+| Cyclical | `examples/synthetic_cyclical/` | HIGH_CYCLICALITY routing diagnosis |
+| Holding | `examples/synthetic_holding_company/` | SOTP/NAV or data-gap |
 
-## Boundaries
+```bash
+vms phase12 --out /tmp/vms_phase12 --paths 20
+scripts/run_offline_examples.sh /tmp/vms_offline
+```
 
-- No imports from `dsde-engine` or legacy PIT/FTD/DV1 (tested).
-- DSDE integration only via `vms.adapters.dsde` documented interface.
-- HiThink / live A-share provider adapters are **future work** (not Phase 10).
-- No alpha / investability claim without predeclared leakage-safe OOS evidence.
+## Component status (Phases 0–12)
+
+Phases 0–11 deliver contracts through walk-forward calibration. Phase 12 packages docs,
+examples, bundle validation, schema/config migration tests, and release notes (`0.2.0rc1`).
+`ENSEMBLE_CALIBRATED` / `INVESTMENT_VALUE_SUPPORTED` are **not** claimed.

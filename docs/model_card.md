@@ -1,91 +1,96 @@
-# VMS-0.1 Model Card
+# VMS-0.2 Model Card
 
 | Field | Value |
 |---|---|
 | Package | `dsde-valuation` / `vms` |
-| Version | `0.1.0` |
-| Schema contract | `vms-0.1.0` (OUTPUT-CONTRACT-v1) |
-| Spec | SPEC.md §1–§21 |
-| Status | Engineering release on **synthetic** data only |
+| Version | `0.2.0rc1` (pre-release; calibration insufficient) |
+| Schema contract | `vms-0.2.phase12` |
+| Spec | [SPEC.md](../SPEC.md) (VMS-0.2) |
+| Status | **Engineering release on synthetic data only** |
+| Investment label | `INVESTMENT_VALUE_NOT_ESTABLISHED` — **never** `INVESTMENT_VALUE_SUPPORTED` without predeclared leakage-safe OOS evidence |
 
-## 1. Purpose
+This card satisfies SPEC §19 / §20 Phase 12. Engineering success is **not** investment alpha (SPEC §2.12, §22.16).
 
-VMS-0.1 is a **standalone** China A-share valuation and conditional-return engine. Given a PIT
-information set and config, it produces:
+## 1. Intended use
 
-- regime-conditional driver distributions;
-- correlated Monte Carlo paths and path-wise financial statements;
-- FCFF DCF (+ exit-multiple cross-check) value distributions;
-- entry-price-conditioned multi-horizon return mixtures (DIVIDEND-NO-REINVEST);
-- sensitivity / uncertainty attribution;
-- chronological walk-forward evaluation labels.
+VMS-0.2 is a **standalone** Adaptive Multi-Method valuation and conditional-return engine for China A-share research workflows. Given a point-in-time information set and configuration, it:
 
-It is **not** a trading system, Kelly sizer, or portfolio optimizer. Optional delivery of
-distributions to a DSDE decision layer is behind `vms.adapters.dsde` and does **not** require
-DSDE to be installed for core valuation.
+- classifies a company economic profile and routes eligible valuation methods;
+- produces **method-specific** value distributions (FCFF/FCFE/DDM, multiples, RIM, NAV/SOTP where gated);
+- keeps fundamental value separate from future market exit prices;
+- builds entry-price-conditioned total-return distributions (Track B);
+- emits walk-forward / sensitivity diagnostics when requested;
+- optionally exports distributions through `vms.adapters.dsde` (DSDE **not** required for the core).
 
-## 2. Supported profiles
+Intended consumers: quantitative research engineers integrating with a decision layer (e.g. DSDE), and offline synthetic acceptance / regression.
 
-| Profile id | Status | Notes |
+## 2. Supported profiles (synthetic / engineering)
+
+| Profile | Status | Typical methods (after hard gates) |
 |---|---|---|
-| `operating_company` | **Supported** | Generic non-financial FCFF / EV bridge. Config-driven driver profile. |
-| Banks / insurance / brokerages | **Unsupported** | Listed in config `sector_profiles.unsupported` → `UNSUPPORTED_PROFILE` (raw metrics only; no projection/DCF). |
-| Conglomerates / holding cos without operating FCFF | **Unsupported** | No dedicated profile; treat as unsupported unless mapped explicitly. |
-| Cross-listed / non-CNY primary statements | **Blocked** | `CURRENCY_NOT_CNY` critical; FX conversion not implemented. |
+| `MATURE_OPERATING` | Supported (synthetic paths) | FCFF/FCFE/DDM; EV/EBIT, EV/EBITDA, P/E when peers pass |
+| `GROWTH_OR_REINVESTMENT_HEAVY` | Partial | Routing + relative (e.g. EV/Sales) candidates; trailing P/E often ineligible |
+| `FINANCIAL_INSTITUTION` | Supported (RIM path) | Residual income / P/B-style; **industrial FCFF/EV-EBITDA defaults disabled** |
+| `CYCLICAL_OPERATING` | Routing supported | Unnormalized trailing P/E downgraded; mid-cycle normalization required for meaningful multiples |
+| `HOLDING_OR_CONGLOMERATE` | Partial | SOTP/NAV when segment/asset schedules present; otherwise explicit data-gap / unsupported |
+| Distressed / turnaround / opaque | Unsupported | Hard-gated; no silent default DCF |
 
-See also `config/default.yaml` `sector_profiles` and `docs/architecture.md`.
+Offline fixtures: `examples/profile_fixtures/` and `examples/synthetic_*`.
 
-## 3. Unsupported / out of scope (VMS-0.1)
+## 3. Unsupported profiles / out of scope
 
-- Real provider adapters (HiThink / Wind / etc.) — **future work**; offline CSV/Parquet + SYNTHETIC only.
-- HMM market regimes (`regimes.model: hmm`) — interface only; exit code 2 (REGIME-HMM-DEFERRED-v1).
-- Portfolio construction, position sizing, execution, live streaming.
-- Claiming `INVESTMENT_VALUE_SUPPORTED` without predeclared leakage-safe OOS evidence (never on SYNTHETIC).
+- Live trading, portfolio construction, Kelly / position sizing, execution.
+- Guaranteed convergence of price to intrinsic value.
+- Production calibrated ensemble (`ENSEMBLE_CALIBRATED`) without OOS protocol.
+- Claiming `INVESTMENT_VALUE_SUPPORTED` on synthetic or unit-test evidence.
+- Opaque LLM routing without logged deterministic rules.
 - Legacy PIT/FTD/DV1 / `dsde-engine` imports (forbidden; tested).
-- Reinvested-dividend TSR; only DIVIDEND-NO-REINVEST pathwise cash + terminal equity value.
-- Automatic FX conversion; non-CNY amounts are blocked.
+- HMM market regimes (`regimes.model: hmm`) — interface only.
+- Automatic FX conversion; non-CNY amounts blocked.
 
-## 4. Key assumptions (auditable)
+## 4. Limitations
 
-Versioned register: `docs/assumptions.md` / `vms.assumptions`. Highlights:
+- Real A-share PIT history is often incomplete (`pit_complete=false` on live ingest); production claims require explicit PIT completeness.
+- Discount rates / ERP / terminal growth in default config are **labeled assumptions**, not calibrated market quotes.
+- Terminal value can dominate EV in DCF paths; high TV fraction is warned, not “fixed” by more Monte Carlo paths.
+- Peer multiples need PIT membership; current-universe backtests are gated against leakage.
+- Holding-company NAV/SOTP quality depends on segment schedules; missing schedules → structured unsupported, not invented NAV.
+- Cyclical mid-cycle earnings models are diagnosed in routing; full normalized-earnings engine coverage is incomplete vs SPEC §12.6 aspirations.
 
-- ASOF-DATE-CLOSE-v1 — date-only `as_of` = 15:00 Asia/Shanghai.
-- TV-GORDON-v1 / WACC from explicit config `valuation.risk_free_rate` (never invented).
-- DIVIDEND-NO-REINVEST-v1 for holding-period returns.
-- Chronological walk-forward only (random splits raise `RandomSplitProhibitedError`).
-- MC percentile bands are **not** confidence intervals (SENS-MC-PERCENTILE-NOT-CI-v1).
+## 5. Known failure modes
 
-## 5. Investment-value policy
-
-**Default label: `INVESTMENT_VALUE_NOT_ESTABLISHED`.**
-
-Engineering / data-quality / calibration labels are reported separately
-(`ENGINEERING_PASS`, `DATA_QUALITY_PASS`, `CALIBRATION_*`). Passing engineering tests or
-synthetic walk-forward **never** implies alpha or investability (EVAL-INVESTMENT-LABEL-v1,
-SPEC §15.3 / §21).
-
-## 6. Calibration status
-
-| Domain | Status |
+| Failure | Engine response |
 |---|---|
-| Offline SYNTHETIC panel | Metrics produced; label **INCONCLUSIVE / SYNTHETIC_ONLY** |
-| Real A-share OOS | **Not established** in VMS-0.1 (no HiThink adapter; no predeclared OOS protocol executed on live data) |
+| Hard gate fail (profile/fields/peers) | Method `INELIGIBLE` / `UNSUPPORTED`; no silent value |
+| `WACC <= g + margin` | DCF path rejected with structured code |
+| No eligible method for target | `INSUFFICIENT_METHOD_COVERAGE` — **not** a default FCFF |
+| Incompatible method bases | Ensemble / blend refused |
+| Uncalibrated mixture requested as production | Blocked; research `PRIOR_ONLY` only |
+| Intrinsic copied to exit by default | Forbidden; exit requires market-pricing rule |
+| Random time-series split in evaluation | `RandomSplitProhibitedError` |
+| Inadequate calibration sample | `CALIBRATION_INSUFFICIENT` (not inferred success) |
+| Critical data-quality in production | Run blocked (`EXIT_BLOCKED`) |
 
-## 7. Known limitations
+## 6. Data limitations
 
-1. Synthetic annual panel ≠ full quarterly richness of live filings.
-2. Parameter uncertainty via bootstrap + regime Dirichlet; not a full Bayesian hierarchical model.
-3. Copula is Gaussian over shrunk residual correlations — tail dependence understated.
-4. Terminal value and WACC dominate sensitivity; process vs param split is diagnostic, not a CI.
-5. Evaluation intrinsic-stability vs later-origin VPS is reserved / not fully backfilled.
-6. Provider-specific restatement / dual-share / ST/*ST nuances are not modeled beyond SYNTHETIC fixtures.
+- Offline demos use **SYNTHETIC** CSV/Parquet only.
+- Optional HiThink + Eastmoney NOTICE ingest exists for A-shares; restatement / NOTICE completeness is not guaranteed.
+- Peer sets, corporate actions, and share counts must respect `as_of`; leakage suites enforce exclusions.
+- Macro / risk-free adapters are not production-calibrated in this rc.
 
-## 8. Intended users
+## 7. Calibration status
 
-Quant researchers integrating conditional value/return distributions into a separate decision
-layer (e.g. optional DSDE). Not for retail investment advice.
+| Gate (SPEC §17.4) | Synthetic release status |
+|---|---|
+| `ENGINEERING_PASS` | Yes (phased tests + offline examples) |
+| `DATA_QUALITY_PASS` | Yes on synthetic; real data depends on ingest |
+| `CALIBRATION_PASS` | **No** — `CALIBRATION_INSUFFICIENT` |
+| `ENSEMBLE_CALIBRATED` | **No** |
+| `INVESTMENT_VALUE_NOT_ESTABLISHED` | **Yes (always on synthetic)** |
+| `INVESTMENT_VALUE_SUPPORTED` | **Never** without separate predeclared OOS research protocol |
 
-## 9. Contact / provenance
+See [calibration_protocol.md](calibration_protocol.md) and `vms phase11` / `vms evaluate`.
 
-Local git only in the development box; no remote publish implied by this card. Schema stamps
-every public artifact with `schema_version: vms-0.1.0`.
+## 8. Ethical / misuse notes
+
+Do not present simulated distributions, attractive medians, or green unit tests as proof of profitability or alpha. Do not disable eligibility gates to force a single “fair value.” Do not ship CLI JSON with `INVESTMENT_VALUE_SUPPORTED` unless an audited OOS protocol has been executed and recorded outside this engineering package.

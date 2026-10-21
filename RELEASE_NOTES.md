@@ -1,28 +1,39 @@
-# VMS-0.1.0 Release Notes
+# VMS-0.2.0rc1 Release Notes
 
 **Not an alpha / investability claim.** Synthetic engineering release only.
-`investment_value` defaults to `INVESTMENT_VALUE_NOT_ESTABLISHED`.
+`investment_value` remains `INVESTMENT_VALUE_NOT_ESTABLISHED`.
+`INVESTMENT_VALUE_SUPPORTED` is **not** emitted. `ENSEMBLE_CALIBRATED` is **not** claimed.
+Calibration status: `CALIBRATION_INSUFFICIENT` (honest pre-release).
 
-## What’s in 0.1.0
+Schema: `vms-0.2.phase12`. Package: `0.2.0rc1`. Tag (local): `vms-0.2-phase12`.
 
-- End-to-end valuation & conditional-return pipeline for the `operating_company` profile.
-- Optional DSDE adapter (`vms.adapters.dsde`) — core runs with DSDE absent.
-- Versioned output contract `schema_version: vms-0.1.0`.
-- Model card, architecture, data contracts, offline e2e demo script.
-- Chronological walk-forward evaluation; random splits prohibited.
-- Sensitivity / uncertainty attribution (MC percentiles ≠ CIs).
+## What’s in 0.2.0rc1 (Phase 12)
+
+- Adaptive Multi-Method engine through Phases 0–11 (profile → router → methods →
+  market exit → returns → walk-forward / sensitivity).
+- Phase 12 packaging: model card, architecture, data contracts, method registry,
+  calibration protocol docs.
+- Five offline synthetic examples: mature operating, growth/neg-FCF, bank, cyclical,
+  holding (`vms phase12`, `scripts/run_offline_examples.sh`).
+- Result-bundle validation (`vms validate-bundle`) against SPEC §16.3 subsets.
+- Schema / configuration version migration tests (phase0…phase12 stamps).
+- Optional DSDE adapter retained (`vms.adapters.dsde`); core does not require DSDE.
+
+## Migration from phase stamps
+
+Prior schema stamps `vms-0.2.phase0` … `vms-0.2.phase11` are superseded by
+`vms-0.2.phase12` for this packaging. Config sidecars bump to `*.phase12`.
+Consumers should key off `schema_version` and `implemented_phase`.
+
+Archived VMS-0.1: `SPEC_VMS-0.1.md`, tag `vms-0.1`.
 
 ## What is deliberately not claimed
 
 - No portfolio alpha, Kelly sizing, or live trading recommendations.
-- No `INVESTMENT_VALUE_SUPPORTED` on SYNTHETIC data.
-- No HiThink / Wind live A-share adapter (future work).
-- No calibration pass on real-market OOS.
-
-## Upgrade / schema
-
-Prior phase stamps (`vms-0.1.phaseN`) are superseded by `vms-0.1.0` for this packaging.
-Consumers should key off `schema_version` and `schema_kind`.
+- No `INVESTMENT_VALUE_SUPPORTED` on SYNTHETIC data or unit tests.
+- No production `ENSEMBLE_CALIBRATED` weights.
+- No real A-share long-history OOS calibration pass.
+- Real-data PIT completeness remains an honest gap (`pit_complete` may be false).
 
 ## Offline demo
 
@@ -30,10 +41,10 @@ Consumers should key off `schema_version` and `schema_kind`.
 uv venv .venv --python 3.11
 uv pip sync --python .venv/bin/python requirements.lock
 uv pip install --python .venv/bin/python --no-deps -e .
-scripts/e2e_offline_demo.sh /tmp/vms_e2e
+scripts/run_offline_examples.sh /tmp/vms_offline
 .venv/bin/python -m pytest -q
 ```
 
 ## Definition of Done
 
-See `PHASE10_DONE.md` § Definition of Done — all items evidenced; **no alpha claim**.
+See `PHASE12_DONE.md` — Phase 12 acceptance + SPEC §23 mapped with explicit deferrals.

@@ -3,14 +3,15 @@
 Adaptive Multi-Method valuation & conditional return engine for China A-shares.
 Spec: [SPEC.md](SPEC.md) (VMS-0.2). Archived VMS-0.1: [SPEC_VMS-0.1.md](SPEC_VMS-0.1.md), tag `vms-0.1`.
 
-**Status: VMS-0.2 Phase 11 complete (walk-forward calibration + sensitivity; Phase 10 returns/DSDE retained).**
-Schema contract: `vms-0.2.phase11`. Package: `0.2.0a0`. Phase report: [PHASE11_DONE.md](PHASE11_DONE.md) (see also [PHASE10_DONE.md](PHASE10_DONE.md)…[PHASE0_DONE.md](PHASE0_DONE.md)).
+**Status: VMS-0.2 Phase 12 complete (docs / five offline examples / bundle validation; `0.2.0rc1`).**
+Schema contract: `vms-0.2.phase12`. Package: `0.2.0rc1` (pre-release; `CALIBRATION_INSUFFICIENT`).
+Phase report: [PHASE12_DONE.md](PHASE12_DONE.md) (see also [PHASE11_DONE.md](PHASE11_DONE.md)…[PHASE0_DONE.md](PHASE0_DONE.md)).
 Labels always include `INVESTMENT_VALUE_NOT_ESTABLISHED` on synthetic (no alpha claim).
 
 Phase 6 methods live under `vms.methods.rim` / `nav` / `sotp`; multiples under `vms.methods.multiples`;
 cash-flow under `vms.methods.cash_flow`. Legacy `vms value` (0.1 FCFF pipeline) remains importable
 but is **not** the adaptive path. Ensemble lives under `vms.ensemble` (PRIOR_ONLY research
-mixture only — never `ENSEMBLE_CALIBRATED` without OOS). Exit-price engine is Phase 9; Track B returns + DSDE adapter are Phase 10; walk-forward calibration + sensitivity are Phase 11. Phase 12 docs/examples release is not claimed.
+mixture only — never `ENSEMBLE_CALIBRATED` without OOS). Exit-price engine is Phase 9; Track B returns + DSDE adapter are Phase 10; walk-forward calibration + sensitivity are Phase 11; docs/examples/bundle validation are Phase 12.
 Older `PHASE*_DONE.md` from VMS-0.1 numbering are historical only where superseded.
 
 Fully standalone: does not import `dsde-engine` or any legacy PIT/FTD/DV1/Monte-Carlo code
@@ -58,6 +59,9 @@ vms phase8 --out /tmp/vms_phase8 --seed 42 --fixture mature     # ensemble PRIOR
 vms phase9 --out /tmp/vms_phase9 --seed 42 --paths 40           # market-pricing + exit prices; NOT investment advice
 vms phase10 --out /tmp/vms_phase10 --seed 42 --paths 40 --spot 10  # Track B returns + DSDE export; NOT investment advice
 vms phase11 --out /tmp/vms_phase11 --seed 42 --paths 20             # walk-forward + sensitivity; NOT investment advice
+vms phase12 --out /tmp/vms_phase12 --seed 42 --paths 20             # five offline patterns; NOT investment advice
+vms validate-bundle --path /tmp/vms_phase12/mature_operating --subset phase12_mature_full
+scripts/run_offline_examples.sh /tmp/vms_offline
 vms evaluate --universe config/universe.synthetic.yaml --start 2018-01-01 --end 2022-12-31 --out /tmp/vms_eval
 # or:
 python examples/synthetic_mature_operating/run_phase0.py --out /tmp/vms_phase0 --seed 42

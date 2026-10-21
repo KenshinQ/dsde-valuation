@@ -1,3 +1,15 @@
+# Data contracts (VMS-0.2)
+
+Schema stamp: `vms-0.2.phase12` (`SCHEMA_VERSION`). Configuration sidecars carry
+`configuration_version` / `registry_version` / `router_version` / `catalog_version`
+(see `config/`). Result-bundle layout: SPEC §16.3; phase CLI subsets documented in
+`vms.reporting.bundle_validation.PHASE_CLI_SUBSETS`.
+
+**Label:** synthetic and engineering runs use `INVESTMENT_VALUE_NOT_ESTABLISHED`.
+This is not an investability claim.
+
+---
+
 # Data contracts (Phase 9)
 
 Sources of truth: `src/vms/schemas/observations.py`, `src/vms/schemas/fields.py`,

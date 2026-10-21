@@ -1,76 +1,75 @@
-# Phase 6 — DCF & multiple cross-check: DONE
+# Phase 6 — RIM, NAV and SOTP methods: DONE (VMS-0.2 §20 / §24)
 
-Also includes Phase 5 review decisions (central-path gate, path-ledger parquet, buyback last-close).
+Date: 2026-10-21 (Asia/Shanghai). Repo: local git only, no remote. Branch: `master`.
+Prior freeze tag: `vms-0.1`. Spec: `SPEC.md` (VMS-0.2). Prior: [PHASE5_DONE.md](PHASE5_DONE.md).
 
-Not started: Phase 7 (entry-price return distributions).
+Status: **all Phase 6 acceptance criteria pass** for residual income (RIM), asset-based NAV,
+and SOTP with segment/asset contracts and reconciliation.
+Label: `ENGINEERING_PASS` for Phase 6 only; `INVESTMENT_VALUE_NOT_ESTABLISHED`.
+This is **not** investment advice and does **not** claim investment value.
+Phases 7+ (router hardening / ensemble / exit-price / walk-forward) are **not** claimed done.
 
-## Decisions recorded
-| ID | Decision |
-|---|---|
-| CENTRAL-PATH-GATE-v1 | Central path failure BLOCK in production (non-zero exit); exploratory + recorded override. Critical modeling failure. |
-| PATH-LEDGER-PARQUET-v1 | Default write full path ledgers as parquet; JSON summary stays lean. |
-| BUYBACK-PRICE-LAST-CLOSE-v1 | VMS-0.1 buybacks at last close; price paths belong to Phase 7. |
-| WACC-RF-CONFIG-v1 | `valuation.risk_free_rate` MUST be supplied (labeled); never invent. Production PIT 10y CGB adapter later. |
-| WACC-BETA-SHRINK-v1 | β = (n·β_raw + k·prior)/(n+k); synthetic may supply explicit beta / cost_of_equity with provenance. |
-| WACC-CONSTRUCTION-v1 | WACC = we·ke + wd·kd·(1−tc); ke = rf+β·erp (or override). |
-| TV-GORDON-v1 | TV = FCFF[n]·(1+g)/(WACC−g); reject WACC_G_MARGIN_FAIL (no silent repair); TV/EV warn. |
-| EXIT-MULTIPLE-SEPARATE-v1 | Exit-multiple reported separately; composite only if versioned `composite_weights` (default null). |
-| EV-EQUITY-BRIDGE-v1 | EV+cash−debt−leases−minority−other; components reported; negative equity preserved; diluted shares > 0. |
+> Note: an older VMS-0.1 `PHASE6_DONE.md` (DCF & multiple cross-check under 0.1 numbering) is
+> superseded by this VMS-0.2 Phase 6 report. The 0.1 DCF/bridge work remains in the codebase
+> under `vms.valuation` / `vms.equity_bridge` and is covered by retained valuation suites.
 
-## Changed / new files
-- `src/vms/valuation/{wacc,dcf,multiples,value}.py` — WACC, Gordon DCF, exit-multiple, path valuation
-- `src/vms/equity_bridge/bridge.py` — EV→equity bridge
-- `src/vms/statements/paths.py` — CentralPathError + production BLOCK; ledger parquet write
-- `src/vms/pipeline.py` — `Phase6Run` / `run_valuation`; central-path mode/override
-- `src/vms/engine.py` — `value_paths` / `value_from_load` / `run` through Phase 6
-- `src/vms/cli/main.py` — `vms value`; `_write_phase6` (valuation_summary.json + path_valuations.parquet); demo Phase 6
-- `src/vms/schemas/config.py` — ValuationConfig (RF required), TerminalValueConfig, ExitMultipleConfig
-- `config/default.yaml` — valuation block (rf=0.025 labeled, erp=0.06, beta=1.0, composite_weights null)
-- assumptions register + docs + CI (`vms value` step)
-- Tests: `test_valuation.py` (8), `test_phase5_followups.py` (2), `test_cli_value.py` (1)
+## Changed / added files (VMS-0.2 Phase 6)
+```
+src/vms/__init__.py                         SCHEMA_VERSION=vms-0.2.phase6, PHASE_6
+src/vms/methods/rim/                        NEW: clean-surplus assess + RIM PV math + plugin
+src/vms/methods/nav/                        NEW: explicit FV asset/claim NAV + plugin
+src/vms/methods/sotp/                       NEW: segment reconcile + holding discount + plugin
+src/vms/methods/asset_based/                NEW: run_eligible_phase6_methods orchestrator
+src/vms/methods/protocol.py                 rim_inputs / nav_inputs / sotp_inputs on context
+src/vms/methods/registry.py                 bind Phase 6 plugins when IMPLEMENTED+enabled
+src/vms/assumptions.py                      RIM-*/NAV-*/SOTP-* assumption IDs
+src/vms/reporting/phase6_bundle.py          NEW: offline synthetic RIM/NAV/SOTP emitter
+src/vms/cli/main.py                         `vms phase6`
+config/method_registry.yaml                 residual_income/nav/sotp → IMPLEMENTED+enabled
+config/*.yaml                               catalogs → phase6
+examples/profile_fixtures/financial_institution.json  (renamed from bank.json)
+tests/unit/test_phase6_acceptance.py        NEW (§20 AC + hand fixtures)
+tests/integration/test_cli_phase6.py        NEW
+PHASE6_DONE.md / README.md / docs/assumptions.md
+```
 
-## Tests
-- **429 passed** (~158 s box; clean clone + uv/py3.11 + requirements.lock: **429 passed** in 175 s; `vms value` exit 0, n_valid_dcf=50, artifacts valuation_summary.json + path_valuations.parquet + financial_path_ledgers.parquet).
-- Leakage mutation: **6/6 KILLED**. Invariant mutation: **7/7 KILLED**.
+## Commands executed
+| Environment | Command | Result |
+|---|---|---|
+| Repo `.venv` (Python 3.13) | `python -m pytest` | **587 passed** (Phase 5 was **577**; +10) |
+| CLI | `vms phase6 --out /tmp/vms_phase6_smoke --seed 42 --fixture financial` | `PHASE6_RIM_NAV_SOTP_NOT_INVESTMENT_ADVICE`; eligible_run includes `residual_income`; industrial FCFF/EV EBITDA disabled |
+| CLI | `vms phase6 --fixture holding_gap` | eligible_run=[]; NAV/SOTP `unsupported` + data_gap |
 
-## Acceptance evidence
+## Acceptance criterion → evidence (§20 Phase 6 / §24)
 
-1. **WACC construction (RF required; beta shrink; no silent invent).**
-   - `test_wacc_hand_fixture`: ke = rf+β·erp; WACC = we·ke+wd·kd·(1−tc); assumptions include WACC-RF-CONFIG-v1.
-   - `test_shrink_beta_formula`: (n·β_raw+k·prior)/(n+k).
-   - Config forbids missing RF (Pydantic required field); provenance labels on all WACC inputs.
+| # | Criterion (SPEC §20 Phase 6) | Evidence |
+|---|---|---|
+| 1 | RIM validates book-equity and clean-surplus conditions or becomes ineligible | `assess_clean_surplus` / `residual_income_value`; `test_ac1_rim_clean_surplus_or_ineligible` (UNASSESSABLE / CLEAN_SURPLUS_FAIL / NEGATIVE_BOOK_EQUITY); hand fixture `test_ac1_rim_hand_fixture_numeric` (equity=120) |
+| 2 | NAV requires explicit asset/claim assumptions; book ≠ fair without justification | `book_totals_are_not_nav`; `compute_nav` rejects fair=book with empty justification; `test_ac2_nav_requires_explicit_fair_not_raw_book`; assumption `NAV-BOOK-NE-FAIR-v1` |
+| 3 | SOTP reconciles segments, group costs, debt, minorities and inter-segment items | `compute_sotp` reconciliation identity; `test_ac3_sotp_reconciles_segments_and_group_items`; inter-segment mismatch → `INTER_SEGMENT_UNRECONCILED`; holding discount explicit (`SOTP-HOLDING-DISCOUNT-EXPLICIT-v1`) |
+| 4 | Synthetic bank and holding fixtures route to appropriate methods or visible unsupported | `test_ac4_financial_routes_to_rim_industrial_fcff_disabled` (FINANCIAL_INSTITUTION → RIM; FCFF/EV EBITDA ineligible; P/B eligible on relative target); `test_ac4_holding_routes_to_sotp_nav_or_visible_gap`; CLI financial + holding / holding_gap |
+| 5 | Missing segment/asset data cannot generate an apparently complete NAV result | `test_ac5_missing_asset_or_segment_cannot_look_complete`; CLI `holding_gap` → empty values + `unsupported` + data_gap; flags `APPARENTLY_COMPLETE_NAV_FORBIDDEN` |
 
-2. **Gordon TV with WACC>g margin; reject invalid paths (no silent repair).**
-   - `test_dcf_hand_fixture_matches_present_value`: hand PV(FCFF)+PV(TV) within tolerance; FCFF typed with WACC only.
-   - `test_wacc_g_margin_rejects_without_repair`: `invalid_reason=WACC_G_MARGIN_FAIL`, flag `NO_SILENT_DENOMINATOR_REPAIR`.
-   - TV fraction reported; `TV_FRACTION_HIGH` / `TV_FRACTION_HIGH_PRESENT` when above threshold.
+Additional: no ensemble (`ensemble=null`); equity-side RIM has `ev_bridge_applied=false`; Phase 4/5 methods remain enabled and green.
 
-3. **Exit-multiple cross-check separate; robust peers/shrink; no auto-average.**
-   - `test_exit_multiple_separate_and_shrink`: peer median + shrink; PEER_SCARCITY; default `composite_weights is None`.
-   - Path valuation keeps DCF and exit-multiple separate (`composite_equity is None` unless weights set).
+## Example artifact summary
+```text
+vms phase6 --out /tmp/vms_phase6_smoke --seed 42 --fixture financial
+→ status=PHASE6_RIM_NAV_SOTP_NOT_INVESTMENT_ADVICE
+→ schema_version=vms-0.2.phase6  implemented_phase=PHASE_6
+→ profile_primary=FINANCIAL_INSTITUTION
+→ eligible_run=[residual_income]
+→ industrial_fcff_disabled.fcff_dcf_eligible=false
+→ ensemble=null
+→ investment_value=INVESTMENT_VALUE_NOT_ESTABLISHED
+→ artifacts: method_results.json, route_report.json, profile_report.json
+```
 
-4. **EV→equity bridge; components; negative equity preserved; diluted shares.**
-   - `test_bridge_hand_fixture_and_negative_equity_preserved`: 1000+50−200−30−20−10=790; VPS=7.9;
-     negative equity kept with `NEGATIVE_EQUITY_PRESERVED`; `NONPOSITIVE_SHARES` rejects.
-
-5. **Hand fixtures match within tolerance; path + CLI artifacts.**
-   - Hand WACC/DCF/bridge tests above.
-   - `test_path_valuation_end_to_end` / `test_engine_value_paths`: central VALID, n_valid_dcf, separate exit-multiple.
-   - `vms value` → `valuation_summary.json` + `path_valuations.parquet` (+ `financial_path_ledgers.parquet`); schema `vms-0.1.phase6`.
-   - Facade: `ValuationEngine.value_paths`.
-
-6. **Phase 5 follow-ups implemented.**
-   - `test_central_path_blocks_production` / parquet ledger tests in `test_phase5_followups.py`.
-
-## Limitations
-1. RF is config assumption (labeled), not a live PIT 10y CGB adapter.
-2. Synthetic default `beta_n_eff=0` → shrink to prior unless n_eff/series provided; no live CSI300 beta fetch.
-3. TV/EV fraction often high on short horizons (warned, not auto-fixed).
-4. Buyback still last close (BUYBACK-PRICE-LAST-CLOSE-v1); price paths Phase 7.
-5. Exit-multiple peers are explicit config/synthetic; no live peer universe adapter.
-6. Suite ~2.6 min (path projection × N + valuation).
-
-## New questions
-1. Production RF adapter: source/vendor for PIT 10y CGB and refresh cadence?
-2. When beta series is missing in production, BLOCK vs shrink-to-1 with flag?
-3. Default horizon / terminal growth bounds for A-share cyclicals to keep TV/EV below warning threshold?
+## Known gaps (honest)
+- Router soft-suitability / disagreement hardening beyond current gates (Phase 7).
+- No calibrated ensemble — production mixture forbidden (Phase 8).
+- Market-pricing **estimator** deferred (schemas only; Phase 9).
+- RIM path-bundle extraction is best-effort from statement projections; bank demo uses explicit rim_inputs schedules.
+- SOTP segment values are configured/injected in Phase 6 (segment-level method recursion not built).
+- No exit-price / returns rewrite under 0.2 adaptive path (Phases 9–10).
+- No walk-forward release gates (Phase 11).

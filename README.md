@@ -3,14 +3,14 @@
 Adaptive Multi-Method valuation & conditional return engine for China A-shares.
 Spec: [SPEC.md](SPEC.md) (VMS-0.2). Archived VMS-0.1: [SPEC_VMS-0.1.md](SPEC_VMS-0.1.md), tag `vms-0.1`.
 
-**Status: VMS-0.2 Phase 5 complete (relative multiples P/E, P/B, EV/* + PIT peers; Phase 4 cash-flow retained).**
-Schema contract: `vms-0.2.phase5`. Package: `0.2.0a0`. Phase report: [PHASE5_DONE.md](PHASE5_DONE.md) (see also [PHASE4_DONE.md](PHASE4_DONE.md)…[PHASE0_DONE.md](PHASE0_DONE.md)).
+**Status: VMS-0.2 Phase 6 complete (RIM / NAV / SOTP; Phase 5 multiples + Phase 4 cash-flow retained).**
+Schema contract: `vms-0.2.phase6`. Package: `0.2.0a0`. Phase report: [PHASE6_DONE.md](PHASE6_DONE.md) (see also [PHASE5_DONE.md](PHASE5_DONE.md)…[PHASE0_DONE.md](PHASE0_DONE.md)).
 Labels always include `INVESTMENT_VALUE_NOT_ESTABLISHED` on synthetic (no alpha claim).
 
-Phase 5 multiples live under `vms.methods.multiples`; cash-flow under `vms.methods.cash_flow`.
-Legacy `vms value` (0.1 FCFF pipeline) remains importable but is **not** the adaptive path.
-RIM/NAV/SOTP / ensemble / exit-price estimator are later phases. Older `PHASE*_DONE.md`
-from VMS-0.1 numbering are historical only.
+Phase 6 methods live under `vms.methods.rim` / `nav` / `sotp`; multiples under `vms.methods.multiples`;
+cash-flow under `vms.methods.cash_flow`. Legacy `vms value` (0.1 FCFF pipeline) remains importable
+but is **not** the adaptive path. Ensemble / exit-price estimator are later phases. Older
+`PHASE*_DONE.md` from VMS-0.1 numbering are historical only.
 
 Fully standalone: does not import `dsde-engine` or any legacy PIT/FTD/DV1/Monte-Carlo code
 (enforced by `tests/unit/test_no_legacy_imports.py`).
@@ -50,6 +50,7 @@ vms phase0 --out /tmp/vms_phase0 --seed 42
 vms phase3 --out /tmp/vms_phase3 --seed 42 --paths 80   # path bundle; NOT a valuation
 vms phase4 --out /tmp/vms_phase4 --seed 42 --paths 40   # FCFF/FCFE/DDM via router; NOT investment advice
 vms phase5 --out /tmp/vms_phase5 --seed 42 --multiples-only  # P/E P/B EV/* + PIT peers; NOT investment advice
+vms phase6 --out /tmp/vms_phase6 --seed 42 --fixture financial  # RIM/NAV/SOTP; NOT investment advice
 # or:
 python examples/synthetic_mature_operating/run_phase0.py --out /tmp/vms_phase0 --seed 42
 ```
@@ -61,7 +62,7 @@ with all methods `NOT_RUN`, `simulation_metadata.json`, …). **Not a valuation.
 
 ```bash
 vms profile --fixture examples/profile_fixtures/mature_operating.json
-vms route --fixture examples/profile_fixtures/bank.json --target FUNDAMENTAL_VALUE_CURRENT --attempt-stubs
+vms route --fixture examples/profile_fixtures/financial_institution.json --target FUNDAMENTAL_VALUE_CURRENT --attempt-stubs
 ```
 
 Five synthetic fixtures under `examples/profile_fixtures/` exercise mature, growth/neg-FCF,

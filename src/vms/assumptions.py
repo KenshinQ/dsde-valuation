@@ -241,6 +241,30 @@ ASSUMPTIONS: dict[str, str] = {
     "CYCLE-NORMALIZE-FLAG-v1": "Cyclical / HIGH_CYCLICALITY names do not treat trailing earnings as sustainable by "
                               "default. When mid-cycle denominator is unavailable, mark CYCLE_ESTIMATE_LOW_CONFIDENCE "
                               "and TRAILING_DENOMINATOR_UNQUALIFIED_RISK (SPEC §12.6). Full cycle model may be minimal.",
+    "RIM-CLEAN-SURPLUS-v1": "Residual income requires assessable clean-surplus conditions "
+                            "(beginning book, NI, and dividends/net issuance/OCI — or explicit "
+                            "zeros_explicit). Unassessable or unexplained deviations make RIM "
+                            "ineligible; deviations may be MODELED, ADJUSTED, or INELIGIBLE.",
+    "RIM-COST-OF-EQUITY-v1": "RIM discounts residual income at cost of equity only. WACC must not "
+                            "be substituted. Terminal RI uses Gordon with ke > g margin "
+                            "(no silent denominator repair).",
+    "RIM-GOODWILL-HAIRCUT-v1": "Material goodwill on book equity is flagged. An optional "
+                              "goodwill_haircut (0..1) may reduce opening book; default is no "
+                              "haircut with GOODWILL_UNHAIRCUTTED when goodwill > 0.",
+    "NAV-EXPLICIT-FAIR-v1": "NAV values each material asset and claim with an explicit fair_value, "
+                           "optional haircut, and non-empty justification (appraisal/market/yield/"
+                           "replacement/reserve/impairment/configured). Corporate overhead and "
+                           "disposal tax are separate reconciling items.",
+    "NAV-BOOK-NE-FAIR-v1": "Book balance-sheet totals are never equated to NAV. Supplying only "
+                          "total_assets/total_liabilities yields MISSING_ASSET_INPUTS / unsupported "
+                          "data-gap — never an apparently complete NAV. Fair=book requires "
+                          "explicit justification; thin 'use book' justifications are flagged.",
+    "SOTP-RECONCILE-v1": "SOTP equity = sum(segment values) - inter-segment elimination - group "
+                        "costs PV - parent debt - minorities + non-operating assets. Inter-segment "
+                        "elimination must match segment receivables/payables when both provided.",
+    "SOTP-HOLDING-DISCOUNT-EXPLICIT-v1": "Holding-company discount/premium is an explicit uncertain "
+                                        "parameter (rate + rationale). It is never an undisclosed "
+                                        "plug. Absence is labeled HOLDING_DISCOUNT_NONE_EXPLICIT.",
     "EXIT-MULTIPLE-SEPARATE-v1": "Exit-multiple cross-check (normalized EBIT or EBITDA x multiple) is reported "
                                 "separately from DCF. Peer multiples from explicit config/synthetic peers with robust "
                                 "location + shrink. Composite with DCF only if valuation.composite_weights is set "

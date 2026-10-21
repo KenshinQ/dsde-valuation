@@ -10,7 +10,7 @@ vms phase0 --out /tmp/vms_phase0 --seed 42
 python examples/synthetic_mature_operating/run_phase0.py --out /tmp/vms_phase0 --seed 42
 ```
 
-Emits contracts-only result bundle (`schema_version=vms-0.2.phase3`); methods all `NOT_RUN`.
+Emits contracts-only result bundle (`schema_version=vms-0.2.phase4`); methods all `NOT_RUN`.
 
 ## Phase 3 — driver / regime / path bundle
 
@@ -37,3 +37,14 @@ Expected qualitative behavior:
 - market-pricing vocabulary (COMPRESSED/NORMAL/EXPANDED/DISLOCATION) is distinct from fundamental regimes
 
 This example must not assert fictitious investment performance.
+
+## Phase 4 — cash-flow methods (FCFF / FCFE / DDM)
+
+```bash
+vms phase4 --out /tmp/vms_phase4 --seed 42 --paths 40 --years 4
+# or:
+python examples/synthetic_mature_operating/run_phase4.py --out /tmp/vms_phase4 --seed 42
+```
+
+Emits router + `method_results.json` (`schema_version=vms-0.2.phase4`). Label:
+`INVESTMENT_VALUE_NOT_ESTABLISHED`. No ensemble / exit-price / multiples.

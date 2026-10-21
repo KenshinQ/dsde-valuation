@@ -11,7 +11,8 @@ Implemented commands:
   returns         Phase 7 entry-price-conditioned multi-horizon returns
   sensitivity     Phase 8 sensitivity & uncertainty attribution
   evaluate        Phase 9 chronological walk-forward evaluation
-  demo            offline SYNTHETIC smoke (Phases 0–10; evaluate + optional DSDE adapter).
+  phase0          VMS-0.2 Phase 0 contracts baseline (synthetic; NOT a valuation)
+  demo            offline SYNTHETIC smoke (legacy 0.1 pipeline retained; evaluate + optional DSDE adapter).
 
 Exit codes: 0 ok, 1 unexpected error, 2 invalid input/config/arguments,
             3 BLOCKED by critical data-quality errors in production mode,
@@ -39,6 +40,9 @@ from vms.pit.snapshot import PITSnapshot
 from vms.quality.report import DataQualityReport, GateError, QualityState, assess, gate
 from vms.reporting.metadata import (ArtifactStamp, content_run_id, hash_models, make_run_metadata, sha256_of,
                                     write_artifact)
+from vms.reporting.phase0_bundle import (PHASE0_STATUS, Phase0BundleError, build_phase0_bundle,
+                                        dump_summary)
+from vms.schemas.contracts import ValuationTarget
 from vms.schemas import ValuationRequest, format_validation_error
 from vms.schemas.config import ConfigError, LoadedConfig, load_config
 from vms.schemas.fields import FIELD_REGISTRY_VERSION
@@ -926,6 +930,45 @@ def cmd_evaluate(args: argparse.Namespace) -> int:
     return EXIT_OK
 
 
+def cmd_phase0(args: argparse.Namespace) -> int:
+    """VMS-0.2 Phase 0 offline demo: validate contracts and emit a provenance bundle.
+
+    Does not classify profiles, route methods, or run DCF/returns.
+    """
+    try:
+        horizons = None if args.horizons is None else [int(h) for h in args.horizons.split(",")]
+    except ValueError:
+        raise InputError(f"--horizons {args.horizons!r} must be comma-separated integers, e.g. 1,3,5") from None
+    try:
+        target = ValuationTarget(args.target)
+    except ValueError as e:
+        allowed = ", ".join(t.value for t in ValuationTarget)
+        raise InputError(f"--target {args.target!r} is not a ValuationTarget; expected one of: {allowed}") from e
+    as_of = None
+    if args.as_of:
+        as_of, _ = _as_of(args.as_of)
+    seed = args.seed
+    paths = args.paths
+    loaded = load_config(args.config)
+    if seed is None:
+        seed = loaded.config.monte_carlo.default_seed
+    if paths is None:
+        paths = min(100, loaded.config.monte_carlo.default_paths)
+    summary = build_phase0_bundle(
+        out_dir=args.out,
+        config_path=args.config,
+        seed=seed,
+        paths=paths,
+        as_of=as_of,
+        target=target,
+        horizons_years=horizons,
+        data_format=args.format,
+    )
+    print(dump_summary(summary), end="")
+    assert summary["status"] == PHASE0_STATUS
+    return EXIT_OK
+
+
 def cmd_demo(args: argparse.Namespace) -> int:
     loaded = load_config(args.config)
     cfg = loaded.config
@@ -1234,7 +1277,19 @@ def build_parser() -> argparse.ArgumentParser:
     ih.add_argument("--end", help="optional YYYY-MM-DD filter / price window end")
     ih.set_defaults(func=cmd_ingest_hithink)
 
-    d = sub.add_parser("demo", help="offline SYNTHETIC smoke (through returns/sensitivity)")
+    p0 = sub.add_parser("phase0", help="VMS-0.2 Phase 0 contracts baseline (synthetic; NOT a valuation)")
+    p0.add_argument("--out", required=True)
+    p0.add_argument("--seed", type=int)
+    p0.add_argument("--paths", type=int, help="recorded in request; no MC valuation in Phase 0")
+    p0.add_argument("--horizons", help="comma-separated years, e.g. 1,3,5")
+    p0.add_argument("--as-of", default="2025-06-30", help=asof_help)
+    p0.add_argument("--target", default=ValuationTarget.FUNDAMENTAL_VALUE_CURRENT.value,
+                    help="ValuationTarget enum value (SPEC §10.1)")
+    p0.add_argument("--format", choices=["csv", "parquet"], default="csv")
+    p0.add_argument("--config", default=str(_default_config_path()))
+    p0.set_defaults(func=cmd_phase0)
+
+    d = sub.add_parser("demo", help="offline SYNTHETIC smoke (legacy 0.1 pipeline; through returns/sensitivity)")
     d.add_argument("--policy", choices=sorted(POLICIES))
     d.add_argument("--out", required=True)
     d.add_argument("--seed", type=int)
@@ -1251,7 +1306,7 @@ def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     try:
         return args.func(args)
-    except (ConfigError, InputError, RegimeModelNotImplemented, RandomSplitProhibitedError) as e:
+    except (ConfigError, InputError, Phase0BundleError, RegimeModelNotImplemented, RandomSplitProhibitedError) as e:
         print(f"error: {e}", file=sys.stderr)
         return EXIT_INVALID
 

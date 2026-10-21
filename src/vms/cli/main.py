@@ -19,6 +19,7 @@ Implemented commands:
   phase7          VMS-0.2 Phase 7 router hardening + method comparison (synthetic; NOT investment advice)
   compare-methods VMS-0.2 Phase 7 method disagreement report (synthetic; NOT investment advice)
   phase8          VMS-0.2 Phase 8 ensemble + model uncertainty (synthetic; NOT investment advice)
+  phase9          VMS-0.2 Phase 9 market-pricing regime + exit-price engine (synthetic; NOT investment advice)
   profile         VMS-0.2 Phase 2 economic-profile classifier (NOT a valuation)
   route           VMS-0.2 Phase 7 routing log + soft suitability (no method computation by default)
   demo            offline SYNTHETIC smoke (legacy 0.1 pipeline retained; evaluate + optional DSDE adapter).
@@ -63,6 +64,8 @@ from vms.reporting.phase7_bundle import (PHASE7_STATUS, Phase7BundleError, build
                                         dump_summary as dump_phase7_summary)
 from vms.reporting.phase8_bundle import (PHASE8_STATUS, Phase8BundleError, build_phase8_bundle,
                                         dump_summary as dump_phase8_summary)
+from vms.reporting.phase9_bundle import (PHASE9_STATUS, Phase9BundleError, build_phase9_bundle,
+                                        dump_summary as dump_phase9_summary)
 from vms.schemas.contracts import ValuationTarget
 from vms.profiles import classify_profile, load_overrides
 from vms.profiles.fixtures import FixtureError, features_from_fixture, load_fixture
@@ -810,8 +813,8 @@ def _write_phase8(out: Path, stamp, report) -> None:  # noqa: ANN001
     write_artifact(out, "sensitivity_report.json", payload, stamp)
     write_artifact(out, "simulation_metadata.json", {
         "status": "SENSITIVITY_ATTRIBUTION",
-        "implemented_phase": "PHASE_8",
-        "warning": "Sensitivity/attribution complete; use vms evaluate for Phase 9 walk-forward.",
+        "implemented_phase": IMPLEMENTED_PHASE,
+        "warning": "Sensitivity/attribution complete; walk-forward calibration is Phase 11 under VMS-0.2.",
         "content_hash": report.content_hash,
         "n_cases": len(report.cases),
         "flags": report.flags,
@@ -1332,6 +1335,43 @@ def cmd_phase8(args: argparse.Namespace) -> int:
     return EXIT_OK
 
 
+
+def cmd_phase9(args: argparse.Namespace) -> int:
+    """Synthetic market-pricing + exit prices. NOT investment advice."""
+    out = Path(args.out)
+    seed = 42 if args.seed is None else int(args.seed)
+    paths = 40 if args.paths is None else int(args.paths)
+    years = 4 if args.years is None else int(args.years)
+    horizons = None
+    if args.horizons is not None:
+        try:
+            horizons = [int(h) for h in args.horizons.split(",")]
+        except ValueError:
+            raise InputError(f"--horizons {args.horizons!r} must be comma-separated integers") from None
+    as_of = None
+    if args.as_of:
+        as_of, _ = parse_as_of(args.as_of)
+    try:
+        summary = build_phase9_bundle(
+            out_dir=out,
+            config_path=args.config,
+            seed=seed,
+            paths=paths,
+            years=years,
+            as_of=as_of,
+            metric_id=args.metric,
+            horizons=horizons,
+            include_convergence_demo=not args.no_convergence_demo,
+        )
+    except Phase9BundleError as e:
+        raise InputError(str(e)) from e
+    print(dump_phase9_summary(summary), end="")
+    assert summary["status"] == PHASE9_STATUS
+    assert summary["investment_value"] == "INVESTMENT_VALUE_NOT_ESTABLISHED"
+    assert summary["default_silent_intrinsic_copy_detected"] is False
+    return EXIT_OK
+
+
 def cmd_demo(args: argparse.Namespace) -> int:
     loaded = load_config(args.config)
     cfg = loaded.config
@@ -1774,6 +1814,21 @@ def build_parser() -> argparse.ArgumentParser:
                     help="mixture Monte Carlo draws for PRIOR_ONLY research path")
     p8.set_defaults(func=cmd_phase8)
 
+
+    p9 = sub.add_parser("phase9", help="VMS-0.2 Phase 9 market-pricing + exit-price engine (synthetic; NOT investment advice)")
+    p9.add_argument("--out", required=True)
+    p9.add_argument("--config", default=str(_default_config_path()))
+    p9.add_argument("--seed", type=int, default=None)
+    p9.add_argument("--as-of", dest="as_of", default=None)
+    p9.add_argument("--paths", type=int, default=None)
+    p9.add_argument("--years", type=int, default=None)
+    p9.add_argument("--horizons", default=None, help="comma-separated years, e.g. 1,3")
+    p9.add_argument("--metric", default=None, choices=["pe", "pb", "ev_ebit", "ev_ebitda", "ev_sales"],
+                    help="terminal-multiple family (default: config market_pricing.default_metric_id)")
+    p9.add_argument("--no-convergence-demo", dest="no_convergence_demo", action="store_true",
+                    help="skip explicit CONVERGENCE_TO_INTRINSIC demo artifact")
+    p9.set_defaults(func=cmd_phase9)
+
     d = sub.add_parser("demo", help="offline SYNTHETIC smoke (legacy 0.1 pipeline; through returns/sensitivity)")
     d.add_argument("--policy", choices=sorted(POLICIES))
     d.add_argument("--out", required=True)
@@ -1791,7 +1846,7 @@ def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     try:
         return args.func(args)
-    except (ConfigError, InputError, Phase0BundleError, Phase3BundleError, Phase8BundleError, FixtureError, RegimeModelNotImplemented, RandomSplitProhibitedError) as e:
+    except (ConfigError, InputError, Phase0BundleError, Phase3BundleError, Phase8BundleError, Phase9BundleError, FixtureError, RegimeModelNotImplemented, RandomSplitProhibitedError) as e:
         print(f"error: {e}", file=sys.stderr)
         return EXIT_INVALID
 

@@ -1,0 +1,21 @@
+# Auxiliary industry keyword evidence for the economic-profile classifier (Phase 2).
+# Keywords alone NEVER hard-class a company (SPEC §7.3). Loaded from config so
+# sector strings are not scattered through Python sources (INDUSTRY-SW-L1-v1).
+keywords_version: "vms-industry-aux-0.2.phase2"
+financial_institution:
+  - "银行"
+  - "保险"
+  - "证券"
+  - "bank"
+  - "insurance"
+  - "broker"
+cyclical_operating:
+  - "钢铁"
+  - "有色"
+  - "煤炭"
+  - "化工"
+  - "航运"
+  - "steel"
+  - "mining"
+  - "chemical"
+  - "shipping"

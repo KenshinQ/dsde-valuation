@@ -1,5 +1,5 @@
 # VMS-0.2 router policy (SPEC §11). Phase 7: hard gates + soft suitability + comparison.
-router_version: "vms-router-0.2.phase7"
+router_version: "vms-router-0.2.phase8"
 require_hard_gates: true
 allow_ensemble_without_calibration: false
 min_eligible_methods_for_coverage: 1

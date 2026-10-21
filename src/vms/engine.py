@@ -1,4 +1,4 @@
-"""Public ValuationEngine facade (SPEC §16.1). Phase 10: full ``run`` → ValuationRunResult."""
+"""Public ValuationEngine facade (SPEC §18.1). Phase 10 adds Track B return distributions."""
 
 from __future__ import annotations
 
@@ -19,7 +19,12 @@ from vms.schemas.config import LoadedConfig
 from vms.schemas.observations import ValuationRequest
 from vms.statements.paths import FinancialPathBundle, project_financial_paths
 from vms.evaluation import EvaluationReport, run_evaluation
-from vms.returns import ReturnDistributionBundle, build_return_distributions
+from vms.returns import (
+    ReturnDistributionBundle,
+    ReturnDistributionBundleTrackB,
+    build_return_distributions,
+    build_return_distributions_from_exit_prices,
+)
 from vms.valuation import ValuationBundle, value_paths
 
 
@@ -104,6 +109,29 @@ class ValuationEngine:
         return build_return_distributions(
             valuation=valuation, financial=financial, loaded=self.loaded, spot_price=spot_price,
             entry_prices=entry_prices, horizons_years=horizons_years, simulation=simulation, regimes=regimes)
+
+    def build_return_distributions_from_exit(
+        self,
+        exit_prices,
+        *,
+        spot_price: float,
+        financial: FinancialPathBundle | None = None,
+        entry_prices: list[float] | None = None,
+        horizons_years: list[int] | None = None,
+        user_entry_prices: list[float] | None = None,
+        fundamental_state_by_path: dict[str, str] | None = None,
+    ) -> ReturnDistributionBundleTrackB:
+        """SPEC §18.1 Phase 10: Track B returns from ExitPriceBundle (not intrinsic-as-price)."""
+        return build_return_distributions_from_exit_prices(
+            exit_prices=exit_prices,
+            spot_price=spot_price,
+            loaded=self.loaded,
+            financial=financial,
+            entry_prices=entry_prices,
+            horizons_years=horizons_years,
+            user_entry_prices=user_entry_prices,
+            fundamental_state_by_path=fundamental_state_by_path,
+        )
 
     def returns_from_load(self, load: LoadResult, *, instrument_id: str, as_of: datetime, seed: int,
                           spot_price: float | None = None, n_paths: int | None = None,

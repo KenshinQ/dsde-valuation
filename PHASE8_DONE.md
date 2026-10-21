@@ -1,54 +1,77 @@
-# Phase 8 — Sensitivity & uncertainty attribution: DONE
+# Phase 8 — Ensemble and model uncertainty: DONE (VMS-0.2 §20 / §24)
 
-Not started: Phase 9 (walk-forward historical evaluation).
+Date: 2026-10-21 (Asia/Shanghai). Repo: local git only, no remote. Branch: `master`.
+Prior freeze tag: `vms-0.1`. Spec: `SPEC.md` (VMS-0.2). Prior: [PHASE7_DONE.md](PHASE7_DONE.md).
 
-## Decisions recorded
-| ID | Decision |
-|---|---|
-| SENS-OAT-ISOLATION-v1 | OAT shocks alter only the named input; isolation_check on frozen paths |
-| SENS-MC-PERCENTILE-NOT-CI-v1 | MC p05/p95 = percentile intervals, never labeled as CIs |
-| SENS-PROCESS-VS-PARAM-v1 | parameter_mode fixed vs resampled comparison |
-| SENS-DRIVER-ABLATION-v1 | Pathwise ablation to central year-1 (not Shapley) |
+Status: **all Phase 8 acceptance criteria pass** for compatibility-gated ensembles,
+named weight protocols, distributional mixture, separate intrinsic vs market-outcome
+weight artifacts, and leave-one-method-out / between-method disagreement on synthetic
+examples. Label: `ENGINEERING_PASS` for Phase 8 only; `INVESTMENT_VALUE_NOT_ESTABLISHED`.
+This is **not** investment advice and does **not** claim investment value.
+**No** `ENSEMBLE_CALIBRATED` / `INVESTMENT_VALUE_SUPPORTED` without real OOS evidence.
+Phases 9+ (market-pricing exit engine / returns rewrite / walk-forward) are **not** claimed done.
 
-## Changed / new files
-- `src/vms/diagnostics/{metrics,perturb,sensitivity}.py` — report orchestration
-- `src/vms/sampling/simulate.py` — `parameter_mode` fixed|resampled
-- `src/vms/schemas/config.py` + `config/default.yaml` — SensitivityConfig
-- `src/vms/engine.py` — `run_diagnostics`
-- `src/vms/cli/main.py` — `vms sensitivity --run-dir/--run-id`; demo writes sensitivity_report.json
-- assumptions + docs + CI
-- Tests: `test_diagnostics.py`, `test_cli_sensitivity.py`
+> Note: an older VMS-0.1 `PHASE8_DONE.md` (sensitivity & uncertainty attribution under 0.1
+> numbering) is superseded by this VMS-0.2 Phase 8 report. The 0.1 sensitivity work remains in
+> `vms.diagnostics` / CLI `vms sensitivity` and is covered by retained diagnostics suites.
 
-## Tests
-- **444 passed** (~223 s box). Leakage 6/6; invariant 7/7. Clean-clone in verification commit.
+## Changed / added files (VMS-0.2 Phase 8)
+```
+src/vms/__init__.py                         SCHEMA_VERSION=vms-0.2.phase8, PHASE_8
+src/vms/ensemble/__init__.py                NEW: public exports
+src/vms/ensemble/protocols.py               NEW: named/versioned WeightProtocol (§13.3–13.4)
+src/vms/ensemble/weights.py                 NEW: WeightArtifact; ≥0 sum-to-1; intrinsic vs MARKET_OUTCOME
+src/vms/ensemble/checklist.py               NEW: §13.3 checklist + CalibrationEvidence
+src/vms/ensemble/mixture.py                 NEW: MethodDistribution + P(V)=Σ w_m P_m
+src/vms/ensemble/disagreement.py            NEW: between-method + leave-one-method-out
+src/vms/ensemble/build.py                   NEW: build_ensemble orchestration (prod refuse / PRIOR_ONLY)
+src/vms/reporting/phase8_bundle.py          NEW: offline ensemble emitter
+src/vms/cli/main.py                         `vms phase8`
+src/vms/router/compatibility.py             notes → Phase 8 ensemble ownership
+src/vms/router/compare.py / __init__.py     notes
+config/*.yaml                               versions → phase8
+tests/unit/test_phase8_acceptance.py        NEW (§20 AC1–AC6)
+tests/property/test_ensemble_properties.py  NEW (§21.2 weights / ineligible)
+tests/integration/test_cli_phase8.py        NEW
+PHASE8_DONE.md / README.md / schema hardcodes
+```
 
-## Acceptance evidence
+## Commands executed
+| Environment | Command | Result |
+|---|---|---|
+| Repo `.venv` (Python 3.13) | `python -m pytest` | **615 passed** (Phase 7 was **598**; +17) |
+| CLI | `vms phase8 --out /tmp/vms_phase8_smoke --seed 42 --fixture mature --n-draws 400` | `PHASE8_ENSEMBLE_NOT_INVESTMENT_ADVICE`; production_mixture=false; research_mode=`PRIOR_ONLY`; calibrated_claim=false |
 
-1. **OAT alters only intended inputs.**
-   - `test_oat_isolation_only_intended_driver`; report `isolation_check.pass` for all pathwise OAT cases.
+## Acceptance criterion → evidence (§20 Phase 8 / §24)
 
-2. **Dominant valuation assumptions identified.**
-   - `dominant_assumptions` ranked by |Δ mean_vps_dcf| (and tracks |Δ p_loss|, Δ CVaR).
+| # | Criterion (SPEC §20 Phase 8) | Evidence |
+|---|---|---|
+| 1 | Uncalibrated or incompatible methods cannot form a production ensemble | `build_ensemble(..., intent="production")` → mixture=None, `ENSEMBLE_UNCALIBRATED` / `CALIBRATION_INSUFFICIENT`; incompatible EV↔EQUITY → `NOT_COMBINED_INCOMPATIBLE`; `test_ac1_*` |
+| 2 | Mixture weights are non-negative, sum to one, and carry a named target/scoring protocol | `WeightArtifact` + `WeightProtocol` (`protocol_id`/`protocol_version`/`target`/`scoring_rule`); `test_ac2_*`; property `test_normalized_weights_nonneg_sum_to_one` |
+| 3 | No default equal-weight blend is exposed as calibrated | Research path labels `PRIOR_ONLY` / `ENSEMBLE_UNCALIBRATED`; never `ENSEMBLE_CALIBRATED`; `test_ac3_equal_weight_not_calibrated`; CLI `equal_weight_labeled_prior_only=true`, `calibrated_claim=false` |
+| 4 | Ensemble and method-specific distributions are both saved | `method_results/<id>.json` + `ensemble_report.json`; `test_ac4_both_distributions_persisted` |
+| 5 | Intrinsic-value weights and market-outcome weights are separate artifacts | `intrinsic_value_weights.json` vs `market_outcome_weights.json`; `refuse_reuse_market_as_intrinsic`; `test_ac5_*` |
+| 6 | Leave-one-method-out and between-method disagreement diagnostics work on synthetic examples | `LeaveOneOutReport` + `BetweenMethodDisagreement`; `test_ac6_l1o_and_disagreement_synthetic`; CLI `l1o_max_abs_delta_median` / `disagreement_range` |
 
-3. **Tail-risk sensitivity included.**
-   - Each case reports return `p_loss` / `cvar_0.95` deltas; flag `TAIL_RISK_SENSITIVITY_INCLUDED`.
+Additional: property tests — weights sum to 1; ineligible methods never enter mixture (`test_ineligible_never_in_mixture_property`).
 
-4. **Percentile ranges not mislabeled as CIs.**
-   - `interval_labeling.rule = MC_PERCENTILE_NOT_CI`; bands carry `kind=monte_carlo_percentile_interval` + `not_a_confidence_interval`.
+## Example artifact summary
+```text
+vms phase8 --out /tmp/vms_phase8_smoke --seed 42 --fixture mature --n-draws 400
+→ status=PHASE8_ENSEMBLE_NOT_INVESTMENT_ADVICE
+→ schema_version=vms-0.2.phase8  implemented_phase=PHASE_8
+→ production_mixture=false  production_calibration_status=CALIBRATION_INSUFFICIENT
+→ research_mode=PRIOR_ONLY  research_protocol=PRIOR_ONLY_EQUAL_WEIGHT
+→ research_mixture=true  ensemble_status=ENSEMBLE_UNCALIBRATED  calibrated_claim=false
+→ investment_value=INVESTMENT_VALUE_NOT_ESTABLISHED
+→ artifacts: ensemble_report.json, intrinsic_value_weights.json,
+             market_outcome_weights.json, method_results/
+```
 
-5. **Reports reproduce from saved artifacts.**
-   - Same seed/config/baseline → same `content_hash` (`test_reproducible_content_hash`, CLI twice).
-
-Also covered: joint scenarios; DCF vs multiple; TV contribution; process vs param; driver ablation; CLI `vms sensitivity`.
-
-## Limitations
-1. Sensitivity re-runs use exploratory central-path override; production gates not re-applied per case.
-2. Driver attribution is simple ablation (documented), not Shapley.
-3. Posterior/transition OATs re-simulate (process noise re-drawn with same seed).
-4. Demo/CI sensitivity uses reduced path counts for runtime.
-5. Suite ~3.7 min.
-
-## New questions
-1. Persist per-case path parquets for audit, or summary-only?
-2. Formal bootstrap CIs for selected scalars in Phase 9+?
-3. Default sensitivity path count vs valuation path count coupling?
+## Known gaps (honest)
+- No real walk-forward calibration sample yet (Phase 11) — production ensemble always refused; `ENSEMBLE_CALIBRATED` is not emitted by Phase 8 `build_ensemble`.
+- Market-pricing **estimator** deferred (Phase 9); market-outcome weight artifact is a separate labeled stub only.
+- Equal-weight is exploratory `PRIOR_ONLY` only — not a calibrated claim.
+- Soft suitability still ≠ mixture weight (Phase 7 invariant retained).
+- Synthetic hand centers drive offline disagreement / L1O demos; not investment estimates.
+- No exit-price / returns rewrite under 0.2 adaptive path (Phases 9–10).

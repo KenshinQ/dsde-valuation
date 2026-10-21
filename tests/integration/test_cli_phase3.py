@@ -16,8 +16,8 @@ def test_cli_phase3_artifacts(tmp_path, capsys):
     assert rc == 0
     summ = json.loads(capsys.readouterr().out)
     assert summ["status"] == PHASE3_STATUS
-    assert summ["schema_version"] == SCHEMA_VERSION == "vms-0.2.phase7"
-    assert summ["implemented_phase"] == IMPLEMENTED_PHASE == "PHASE_7"
+    assert summ["schema_version"] == SCHEMA_VERSION == "vms-0.2.phase8"
+    assert summ["implemented_phase"] == IMPLEMENTED_PHASE == "PHASE_8"
     assert summ["investment_value"] == "INVESTMENT_VALUE_NOT_ESTABLISHED"
     assert summ["financial_n_valid"] == 30
     assert summ["market_pricing_status"] == "UNAVAILABLE"

@@ -16,8 +16,8 @@ def test_cli_phase7_mature_smoke(tmp_path, capsys):
     assert rc == 0
     summ = json.loads((out / "phase7_summary.json").read_text())
     assert summ["status"] == PHASE7_STATUS
-    assert summ["schema_version"] == SCHEMA_VERSION == "vms-0.2.phase7"
-    assert summ["implemented_phase"] == IMPLEMENTED_PHASE == "PHASE_7"
+    assert summ["schema_version"] == SCHEMA_VERSION == "vms-0.2.phase8"
+    assert summ["implemented_phase"] == IMPLEMENTED_PHASE == "PHASE_8"
     assert summ["investment_value"] == "INVESTMENT_VALUE_NOT_ESTABLISHED"
     assert summ["combined_value"] is None
     assert summ["ensemble_status"] == "ENSEMBLE_UNCALIBRATED"

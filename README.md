@@ -3,14 +3,15 @@
 Adaptive Multi-Method valuation & conditional return engine for China A-shares.
 Spec: [SPEC.md](SPEC.md) (VMS-0.2). Archived VMS-0.1: [SPEC_VMS-0.1.md](SPEC_VMS-0.1.md), tag `vms-0.1`.
 
-**Status: VMS-0.2 Phase 6 complete (RIM / NAV / SOTP; Phase 5 multiples + Phase 4 cash-flow retained).**
-Schema contract: `vms-0.2.phase7`. Package: `0.2.0a0`. Phase report: [PHASE7_DONE.md](PHASE7_DONE.md) (see also [PHASE6_DONE.md](PHASE6_DONE.md)…[PHASE0_DONE.md](PHASE0_DONE.md)).
+**Status: VMS-0.2 Phase 8 complete (ensemble mixture + model uncertainty; Phase 7 router/compare retained).**
+Schema contract: `vms-0.2.phase8`. Package: `0.2.0a0`. Phase report: [PHASE8_DONE.md](PHASE8_DONE.md) (see also [PHASE7_DONE.md](PHASE7_DONE.md)…[PHASE0_DONE.md](PHASE0_DONE.md)).
 Labels always include `INVESTMENT_VALUE_NOT_ESTABLISHED` on synthetic (no alpha claim).
 
 Phase 6 methods live under `vms.methods.rim` / `nav` / `sotp`; multiples under `vms.methods.multiples`;
 cash-flow under `vms.methods.cash_flow`. Legacy `vms value` (0.1 FCFF pipeline) remains importable
-but is **not** the adaptive path. Ensemble / exit-price estimator are later phases. Older
-`PHASE*_DONE.md` from VMS-0.1 numbering are historical only.
+but is **not** the adaptive path. Ensemble lives under `vms.ensemble` (PRIOR_ONLY research
+mixture only — never `ENSEMBLE_CALIBRATED` without OOS). Exit-price estimator is Phase 9.
+Older `PHASE*_DONE.md` from VMS-0.1 numbering are historical only where superseded.
 
 Fully standalone: does not import `dsde-engine` or any legacy PIT/FTD/DV1/Monte-Carlo code
 (enforced by `tests/unit/test_no_legacy_imports.py`).
@@ -53,6 +54,7 @@ vms phase5 --out /tmp/vms_phase5 --seed 42 --multiples-only  # P/E P/B EV/* + PI
 vms phase6 --out /tmp/vms_phase6 --seed 42 --fixture financial  # RIM/NAV/SOTP; NOT investment advice
 vms phase7 --out /tmp/vms_phase7 --seed 42 --fixture mature     # router + disagreement; NOT investment advice
 vms compare-methods --out /tmp/vms_compare --fixture mature     # method_comparison.json; no blend
+vms phase8 --out /tmp/vms_phase8 --seed 42 --fixture mature     # ensemble PRIOR_ONLY + L1O; NOT investment advice
 # or:
 python examples/synthetic_mature_operating/run_phase0.py --out /tmp/vms_phase0 --seed 42
 ```

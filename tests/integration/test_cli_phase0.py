@@ -36,8 +36,8 @@ def test_phase0_via_console_script(tmp_path):
     assert p.returncode == 0, p.stderr
     summary = json.loads(p.stdout)
     assert summary["status"] == PHASE0_STATUS
-    assert summary["schema_version"] == SCHEMA_VERSION == "vms-0.2.phase2"
-    assert summary["implemented_phase"] == IMPLEMENTED_PHASE == "PHASE_2"
+    assert summary["schema_version"] == SCHEMA_VERSION == "vms-0.2.phase3"
+    assert summary["implemented_phase"] == IMPLEMENTED_PHASE == "PHASE_3"
     assert summary["investment_value"] == "INVESTMENT_VALUE_NOT_ESTABLISHED"
     assert summary["enabled_methods"] == 0
     for name in [*PHASE0_DETERMINISTIC, "run_context.json"]:

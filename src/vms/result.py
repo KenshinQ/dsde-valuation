@@ -69,12 +69,12 @@ class ValuationRunResult(_M):
         labels = assign_labels(
             engineering_ok=eng_ok,
             data_quality_ok=dq_ok,
-            calibration_ok=None,  # Phase 10: calibration assessed on synthetic only → INCONCLUSIVE
+            calibration_ok=None,  # Phase 11: synthetic OOS → CALIBRATION_INSUFFICIENT
             data_label="SYNTHETIC_OR_UNSPECIFIED",
             predeclared_oos_alpha=False,
         )
         labels["calibration_note"] = (
-            "Calibration status is SYNTHETIC_ONLY / INCONCLUSIVE for VMS-0.1 release; "
+            "Calibration status is SYNTHETIC_ONLY / CALIBRATION_INSUFFICIENT for Phase 11; "
             "no real A-share OOS calibration claim."
         )
         dist_sum = None

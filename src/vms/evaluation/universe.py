@@ -1,4 +1,4 @@
-"""Universe loading and offline synthetic panel for Phase 9 evaluation."""
+"""Universe loading and offline synthetic panel for Phase 11 evaluation."""
 
 from __future__ import annotations
 
@@ -75,7 +75,7 @@ def generate_eval_panel(*, seed: int, n_instruments: int = 2, start_year: int = 
     out: dict[str, LoadResult] = {}
     src = SourceDescriptor(
         source_id=syn.SYNTHETIC_SOURCE, reporting_convention=ReportingConvention.CN_CUMULATIVE_YTD,
-        versioning=Versioning.FULL_HISTORY, description="SYNTHETIC Phase-9 eval panel — not real data")
+        versioning=Versioning.FULL_HISTORY, description="SYNTHETIC Phase-11 eval panel — not real data")
     for i in range(n_instruments):
         iid = f"SYN{i:06d}.SZ"
         rng = stream_rng(seed + i, f"eval_panel:{iid}")

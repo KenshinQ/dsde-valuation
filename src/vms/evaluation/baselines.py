@@ -1,4 +1,4 @@
-"""Side-by-side valuation / forecast baselines at a PIT origin (SPEC §15.3)."""
+"""Side-by-side valuation / forecast baselines at a PIT origin (SPEC §17.3)."""
 
 from __future__ import annotations
 
@@ -67,11 +67,16 @@ def build_baselines(*, load, instrument_id, as_of, loaded: LoadedConfig, spot: f
                        "EV-EQUITY-BRIDGE-v1", "DRIVER-CENTRAL-MEDIAN-v1")
     run = run_projection(load, instrument_id=instrument_id, as_of=as_of, loaded=loaded,
                          years=max(horizon_years, loaded.config.projection.default_years),
-                         mode="exploratory", override_reason="phase9_baseline_origin")
+                         mode="exploratory", override_reason="phase11_baseline_origin")
+    profile_id = None
+    if getattr(loaded, "profile", None) is not None:
+        profile_id = getattr(loaded.profile, "profile_id", None)
     out: dict[str, Any] = {
         "origin_as_of": as_of.isoformat(),
         "spot_price": spot,
         "profile": run.resolution.status.value,
+        "profile_id": profile_id or "UNKNOWN",
+        "fundamental_regime": None,  # filled by caller when regime posterior available
         "projection_status": run.projection.status,
         "baselines": {},
         "forecasts": {},
@@ -163,11 +168,51 @@ def build_baselines(*, load, instrument_id, as_of, loaded: LoadedConfig, spot: f
             "note": "composite_weights null — methods kept separate (EXIT-MULTIPLE-SEPARATE-v1)",
         }
 
+    # 6) Current-multiple persistence for exit pricing (SPEC §17.3)
+    # As-of trading multiple = spot / (EBITDA_y0 / shares_y0); apply to horizon-year metric.
+    # This is an EXIT-PRICE baseline, not an intrinsic-value claim.
+    persist: dict[str, Any] = {
+        "label": "current_multiple_persistence",
+        "current_multiple": None,
+        "metric": "price_to_ebitda_per_share",
+        "exit_price_point": None,
+        "note": (
+            "Exit-price baseline: hold the as-of price / (EBITDA/shares) multiple constant "
+            "and apply it to the horizon-year EBITDA/shares. Separate from intrinsic "
+            "valuation (SPEC §17.3)."
+        ),
+    }
+    y0 = proj.years[0]
+    yH = proj.years[min(horizon_years, len(proj.years)) - 1]
+    ebitda0 = _item(proj, "ebitda", y0)
+    shares0 = _item(proj, "diluted_shares", y0)
+    ebitdaH = _item(proj, "ebitda", yH)
+    sharesH = _item(proj, "diluted_shares", yH)
+    if (
+        spot > 0 and ebitda0 is not None and shares0 and shares0 > 0 and ebitda0 > 0
+        and ebitdaH is not None and sharesH and sharesH > 0 and ebitdaH > 0
+    ):
+        eps0 = ebitda0 / shares0
+        cur_mult = spot / eps0
+        persist["current_multiple"] = float(cur_mult)
+        persist["exit_price_point"] = float(cur_mult * (ebitdaH / sharesH))
+        persist["origin_ebitda_per_share"] = float(eps0)
+        persist["horizon_ebitda_per_share"] = float(ebitdaH / sharesH)
+    elif spot > 0:
+        persist["current_multiple"] = 1.0
+        persist["exit_price_point"] = float(spot)
+        persist["metric"] = "raw_price_persistence"
+        persist["flags"] = ["FALLBACK_PRICE_PERSISTENCE_NO_EBITDA"]
+    out["baselines"]["current_multiple_persistence"] = persist
+
     # Forecasts to persist (before outcomes)
     fcff_y1 = None if fcff is None or not fcff.values else fcff.values[0]
     vps = central.get("vps")
-    # market-price forecast: use VPS as model fair price (NOT a claim that price must converge)
-    price_forecast = vps
+    # market-price forecast: prefer current-multiple persistence (exit pricing baseline);
+    # fall back to VPS as a fair-price proxy. NOT a claim that price must converge to IV.
+    price_forecast = persist.get("exit_price_point")
+    if price_forecast is None:
+        price_forecast = vps
     # return point forecast at horizon H under DIVIDEND-NO-REINVEST using book DPS proxy = 0 for point baseline
     # cum DPS from projection dividends / shares over H years
     cum_dps = 0.0
@@ -196,9 +241,12 @@ def build_baselines(*, load, instrument_id, as_of, loaded: LoadedConfig, spot: f
             "note": "Intrinsic under stated WACC/g assumptions — not scored solely against market price",
         },
         "market_price": {
-            "metric": "model_fair_price_proxy",
+            "metric": "current_multiple_persistence_or_vps_proxy",
             "point": price_forecast,
-            "note": "Uses intrinsic VPS as a price-level forecast proxy; distinct from intrinsic evaluation",
+            "note": (
+                "Primary: current-multiple persistence exit-price baseline; "
+                "fallback: intrinsic VPS as price-level proxy. Distinct from intrinsic evaluation."
+            ),
         },
         "total_shareholder_return": {
             "metric": "holding_period_return_point",

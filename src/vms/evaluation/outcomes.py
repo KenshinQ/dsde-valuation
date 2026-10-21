@@ -1,4 +1,4 @@
-"""Realize outcomes ONLY after the forecast horizon has elapsed (SPEC §15.1 step 4)."""
+"""Realize outcomes ONLY after the forecast horizon has elapsed (SPEC §17.1 step 4)."""
 
 from __future__ import annotations
 
@@ -28,7 +28,7 @@ def realize_outcomes(*, load: LoadResult, instrument_id: str, origin: datetime, 
         return {"pending": True, "due_as_of": due.isoformat(), "evaluation_as_of": evaluation_as_of.isoformat()}
 
     snap, _report = assess(load, instrument_id=instrument_id, as_of=evaluation_as_of, cfg=quality_cfg,
-                           mode="exploratory", override_reason="phase9_outcome_realization")
+                           mode="exploratory", override_reason="phase11_outcome_realization")
 
     published_fys = sorted({
         f.period_end for f in snap.financials

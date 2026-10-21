@@ -302,15 +302,28 @@ ASSUMPTIONS: dict[str, str] = {
                                "convention fixed. Difference approximates parameter-uncertainty contribution.",
     "SENS-DRIVER-ABLATION-v1": "Driver contribution uses simple pathwise ablation to the central path year-1 value "
                               "(baseline metric minus ablated metric). Not a Shapley/game-theoretic allocation.",
-    "EVAL-CHRONOLOGICAL-ONLY-v1": "Phase 9 walk-forward evaluation allows only chronological origins. Random "
+    "EVAL-CHRONOLOGICAL-ONLY-v1": "Phase 11 walk-forward evaluation allows only chronological origins. Random "
                                  "row-level time-series train/test splits are prohibited (RandomSplitProhibitedError).",
     "EVAL-FORECAST-BEFORE-OUTCOME-v1": "At each origin, forecasts are persisted with outcomes=null before any "
                                       "realization is attached. Evaluation of a horizon occurs only after that horizon elapses.",
     "EVAL-TARGETS-SEPARATE-v1": "Operating cash-flow, intrinsic value, market-price, and TSR forecasts are scored in "
                                "separate metric blocks. Intrinsic value is never judged solely by matching future market prices.",
-    "EVAL-INVESTMENT-LABEL-v1": "Every evaluation report carries ENGINEERING_PASS, DATA_QUALITY_PASS, CALIBRATION_PASS "
-                               "(or INCONCLUSIVE), and investment_value. Synthetic / no predeclared leakage-safe OOS "
+    "EVAL-INVESTMENT-LABEL-v1": "Every evaluation report carries ENGINEERING_PASS, DATA_QUALITY_PASS, "
+                               "CALIBRATION_PASS / CALIBRATION_INSUFFICIENT, ENSEMBLE_CALIBRATED (false unless "
+                               "authorized), and investment_value. Synthetic / no predeclared leakage-safe OOS "
                                "evidence => INVESTMENT_VALUE_NOT_ESTABLISHED; never SUPPORTED on synthetic demos.",
+    "EVAL-CALIBRATION-INSUFFICIENT-v1": "When OOS sample size is inadequate or proper scores cannot be compared to "
+                                       "baselines with leakage-safe evidence, status is CALIBRATION_INSUFFICIENT — "
+                                       "never an inferred CALIBRATION_PASS (SPEC §17.4).",
+    "EVAL-WEIGHTS-FROZEN-v1": "Ensemble weights and evaluation thresholds are persisted (frozen_weights.json) before "
+                             "the test window opens. Mutating weights after freeze bars calibration claims "
+                             "(SPEC §17.4 / §21.3).",
+    "EVAL-SUBGROUP-DIAGNOSTICS-v1": "Calibration reports include descriptive subgroup diagnostics by economic "
+                                   "profile and fundamental regime. Subgroup instability is reported; it does not "
+                                   "alone authorize ENSEMBLE_CALIBRATED (SPEC §17.3–17.4).",
+    "EVAL-IV-NOT-PRICE-TRUTH-v1": "Future market price is never treated as ground truth for intrinsic value. Any "
+                                 "intrinsic↔price comparison is labeled MARKET_PRICE_ASSOCIATION_NOT_INTRINSIC_GROUND_TRUTH "
+                                 "(SPEC §17.2 / §22.4).",
     # ---- VMS-0.2 Phase 10: Track B exit-price conditioned returns + DSDE contract
     "TRACK-B-EXIT-RETURN-v1": "VMS-0.2 Phase 10 total shareholder return uses Track B future market exit "
                               "prices (ExitPriceBundle), not Track A intrinsic/horizon-equity as a silent "

@@ -18,6 +18,7 @@ Implemented commands:
   phase6          VMS-0.2 Phase 6 RIM/NAV/SOTP (synthetic; NOT investment advice)
   phase7          VMS-0.2 Phase 7 router hardening + method comparison (synthetic; NOT investment advice)
   compare-methods VMS-0.2 Phase 7 method disagreement report (synthetic; NOT investment advice)
+  phase8          VMS-0.2 Phase 8 ensemble + model uncertainty (synthetic; NOT investment advice)
   profile         VMS-0.2 Phase 2 economic-profile classifier (NOT a valuation)
   route           VMS-0.2 Phase 7 routing log + soft suitability (no method computation by default)
   demo            offline SYNTHETIC smoke (legacy 0.1 pipeline retained; evaluate + optional DSDE adapter).
@@ -60,6 +61,8 @@ from vms.reporting.phase6_bundle import (PHASE6_STATUS, Phase6BundleError, build
                                         dump_summary as dump_phase6_summary)
 from vms.reporting.phase7_bundle import (PHASE7_STATUS, Phase7BundleError, build_phase7_bundle,
                                         dump_summary as dump_phase7_summary)
+from vms.reporting.phase8_bundle import (PHASE8_STATUS, Phase8BundleError, build_phase8_bundle,
+                                        dump_summary as dump_phase8_summary)
 from vms.schemas.contracts import ValuationTarget
 from vms.profiles import classify_profile, load_overrides
 from vms.profiles.fixtures import FixtureError, features_from_fixture, load_fixture
@@ -1301,6 +1304,34 @@ def cmd_compare_methods(args: argparse.Namespace) -> int:
     return EXIT_OK
 
 
+def cmd_phase8(args: argparse.Namespace) -> int:
+    """Synthetic ensemble + model uncertainty. NOT investment advice."""
+    try:
+        target = ValuationTarget(args.target) if args.target else None
+    except ValueError as e:
+        allowed = ", ".join(tv.value for tv in ValuationTarget)
+        raise InputError(f"--target {args.target!r} is not a ValuationTarget; expected one of: {allowed}") from e
+    out = Path(args.out)
+    seed = 42 if args.seed is None else int(args.seed)
+    n_draws = 1000 if args.n_draws is None else int(args.n_draws)
+    try:
+        summary = build_phase8_bundle(
+            out,
+            config_path=args.config,
+            seed=seed,
+            as_of=args.as_of,
+            fixture=args.fixture,
+            target=target,
+            n_draws=n_draws,
+        )
+    except Phase8BundleError as e:
+        raise InputError(str(e)) from e
+    print(dump_phase8_summary(summary), end="")
+    assert summary["status"] == PHASE8_STATUS
+    assert summary["calibrated_claim"] is False
+    return EXIT_OK
+
+
 def cmd_demo(args: argparse.Namespace) -> int:
     loaded = load_config(args.config)
     cfg = loaded.config
@@ -1727,6 +1758,22 @@ def build_parser() -> argparse.ArgumentParser:
     cm.add_argument("--request-blend", action="store_true")
     cm.set_defaults(func=cmd_compare_methods)
 
+    p8 = sub.add_parser("phase8", help="VMS-0.2 Phase 8 ensemble + model uncertainty (synthetic; NOT investment advice)")
+    p8.add_argument("--out", required=True)
+    p8.add_argument("--config", default=str(_default_config_path()))
+    p8.add_argument("--seed", type=int, default=None)
+    p8.add_argument("--as-of", dest="as_of", default=None)
+    p8.add_argument(
+        "--fixture",
+        default="mature",
+        choices=["mature", "financial", "holding"],
+        help="synthetic profile fixture",
+    )
+    p8.add_argument("--target", default=None, help="ValuationTarget override")
+    p8.add_argument("--n-draws", dest="n_draws", type=int, default=None,
+                    help="mixture Monte Carlo draws for PRIOR_ONLY research path")
+    p8.set_defaults(func=cmd_phase8)
+
     d = sub.add_parser("demo", help="offline SYNTHETIC smoke (legacy 0.1 pipeline; through returns/sensitivity)")
     d.add_argument("--policy", choices=sorted(POLICIES))
     d.add_argument("--out", required=True)
@@ -1744,7 +1791,7 @@ def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     try:
         return args.func(args)
-    except (ConfigError, InputError, Phase0BundleError, Phase3BundleError, FixtureError, RegimeModelNotImplemented, RandomSplitProhibitedError) as e:
+    except (ConfigError, InputError, Phase0BundleError, Phase3BundleError, Phase8BundleError, FixtureError, RegimeModelNotImplemented, RandomSplitProhibitedError) as e:
         print(f"error: {e}", file=sys.stderr)
         return EXIT_INVALID
 

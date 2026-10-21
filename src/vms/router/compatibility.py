@@ -1,7 +1,7 @@
 """Compatibility before combination (SPEC §13.2).
 
 Phase 7 enforces the checker and refuses incompatible blends.
-Calibrated ensemble mixture is Phase 8 — this module never produces weights.
+Phase 8 owns mixture weights in vms.ensemble; this module remains the §13.2 gate.
 """
 
 from __future__ import annotations
@@ -37,8 +37,8 @@ class CompatibilityReport(BaseModel):
     issues: list[CompatibilityIssue] = Field(default_factory=list)
     combination_status: str = ClaimStatus.ENSEMBLE_UNCALIBRATED.value
     note: str = (
-        "Phase 7: compatibility gate only; no calibrated ensemble "
-        "(SPEC §13.2 / §13.3). Suitability ≠ weight."
+        "Compatibility gate (SPEC §13.2). Production calibrated ensemble "
+        "requires vms.ensemble checklist (SPEC §13.3). Suitability ≠ weight."
     )
 
 
@@ -103,7 +103,7 @@ def check_combination_compatibility(
             combination_status=ClaimStatus.ENSEMBLE_UNCALIBRATED.value,
             note=(
                 "fewer than two valid results; nothing to combine. "
-                "Phase 7 never fabricates a blend."
+                "Compatibility gate alone never fabricates a blend."
             ),
         )
 
@@ -228,10 +228,11 @@ def refuse_uncalibrated_blend(
         "compatible": compat.compatible,
         "compatibility": compat.model_dump(mode="json"),
         "reason": (
-            "Phase 7 forbids calibrated/production ensemble; "
+            "Uncalibrated production blend refused; "
             "report method-specific results and disagreement only "
             "(SPEC §13.3). Equal-weight or suitability-proportional "
-            "blends are not production defaults (SPEC §22.6–22.7)."
+            "blends are PRIOR_ONLY exploratory baselines, not "
+            "ENSEMBLE_CALIBRATED (SPEC §22.6–22.7)."
         ),
         "investment_value": ClaimStatus.INVESTMENT_VALUE_NOT_ESTABLISHED.value,
     }

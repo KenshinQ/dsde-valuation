@@ -1,7 +1,7 @@
-"""Deterministic method router (VMS-0.2 Phase 7, SPEC §11.3–11.4 / §13).
+"""Deterministic method router (VMS-0.2 Phase 7+, SPEC §11.3–11.4 / §13).
 
 Hard gates + soft suitability diagnostics + comparison/disagreement.
-Never fabricates a default DCF. Never builds a calibrated ensemble (Phase 8).
+Never fabricates a default DCF. Calibrated / PRIOR_ONLY mixtures live in vms.ensemble.
 """
 
 from vms.router.compatibility import (

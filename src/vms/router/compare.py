@@ -1,7 +1,7 @@
 """Method comparison, normalization and disagreement (SPEC §13.1 / §13.5).
 
 Phase 7: normalize only when mathematically valid; preserve method identity;
-report disagreement. Never average or mixture-combine (Phase 8).
+report disagreement. Mixture combination is delegated to vms.ensemble (Phase 8).
 """
 
 from __future__ import annotations

@@ -1,4 +1,4 @@
-"""Correlated driver/state path sampling (SPEC §8.2–8.3, Phase 4)."""
+"""Correlated driver/state path sampling (SPEC §8.2–8.3, VMS-0.2 Phase 3 / SPEC §8.4)."""
 
 from vms.sampling.schemas import (INVALID_REASON_CODES, MATERIAL_BLOCKS, DependenceModel, InvalidPathSummary,
                                   MCDiagnostics, PathRecord, SimulationBundle, YearDrivers)

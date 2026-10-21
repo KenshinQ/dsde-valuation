@@ -12,6 +12,7 @@ Implemented commands:
   sensitivity     Phase 8 sensitivity & uncertainty attribution
   evaluate        Phase 9 chronological walk-forward evaluation
   phase0          VMS-0.2 Phase 0 contracts baseline (synthetic; NOT a valuation)
+  phase3          VMS-0.2 Phase 3 path bundle (synthetic; NOT a valuation)
   profile         VMS-0.2 Phase 2 economic-profile classifier (NOT a valuation)
   route           VMS-0.2 Phase 2 hard-gate candidates only (no method computation)
   demo            offline SYNTHETIC smoke (legacy 0.1 pipeline retained; evaluate + optional DSDE adapter).
@@ -44,6 +45,8 @@ from vms.reporting.metadata import (ArtifactStamp, content_run_id, hash_models, 
                                     write_artifact)
 from vms.reporting.phase0_bundle import (PHASE0_STATUS, Phase0BundleError, build_phase0_bundle,
                                         dump_summary)
+from vms.reporting.phase3_bundle import (PHASE3_STATUS, Phase3BundleError, build_phase3_bundle,
+                                        dump_summary as dump_phase3_summary)
 from vms.schemas.contracts import ValuationTarget
 from vms.profiles import classify_profile, load_overrides
 from vms.profiles.fixtures import FixtureError, features_from_fixture, load_fixture
@@ -1072,6 +1075,35 @@ def cmd_phase0(args: argparse.Namespace) -> int:
     return EXIT_OK
 
 
+
+def cmd_phase3(args: argparse.Namespace) -> int:
+    """Synthetic mature-operating path bundle (drivers/regimes/statements). NOT a valuation."""
+    as_of = None
+    if args.as_of:
+        as_of, _ = _as_of(args.as_of)
+    seed = args.seed
+    paths = args.paths
+    loaded = load_config(args.config)
+    if seed is None:
+        seed = loaded.config.monte_carlo.default_seed
+    if paths is None:
+        paths = min(80, loaded.config.monte_carlo.default_paths)
+    years = 4 if args.years is None else args.years
+    summary = build_phase3_bundle(
+        out_dir=args.out,
+        config_path=args.config,
+        seed=seed,
+        paths=paths,
+        years=years,
+        as_of=as_of,
+        policy_id=args.policy,
+        data_format=args.format,
+    )
+    print(dump_phase3_summary(summary), end="")
+    assert summary["status"] == PHASE3_STATUS
+    return EXIT_OK
+
+
 def cmd_demo(args: argparse.Namespace) -> int:
     loaded = load_config(args.config)
     cfg = loaded.config
@@ -1410,6 +1442,17 @@ def build_parser() -> argparse.ArgumentParser:
     p0.add_argument("--config", default=str(_default_config_path()))
     p0.set_defaults(func=cmd_phase0)
 
+    p3 = sub.add_parser("phase3", help="VMS-0.2 Phase 3 path bundle (synthetic; NOT a valuation)")
+    p3.add_argument("--out", required=True)
+    p3.add_argument("--seed", type=int)
+    p3.add_argument("--paths", type=int, help="Monte Carlo paths (default: min(80, config))")
+    p3.add_argument("--years", type=int, help="projection years (default: 4)")
+    p3.add_argument("--policy", choices=sorted(POLICIES), help="capital-allocation policy")
+    p3.add_argument("--as-of", default="2025-06-30", help=asof_help)
+    p3.add_argument("--format", choices=["csv", "parquet"], default="csv")
+    p3.add_argument("--config", default=str(_default_config_path()))
+    p3.set_defaults(func=cmd_phase3)
+
     d = sub.add_parser("demo", help="offline SYNTHETIC smoke (legacy 0.1 pipeline; through returns/sensitivity)")
     d.add_argument("--policy", choices=sorted(POLICIES))
     d.add_argument("--out", required=True)
@@ -1427,7 +1470,7 @@ def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     try:
         return args.func(args)
-    except (ConfigError, InputError, Phase0BundleError, FixtureError, RegimeModelNotImplemented, RandomSplitProhibitedError) as e:
+    except (ConfigError, InputError, Phase0BundleError, Phase3BundleError, FixtureError, RegimeModelNotImplemented, RandomSplitProhibitedError) as e:
         print(f"error: {e}", file=sys.stderr)
         return EXIT_INVALID
 

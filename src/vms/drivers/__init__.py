@@ -1,4 +1,4 @@
-"""Driver definitions, transforms, bounds, central estimates and sector profiles. Phase 2: implemented.
+"""Driver definitions, transforms, bounds, central estimates and sector profiles.
 
-Distributions/regime-conditional estimation are Phase 3.
+VMS-0.2 Phase 3: distributions / regime-conditional estimation implemented (SPEC §8).
 """

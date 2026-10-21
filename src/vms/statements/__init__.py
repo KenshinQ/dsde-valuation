@@ -1,7 +1,7 @@
 """Financial statement projection.
 
-Phase 2: deterministic central case (generic operating company).
-Phase 5: path-wise projection of SimulationBundle (PATH-STATEMENTS-v1).
+VMS-0.2 Phase 3: deterministic central case (generic operating company).
+VMS-0.2 Phase 3 path-wise: path-wise projection of SimulationBundle (PATH-STATEMENTS-v1).
 
 Importing this package registers the built-in sector profiles.
 """

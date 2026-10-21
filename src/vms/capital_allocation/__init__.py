@@ -1,1 +1,1 @@
-"""Capital allocation policies. Phase 2: deterministic versioned policies; path-wise use in Phase 5."""
+"""Capital allocation policies. VMS-0.2 Phase 3: deterministic versioned policies; path-wise use in path projection."""

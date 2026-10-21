@@ -1,31 +1,39 @@
-# SYNTHETIC mature operating company (VMS-0.2 Phase 0)
+# SYNTHETIC mature operating company (VMS-0.2)
 
 **SYNTHETIC DATA: no real company, no investment meaning.**
 
-This example is the VMS-0.2 Phase 0 offline baseline (SPEC §19 / §20 Phase 0).
-It reuses the same seeded generator as `examples/synthetic_operating_company/`
-(instrument `SYN000001.SZ`) and emits a **contracts-only** result bundle:
-
-- validates default config + empty method registry + router + profiles catalog
-- writes `request.json`, `config_snapshot.json`, `data_manifest.json`,
-  `method_eligibility.json` (all `NOT_RUN`), `validation_report.json`,
-  `simulation_metadata.json` with `schema_version=vms-0.2.phase2` and
-  `INVESTMENT_VALUE_NOT_ESTABLISHED`
-- does **not** classify profiles, route methods, or run DCF/returns
+## Phase 0 — contracts baseline
 
 ```bash
-# from repo root, after editable install
 vms phase0 --out /tmp/vms_phase0 --seed 42
 # or:
 python examples/synthetic_mature_operating/run_phase0.py --out /tmp/vms_phase0 --seed 42
 ```
 
-Expected qualitative behavior (Phase 0):
+Emits contracts-only result bundle (`schema_version=vms-0.2.phase3`); methods all `NOT_RUN`.
 
-- config / registry / request validation PASS
-- `enabled_methods == 0`
-- every catalog method id appears as `NOT_RUN`
-- same seed ⇒ identical deterministic artifact hashes (exact bytes)
+## Phase 3 — driver / regime / path bundle
 
-Routing / method eligibility assertions arrive in Phase 2+; this example must
-not assert fictitious investment performance.
+```bash
+vms phase3 --out /tmp/vms_phase3 --seed 42 --paths 80 --years 4
+# or:
+python examples/synthetic_mature_operating/run_phase3.py --out /tmp/vms_phase3 --seed 42
+```
+
+Emits:
+
+- `simulation_bundle.json` — correlated driver/regime paths (`sampler_version` persisted)
+- `financial_path_bundle.json` — statement projections + capital allocation (invariants enforced)
+- `state_posterior.json` — fundamental regimes + market-pricing **schema** stub (`UNAVAILABLE`)
+- `simulation_metadata.json` — `PHASE3_PATH_BUNDLE_NOT_A_VALUATION`, `INVESTMENT_VALUE_NOT_ESTABLISHED`
+
+Does **not** run FCFF/FCFE/DDM/multiples method engines, ensemble, or exit-price models.
+
+Expected qualitative behavior:
+
+- profile resolves to `operating_company` / SUPPORTED
+- valid paths reconcile accounting invariants
+- fixed seed ⇒ identical `run_id` / path aggregates
+- market-pricing vocabulary (COMPRESSED/NORMAL/EXPANDED/DISLOCATION) is distinct from fundamental regimes
+
+This example must not assert fictitious investment performance.

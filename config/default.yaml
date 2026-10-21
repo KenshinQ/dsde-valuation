@@ -1,8 +1,8 @@
-# VMS-0.2 default configuration (Phase 6 RIM/NAV/SOTP + Phase 5 multiples + Phase 4 cash-flow; Phase 0–3 retained).
+# VMS-0.2 default configuration (Phase 7 router/compare; Phase 6 RIM/NAV/SOTP + Phase 5 multiples + Phase 4 cash-flow; Phase 0–3 retained).
 # Phase 0 validates every field below. Fields marked "(Phase N)" are not consumed
 # until that VMS-0.2 phase is implemented. Numeric values are explicit ASSUMPTIONS,
 # not calibrated estimates. Legacy 0.1 modules may still read these keys.
-configuration_version: "vms-default-0.2.phase6"
+configuration_version: "vms-default-0.2.phase7"
 method_registry_file: method_registry.yaml   # relative to this file; empty registry OK
 router_file: router.yaml
 profiles_file: profiles.yaml

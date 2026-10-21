@@ -4,7 +4,7 @@ Adaptive Multi-Method valuation & conditional return engine for China A-shares.
 Spec: [SPEC.md](SPEC.md) (VMS-0.2). Archived VMS-0.1: [SPEC_VMS-0.1.md](SPEC_VMS-0.1.md), tag `vms-0.1`.
 
 **Status: VMS-0.2 Phase 6 complete (RIM / NAV / SOTP; Phase 5 multiples + Phase 4 cash-flow retained).**
-Schema contract: `vms-0.2.phase6`. Package: `0.2.0a0`. Phase report: [PHASE6_DONE.md](PHASE6_DONE.md) (see also [PHASE5_DONE.md](PHASE5_DONE.md)…[PHASE0_DONE.md](PHASE0_DONE.md)).
+Schema contract: `vms-0.2.phase7`. Package: `0.2.0a0`. Phase report: [PHASE7_DONE.md](PHASE7_DONE.md) (see also [PHASE6_DONE.md](PHASE6_DONE.md)…[PHASE0_DONE.md](PHASE0_DONE.md)).
 Labels always include `INVESTMENT_VALUE_NOT_ESTABLISHED` on synthetic (no alpha claim).
 
 Phase 6 methods live under `vms.methods.rim` / `nav` / `sotp`; multiples under `vms.methods.multiples`;
@@ -51,6 +51,8 @@ vms phase3 --out /tmp/vms_phase3 --seed 42 --paths 80   # path bundle; NOT a val
 vms phase4 --out /tmp/vms_phase4 --seed 42 --paths 40   # FCFF/FCFE/DDM via router; NOT investment advice
 vms phase5 --out /tmp/vms_phase5 --seed 42 --multiples-only  # P/E P/B EV/* + PIT peers; NOT investment advice
 vms phase6 --out /tmp/vms_phase6 --seed 42 --fixture financial  # RIM/NAV/SOTP; NOT investment advice
+vms phase7 --out /tmp/vms_phase7 --seed 42 --fixture mature     # router + disagreement; NOT investment advice
+vms compare-methods --out /tmp/vms_compare --fixture mature     # method_comparison.json; no blend
 # or:
 python examples/synthetic_mature_operating/run_phase0.py --out /tmp/vms_phase0 --seed 42
 ```

@@ -30,7 +30,7 @@ def test_engine_run_full_pipeline():
         mode="exploratory", override_reason="phase10_unit_engine_run",
     )
     assert isinstance(result, ValuationRunResult)
-    assert result.schema_version == SCHEMA_VERSION == "vms-0.2.phase6"
+    assert result.schema_version == SCHEMA_VERSION == "vms-0.2.phase7"
     assert result.run_id.startswith("vms-")
     assert result.labels["investment_value"] == "INVESTMENT_VALUE_NOT_ESTABLISHED"
     assert "ENGINEERING_PASS" in result.labels

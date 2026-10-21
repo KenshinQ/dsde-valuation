@@ -1,4 +1,4 @@
-catalog_version: vms-profiles-0.2.phase6
+catalog_version: vms-profiles-0.2.phase7
 profiles:
 - label: MATURE_OPERATING
   description: Mature operating company with forecastable unlevered cash flows

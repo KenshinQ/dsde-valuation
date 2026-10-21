@@ -1,8 +1,9 @@
 # VMS-0.2 method registry (SPEC §11.1 / §19).
 # Phase 4: fcff_dcf / fcfe_dcf / ddm IMPLEMENTED+enabled.
 # Phase 5: pe / pb / ev_ebit / ev_ebitda / ev_sales IMPLEMENTED+enabled.
-# Phase 6: residual_income / nav / sotp IMPLEMENTED+enabled. No default DCF bypass / no ensemble.
-registry_version: "vms-method-registry-0.2.phase6"
+# Phase 6: residual_income / nav / sotp IMPLEMENTED+enabled.
+# Phase 7: router soft-suitability + disagreement; still no calibrated ensemble.
+registry_version: "vms-method-registry-0.2.phase7"
 methods:
   - method_id: fcff_dcf
     version: "0.2.0"

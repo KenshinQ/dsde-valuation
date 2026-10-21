@@ -21,7 +21,7 @@ FIXTURES = fixtures_dir()
 @pytest.mark.parametrize("name,expected", [
     ("mature_operating.json", ProfileLabel.MATURE_OPERATING),
     ("growth_negative_fcf.json", ProfileLabel.GROWTH_OR_REINVESTMENT_HEAVY),
-    ("bank.json", ProfileLabel.FINANCIAL_INSTITUTION),
+    ("financial_institution.json", ProfileLabel.FINANCIAL_INSTITUTION),
     ("cyclical.json", ProfileLabel.CYCLICAL_OPERATING),
     ("holding.json", ProfileLabel.HOLDING_OR_CONGLOMERATE),
 ])

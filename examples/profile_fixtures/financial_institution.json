@@ -1,11 +1,11 @@
 {
-  "fixture_id": "bank",
+  "fixture_id": "financial_institution",
   "expected_primary": "FINANCIAL_INSTITUTION",
   "allow_low_confidence": false,
   "features": {
     "instrument_id": "SYN_BANK.SH",
     "as_of": "2025-06-30",
-    "fixture_id": "bank",
+    "fixture_id": "financial_institution",
     "revenue_cagr_3y": 0.04,
     "fcf_to_revenue": null,
     "ebit_margin": null,
@@ -15,11 +15,11 @@
     "financial_assets_to_assets": 0.85,
     "investment_assets_to_assets": 0.05,
     "ppe_to_assets": 0.02,
-    "debt_to_assets": 0.10,
+    "debt_to_assets": 0.1,
     "cash_to_assets": 0.05,
     "net_cash_to_assets": null,
-    "dividend_payout": 0.30,
-    "book_equity": 2.0e11,
+    "dividend_payout": 0.3,
+    "book_equity": 200000000000.0,
     "n_segments": 2,
     "has_listed_subsidiaries": false,
     "history_years": 12,
@@ -27,5 +27,9 @@
     "industry_name": "银行",
     "low_data_quality": false
   },
-  "available_fields": ["total_equity", "parent_net_income", "dividends_paid"]
+  "available_fields": [
+    "total_equity",
+    "parent_net_income",
+    "dividends_paid"
+  ]
 }

@@ -1,5 +1,5 @@
 # VMS-0.2 router policy (SPEC §11). Phase 2: hard-gate skeleton; no method computation.
-router_version: "vms-router-0.2.phase5"
+router_version: "vms-router-0.2.phase6"
 require_hard_gates: true
 allow_ensemble_without_calibration: false
 min_eligible_methods_for_coverage: 1

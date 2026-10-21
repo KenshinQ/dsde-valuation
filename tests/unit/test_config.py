@@ -32,7 +32,7 @@ def test_shipped_configs_valid(repo):
     assert lc.config.base_currency == "CNY"
     assert lc.profile.profile_id == "operating_company" and lc.profile.supported
     assert lc.profile.bounds_status == "placeholder"
-    assert len(lc.method_registry.methods) >= 8 and {m.method_id for m in lc.method_registry.enabled_methods} == {"fcff_dcf", "fcfe_dcf", "ddm", "pe", "pb", "ev_ebit", "ev_ebitda", "ev_sales"}
+    assert len(lc.method_registry.methods) >= 8 and {m.method_id for m in lc.method_registry.enabled_methods} == {"fcff_dcf", "fcfe_dcf", "ddm", "residual_income", "pe", "pb", "ev_ebit", "ev_ebitda", "ev_sales", "nav", "sotp"}
     assert lc.router.require_hard_gates is True
     assert len(lc.profiles_catalog.profiles) >= 8
 

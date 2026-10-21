@@ -8,7 +8,7 @@ Synthetic economic-profile inputs for the rule-based classifier. These are
 |---|---|
 | `mature_operating.json` | `MATURE_OPERATING` |
 | `growth_negative_fcf.json` | `GROWTH_OR_REINVESTMENT_HEAVY` |
-| `bank.json` | `FINANCIAL_INSTITUTION` |
+| `financial_institution.json` | `FINANCIAL_INSTITUTION` |
 | `cyclical.json` | `CYCLICAL_OPERATING` (or low confidence with `HIGH_CYCLICALITY`) |
 | `holding.json` | `HOLDING_OR_CONGLOMERATE` |
 
@@ -16,5 +16,5 @@ Run:
 
 ```bash
 vms profile --fixture examples/profile_fixtures/mature_operating.json
-vms route --fixture examples/profile_fixtures/bank.json --target FUNDAMENTAL_VALUE_CURRENT
+vms route --fixture examples/profile_fixtures/financial_institution.json --target FUNDAMENTAL_VALUE_CURRENT
 ```

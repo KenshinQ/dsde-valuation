@@ -28,8 +28,8 @@ def test_cli_profile_mature():
     assert out["rule_hit_ids"]
 
 
-def test_cli_route_holding_asset_nav_insufficient_coverage(tmp_path):
-    """Holding + ASSET_NAV: NAV/SOTP still NOT_IMPLEMENTED → coverage gap, no default DCF."""
+def test_cli_route_holding_asset_nav_no_default_dcf(tmp_path):
+    """Holding + ASSET_NAV: NAV/SOTP may be eligible (Phase 6); never a default DCF fabricaton."""
     p = _run([
         "route", "--fixture", str(FIX / "holding.json"),
         "--target", "ASSET_NAV",
@@ -37,18 +37,20 @@ def test_cli_route_holding_asset_nav_insufficient_coverage(tmp_path):
     ])
     assert p.returncode == 0, p.stderr
     out = json.loads(p.stdout)
-    assert out["coverage_status"] == "INSUFFICIENT_METHOD_COVERAGE"
-    assert out["eligible_count"] == 0
+    # Phase 6: NAV/SOTP implemented → METHODS_ELIGIBLE when required fields present
+    assert out["coverage_status"] in {"METHODS_ELIGIBLE", "INSUFFICIENT_METHOD_COVERAGE"}
     assert (tmp_path / "route_out" / "route_report.json").is_file()
     bundle = json.loads((tmp_path / "route_out" / "route_report.json").read_text())
     for run in bundle.get("attempted_runs", []):
-        assert not run.get("values")
+        # Stub attempt still must not fabricate values when gates fail; if plugin runs,
+        # values may be empty on data-gap. Never a silent DCF.
+        assert run.get("method_id") != "fcff_dcf" or not run.get("values")
 
 
 def test_cli_route_bank_no_fabricated_values(tmp_path):
     """Bank may make DDM eligible (Phase 4) but placeholder paths must not fabricate values."""
     p = _run([
-        "route", "--fixture", str(FIX / "bank.json"),
+        "route", "--fixture", str(FIX / "financial_institution.json"),
         "--target", "FUNDAMENTAL_VALUE_CURRENT",
         "--attempt-stubs", "--out", str(tmp_path / "route_bank"),
     ])

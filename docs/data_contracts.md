@@ -33,10 +33,10 @@ Announcements published after the close (e.g. 18:00) are excluded until the next
 Explicit tz-aware datetimes are used as given. The rule id/version is written into
 `request.json`, `data_manifest.json` and `pit_snapshot.json`.
 
-## 3. Canonical field vocabulary — registry `FIELDS-2`
+## 3. Canonical field vocabulary — registry `FIELDS-3`
 - **kind**: `flow` (period amount; eligible for cumulative→standalone conversion) or
   `stock` (point-in-time balance; **never** converted).
-- **unit**: all fields are currency amounts (CNY yuan after normalisation).
+- **unit**: `currency` (CNY yuan after normalisation) or `per_share` (e.g. basic_eps).
 - **sign**:
   - `positive_magnitude`: stored as a **non-negative magnitude even though it is an outflow/expense**.
     `capex = 100` means 100 of cash spent. Same for `dividends_paid`, `share_repurchases`,
@@ -84,6 +84,13 @@ Explicit tz-aware datetimes are used as given. The rule id/version is written in
 | `total_liabilities` | balance_sheet | stock | nonnegative | Total liabilities |
 | `total_equity` | balance_sheet | stock | signed | Total equity INCLUDING minority interest; identity: total_assets = total_liabilities + total_equity |
 | `parent_equity` | balance_sheet | stock | signed | Equity attributable to parent |
+| `other_equity_instruments` | balance_sheet | stock | nonnegative | Other equity instruments (其他权益工具: preferred + perpetual etc.) |
+| `preferred_shares` | balance_sheet | stock | nonnegative | Preferred shares component of other equity instruments (优先股) |
+| `perpetual_bond` | balance_sheet | stock | nonnegative | Perpetual bond / AT1 component of other equity instruments (永续债) |
+| `other_comprehensive_income` | income | flow | signed | Period OCI attributable to parent (归母其他综合收益); used for clean-surplus |
+| `interest_income` | income | flow | nonnegative | Interest income (利息收入); deposit-taking FI classifier feature |
+| `interest_net_income` | income | flow | signed | Net interest income (利息净收入) |
+| `basic_eps` | income | flow | signed | Basic earnings per share attributable to ordinary shareholders (基本每股收益) |
 
 ## 4. Input tables
 Directory with one file per table, either `.csv` or `.parquet` (both present → error):

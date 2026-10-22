@@ -1,4 +1,4 @@
-"""Canonical financial field vocabulary (SPEC §5.2). Registry version: FIELDS-2 (FIELDS-1 + non_recurring_items_pretax).
+"""Canonical financial field vocabulary (SPEC §5.2). Registry version: FIELDS-3 (FIELDS-2 + common-equity / OCI / EPS / interest_income for deposit-taking FI).
 
 Every canonical field declares:
 - statement_type: income | cash_flow | balance_sheet
@@ -19,7 +19,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Literal
 
-FIELD_REGISTRY_VERSION = "FIELDS-2"
+FIELD_REGISTRY_VERSION = "FIELDS-3"
 
 Kind = Literal["flow", "stock"]
 Sign = Literal["positive_magnitude", "nonnegative", "signed"]
@@ -32,7 +32,7 @@ class CanonicalField:
     kind: Kind
     sign: Sign
     description: str
-    unit: Literal["currency"] = "currency"
+    unit: Literal["currency", "per_share"] = "currency"
 
 
 _F = CanonicalField
@@ -77,6 +77,22 @@ FIELDS: tuple[CanonicalField, ...] = (
     _F("total_equity", "balance_sheet", "stock", "signed",
        "Total equity INCLUDING minority interest; identity: total_assets = total_liabilities + total_equity"),
     _F("parent_equity", "balance_sheet", "stock", "signed", "Equity attributable to parent"),
+    # ---- deposit-taking FI / common-equity basis (R2)
+    _F("other_equity_instruments", "balance_sheet", "stock", "nonnegative",
+       "Other equity instruments (其他权益工具: preferred + perpetual etc.)"),
+    _F("preferred_shares", "balance_sheet", "stock", "nonnegative",
+       "Preferred shares component of other equity instruments (优先股)"),
+    _F("perpetual_bond", "balance_sheet", "stock", "nonnegative",
+       "Perpetual bond / AT1 component of other equity instruments (永续债)"),
+    _F("other_comprehensive_income", "income", "flow", "signed",
+       "Period OCI attributable to parent (归母其他综合收益); used for clean-surplus"),
+    _F("interest_income", "income", "flow", "nonnegative",
+       "Interest income (利息收入); deposit-taking FI classifier feature"),
+    _F("interest_net_income", "income", "flow", "signed",
+       "Net interest income (利息净收入)"),
+    _F("basic_eps", "income", "flow", "signed",
+       "Basic earnings per share attributable to ordinary shareholders (基本每股收益)",
+       unit="per_share"),
 )
 
 REGISTRY: dict[str, CanonicalField] = {f.name: f for f in FIELDS}

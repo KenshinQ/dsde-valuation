@@ -131,7 +131,7 @@ def test_features_from_bank_snapshot_are_financial_not_mature():
 def test_rim_inputs_constant_ni_and_explicit_cs_zeros(repo):
     loaded = load_config(repo / "config/default.yaml")
     snap = _snap(_bank_load())
-    bridge = rim_inputs_from_snapshot(snap, loaded=loaded, years=5, zeros_explicit=True)
+    bridge = rim_inputs_from_snapshot(snap, loaded=loaded, years=5, zeros_explicit=True, equity_basis="total")
     assert bridge.ok
     ri = bridge.rim_inputs
     assert ri["book_equity_0"] == 500.0
@@ -151,7 +151,7 @@ def test_rim_inputs_refuse_silent_cs_zeros(repo):
     loaded = load_config(repo / "config/default.yaml")
     snap = _snap(_bank_load())
     with pytest.raises(RimBridgeError) as ei:
-        rim_inputs_from_snapshot(snap, loaded=loaded, years=3, zeros_explicit=False)
+        rim_inputs_from_snapshot(snap, loaded=loaded, years=3, zeros_explicit=False, equity_basis="total")
     msg = str(ei.value)
     assert ("zeros_explicit" in msg) or ("CLEAN_SURPLUS" in msg)
 
@@ -167,6 +167,6 @@ def test_rim_inputs_missing_ni_ineligible(repo):
         classifications=load.classifications,
     )
     snap = _snap(load)
-    bridge = rim_inputs_from_snapshot(snap, loaded=loaded, years=3, zeros_explicit=True)
+    bridge = rim_inputs_from_snapshot(snap, loaded=loaded, years=3, zeros_explicit=True, equity_basis="total")
     assert not bridge.ok
     assert bridge.ineligible_reason in {"MISSING_NET_INCOME_FORECAST", "MISSING_PARENT_NET_INCOME"}

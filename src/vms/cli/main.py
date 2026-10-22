@@ -16,7 +16,7 @@ Implemented commands:
   phase4          VMS-0.2 Phase 4 FCFF/FCFE/DDM via router (synthetic; NOT investment advice)
   phase5          VMS-0.2 Phase 5 relative multiples + PIT peers (synthetic; NOT investment advice)
   phase6          VMS-0.2 Phase 6 RIM/NAV/SOTP (synthetic; NOT investment advice)
-  value-rim       R1 real A-share FINANCIAL_INSTITUTION → RIM via PIT bridge (NOT investment advice)
+  value-rim       R1/R2 real A-share FINANCIAL_INSTITUTION → RIM (common equity + P2; NOT investment advice)
   phase7          VMS-0.2 Phase 7 router hardening + method comparison (synthetic; NOT investment advice)
   compare-methods VMS-0.2 Phase 7 method disagreement report (synthetic; NOT investment advice)
   phase8          VMS-0.2 Phase 8 ensemble + model uncertainty (synthetic; NOT investment advice)
@@ -1224,7 +1224,7 @@ def cmd_phase5(args: argparse.Namespace) -> int:
 
 
 def cmd_value_rim(args: argparse.Namespace) -> int:
-    """Real PIT → residual income (R1 FINANCIAL_INSTITUTION bridge). NOT investment advice."""
+    """Real PIT → residual income (R1/R2 FINANCIAL_INSTITUTION bridge). NOT investment advice."""
     cfg = load_config(args.config)
     mode = _mode(args, cfg)
     as_of, note = _as_of(args.as_of)
@@ -1233,6 +1233,16 @@ def cmd_value_rim(args: argparse.Namespace) -> int:
     zeros_explicit = bool(getattr(args, "zeros_explicit", True))
     if getattr(args, "no_zeros_explicit", False):
         zeros_explicit = False
+    equity_basis = getattr(args, "equity_basis", "common") or "common"
+    run_distribution = not bool(getattr(args, "no_distribution", False))
+    n_paths = getattr(args, "paths", None)
+    seed = getattr(args, "seed", None)
+    ke_grid = None
+    if getattr(args, "ke_grid", None):
+        try:
+            ke_grid = [float(x) for x in str(args.ke_grid).split(",") if str(x).strip()]
+        except ValueError as e:
+            raise InputError(f"--ke-grid must be comma-separated floats: {args.ke_grid!r}") from e
     target = None
     if args.target:
         try:
@@ -1256,6 +1266,11 @@ def cmd_value_rim(args: argparse.Namespace) -> int:
             years=years,
             zeros_explicit=zeros_explicit,
             target=target,
+            equity_basis=equity_basis,
+            run_distribution=run_distribution,
+            n_paths=n_paths,
+            seed=seed,
+            ke_grid=ke_grid,
         )
     except GateError as e:
         print(f"error: {e}", file=sys.stderr)
@@ -1971,7 +1986,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     vr = sub.add_parser(
         "value-rim",
-        help="R1 real A-share FINANCIAL_INSTITUTION → RIM via PIT bridge (NOT investment advice; leaves industrial UNSUPPORTED)",
+        help="R1/R2 real A-share FINANCIAL_INSTITUTION → RIM via PIT bridge (NOT investment advice; leaves industrial UNSUPPORTED)",
     )
     vr.add_argument("--input", required=True, help="directory with canonical CSV/Parquet tables")
     vr.add_argument("--ticker", required=True, help="instrument_id, e.g. 000001.SZ")
@@ -1982,6 +1997,13 @@ def build_parser() -> argparse.ArgumentParser:
                     help="allow explicit zero OCI/net_issuance (flag CLEAN_SURPLUS_ZEROS_ASSUMED); default on")
     vr.add_argument("--no-zeros-explicit", action="store_true",
                     help="refuse missing OCI/net_issuance (structured error; never silent zeros)")
+    vr.add_argument("--equity-basis", choices=["common", "total"], default="common",
+                    help="R2 default common equity; total = R1 legacy total_equity book")
+    vr.add_argument("--paths", type=int, default=None, help="P2 ROE bootstrap paths (default: config monte_carlo.default_paths)")
+    vr.add_argument("--seed", type=int, default=None, help="P2 bootstrap seed (default: config monte_carlo.default_seed)")
+    vr.add_argument("--ke-grid", default=None, help="comma-separated ke grid, default 0.08,0.09,0.10")
+    vr.add_argument("--no-distribution", action="store_true",
+                    help="skip R2b P2 distribution / ke grid (P1 point only)")
     vr.add_argument("--target", default=None, help="ValuationTarget (default FUNDAMENTAL_VALUE_CURRENT)")
     _gate_args(vr)
     vr.set_defaults(func=cmd_value_rim)

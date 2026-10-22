@@ -13,6 +13,8 @@ from vms.providers.eastmoney.equity import apply_shares_to_market, equity_share_
 from vms.providers.eastmoney.industry import parse_company_survey, to_classification
 from vms.providers.eastmoney.sharebonus import SOURCE_ID as CA_SOURCE, map_sharebonus_rows
 from vms.providers.eastmoney.balance_lines import SOURCE_ID as BS_SOURCE, map_balance_line_rows
+from vms.providers.eastmoney.bank_f10 import SOURCE_ID as BANK_F10_SOURCE, map_bank_f10_rows
+from vms.providers.eastmoney.industry import deposit_taking_fi_sw_label
 from vms.schemas.observations import (CorporateActionEvent, FinancialObservation,
                                      InstrumentClassification, MarketObservation,
                                      ReportingConvention, SourceDescriptor, Versioning)
@@ -178,6 +180,49 @@ def _ensure_balance_lines(thscode: str, *, prefer_local: bool, min_local: int, d
 
 
 
+
+def _bank_f10_source() -> SourceDescriptor:
+    return SourceDescriptor(
+        source_id=BANK_F10_SOURCE,
+        reporting_convention=ReportingConvention.CN_CUMULATIVE_YTD,
+        versioning=Versioning.LATEST_ONLY,
+        fiscal_year_end="12-31",
+        description=(
+            "Eastmoney PC_HSF10 NewFinanceAnalysis companyType=3 template: "
+            "OEI/preferred/perpetual/minority/goodwill/OCI/EPS/interest (EM-FI-F10-v1). "
+            "published_at = NOTICE_DATE @ 15:00 Asia/Shanghai."
+        ),
+    )
+
+
+def _ensure_bank_f10(thscode: str, *, prefer_local: bool, min_local: int, db: Path) -> tuple[dict, str]:
+    try:
+        em_store.ensure_tables(db)
+    except Exception:
+        pass
+    n = em_store.count_bank_f10(thscode, db_path=db)
+    if prefer_local and n >= min_local:
+        return {
+            "balance": em_store.read_bank_f10(thscode, statement="zcfzb", db_path=db),
+            "income": em_store.read_bank_f10(thscode, statement="lrb", db_path=db),
+        }, "local"
+    try:
+        bundle = em_client.fetch_bank_f10_bundle(thscode, company_type=3)
+        em_store.upsert_bank_f10(thscode, statement="zcfzb", rows=bundle.get("balance") or [], db_path=db)
+        em_store.upsert_bank_f10(thscode, statement="lrb", rows=bundle.get("income") or [], db_path=db)
+        return {
+            "balance": em_store.read_bank_f10(thscode, statement="zcfzb", db_path=db),
+            "income": em_store.read_bank_f10(thscode, statement="lrb", db_path=db),
+        }, "rest_upsert"
+    except Exception as e:  # noqa: BLE001
+        if n > 0:
+            return {
+                "balance": em_store.read_bank_f10(thscode, statement="zcfzb", db_path=db),
+                "income": em_store.read_bank_f10(thscode, statement="lrb", db_path=db),
+            }, f"rest_failed_local:{type(e).__name__}"
+        raise
+
+
 def enrich_bundle(
     thscode: str,
     *,
@@ -190,6 +235,7 @@ def enrich_bundle(
     enable_shares: bool = True,
     enable_industry: bool = True,
     enable_balance_lines: bool = True,
+    enable_bank_f10: bool = True,
     notice_by_period_end: dict | None = None,
 ) -> EnrichmentResult:
     """Fetch/map EM enrichment. Local DuckDB cache first; REST on miss.
@@ -208,6 +254,7 @@ def enrich_bundle(
             "EM-CA-SHAREBONUS-v1",
             "EM-SHARES-EQUITY-v1",
             "EM-BS-LINES-v1",
+            "EM-FI-F10-v1",
             "INDUSTRY-SW-L1-PROXY-EM-v1",
             "INDUSTRY-NO-RECLASS-HISTORY-v1",
             "HITHINK-ALLOTMENT-DEFER-v1",
@@ -285,6 +332,37 @@ def enrich_bundle(
             diag["balance_lines"] = {"path": path, "rows": len(rows), **stats, "observations": len(obs)}
         except Exception as e:  # noqa: BLE001
             diag["balance_lines"] = {"error": f"{type(e).__name__}: {str(e)[:160]}"}
+
+
+    if enable_bank_f10:
+        # Attempt companyType=3 template when industry is deposit-taking FI (or unknown yet).
+        sw = None
+        if res.classifications:
+            sw = res.classifications[0].industry
+        fi_label = deposit_taking_fi_sw_label()
+        if sw in (None, "", fi_label):
+            try:
+                bundle, path = _ensure_bank_f10(thscode, prefer_local=prefer_local, min_local=1, db=db)
+                obs, stats = map_bank_f10_rows(
+                    balance_rows=bundle.get("balance") or [],
+                    income_rows=bundle.get("income") or [],
+                    instrument_id=thscode,
+                )
+                if obs:
+                    res.financial = list(res.financial) + obs
+                    res.sources[BANK_F10_SOURCE] = _bank_f10_source()
+                diag["bank_f10"] = {
+                    "path": path,
+                    "balance_rows": len(bundle.get("balance") or []),
+                    "income_rows": len(bundle.get("income") or []),
+                    **stats,
+                    "observations": len(obs),
+                    "industry": sw,
+                }
+            except Exception as e:  # noqa: BLE001
+                diag["bank_f10"] = {"error": f"{type(e).__name__}: {str(e)[:160]}", "industry": sw}
+        else:
+            diag["bank_f10"] = {"skipped": True, "reason": "industry_not_deposit_taking_fi", "industry": sw}
 
     res.diagnostics = diag
     return res

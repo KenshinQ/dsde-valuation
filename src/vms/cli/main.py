@@ -1271,6 +1271,7 @@ def cmd_value_rim(args: argparse.Namespace) -> int:
             n_paths=n_paths,
             seed=seed,
             ke_grid=ke_grid,
+            auto_fi_peers=not bool(getattr(args, "no_auto_fi_peers", False)),
         )
     except GateError as e:
         print(f"error: {e}", file=sys.stderr)
@@ -1986,7 +1987,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     vr = sub.add_parser(
         "value-rim",
-        help="R1/R2 real A-share FINANCIAL_INSTITUTION → RIM via PIT bridge (NOT investment advice; leaves industrial UNSUPPORTED)",
+        help="R1–R3 real A-share FINANCIAL_INSTITUTION → RIM via PIT bridge (NOT investment advice; leaves industrial UNSUPPORTED)",
     )
     vr.add_argument("--input", required=True, help="directory with canonical CSV/Parquet tables")
     vr.add_argument("--ticker", required=True, help="instrument_id, e.g. 000001.SZ")
@@ -2004,6 +2005,8 @@ def build_parser() -> argparse.ArgumentParser:
     vr.add_argument("--ke-grid", default=None, help="comma-separated ke grid, default 0.08,0.09,0.10")
     vr.add_argument("--no-distribution", action="store_true",
                     help="skip R2b P2 distribution / ke grid (P1 point only)")
+    vr.add_argument("--no-auto-fi-peers", action="store_true",
+                    help="disable R3 auto-build of deposit-taking FI peer_observations when load.peers empty")
     vr.add_argument("--target", default=None, help="ValuationTarget (default FUNDAMENTAL_VALUE_CURRENT)")
     _gate_args(vr)
     vr.set_defaults(func=cmd_value_rim)

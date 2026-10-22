@@ -3,6 +3,8 @@
 Leaves legacy industrial FCFF ``industry.unsupported`` intact.
 R2a: common-equity basis + sharebonus DPS + EPS common NI.
 R2b: P2 ROE distribution + ke grid (no ensemble).
+R2c: P/B-ROE relative sidecar (pb_common, raw close; PEER_SCARCITY ok).
+R2d: Track B returns via own-hist common P/B exit (UNAVAILABLE if hist < 12).
 Label always INVESTMENT_VALUE_NOT_ESTABLISHED.
 """
 
@@ -18,6 +20,8 @@ from vms.data.io import LoadResult
 from vms.methods import MethodConfig, build_registry_from_config
 from vms.methods.protocol import ValuationContext
 from vms.methods.rim.distribution import DEFAULT_KE_GRID, run_rim_distribution
+from vms.methods.rim.pb_roe import run_pb_roe_relative
+from vms.methods.rim.track_b_exit import run_rim_track_b
 from vms.methods.rim.from_snapshot import (
     BOOK_EQUITY_COMMON_RULE,
     BOOK_EQUITY_TE_RULE,
@@ -59,6 +63,11 @@ def build_value_rim_bundle(
     n_paths: int | None = None,
     seed: int | None = None,
     ke_grid: Sequence[float] | None = None,
+    run_pb_roe: bool = True,
+    run_track_b: bool = True,
+    peer_min_count: int = 5,
+    track_b_horizons: Sequence[int] | None = None,
+    track_b_paths: int | None = None,
 ) -> dict[str, Any]:
     """Assess PIT → classify → bridge rim_inputs → route → residual_income (+ optional P2 grid)."""
     out = Path(out_dir)
@@ -238,6 +247,49 @@ def build_value_rim_bundle(
             }
             result_flags = sorted(set(result_flags) | set(dist.flags))
 
+    pb_roe_payload: dict[str, Any] | None = None
+    track_b_payload: dict[str, Any] | None = None
+    if bridge.ok and equity_basis == "common":
+        rim_xcheck = None
+        if dist_payload and dist_payload.get("ke_grid"):
+            rim_xcheck = (dist_payload["ke_grid"][0] or {}).get("vps_p50")
+        elif vps is not None:
+            rim_xcheck = vps.get("mean") if isinstance(vps, dict) else vps
+        if run_pb_roe:
+            pb_rep = run_pb_roe_relative(
+                snap,
+                bridge=bridge,
+                peer_observations=list(load.peers or []),
+                rim_vps_crosscheck=None if rim_xcheck is None else float(rim_xcheck),
+                peer_min_count=int(peer_min_count),
+                zeros_explicit=zeros_explicit,
+            )
+            pb_roe_payload = pb_rep.as_dict()
+            result_flags = sorted(set(result_flags) | set(pb_rep.flags))
+            if pb_rep.assumption_ids:
+                # assumption_labels stay bridge-primary; ids recorded in sidecar
+                pass
+        if run_track_b:
+            tb_paths = int(track_b_paths) if track_b_paths is not None else int(n_paths)
+            tb_h = list(track_b_horizons) if track_b_horizons is not None else [1, 3]
+            oci_const = None
+            oci_seq = (bridge.rim_inputs or {}).get("oci")
+            if isinstance(oci_seq, list) and oci_seq:
+                oci_const = float(oci_seq[0])
+            tb = run_rim_track_b(
+                snap,
+                bridge=bridge,
+                loaded=loaded,
+                years=years or cfg.projection.default_years,
+                n_paths=tb_paths,
+                seed=int(seed),
+                horizons_years=tb_h,
+                zeros_explicit=zeros_explicit,
+                oci_constant=oci_const,
+            )
+            track_b_payload = tb.as_dict()
+            result_flags = sorted(set(result_flags) | set(tb.flags))
+
     stamp = ArtifactStamp(run_id=content_run_id(
         kind="value-rim", instrument=instrument_id, as_of=as_of.isoformat(),
         data=sha256_of({"n_fin": len(load.financial), "n_mkt": len(load.market)}),
@@ -278,6 +330,10 @@ def build_value_rim_bundle(
         }, stamp)
     if dist_payload is not None:
         write_artifact(out, "rim_distribution.json", dist_payload, stamp)
+    if pb_roe_payload is not None:
+        write_artifact(out, "rim_pb_roe.json", pb_roe_payload, stamp)
+    if track_b_payload is not None:
+        write_artifact(out, "rim_track_b.json", track_b_payload, stamp)
 
     primary_cell = None
     if dist_payload and dist_payload.get("ke_grid"):
@@ -330,6 +386,28 @@ def build_value_rim_bundle(
         } if run_distribution else None,
         "ev_bridge_applied": False,
         "ensemble": None,
+        "pb_roe": None if pb_roe_payload is None else {
+            "status": pb_roe_payload.get("status"),
+            "ok": pb_roe_payload.get("ok"),
+            "ineligible_reason": pb_roe_payload.get("ineligible_reason"),
+            "subject_pb": pb_roe_payload.get("subject_pb"),
+            "subject_roe": pb_roe_payload.get("subject_roe"),
+            "peer_n_included": pb_roe_payload.get("peer_n_included"),
+            "peer_median_pb": pb_roe_payload.get("peer_median_pb"),
+            "relative_vps": pb_roe_payload.get("relative_vps"),
+            "rim_vps_crosscheck": pb_roe_payload.get("rim_vps_crosscheck"),
+            "shared_book_math_note": pb_roe_payload.get("shared_book_math_note"),
+        },
+        "track_b": None if track_b_payload is None else {
+            "status": track_b_payload.get("status"),
+            "ok": track_b_payload.get("ok"),
+            "ineligible_reason": track_b_payload.get("ineligible_reason"),
+            "hist_pb_n": (track_b_payload.get("hist_pb") or {}).get("n"),
+            "pb_center_used": track_b_payload.get("pb_center_used"),
+            "spot_price": track_b_payload.get("spot_price"),
+            "n_book_paths": track_b_payload.get("n_book_paths"),
+            "exit_n_valid": None if not track_b_payload.get("exit_prices") else track_b_payload["exit_prices"].get("n_valid"),
+        },
         "flags": result_flags,
         "assumption_labels": list(bridge.assumption_labels),
         "industrial_fcff_disabled": industrial,
@@ -338,7 +416,7 @@ def build_value_rim_bundle(
         "pit_complete": snap.pit_complete,
         "quality_status": report.status.value,
         "note": (
-            "Engineering smoke: real PIT→RIM bridge (R2 common equity + P2 distribution). "
+            "Engineering smoke: real PIT→RIM bridge (R2a/b + R2c P/B-ROE sidecar + R2d Track B). "
             "ke/g/NI/ROE are ASSUMPTIONs; PIT may be incomplete; not an investment conclusion."
         ),
     }
@@ -357,7 +435,7 @@ def build_value_rim_bundle(
 def _write_run_report(path: Path, summary: dict[str, Any], *, bridge_detail: str) -> None:
     dist = summary.get("distribution") or {}
     lines = [
-        f"# Exploratory value-rim — {summary['instrument_id']}（R2）",
+        f"# Exploratory value-rim — {summary['instrument_id']}（R2a–d）",
         "",
         f"**as_of**: `{summary['as_of']}`  ",
         f"**mode**: {summary['mode']}  ",
@@ -381,6 +459,8 @@ def _write_run_report(path: Path, summary: dict[str, Any], *, bridge_detail: str
         f"- ke_grid: {json.dumps(dist.get('ke_grid'), ensure_ascii=False) if dist.get('ke_grid') else None}",
         f"- ev_bridge_applied: {summary.get('ev_bridge_applied')}",
         f"- ensemble: {summary.get('ensemble')}",
+        f"- pb_roe: {json.dumps(summary.get('pb_roe'), ensure_ascii=False)}",
+        f"- track_b: {json.dumps(summary.get('track_b'), ensure_ascii=False)}",
         f"- flags: {', '.join(summary.get('flags') or [])}",
         f"- industrial FCFF disabled: {summary.get('industrial_fcff_disabled')}",
         f"- pit_complete / quality: {summary.get('pit_complete')} / {summary.get('quality_status')}",
@@ -391,7 +471,7 @@ def _write_run_report(path: Path, summary: dict[str, Any], *, bridge_detail: str
         "## Honesty",
         "- Legacy `vms project` / `vms value` remain `UNSUPPORTED_PROFILE` for industry.unsupported names.",
         "- Common equity / DPS / P2 ROE / ke grid are ASSUMPTIONs; OCI zeros explicit when used.",
-        "- No Track B returns, no P/B-ROE peers, no ensemble, no investment-value claim.",
+        "- R2c P/B-ROE sidecar + R2d Track B when eligible; PEER_SCARCITY / hist<12 → explicit UNAVAILABLE; no ensemble.",
         "- `INVESTMENT_VALUE_NOT_ESTABLISHED`.",
         "",
     ]

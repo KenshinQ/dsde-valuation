@@ -402,6 +402,34 @@ ASSUMPTIONS: dict[str, str] = {
                                  "(no announced_at). Rights/allotment share_issuance stays out of VMS CA until "
                                  "an announce-date source is wired. Do not backfill announce from ex_date.",
     "EM-BS-LINES-v1": "Inventory and accounts_payable from Eastmoney RPT_DMSK_FN_BALANCE (local DuckDB em_balance_lines). published_at prefers EM earnings NOTICE for the same period_end (HITHINK-PIT-NOTICE-v1); else balance NOTICE_DATE @ 15:00 Asia/Shanghai. Never invent published_at from REPORT_DATE. Balance NOTICE often tracks amendments (LATEST_ONLY) so values may be restated; pit_complete stays false. HiThink local balance_sheets lacks these columns.",
+    "EM-FI-F10-v1": "Deposit-taking FI balance/income lines from Eastmoney PC_HSF10 "
+                       "NewFinanceAnalysis AjaxNew with companyType=3 (银行模板). "
+                       "Maps OTHER_EQUITY_TOOL/PREFERRED_SHARES/PERPETUAL_BOND/MINORITY_EQUITY/"
+                       "GOODWILL/PARENT_OCI/BASIC_EPS/INTEREST_INCOME/INTEREST_NI. "
+                       "published_at = NOTICE_DATE @ 15:00 Asia/Shanghai; never invent from "
+                       "REPORT_DATE. Does not re-emit total_equity/parent_net_income (avoid "
+                       "source conflict with HiThink). Local DuckDB cache em_bank_f10.",
+    "RIM-COMMON-EQUITY-v1": "Deposit-taking FI RIM book equity uses common equity attributable "
+                            "to ordinary shareholders: total_equity - minority_interest - "
+                            "other_equity_instruments (preferred + perpetual). Missing "
+                            "other_equity_instruments ⇒ INELIGIBLE (no silent fill). Missing "
+                            "minority treated as 0 only with zeros_explicit and flag "
+                            "MINORITY_EQUITY_ASSUMED_ZERO. Goodwill is sensitivity-only "
+                            "(not default haircut).",
+    "RIM-NI-P2-ROE-v1": "Primary deposit-taking FI RIM NI policy P2: NI_t = ROE × beginning "
+                       "common equity_t. ROE paths are bootstrapped from ~10y PIT history of "
+                       "common_NI / prior common equity, truncated at as_of, fixed seed. P1 "
+                       "constant last-FY common NI retained as control path only.",
+    "RIM-DPS-SHAREBONUS-v1": "Ordinary-share cash DPS for deposit-taking FI RIM dividends comes "
+                            "from em_sharebonus CorporateActionEvent cash_dividend rows whose "
+                            "action_id report date is FY-12-31 or FY-06-30 of the book-equity "
+                            "year (interim+final), announced_at <= as_of. Total dividends = "
+                            "DPS × diluted shares. Mixed CF dividends_paid (interest) is not "
+                            "primary.",
+    "RIM-KE-GRID-v1": "Deposit-taking FI RIM R2b reports a cost-of-equity sensitivity grid "
+                     "(default {0.08, 0.09, 0.10} or config-driven). Each ke yields a VPS "
+                     "distribution under P2; no ensemble blend across ke.",
+
     "HITHINK-FIELD-MAP-v1": "HiThink columns map to FIELDS-2 via vms.providers.hithink.mapping (documented in "
                            "docs/data_contracts.md). Outflows use positive magnitudes. Unmapped columns ignored "
                            "with optional warning count. pay_dividends_profits_interest_cash → dividends_paid "

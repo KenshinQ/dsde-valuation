@@ -7,10 +7,12 @@ from vms.schemas.fields import FIELD_REGISTRY_VERSION, FIELDS, REGISTRY
 
 
 def test_registry_consistency():
-    assert FIELD_REGISTRY_VERSION == "FIELDS-2" and "non_recurring_items_pretax" in REGISTRY
+    assert FIELD_REGISTRY_VERSION == "FIELDS-3" and "non_recurring_items_pretax" in REGISTRY
     for f in FIELDS:
         assert (f.kind == "stock") == (f.statement_type == "balance_sheet"), f.name
-        assert f.unit == "currency"
+        assert f.unit in ("currency", "per_share"), f.name
+    assert REGISTRY["basic_eps"].unit == "per_share"
+    assert "other_equity_instruments" in REGISTRY
     # explicit sign conventions requested in the Phase-1 decision
     for name in ("capex", "dividends_paid", "share_repurchases", "cost_of_revenue"):
         assert REGISTRY[name].sign == "positive_magnitude"

@@ -430,6 +430,21 @@ ASSUMPTIONS: dict[str, str] = {
                      "(default {0.08, 0.09, 0.10} or config-driven). Each ke yields a VPS "
                      "distribution under P2; no ensemble blend across ke.",
 
+    "RIM-PB-ROE-PEER-v1": "Deposit-taking FI relative P/B uses peer_field=pb_common = "
+                       "peer raw_close / (peer common_equity / shares), PIT via peer_known_at. "
+                       "Subject cross-check uses the same common BPS + raw close. Peer set: "
+                       "same SW L1 deposit-taking FI + tradable; n < peer_min_count ⇒ "
+                       "INELIGIBLE/PEER_SCARCITY (no silent fill). Output is relative pricing "
+                       "sharing book math with RIM — NOT independent intrinsic evidence; "
+                       "INVESTMENT_VALUE_NOT_ESTABLISHED; no ensemble.",
+    "RIM-EXIT-OWN-PB-HIST-v1": "Bank RIM Track B exit multiples are centered on the subject's "
+                              "own historical common-equity P/B (raw_close / common BPS) at "
+                              "NOTICE-aligned FY points with published_at/timestamp <= as_of. "
+                              "Default market-pricing pb center=2.0 is forbidden on this path. "
+                              "If valid hist points < 12 ⇒ exit/returns channel UNAVAILABLE "
+                              "(explicit; no invent). Never copies intrinsic VPS to exit "
+                              "(MARKET-PRICING-NO-SILENT-INTRINSIC-EXIT-v1).",
+
     "HITHINK-FIELD-MAP-v1": "HiThink columns map to FIELDS-2 via vms.providers.hithink.mapping (documented in "
                            "docs/data_contracts.md). Outflows use positive magnitudes. Unmapped columns ignored "
                            "with optional warning count. pay_dividends_profits_interest_cash → dividends_paid "

@@ -96,7 +96,7 @@ def test_ac2_3_4_5_6_rim_bridge_route_and_value(repo):
     assert profile.primary_profile is ProfileLabel.FINANCIAL_INSTITUTION
     assert profile.primary_profile is not ProfileLabel.MATURE_OPERATING
 
-    bridge = rim_inputs_from_snapshot(snap, loaded=loaded, years=5, zeros_explicit=True)
+    bridge = rim_inputs_from_snapshot(snap, loaded=loaded, years=5, zeros_explicit=True, equity_basis="total")
     assert bridge.ok
     assert bridge.rim_inputs["book_equity_0"] == 494.842e9
     assert bridge.rim_inputs["zeros_explicit"] is True

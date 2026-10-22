@@ -143,3 +143,9 @@ def to_classification(
         published_at=published_at,
         source_id=source_id,
     )
+
+
+
+def deposit_taking_fi_sw_label() -> str:
+    """SW L1 label for deposit-taking FI from proxy YAML (no hardcoded industry tokens)."""
+    return str(_proxy_table().get("unsupported_bank_label") or "")

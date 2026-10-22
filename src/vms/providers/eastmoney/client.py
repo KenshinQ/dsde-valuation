@@ -123,3 +123,101 @@ def fetch_company_survey(thscode: str, *, sleep_s: float = DEFAULT_SLEEP_S) -> d
     if not isinstance(body, dict):
         raise EastmoneyHTTPError("CompanySurveyAjax returned non-object")
     return body
+
+
+F10_FIN_BASE = "https://emweb.securities.eastmoney.com/PC_HSF10/NewFinanceAnalysis"
+
+
+def fetch_bank_f10_dates(
+    thscode: str,
+    *,
+    statement: str = "zcfzb",
+    company_type: int = 3,
+    report_date_type: int = 0,
+    sleep_s: float = DEFAULT_SLEEP_S,
+) -> list[dict[str, Any]]:
+    """Available REPORT_DATEs for companyType=3 F10 statement (DateAjaxNew)."""
+    code = em_f10_code(thscode)
+    url = (
+        f"{F10_FIN_BASE}/{statement}DateAjaxNew"
+        f"?companyType={company_type}&reportDateType={report_date_type}"
+        f"&code={urllib.parse.quote(code)}"
+    )
+    if sleep_s > 0:
+        time.sleep(sleep_s)
+    body = _request(url, referer=f"{F10_FIN_BASE}/Index?type=web&code={code}")
+    if not isinstance(body, dict):
+        raise EastmoneyHTTPError(f"{statement}DateAjaxNew returned non-object")
+    rows = body.get("data") or []
+    return list(rows) if isinstance(rows, list) else []
+
+
+def fetch_bank_f10_statement(
+    thscode: str,
+    *,
+    statement: str,
+    dates: list[str],
+    company_type: int = 3,
+    report_date_type: int = 0,
+    report_type: int = 1,
+    sleep_s: float = DEFAULT_SLEEP_S,
+) -> list[dict[str, Any]]:
+    """Fetch companyType=3 F10 rows for given REPORT_DATE list (AjaxNew; dates required).
+
+    ``statement``: zcfzb | lrb | xjllb. ``company_type=3`` = deposit-taking FI template.
+    """
+    if not dates:
+        return []
+    code = em_f10_code(thscode)
+    dates_param = ",".join(dates)
+    url = (
+        f"{F10_FIN_BASE}/{statement}AjaxNew"
+        f"?companyType={company_type}&reportDateType={report_date_type}"
+        f"&reportType={report_type}&dates={urllib.parse.quote(dates_param)}"
+        f"&code={urllib.parse.quote(code)}"
+    )
+    if sleep_s > 0:
+        time.sleep(sleep_s)
+    body = _request(url, referer=f"{F10_FIN_BASE}/Index?type=web&code={code}")
+    if not isinstance(body, dict):
+        raise EastmoneyHTTPError(f"{statement}AjaxNew returned non-object")
+    rows = body.get("data") or []
+    return list(rows) if isinstance(rows, list) else []
+
+
+def fetch_bank_f10_bundle(
+    thscode: str,
+    *,
+    company_type: int = 3,
+    max_annual: int = 12,
+    sleep_s: float = DEFAULT_SLEEP_S,
+) -> dict[str, list[dict[str, Any]]]:
+    """Fetch annual companyType=3 F10 balance + income rows (up to max_annual FYs)."""
+    date_rows = fetch_bank_f10_dates(
+        thscode, statement="zcfzb", company_type=company_type, sleep_s=sleep_s,
+    )
+    annual: list[str] = []
+    for r in date_rows:
+        pe = str(r.get("REPORT_DATE") or "")[:10]
+        if len(pe) == 10 and pe.endswith("-12-31"):
+            annual.append(pe)
+        if len(annual) >= max_annual:
+            break
+    if not annual:
+        return {"balance": [], "income": [], "dates": []}
+    bal: list[dict[str, Any]] = []
+    inc: list[dict[str, Any]] = []
+    chunk = 5
+    for i in range(0, len(annual), chunk):
+        part = annual[i : i + chunk]
+        bal.extend(
+            fetch_bank_f10_statement(
+                thscode, statement="zcfzb", dates=part, company_type=company_type, sleep_s=sleep_s,
+            )
+        )
+        inc.extend(
+            fetch_bank_f10_statement(
+                thscode, statement="lrb", dates=part, company_type=company_type, sleep_s=sleep_s,
+            )
+        )
+    return {"balance": bal, "income": inc, "dates": annual}

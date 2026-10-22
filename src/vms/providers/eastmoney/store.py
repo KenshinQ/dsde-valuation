@@ -16,6 +16,7 @@ SHAREBONUS_TABLE = "em_sharebonus"
 EQUITY_TABLE = "em_equity_changes"
 INDUSTRY_TABLE = "em_industry_profile"
 BALANCE_LINES_TABLE = "em_balance_lines"
+BANK_F10_TABLE = "em_bank_f10"
 
 
 def _connect(db_path: Path, *, read_only: bool = False):
@@ -97,6 +98,20 @@ def ensure_tables(db_path: Path | None = None) -> Path:
                 raw_json VARCHAR,
                 fetched_at TIMESTAMP,
                 PRIMARY KEY (security_code, report_date, date_type_code)
+            )
+        """)
+
+
+        con.execute(f"""
+            CREATE TABLE IF NOT EXISTS {BANK_F10_TABLE} (
+                thscode VARCHAR,
+                security_code VARCHAR,
+                statement VARCHAR,
+                report_date DATE,
+                notice_date DATE,
+                raw_json VARCHAR,
+                fetched_at TIMESTAMP,
+                PRIMARY KEY (security_code, statement, report_date)
             )
         """)
 
@@ -384,6 +399,89 @@ def upsert_balance_lines(thscode: str, rows: list[dict[str, Any]], db_path: Path
                     r.get("MONETARYFUNDS"),
                     r.get("TOTAL_ASSETS"),
                     r.get("TOTAL_LIABILITIES"),
+                    json.dumps(r, ensure_ascii=False, default=str),
+                    now,
+                ],
+            )
+            n += 1
+        return n
+    finally:
+        con.close()
+
+
+
+def count_bank_f10(thscode: str, db_path: Path | None = None) -> int:
+    path = Path(db_path) if db_path else fund_db_path()
+    if not path.is_file():
+        return 0
+    con = _connect(path, read_only=True)
+    try:
+        return int(con.execute(
+            f"SELECT COUNT(*) FROM {BANK_F10_TABLE} WHERE thscode = ?", [thscode]
+        ).fetchone()[0])
+    except Exception:
+        return 0
+    finally:
+        con.close()
+
+
+def read_bank_f10(
+    thscode: str, *, statement: str, db_path: Path | None = None,
+) -> list[dict[str, Any]]:
+    path = Path(db_path) if db_path else fund_db_path()
+    if not path.is_file():
+        return []
+    con = _connect(path, read_only=True)
+    try:
+        rows = con.execute(
+            f"SELECT raw_json FROM {BANK_F10_TABLE} WHERE thscode = ? AND statement = ? "
+            f"ORDER BY report_date DESC",
+            [thscode, statement],
+        ).fetchall()
+        out: list[dict[str, Any]] = []
+        for (raw,) in rows:
+            try:
+                out.append(json.loads(raw))
+            except Exception:
+                continue
+        return out
+    except Exception:
+        return []
+    finally:
+        con.close()
+
+
+def upsert_bank_f10(
+    thscode: str,
+    *,
+    statement: str,
+    rows: list[dict[str, Any]],
+    db_path: Path | None = None,
+) -> int:
+    path = ensure_tables(db_path)
+    if not rows:
+        return 0
+    code = thscode.split(".", 1)[0]
+    now = datetime.now(TZ).replace(tzinfo=None)
+    con = _connect(path, read_only=False)
+    try:
+        n = 0
+        for r in rows:
+            rd = _parse_date(r.get("REPORT_DATE"))
+            if rd is None:
+                continue
+            con.execute(
+                f"""
+                INSERT OR REPLACE INTO {BANK_F10_TABLE}
+                (thscode, security_code, statement, report_date, notice_date, raw_json, fetched_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+                """,
+                [
+                    thscode,
+                    str(r.get("SECURITY_CODE") or code),
+                    statement,
+                    rd,
+                    _parse_date(r.get("NOTICE_DATE")),
                     json.dumps(r, ensure_ascii=False, default=str),
                     now,
                 ],

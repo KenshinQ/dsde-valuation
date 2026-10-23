@@ -430,6 +430,20 @@ ASSUMPTIONS: dict[str, str] = {
                      "(default {0.08, 0.09, 0.10} or config-driven). Each ke yields a VPS "
                      "distribution under P2; no ensemble blend across ke.",
 
+    "RIM-FI-PEER-UNIVERSE-v1": "Deposit-taking FI peer universe for R2c pb_common is built "
+                              "from lean curated A-share tickers (ID allowlist in bank_peers) "
+                              "union local SW L1 proxy classifications (LABEL SoT = "
+                              "em_industry_proxy.yaml via deposit_taking_fi_sw_label; dual-"
+                              "universe drift accepted for lean v1). pb_common = raw_close / "
+                              "((total_equity - minority_interest - other_equity_instruments) "
+                              "/ shares); PIT = financial published_at (NOTICE-aligned) and "
+                              "market timestamp <= as_of. Missing OEI excludes the peer with "
+                              "canonical code MISSING_OTHER_EQUITY_INSTRUMENTS (alias "
+                              "MISSING_OEI; never treat TE as common). Auto-wire requires subject latest PIT SW L1 == "
+                              "deposit_taking_fi_sw_label() (profile FINANCIAL_INSTITUTION "
+                              "alone never grants; missing SW ⇒ skip auto). "
+                              "Empty eligible set + exclusion funnel is honest PEER_SCARCITY; "
+                              "does not lift industry.unsupported; INVESTMENT_VALUE_NOT_ESTABLISHED.",
     "RIM-PB-ROE-PEER-v1": "Deposit-taking FI relative P/B uses peer_field=pb_common = "
                        "peer raw_close / (peer common_equity / shares), PIT via peer_known_at. "
                        "Subject cross-check uses the same common BPS + raw close. Peer set: "

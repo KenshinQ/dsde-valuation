@@ -5,6 +5,8 @@ R2a: common-equity basis + sharebonus DPS + EPS common NI.
 R2b: P2 ROE distribution + ke grid (no ensemble).
 R2c: P/B-ROE relative sidecar (pb_common, raw close; PEER_SCARCITY ok).
 R2d: Track B returns via own-hist common P/B exit (UNAVAILABLE if hist < 12).
+R3: auto-build FI peer_observations for R2c when load.peers empty (default ON;
+    subject latest PIT SW must equal deposit_taking_fi_sw_label(); profile alone never grants).
 Label always INVESTMENT_VALUE_NOT_ESTABLISHED.
 """
 
@@ -20,6 +22,10 @@ from vms.data.io import LoadResult
 from vms.methods import MethodConfig, build_registry_from_config
 from vms.methods.protocol import ValuationContext
 from vms.methods.rim.distribution import DEFAULT_KE_GRID, run_rim_distribution
+from vms.methods.rim.bank_peers import (
+    build_fi_peer_observations,
+    subject_allows_auto_fi_peers,
+)
 from vms.methods.rim.pb_roe import run_pb_roe_relative
 from vms.methods.rim.track_b_exit import run_rim_track_b
 from vms.methods.rim.from_snapshot import (
@@ -68,6 +74,7 @@ def build_value_rim_bundle(
     peer_min_count: int = 5,
     track_b_horizons: Sequence[int] | None = None,
     track_b_paths: int | None = None,
+    auto_fi_peers: bool = True,
 ) -> dict[str, Any]:
     """Assess PIT → classify → bridge rim_inputs → route → residual_income (+ optional P2 grid)."""
     out = Path(out_dir)
@@ -249,17 +256,42 @@ def build_value_rim_bundle(
 
     pb_roe_payload: dict[str, Any] | None = None
     track_b_payload: dict[str, Any] | None = None
+    fi_peers_payload: dict[str, Any] | None = None
     if bridge.ok and equity_basis == "common":
         rim_xcheck = None
         if dist_payload and dist_payload.get("ke_grid"):
             rim_xcheck = (dist_payload["ke_grid"][0] or {}).get("vps_p50")
         elif vps is not None:
             rim_xcheck = vps.get("mean") if isinstance(vps, dict) else vps
+        peer_obs = list(load.peers or [])
+        if run_pb_roe and auto_fi_peers and not peer_obs:
+            if subject_allows_auto_fi_peers(
+                primary_profile=profile.primary_profile,
+                instrument_id=instrument_id,
+                as_of=as_of,
+                classifications=load.classifications,
+            ):
+                fi_rep = build_fi_peer_observations(
+                    subject_instrument_id=instrument_id,
+                    as_of=as_of,
+                    financial=load.financial,
+                    market=load.market,
+                    classifications=load.classifications,
+                    zeros_explicit=zeros_explicit,
+                )
+                peer_obs = list(fi_rep.peers)
+                fi_peers_payload = fi_rep.as_dict()
+                # Universe-level flags only (peer cflags stay in rim_fi_peers peer_diagnostics).
+                result_flags = sorted(set(result_flags) | set(fi_rep.flags) | {"AUTO_FI_PEERS"})
+            else:
+                result_flags = sorted(set(result_flags) | {"AUTO_FI_PEERS_SKIPPED_NON_FI"})
+        elif run_pb_roe and not auto_fi_peers and not peer_obs:
+            result_flags = sorted(set(result_flags) | {"AUTO_FI_PEERS_DISABLED"})
         if run_pb_roe:
             pb_rep = run_pb_roe_relative(
                 snap,
                 bridge=bridge,
-                peer_observations=list(load.peers or []),
+                peer_observations=peer_obs,
                 rim_vps_crosscheck=None if rim_xcheck is None else float(rim_xcheck),
                 peer_min_count=int(peer_min_count),
                 zeros_explicit=zeros_explicit,
@@ -330,6 +362,8 @@ def build_value_rim_bundle(
         }, stamp)
     if dist_payload is not None:
         write_artifact(out, "rim_distribution.json", dist_payload, stamp)
+    if fi_peers_payload is not None:
+        write_artifact(out, "rim_fi_peers.json", fi_peers_payload, stamp)
     if pb_roe_payload is not None:
         write_artifact(out, "rim_pb_roe.json", pb_roe_payload, stamp)
     if track_b_payload is not None:
@@ -386,6 +420,13 @@ def build_value_rim_bundle(
         } if run_distribution else None,
         "ev_bridge_applied": False,
         "ensemble": None,
+        "fi_peers": None if fi_peers_payload is None else {
+            "n_peers": fi_peers_payload.get("n_peers"),
+            "n_excluded": fi_peers_payload.get("n_excluded"),
+            "funnel": fi_peers_payload.get("funnel"),
+            "candidate_n": len(fi_peers_payload.get("candidate_ids") or []),
+            "source_id": fi_peers_payload.get("source_id"),
+        },
         "pb_roe": None if pb_roe_payload is None else {
             "status": pb_roe_payload.get("status"),
             "ok": pb_roe_payload.get("ok"),
@@ -435,7 +476,7 @@ def build_value_rim_bundle(
 def _write_run_report(path: Path, summary: dict[str, Any], *, bridge_detail: str) -> None:
     dist = summary.get("distribution") or {}
     lines = [
-        f"# Exploratory value-rim — {summary['instrument_id']}（R2a–d）",
+        f"# Exploratory value-rim — {summary['instrument_id']}（R2a–d + R3 peers）",
         "",
         f"**as_of**: `{summary['as_of']}`  ",
         f"**mode**: {summary['mode']}  ",
@@ -459,6 +500,7 @@ def _write_run_report(path: Path, summary: dict[str, Any], *, bridge_detail: str
         f"- ke_grid: {json.dumps(dist.get('ke_grid'), ensure_ascii=False) if dist.get('ke_grid') else None}",
         f"- ev_bridge_applied: {summary.get('ev_bridge_applied')}",
         f"- ensemble: {summary.get('ensemble')}",
+        f"- fi_peers: {json.dumps(summary.get('fi_peers'), ensure_ascii=False)}",
         f"- pb_roe: {json.dumps(summary.get('pb_roe'), ensure_ascii=False)}",
         f"- track_b: {json.dumps(summary.get('track_b'), ensure_ascii=False)}",
         f"- flags: {', '.join(summary.get('flags') or [])}",
@@ -471,7 +513,7 @@ def _write_run_report(path: Path, summary: dict[str, Any], *, bridge_detail: str
         "## Honesty",
         "- Legacy `vms project` / `vms value` remain `UNSUPPORTED_PROFILE` for industry.unsupported names.",
         "- Common equity / DPS / P2 ROE / ke grid are ASSUMPTIONs; OCI zeros explicit when used.",
-        "- R2c P/B-ROE sidecar + R2d Track B when eligible; PEER_SCARCITY / hist<12 → explicit UNAVAILABLE; no ensemble.",
+        "- R2c P/B-ROE sidecar (+ R3 auto FI peers when load.peers empty) + R2d Track B; PEER_SCARCITY / hist<12 → explicit UNAVAILABLE; no ensemble.",
         "- `INVESTMENT_VALUE_NOT_ESTABLISHED`.",
         "",
     ]

@@ -307,23 +307,35 @@ def test_peer_cflags_do_not_pollute_universe_flags():
 
 
 def test_subject_allows_auto_fi_peers_gate():
+    """Allow iff latest PIT SW == deposit_taking; never grant on FI profile alone."""
     as_of, _ = parse_as_of("2025-06-30")
     bank_cls = [_bank_cls(SUBJ)]
-    assert subject_allows_auto_fi_peers(
+    # Honest missing-SW path: profile FI alone must NOT grant.
+    assert not subject_allows_auto_fi_peers(
         primary_profile="FINANCIAL_INSTITUTION",
         instrument_id=SUBJ, as_of=as_of, classifications=[],
     )
+    assert not subject_allows_auto_fi_peers(
+        primary_profile="FINANCIAL_INSTITUTION",
+        instrument_id=SUBJ, as_of=as_of, classifications=None,
+    )
+    # Deposit-taking SW grants even if profile is not FI.
     assert subject_allows_auto_fi_peers(
         primary_profile="HOLDING_OR_CONGLOMERATE",
         instrument_id=SUBJ, as_of=as_of, classifications=bank_cls,
     )
-    assert not subject_allows_auto_fi_peers(
-        primary_profile="HOLDING_OR_CONGLOMERATE",
-        instrument_id=SUBJ, as_of=as_of, classifications=[],
+    assert subject_allows_auto_fi_peers(
+        primary_profile="FINANCIAL_INSTITUTION",
+        instrument_id=SUBJ, as_of=as_of, classifications=bank_cls,
     )
+    # FI profile + 非银金融 SW must skip (insurance/broker etc.).
     nonbank = InstrumentClassification(
         instrument_id=SUBJ, scheme="SW2021_L1", industry="非银金融",
         published_at=_ts("2000-01-01"), source_id="em_f10_industry",
+    )
+    assert not subject_allows_auto_fi_peers(
+        primary_profile="FINANCIAL_INSTITUTION",
+        instrument_id=SUBJ, as_of=as_of, classifications=[nonbank],
     )
     assert not subject_allows_auto_fi_peers(
         primary_profile="GROWTH_OR_REINVESTMENT_HEAVY",

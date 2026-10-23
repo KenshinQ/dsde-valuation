@@ -439,8 +439,9 @@ ASSUMPTIONS: dict[str, str] = {
                               "/ shares); PIT = financial published_at (NOTICE-aligned) and "
                               "market timestamp <= as_of. Missing OEI excludes the peer with "
                               "canonical code MISSING_OTHER_EQUITY_INSTRUMENTS (alias "
-                              "MISSING_OEI; never treat TE as common). Auto-wire requires "
-                              "subject FINANCIAL_INSTITUTION or deposit-taking SW label. "
+                              "MISSING_OEI; never treat TE as common). Auto-wire requires subject latest PIT SW L1 == "
+                              "deposit_taking_fi_sw_label() (profile FINANCIAL_INSTITUTION "
+                              "alone never grants; missing SW ⇒ skip auto). "
                               "Empty eligible set + exclusion funnel is honest PEER_SCARCITY; "
                               "does not lift industry.unsupported; INVESTMENT_VALUE_NOT_ESTABLISHED.",
     "RIM-PB-ROE-PEER-v1": "Deposit-taking FI relative P/B uses peer_field=pb_common = "

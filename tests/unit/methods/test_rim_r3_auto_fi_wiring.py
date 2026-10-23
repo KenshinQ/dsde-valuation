@@ -235,20 +235,42 @@ def test_wiring_no_auto_fi_peers_flag(repo, tmp_path):
     assert not (out / "rim_fi_peers.json").exists()
 
 
-def test_wiring_fi_gate_skips_non_fi_subject(repo, tmp_path, monkeypatch):
-    """Non-FI / non-deposit subject must not scan bank peer universe."""
-    from vms.reporting import value_rim_bundle as vrb
+def test_wiring_fi_gate_skips_nonbank_fi_subject(repo, tmp_path):
+    """Real FI+非银: FINANCIAL_INSTITUTION profile + 非银金融 SW must skip auto bank peers.
 
-    load = _load(with_peers_panel=True, peers=[])
-    monkeypatch.setattr(vrb, "subject_allows_auto_fi_peers", lambda **kw: False)
+    No monkeypatch — exercises subject_allows_auto_fi_peers with real classifications.
+    """
+    load = _load(with_peers_panel=True, peers=[], subject_industry="非银金融")
     summ, out = _run(repo, tmp_path, load, auto_fi_peers=True)
+    assert summ["profile_primary"] == "FINANCIAL_INSTITUTION"
     assert "AUTO_FI_PEERS_SKIPPED_NON_FI" in summ["flags"]
     assert "AUTO_FI_PEERS" not in summ["flags"]
     assert summ["fi_peers"] is None
     assert not (out / "rim_fi_peers.json").exists()
 
 
-def test_wiring_fi_gate_on_for_financial_institution(repo, tmp_path):
+def test_wiring_fi_gate_skips_when_sw_missing(repo, tmp_path):
+    """Honest missing-SW path: FI profile alone must not scan bank peer universe."""
+    load = _load(with_peers_panel=True, peers=[])
+    # Drop subject classification rows only; keep peer classes for panel realism.
+    load = LoadResult(
+        financial=load.financial,
+        market=load.market,
+        corporate_actions=load.corporate_actions,
+        sources=load.sources,
+        classifications=[c for c in load.classifications if c.instrument_id != INST],
+        corporate_actions_provided=load.corporate_actions_provided,
+        peers=list(load.peers or []),
+    )
+    summ, out = _run(repo, tmp_path, load, auto_fi_peers=True)
+    assert summ["profile_primary"] == "FINANCIAL_INSTITUTION"
+    assert "AUTO_FI_PEERS_SKIPPED_NON_FI" in summ["flags"]
+    assert "AUTO_FI_PEERS" not in summ["flags"]
+    assert summ["fi_peers"] is None
+    assert not (out / "rim_fi_peers.json").exists()
+
+
+def test_wiring_fi_gate_on_for_deposit_taking_sw(repo, tmp_path):
     load = _load(with_peers_panel=True, peers=[])
     summ, _ = _run(repo, tmp_path, load, auto_fi_peers=True)
     assert summ["profile_primary"] == "FINANCIAL_INSTITUTION"

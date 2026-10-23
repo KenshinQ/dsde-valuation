@@ -183,14 +183,17 @@ def subject_allows_auto_fi_peers(
     as_of: datetime,
     classifications: Sequence[InstrumentClassification] | None = None,
 ) -> bool:
-    """True iff subject is FINANCIAL_INSTITUTION or latest PIT SW label is deposit-taking FI.
+    """True iff latest PIT SW L1 label is deposit-taking FI (YAML via deposit_taking_fi_sw_label).
 
-    Used by value-rim auto-wire so non-FI / non-deposit subjects never scan the FI peer universe.
-    ``primary_profile`` may be a ProfileLabel enum or its string value.
+    R3 deposit-taking boundary: never short-circuit on ProfileLabel.FINANCIAL_INSTITUTION
+    alone — non-deposit SW L1 subjects can still classify as FI but must NOT auto-build
+    the deposit-taking peer universe. ``primary_profile`` is accepted for call-site
+    stability and is not used for the allow decision.
+
+    Honest missing-classification path: no usable latest PIT SW row (or empty YAML label)
+    ⇒ False (skip auto; require SW). Do not invent deposit-taking membership from profile.
     """
-    label = getattr(primary_profile, "value", primary_profile)
-    if str(label) == "FINANCIAL_INSTITUTION":
-        return True
+    _ = primary_profile  # call-site compat; profile alone never grants auto FI peers
     bank_label = deposit_taking_fi_sw_label()
     if not bank_label:
         return False

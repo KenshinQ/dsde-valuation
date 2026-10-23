@@ -6,7 +6,7 @@ R2b: P2 ROE distribution + ke grid (no ensemble).
 R2c: P/B-ROE relative sidecar (pb_common, raw close; PEER_SCARCITY ok).
 R2d: Track B returns via own-hist common P/B exit (UNAVAILABLE if hist < 12).
 R3: auto-build FI peer_observations for R2c when load.peers empty (default ON;
-    subject must be FINANCIAL_INSTITUTION or deposit-taking SW label).
+    subject latest PIT SW must equal deposit_taking_fi_sw_label(); profile alone never grants).
 Label always INVESTMENT_VALUE_NOT_ESTABLISHED.
 """
 

@@ -4,7 +4,7 @@ Date: 2026-10-23 (Asia/Shanghai). Branch: `feat/r3-fi-peer-universe` (from `4add
 Remote: `origin` → https://github.com/KenshinQ/dsde-valuation
 Prior: `PHASE_R2CD_BANK_RIM_DONE.md`. Pace: **r3-default** (user widget).
 
-Status: **R3 acceptance criteria pass** (post architecture-review BLOCKER + SHOULD-FIX) (builder + unit AC; 000001 smoke documents honest PEER_SCARCITY + exclusion funnel on thin local panel).
+Status: **R3 acceptance criteria pass** (post architecture-review BLOCKER + SHOULD-FIX + deposit-SW-only auto gate re-review) (builder + unit AC; 000001 smoke documents honest PEER_SCARCITY + exclusion funnel on thin local panel).
 Label: `INVESTMENT_VALUE_NOT_ESTABLISHED`. Engineering smoke ≠ investment advice.
 Does **not** claim OOS calibration, ensemble, gate lift, 非银金融 support, or `pit_complete=true`.
 
@@ -13,7 +13,7 @@ Does **not** claim OOS calibration, ensemble, gate lift, 非银金融 support, o
 - **Metric**: `pb_common = raw_close / ((TE − MI − OEI) / shares)` — same common-equity identity as RIM (`RIM-COMMON-EQUITY-v1`).
 - **PIT**: financial `published_at` (NOTICE-aligned) and market `timestamp` must be `<= as_of`. Future notice/price → excluded.
 - **MISSING_OEI**: peer excluded with canonical code `MISSING_OTHER_EQUITY_INSTRUMENTS` (alias `MISSING_OEI`); **never** treat total equity as common.
-- **value-rim**: when `load.peers` empty and `auto_fi_peers=True` (default), auto-build and write `rim_fi_peers.json` **only if** subject is `FINANCIAL_INSTITUTION` or latest PIT SW label is deposit-taking FI; else flag `AUTO_FI_PEERS_SKIPPED_NON_FI`. CLI `--no-auto-fi-peers` → `AUTO_FI_PEERS_DISABLED`.
+- **value-rim**: when `load.peers` empty and `auto_fi_peers=True` (default), auto-build and write `rim_fi_peers.json` **only if** subject latest PIT SW L1 == `deposit_taking_fi_sw_label()` (YAML). Profile `FINANCIAL_INSTITUTION` alone never grants — 非银金融 (insurance/broker) must skip. Missing SW ⇒ skip auto (`AUTO_FI_PEERS_SKIPPED_NON_FI`). CLI `--no-auto-fi-peers` → `AUTO_FI_PEERS_DISABLED`.
 - **Universe flags**: peer-level cflags (MI assumed 0, PB numerator/denominator) stay in `peer_diagnostics` / exclusion records — do **not** pollute bundle `result_flags`.
 - **Lean curated ownership**: ID allowlist in `bank_peers.LEAN_CURATED_*`; LABEL SoT = `em_industry_proxy.yaml` via `deposit_taking_fi_sw_label()`. Dual-universe drift accepted for lean v1; prefer classifications-only once panel is rich.
 - **Assumption**: `RIM-FI-PEER-UNIVERSE-v1`.

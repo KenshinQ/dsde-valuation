@@ -5,8 +5,19 @@ Candidate discovery = lean curated A-share deposit-taking FI tickers ∪ local
 SW L1 proxy classifications matching the unsupported deposit-taking FI label from
 config/em_industry_proxy.yaml. pb_common = raw_close / ((TE − MI − OEI) / shares)
 with PIT gates on financial published_at and market timestamp (NOTICE-aligned).
-Missing OEI ⇒ exclude (never treat total equity as common). Thin panels may
-emit empty peers + an exclusion funnel (PEER_SCARCITY remains honest).
+Missing OEI ⇒ exclude with canonical code MISSING_OTHER_EQUITY_INSTRUMENTS
+(never treat total equity as common). Thin panels may emit empty peers + an
+exclusion funnel (PEER_SCARCITY remains honest).
+
+Ownership / dual-universe (lean v1):
+- Industry LABEL SoT: config/em_industry_proxy.yaml via deposit_taking_fi_sw_label()
+  — never hardcode industry label strings in this module.
+- Lean curated IDs: instrument-ID allowlist in LEAN_CURATED_DEPOSIT_TAKING_FI only
+  (data plane, not labels). Membership = curated ∪ PIT classifications matching
+  the YAML label. Curated IDs may be vetoed only by the *latest* PIT classification
+  that is non-deposit-taking.
+- Drift risk: curated IDs can drift from live SW membership; accept for lean v1.
+  Prefer a single classifications plane once the multi-name FI panel is rich enough.
 """
 
 from __future__ import annotations
@@ -29,8 +40,25 @@ from vms.schemas.observations import (
 
 SOURCE_ID = "fi_peer_universe_v1"
 
-# Lean curated v1 data plane: major A-share deposit-taking FI tickers only
-# (instrument IDs; industry labels come from YAML / classifications, not literals).
+# Exclusion codes: align peer funnel with subject bridge (rim/from_snapshot).
+# Canonical = MISSING_OTHER_EQUITY_INSTRUMENTS; MISSING_OEI is a short alias only.
+EXCLUSION_MISSING_OEI = "MISSING_OTHER_EQUITY_INSTRUMENTS"
+EXCLUSION_CODE_ALIASES: dict[str, str] = {
+    "MISSING_OEI": EXCLUSION_MISSING_OEI,
+}
+
+# Universe-level flags only (peer-level cflags must not land here).
+_UNIVERSE_FLAG_SEED = (
+    "FI_PEER_UNIVERSE_BUILDER",
+    "RELATIVE_PRICING_ONLY",
+    "NO_INDUSTRY_UNSUPPORTED_LIFT",
+)
+
+
+# Lean curated v1 data plane: major A-share deposit-taking FI tickers only.
+# Ownership: instrument IDs live here; industry LABELS live in YAML
+# (deposit_taking_fi_sw_label). Do not duplicate label strings beside this tuple.
+# Dual-universe drift is an accepted lean-v1 tradeoff — see module docstring.
 LEAN_CURATED_DEPOSIT_TAKING_FI: tuple[str, ...] = (
     "000001.SZ",
     "002142.SZ",
@@ -60,6 +88,7 @@ class PeerExclusionRecord:
     peer_instrument_id: str
     reasons: list[str]
     detail: str = ""
+    peer_flags: list[str] = field(default_factory=list)
 
 
 @dataclass(frozen=True)
@@ -72,6 +101,7 @@ class FiPeerUniverseReport:
     flags: list[str]
     assumption_ids: list[str]
     funnel: dict[str, int] = field(default_factory=dict)
+    peer_diagnostics: list[dict[str, Any]] = field(default_factory=list)
     detail: str = ""
     source_id: str = SOURCE_ID
 
@@ -84,14 +114,21 @@ class FiPeerUniverseReport:
             "candidate_ids": list(self.candidate_ids),
             "peers": [p.model_dump(mode="json") for p in self.peers],
             "excluded": [
-                {"peer_instrument_id": e.peer_instrument_id, "reasons": list(e.reasons), "detail": e.detail}
+                {
+                    "peer_instrument_id": e.peer_instrument_id,
+                    "reasons": list(e.reasons),
+                    "detail": e.detail,
+                    "peer_flags": list(e.peer_flags),
+                }
                 for e in self.excluded
             ],
             "funnel": dict(self.funnel),
             "flags": list(self.flags),
+            "peer_diagnostics": list(self.peer_diagnostics),
             "assumption_ids": list(self.assumption_ids),
             "source_id": self.source_id,
             "detail": self.detail,
+            "exclusion_code_aliases": dict(EXCLUSION_CODE_ALIASES),
             "investment_value": "INVESTMENT_VALUE_NOT_ESTABLISHED",
             "peer_field": PEER_FIELD_PB_COMMON,
         }
@@ -119,6 +156,48 @@ def discover_bank_candidates(
             ids.add(c.instrument_id)
     ids.discard(subject_instrument_id)
     return sorted(ids)
+
+
+def _latest_pit_classification(
+    classifications: Sequence[InstrumentClassification] | None,
+    *,
+    instrument_id: str,
+    as_of: datetime,
+) -> InstrumentClassification | None:
+    """Latest classification row for instrument with published_at <= as_of."""
+    best: InstrumentClassification | None = None
+    for c in classifications or []:
+        if c.instrument_id != instrument_id:
+            continue
+        if c.published_at > as_of:
+            continue
+        if best is None or c.published_at >= best.published_at:
+            best = c
+    return best
+
+
+def subject_allows_auto_fi_peers(
+    *,
+    primary_profile: str | Any,
+    instrument_id: str,
+    as_of: datetime,
+    classifications: Sequence[InstrumentClassification] | None = None,
+) -> bool:
+    """True iff subject is FINANCIAL_INSTITUTION or latest PIT SW label is deposit-taking FI.
+
+    Used by value-rim auto-wire so non-FI / non-deposit subjects never scan the FI peer universe.
+    ``primary_profile`` may be a ProfileLabel enum or its string value.
+    """
+    label = getattr(primary_profile, "value", primary_profile)
+    if str(label) == "FINANCIAL_INSTITUTION":
+        return True
+    bank_label = deposit_taking_fi_sw_label()
+    if not bank_label:
+        return False
+    latest = _latest_pit_classification(
+        classifications, instrument_id=instrument_id, as_of=as_of,
+    )
+    return latest is not None and latest.industry == bank_label
 
 
 def _fy_field_at(
@@ -270,7 +349,7 @@ def compute_peer_pb_common(
         break
 
     if chosen is None:
-        # Distinguish MISSING_OEI (have TE somewhere) vs MISSING_TE
+        # Distinguish MISSING_OTHER_EQUITY_INSTRUMENTS (have TE somewhere) vs MISSING_TE
         any_te = False
         any_oei = False
         for y in years:
@@ -289,7 +368,7 @@ def compute_peer_pb_common(
             if oei is not None:
                 any_oei = True
         if any_te and not any_oei:
-            return None, None, None, flags, "MISSING_OEI"
+            return None, None, None, flags, EXCLUSION_MISSING_OEI
         if not any_te:
             return None, None, None, flags, "MISSING_TE"
         return None, None, None, flags, "MISSING_COMMON_EQUITY_COMPONENTS"
@@ -336,11 +415,7 @@ def build_fi_peer_observations(
         "HITHINK-NO-VENDOR-QFQ-v1",
         "INDUSTRY-SW-L1-PROXY-EM-v1",
     )
-    flags: list[str] = [
-        "FI_PEER_UNIVERSE_BUILDER",
-        "RELATIVE_PRICING_ONLY",
-        "NO_INDUSTRY_UNSUPPORTED_LIFT",
-    ]
+    flags: list[str] = list(_UNIVERSE_FLAG_SEED)
     candidates = discover_bank_candidates(
         subject_instrument_id=subject_instrument_id,
         classifications=classifications,
@@ -352,17 +427,23 @@ def build_fi_peer_observations(
         flags.append("LEAN_CURATED_CANDIDATES")
 
     bank_label = deposit_taking_fi_sw_label()
-    # Optional: known non-deposit labels from classifications to exclude
-    nonbank_by_id: dict[str, str] = {}
+    # Latest PIT classification per instrument — stale non-deposit rows must not veto curated FI names.
+    latest_cls_by_id: dict[str, InstrumentClassification] = {}
     for c in classifications or []:
         if c.published_at > as_of:
             continue
+        prev = latest_cls_by_id.get(c.instrument_id)
+        if prev is None or c.published_at >= prev.published_at:
+            latest_cls_by_id[c.instrument_id] = c
+    nonbank_by_id: dict[str, str] = {}
+    for iid, c in latest_cls_by_id.items():
         if bank_label and c.industry == bank_label:
             continue
-        nonbank_by_id[c.instrument_id] = c.industry
+        nonbank_by_id[iid] = c.industry
 
     peers: list[PeerObservation] = []
     excluded: list[PeerExclusionRecord] = []
+    peer_diagnostics: list[dict[str, Any]] = []
     funnel: dict[str, int] = {}
 
     def _bump(reason: str) -> None:
@@ -387,15 +468,27 @@ def build_fi_peer_observations(
             market=market,
             zeros_explicit=zeros_explicit,
         )
-        flags.extend(cflags)
+        # Peer-level cflags stay on exclusion / peer_diagnostics — never universe flags.
         if pb is None or pub is None or mts is None:
             reason = detail or "PEER_BUILD_FAILED"
             _bump(reason)
-            excluded.append(PeerExclusionRecord(pid, [reason], detail=detail))
+            excluded.append(PeerExclusionRecord(
+                pid, [reason], detail=detail, peer_flags=list(cflags),
+            ))
+            peer_diagnostics.append({
+                "peer_instrument_id": pid, "included": False, "flags": list(cflags), "reason": reason,
+            })
             continue
+        # Belt-and-suspenders: compute_peer_pb_common already PIT-filters; keep explicit reject.
         if pub > as_of or mts > as_of:
             _bump("PIT_AFTER_ASOF")
-            excluded.append(PeerExclusionRecord(pid, ["PIT_AFTER_ASOF"], detail=detail))
+            excluded.append(PeerExclusionRecord(
+                pid, ["PIT_AFTER_ASOF"], detail=detail, peer_flags=list(cflags),
+            ))
+            peer_diagnostics.append({
+                "peer_instrument_id": pid, "included": False, "flags": list(cflags),
+                "reason": "PIT_AFTER_ASOF",
+            })
             continue
         peers.append(
             PeerObservation(
@@ -412,6 +505,9 @@ def build_fi_peer_observations(
                 revision_id="pb_common=raw_close/(TE-MI-OEI)/shares;RIM-FI-PEER-UNIVERSE-v1",
             )
         )
+        peer_diagnostics.append({
+            "peer_instrument_id": pid, "included": True, "flags": list(cflags),
+        })
         _bump("INCLUDED")
 
     if not peers:
@@ -429,5 +525,6 @@ def build_fi_peer_observations(
         flags=sorted(set(flags)),
         assumption_ids=aids,
         funnel=funnel,
+        peer_diagnostics=peer_diagnostics,
         detail=detail,
     )

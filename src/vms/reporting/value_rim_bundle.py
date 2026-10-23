@@ -5,7 +5,8 @@ R2a: common-equity basis + sharebonus DPS + EPS common NI.
 R2b: P2 ROE distribution + ke grid (no ensemble).
 R2c: P/B-ROE relative sidecar (pb_common, raw close; PEER_SCARCITY ok).
 R2d: Track B returns via own-hist common P/B exit (UNAVAILABLE if hist < 12).
-R3: auto-build FI peer_observations for R2c when load.peers empty (default ON).
+R3: auto-build FI peer_observations for R2c when load.peers empty (default ON;
+    subject must be FINANCIAL_INSTITUTION or deposit-taking SW label).
 Label always INVESTMENT_VALUE_NOT_ESTABLISHED.
 """
 
@@ -21,7 +22,10 @@ from vms.data.io import LoadResult
 from vms.methods import MethodConfig, build_registry_from_config
 from vms.methods.protocol import ValuationContext
 from vms.methods.rim.distribution import DEFAULT_KE_GRID, run_rim_distribution
-from vms.methods.rim.bank_peers import build_fi_peer_observations
+from vms.methods.rim.bank_peers import (
+    build_fi_peer_observations,
+    subject_allows_auto_fi_peers,
+)
 from vms.methods.rim.pb_roe import run_pb_roe_relative
 from vms.methods.rim.track_b_exit import run_rim_track_b
 from vms.methods.rim.from_snapshot import (
@@ -261,17 +265,26 @@ def build_value_rim_bundle(
             rim_xcheck = vps.get("mean") if isinstance(vps, dict) else vps
         peer_obs = list(load.peers or [])
         if run_pb_roe and auto_fi_peers and not peer_obs:
-            fi_rep = build_fi_peer_observations(
-                subject_instrument_id=instrument_id,
+            if subject_allows_auto_fi_peers(
+                primary_profile=profile.primary_profile,
+                instrument_id=instrument_id,
                 as_of=as_of,
-                financial=load.financial,
-                market=load.market,
                 classifications=load.classifications,
-                zeros_explicit=zeros_explicit,
-            )
-            peer_obs = list(fi_rep.peers)
-            fi_peers_payload = fi_rep.as_dict()
-            result_flags = sorted(set(result_flags) | set(fi_rep.flags) | {"AUTO_FI_PEERS"})
+            ):
+                fi_rep = build_fi_peer_observations(
+                    subject_instrument_id=instrument_id,
+                    as_of=as_of,
+                    financial=load.financial,
+                    market=load.market,
+                    classifications=load.classifications,
+                    zeros_explicit=zeros_explicit,
+                )
+                peer_obs = list(fi_rep.peers)
+                fi_peers_payload = fi_rep.as_dict()
+                # Universe-level flags only (peer cflags stay in rim_fi_peers peer_diagnostics).
+                result_flags = sorted(set(result_flags) | set(fi_rep.flags) | {"AUTO_FI_PEERS"})
+            else:
+                result_flags = sorted(set(result_flags) | {"AUTO_FI_PEERS_SKIPPED_NON_FI"})
         elif run_pb_roe and not auto_fi_peers and not peer_obs:
             result_flags = sorted(set(result_flags) | {"AUTO_FI_PEERS_DISABLED"})
         if run_pb_roe:

@@ -7,10 +7,13 @@ from datetime import date, datetime, time, timedelta, timezone
 import pytest
 
 from vms.methods.rim.bank_peers import (
+    EXCLUSION_CODE_ALIASES,
+    EXCLUSION_MISSING_OEI,
     LEAN_CURATED_DEPOSIT_TAKING_FI,
     build_fi_peer_observations,
     compute_peer_pb_common,
     discover_bank_candidates,
+    subject_allows_auto_fi_peers,
 )
 from vms.methods.rim.hist_pb import PEER_FIELD_PB_COMMON
 from vms.pit.asof import parse_as_of
@@ -120,7 +123,7 @@ def test_formula_pb_common_matches_te_mi_oei():
     assert pub is not None and pub <= as_of
     assert mts is not None and mts <= as_of
     assert "PB_DENOMINATOR_COMMON_BPS" in flags
-    assert "MISSING_OEI" not in detail
+    assert "MISSING_OEI" not in detail and EXCLUSION_MISSING_OEI not in detail
 
 
 def test_missing_oei_never_uses_te_as_common():
@@ -130,7 +133,8 @@ def test_missing_oei_never_uses_te_as_common():
         peer_instrument_id=PEER_A, as_of=as_of, financial=fins, market=mkts,
     )
     assert pb is None
-    assert reason == "MISSING_OEI"
+    assert reason == EXCLUSION_MISSING_OEI
+    assert EXCLUSION_CODE_ALIASES["MISSING_OEI"] == EXCLUSION_MISSING_OEI
     # TE alone must not produce a pb
     assert pub is None or pb is None
 
@@ -143,7 +147,7 @@ def test_builder_emits_peers_and_funnel():
         f, m = _peer_pack(pid, te=400e9 + i * 10e9, oei=40e9, px=30.0 + i, pub="2025-03-20")
         fins.extend(f)
         mkts.extend(m)
-    # one thin candidate: TE only → MISSING_OEI
+    # one thin candidate: TE only → MISSING_OTHER_EQUITY_INSTRUMENTS
     f_thin, m_thin = _peer_pack("601166.SH", with_oei=False)
     fins.extend(f_thin)
     mkts.extend(m_thin)
@@ -162,8 +166,8 @@ def test_builder_emits_peers_and_funnel():
     assert all(p.value is not None and p.value > 0 for p in rep.peers)
     assert "RIM-FI-PEER-UNIVERSE-v1" in rep.assumption_ids
     assert rep.funnel.get("INCLUDED") == 5
-    assert rep.funnel.get("MISSING_OEI", 0) >= 1
-    assert any(e.peer_instrument_id == "601166.SH" and "MISSING_OEI" in e.reasons for e in rep.excluded)
+    assert rep.funnel.get(EXCLUSION_MISSING_OEI, 0) >= 1
+    assert any(e.peer_instrument_id == "601166.SH" and EXCLUSION_MISSING_OEI in e.reasons for e in rep.excluded)
 
 
 def test_leakage_future_notice_and_price_excluded():
@@ -216,3 +220,112 @@ def test_thin_panel_empty_peers_with_funnel():
     assert rep.funnel
     assert "FI_PEER_UNIVERSE_EMPTY" in rep.flags
     assert sum(rep.funnel.values()) >= len(rep.candidate_ids)
+
+
+def test_nonbank_veto_uses_latest_pit_classification_only():
+    """Stale non-bank row must not veto a curated bank whose latest PIT class is deposit-taking."""
+    as_of, _ = parse_as_of("2025-06-30")
+    fins, mkts = _peer_pack(PEER_A)
+    stale_nonbank = InstrumentClassification(
+        instrument_id=PEER_A,
+        scheme="SW2021_L1",
+        industry="非银金融",
+        published_at=_ts("2010-01-01"),
+        source_id="em_f10_industry",
+    )
+    latest_bank = InstrumentClassification(
+        instrument_id=PEER_A,
+        scheme="SW2021_L1",
+        industry=deposit_taking_fi_sw_label(),
+        published_at=_ts("2020-01-01"),
+        source_id="em_f10_industry",
+    )
+    # Order: latest first, then stale — must still include (latest wins regardless of order).
+    rep = build_fi_peer_observations(
+        subject_instrument_id=SUBJ,
+        as_of=as_of,
+        financial=fins,
+        market=mkts,
+        classifications=[latest_bank, stale_nonbank],
+        use_lean_curated=False,
+        extra_candidates=[PEER_A],
+    )
+    assert {p.peer_instrument_id for p in rep.peers} == {PEER_A}
+    assert PEER_A not in {e.peer_instrument_id for e in rep.excluded if "NOT_DEPOSIT_TAKING_FI" in e.reasons}
+
+
+def test_latest_nonbank_still_vetoes_curated():
+    as_of, _ = parse_as_of("2025-06-30")
+    fins, mkts = _peer_pack(PEER_A)
+    old_bank = InstrumentClassification(
+        instrument_id=PEER_A, scheme="SW2021_L1", industry=deposit_taking_fi_sw_label(),
+        published_at=_ts("2010-01-01"), source_id="em_f10_industry",
+    )
+    new_nonbank = InstrumentClassification(
+        instrument_id=PEER_A, scheme="SW2021_L1", industry="非银金融",
+        published_at=_ts("2024-01-01"), source_id="em_f10_industry",
+    )
+    rep = build_fi_peer_observations(
+        subject_instrument_id=SUBJ,
+        as_of=as_of,
+        financial=fins,
+        market=mkts,
+        classifications=[old_bank, new_nonbank],
+        use_lean_curated=False,
+        extra_candidates=[PEER_A],
+    )
+    assert rep.peers == []
+    assert any("NOT_DEPOSIT_TAKING_FI" in e.reasons for e in rep.excluded if e.peer_instrument_id == PEER_A)
+
+
+def test_peer_cflags_do_not_pollute_universe_flags():
+    as_of, _ = parse_as_of("2025-06-30")
+    # MI missing → MINORITY_EQUITY_ASSUMED_ZERO peer flag when zeros_explicit
+    fins = [
+        _f(PEER_A, "2024-12-31", "total_equity", 500e9, "2025-03-15"),
+        _f(PEER_A, "2024-12-31", "other_equity_instruments", 50e9, "2025-03-15"),
+    ]
+    mkts = [_m(PEER_A, "2025-06-30", 40.0)]
+    rep = build_fi_peer_observations(
+        subject_instrument_id=SUBJ,
+        as_of=as_of,
+        financial=fins,
+        market=mkts,
+        classifications=[_bank_cls(PEER_A)],
+        use_lean_curated=False,
+        extra_candidates=[PEER_A],
+        zeros_explicit=True,
+    )
+    assert len(rep.peers) == 1
+    assert not any(f.startswith("MINORITY_EQUITY_ASSUMED_ZERO") for f in rep.flags)
+    assert not any(f.startswith("PB_") for f in rep.flags)
+    diag = [d for d in rep.peer_diagnostics if d["peer_instrument_id"] == PEER_A and d["included"]]
+    assert diag and any(x.startswith("MINORITY_EQUITY_ASSUMED_ZERO") for x in diag[0]["flags"])
+    # Universe flags stay universe-scoped
+    assert "FI_PEER_UNIVERSE_BUILDER" in rep.flags
+    assert "RELATIVE_PRICING_ONLY" in rep.flags
+
+
+def test_subject_allows_auto_fi_peers_gate():
+    as_of, _ = parse_as_of("2025-06-30")
+    bank_cls = [_bank_cls(SUBJ)]
+    assert subject_allows_auto_fi_peers(
+        primary_profile="FINANCIAL_INSTITUTION",
+        instrument_id=SUBJ, as_of=as_of, classifications=[],
+    )
+    assert subject_allows_auto_fi_peers(
+        primary_profile="HOLDING_OR_CONGLOMERATE",
+        instrument_id=SUBJ, as_of=as_of, classifications=bank_cls,
+    )
+    assert not subject_allows_auto_fi_peers(
+        primary_profile="HOLDING_OR_CONGLOMERATE",
+        instrument_id=SUBJ, as_of=as_of, classifications=[],
+    )
+    nonbank = InstrumentClassification(
+        instrument_id=SUBJ, scheme="SW2021_L1", industry="非银金融",
+        published_at=_ts("2000-01-01"), source_id="em_f10_industry",
+    )
+    assert not subject_allows_auto_fi_peers(
+        primary_profile="GROWTH_OR_REINVESTMENT_HEAVY",
+        instrument_id=SUBJ, as_of=as_of, classifications=[nonbank],
+    )

@@ -100,8 +100,13 @@ def run_rim_calibration(
     evaluation_as_of: datetime | None = None,
     split_mode: str | None = None,
     ensemble_weights: dict[str, float] | None = None,
+    prefer_local: bool = True,
 ) -> RimCalibrationReport:
-    """Walk-forward calibrate deposit-taking FI RIM Track A. Random splits rejected."""
+    """Walk-forward calibrate deposit-taking FI RIM Track A. Random splits rejected.
+
+    ``prefer_local`` (default True) is honored for ``fi_real`` universes only —
+    no REST unless caller passes prefer_local=False (CLI ``--refresh``).
+    """
     if isinstance(universe, (str, Path)):
         universe = load_universe(universe)
     mode = split_mode or universe.split_mode
@@ -111,7 +116,8 @@ def run_rim_calibration(
 
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
-    loads = materialize_universe(universe, work_dir=out)
+    loads = materialize_universe(universe, work_dir=out, prefer_local=prefer_local)
+    is_real = universe.fi_real is not None
     horizons = list(universe.horizons_years) or list(loaded.config.horizons_years)
     horizon = min(horizons)
     eval_as_of = evaluation_as_of or datetime.now(TZ)
@@ -265,7 +271,11 @@ def run_rim_calibration(
         # a predeclared real-OOS protocol — leave None (INSUFFICIENT) unless
         # explicitly upgraded later.
         cal_ok = None
-        flags.append("CALIBRATION_INSUFFICIENT_NO_PREDECLARED_OOS_PROTOCOL")
+        flags.append(
+            "CALIBRATION_INSUFFICIENT_NO_PREDECLARED_PASS_CLAIM"
+            if is_real
+            else "CALIBRATION_INSUFFICIENT_NO_PREDECLARED_OOS_PROTOCOL"
+        )
 
     engineering_ok = (
         mode == "chronological"
@@ -290,13 +300,19 @@ def run_rim_calibration(
         n_unbiased_scored=n_unbiased,
         min_oos_for_calibration=5,
     )
-    # Hard: never claim investment supported / ensemble calibrated on R6 path
+    # Hard: never claim investment supported / ensemble calibrated on R6/R7-default path
     assert labels["investment_value"] == ClaimStatus.INVESTMENT_VALUE_NOT_ESTABLISHED.value
     assert labels["ENSEMBLE_CALIBRATED"] is False
     assert labels["CALIBRATION_CLAIM"] == ClaimStatus.CALIBRATION_INSUFFICIENT.value
 
     notes = [
-        "R6 deposit-taking FI RIM chronological walk-forward (SPEC §17 / EVAL-RIM-FI-DEPOSIT-WF-v1).",
+        (
+            "R7 deposit-taking FI RIM chronological walk-forward on HiThink/EM lean panel "
+            "(SPEC §17 / EVAL-RIM-FI-DEPOSIT-REAL-OOS-v1)."
+            if is_real
+            else "R6 deposit-taking FI RIM chronological walk-forward "
+            "(SPEC §17 / EVAL-RIM-FI-DEPOSIT-WF-v1)."
+        ),
         "Random splits raise RandomSplitProhibitedError.",
         "Forecasts persisted with outcomes=null before realization.",
         "PIT_INCOMPLETE origins excluded from scores_unbiased.",
@@ -308,6 +324,18 @@ def run_rim_calibration(
         "Legacy industry.unsupported / UNSUPPORTED_PROFILE for vms value|project unchanged.",
         "SCHEMA remains phase12; this report does not bump schema to claim calibration PASS.",
     ]
+    if is_real:
+        notes.append(
+            f"fi_real materialize prefer_local={prefer_local} "
+            "(REST only when prefer_local=False / --refresh)."
+        )
+        mat_path = out / "fi_real_materialize.json"
+        if mat_path.is_file():
+            import json as _json
+            mat = _json.loads(mat_path.read_text(encoding="utf-8"))
+            notes.append(f"fi_real rest_calls={mat.get('rest_calls')}")
+            if prefer_local and int(mat.get("rest_calls") or 0) > 0:
+                flags.append("FI_REAL_REST_UNEXPECTED")
     declared = [i.instrument_id for i in universe.instruments]
     payload = {
         "universe_id": universe.universe_id,
@@ -351,7 +379,11 @@ def run_rim_calibration(
             "frozen_before_test": True,
         },
         assumptions=cite(
-            "EVAL-RIM-FI-DEPOSIT-WF-v1",
+            *(
+                ["EVAL-RIM-FI-DEPOSIT-REAL-OOS-v1", "EVAL-RIM-FI-DEPOSIT-WF-v1"]
+                if is_real
+                else ["EVAL-RIM-FI-DEPOSIT-WF-v1"]
+            ),
             "EVAL-CHRONOLOGICAL-ONLY-v1",
             "EVAL-FORECAST-BEFORE-OUTCOME-v1",
             "EVAL-TARGETS-SEPARATE-v1",
@@ -362,6 +394,7 @@ def run_rim_calibration(
             "RIM-COMMON-EQUITY-v1",
             "RIM-EXIT-OWN-PB-HIST-v1",
             "PIT-INCOMPLETE-v1",
+            *(["RIM-SUBJECT-HIST-DEPTH-v1", "HITHINK-LOCAL-FIRST-v1"] if is_real else []),
         ),
         flags=sorted(set(flags)),
         notes=notes,

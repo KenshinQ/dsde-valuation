@@ -1,9 +1,9 @@
-"""R6 deposit-taking FI RIM walk-forward calibration offline emitter.
+"""Deposit-taking FI RIM walk-forward calibration offline emitter (R6/R7).
 
-Reuses Phase 11 evaluation protocol. Synthetic / thin lean panel ⇒
-CALIBRATION_INSUFFICIENT + INVESTMENT_VALUE_NOT_ESTABLISHED.
-Never ENSEMBLE_CALIBRATED / INVESTMENT_VALUE_SUPPORTED / CALIBRATION_PASS
-on the R6-default path. SCHEMA stays vms-0.2.phase12 (no bump to claim PASS).
+Reuses Phase 11 evaluation protocol. Synthetic lean panel (R6) or HiThink/EM
+real lean panel (R7) ⇒ CALIBRATION_INSUFFICIENT + INVESTMENT_VALUE_NOT_ESTABLISHED.
+Never ENSEMBLE_CALIBRATED / INVESTMENT_VALUE_SUPPORTED / CALIBRATION_PASS on the
+default path. SCHEMA stays vms-0.2.phase12 (no bump to claim PASS).
 """
 
 from __future__ import annotations
@@ -39,8 +39,13 @@ def build_calibrate_rim_bundle(
     end: date | None = None,
     evaluation_as_of: datetime | None = None,
     seed: int = 42,
+    prefer_local: bool = True,
 ) -> dict[str, Any]:
-    """Run deposit-taking FI RIM walk-forward; write rim_calibration_report + summary."""
+    """Run deposit-taking FI RIM walk-forward; write rim_calibration_report + summary.
+
+    ``prefer_local=True`` (default): fi_real universes make zero REST.
+    ``prefer_local=False`` (CLI ``--refresh``): allow Recipe E / EM upsert.
+    """
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
     repo_root = Path(__file__).resolve().parents[3]
@@ -77,15 +82,16 @@ def build_calibrate_rim_bundle(
         end=end,
         out_dir=out,
         evaluation_as_of=eval_as_of,
+        prefer_local=prefer_local,
     )
 
     if report.labels.get("investment_value") != INVESTMENT_LABEL:
-        raise CalibrateRimBundleError("R6 must keep INVESTMENT_VALUE_NOT_ESTABLISHED")
+        raise CalibrateRimBundleError("calibrate-rim must keep INVESTMENT_VALUE_NOT_ESTABLISHED")
     if report.labels.get("ENSEMBLE_CALIBRATED"):
-        raise CalibrateRimBundleError("R6 must not claim ENSEMBLE_CALIBRATED")
+        raise CalibrateRimBundleError("calibrate-rim must not claim ENSEMBLE_CALIBRATED")
     if report.labels.get("CALIBRATION_PASS") is True:
         raise CalibrateRimBundleError(
-            "R6-default must not silently claim CALIBRATION_PASS "
+            "calibrate-rim default must not silently claim CALIBRATION_PASS "
             "(expected CALIBRATION_INSUFFICIENT without predeclared OOS protocol)"
         )
     if report.labels.get("CALIBRATION_CLAIM") != ClaimStatus.CALIBRATION_INSUFFICIENT.value:
@@ -115,9 +121,9 @@ def build_calibrate_rim_bundle(
             "implemented_phase": IMPLEMENTED_PHASE,
             "schema_version": SCHEMA_VERSION,
             "warning": (
-                "R6 deposit-taking FI RIM walk-forward. CALIBRATION_INSUFFICIENT for production. "
+                "Deposit-taking FI RIM walk-forward (R6/R7). CALIBRATION_INSUFFICIENT for production. "
                 "INVESTMENT_VALUE_NOT_ESTABLISHED. Not investment advice. "
-                "Does not lift industry.unsupported (see EVAL-RIM-FI-DEPOSIT-WF-v1). "
+                "Does not lift industry.unsupported (see EVAL-RIM-FI-DEPOSIT-WF-v1 / EVAL-RIM-FI-DEPOSIT-REAL-OOS-v1). "
                 f"Track B requires hist_n>={MIN_HIST_PB_POINTS}."
             ),
             "labels": report.labels,
@@ -162,8 +168,24 @@ def build_calibrate_rim_bundle(
         "investment_value": INVESTMENT_LABEL,
         "calibration_claim": report.labels.get("CALIBRATION_CLAIM"),
         "content_hash": report.content_hash,
-        "assumption": "EVAL-RIM-FI-DEPOSIT-WF-v1",
+        "assumption": (
+            "EVAL-RIM-FI-DEPOSIT-REAL-OOS-v1"
+            if "EVAL-RIM-FI-DEPOSIT-REAL-OOS-v1" in report.assumptions
+            else "EVAL-RIM-FI-DEPOSIT-WF-v1"
+        ),
+        "prefer_local": prefer_local,
+        "fi_real_rest_calls": None,
     }
+    mat_path = out / "fi_real_materialize.json"
+    if mat_path.is_file():
+        import json as _json
+        mat = _json.loads(mat_path.read_text(encoding="utf-8"))
+        summary["fi_real_rest_calls"] = mat.get("rest_calls")
+        summary["fi_real_prefer_local"] = mat.get("prefer_local")
+        if prefer_local and int(mat.get("rest_calls") or 0) != 0:
+            raise CalibrateRimBundleError(
+                f"prefer_local=True but fi_real rest_calls={mat.get('rest_calls')}"
+            )
     write_artifact(out, "calibrate_rim_summary.json", summary, stamp)
     return summary
 

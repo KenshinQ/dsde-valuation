@@ -1,4 +1,4 @@
-"""Universe loading and offline synthetic panel for Phase 11 evaluation."""
+"""Universe loading: synthetic / deposit-taking synthetic / HiThink-EM real panels."""
 
 from __future__ import annotations
 
@@ -46,6 +46,7 @@ class UniverseConfig(_M):
     min_history_years: int = Field(default=3, ge=1)
     synthetic: dict[str, Any] | None = None
     bank_synthetic: dict[str, Any] | None = None
+    fi_real: dict[str, Any] | None = None
     forbid_random_splits: bool = True
 
 
@@ -149,8 +150,59 @@ def generate_eval_panel(*, seed: int, n_instruments: int = 2, start_year: int = 
     return out
 
 
-def materialize_universe(uni: UniverseConfig, *, work_dir: Path) -> dict[str, LoadResult]:
-    """Load per-instrument data dirs, or generate synthetic / bank_synthetic panel."""
+def materialize_universe(
+    uni: UniverseConfig,
+    *,
+    work_dir: Path,
+    prefer_local: bool = True,
+) -> dict[str, LoadResult]:
+    """Load per-instrument data dirs, or generate synthetic / fi_real panel.
+
+    ``prefer_local`` applies to ``fi_real`` (HiThink/EM) only. Synthetic paths
+    never call REST. ``fi_real`` and ``bank_synthetic`` are mutually exclusive.
+    """
+    import json
+
+    if uni.fi_real is not None and uni.bank_synthetic is not None:
+        raise ValueError("universe cannot set both fi_real and bank_synthetic")
+    if uni.fi_real is not None:
+        if "SYNTHETIC" in (uni.data_label or "").upper():
+            raise ValueError(
+                "fi_real universe data_label must not contain SYNTHETIC "
+                f"(got {uni.data_label!r})"
+            )
+        from datetime import datetime
+        from zoneinfo import ZoneInfo
+
+        from vms.evaluation.fi_real_panel import materialize_fi_real_panel
+
+        cfg = uni.fi_real or {}
+        ids = list(cfg.get("instrument_ids") or [i.instrument_id for i in uni.instruments])
+        tz = ZoneInfo("Asia/Shanghai")
+        as_of_raw = cfg.get("as_of")
+        if as_of_raw:
+            as_of = datetime.fromisoformat(str(as_of_raw))
+            if as_of.tzinfo is None:
+                as_of = as_of.replace(tzinfo=tz)
+        else:
+            as_of = None
+        panel, diag = materialize_fi_real_panel(
+            ids,
+            as_of=as_of,
+            prefer_local=prefer_local,
+            fund_db=cfg.get("fund_db"),
+            market_db=cfg.get("market_db"),
+            work_dir=work_dir,
+            price_lookback_years=int(cfg.get("price_lookback_years", 20)),
+            max_annual_f10=int(cfg.get("max_annual_f10", 20)),
+            statement_limit=int(cfg.get("statement_limit", 40)),
+        )
+        work_dir.mkdir(parents=True, exist_ok=True)
+        (work_dir / "fi_real_materialize.json").write_text(
+            json.dumps(diag.as_dict(), sort_keys=True, indent=2, ensure_ascii=False) + "\n",
+            encoding="utf-8",
+        )
+        return panel
     if uni.bank_synthetic is not None:
         from vms.evaluation.bank_panel import generate_bank_eval_panel
 

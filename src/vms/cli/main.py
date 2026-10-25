@@ -23,7 +23,7 @@ Implemented commands:
   phase9          VMS-0.2 Phase 9 market-pricing regime + exit-price engine (synthetic; NOT investment advice)
   phase10         VMS-0.2 Phase 10 Track B return distributions + DSDE contract (synthetic; NOT investment advice)
   phase11         VMS-0.2 Phase 11 walk-forward calibration + sensitivity (synthetic; NOT investment advice)
-  calibrate-rim   R6 deposit-taking FI RIM walk-forward calibration (lean curated; NOT investment advice)
+  calibrate-rim   Deposit-taking FI RIM walk-forward (R6 synthetic / R7 HiThink-EM lean; NOT investment advice)
   phase12         VMS-0.2 Phase 12 offline release examples (synthetic; NOT investment advice)
   validate-bundle Validate a result-bundle directory against a PHASE_CLI subset / §16.3
   profile         VMS-0.2 Phase 2 economic-profile classifier (NOT a valuation)
@@ -1539,7 +1539,7 @@ def cmd_phase11(args: argparse.Namespace) -> int:
 
 
 def cmd_calibrate_rim(args: argparse.Namespace) -> int:
-    """R6 deposit-taking FI RIM walk-forward calibration. NOT investment advice."""
+    """Deposit-taking FI RIM walk-forward (R6 synthetic / R7 real). NOT investment advice."""
     from datetime import date as date_cls
     out = Path(args.out)
     seed = 42 if args.seed is None else int(args.seed)
@@ -1548,6 +1548,7 @@ def cmd_calibrate_rim(args: argparse.Namespace) -> int:
     if end < start:
         raise InputError("--end must be >= --start")
     uni = args.universe
+    prefer_local = not bool(getattr(args, "refresh", False))
     try:
         summary = build_calibrate_rim_bundle(
             out_dir=out,
@@ -1556,6 +1557,7 @@ def cmd_calibrate_rim(args: argparse.Namespace) -> int:
             start=start,
             end=end,
             seed=seed,
+            prefer_local=prefer_local,
         )
     except CalibrateRimBundleError as e:
         raise InputError(str(e)) from e
@@ -2146,18 +2148,25 @@ def build_parser() -> argparse.ArgumentParser:
 
     cr = sub.add_parser(
         "calibrate-rim",
-        help="R6 deposit-taking FI RIM walk-forward calibration (lean curated; NOT investment advice)",
+        help="Deposit-taking FI RIM walk-forward (R6 synthetic / R7 HiThink-EM lean; NOT investment advice)",
     )
     cr.add_argument("--out", required=True)
     cr.add_argument("--config", default=str(_default_config_path()))
     cr.add_argument(
         "--universe",
         default=None,
-        help="universe YAML (default: config/universe.fi_deposit_lean.yaml)",
+        help="universe YAML (default: config/universe.fi_deposit_lean.yaml; "
+        "real OOS: config/universe.fi_deposit_lean_real.yaml)",
     )
     cr.add_argument("--start", default="2016-01-01")
     cr.add_argument("--end", default="2022-12-31")
     cr.add_argument("--seed", type=int, default=None)
+    cr.add_argument(
+        "--refresh",
+        action="store_true",
+        default=False,
+        help="fi_real only: allow Recipe E / EM REST upsert (default local-first, zero REST)",
+    )
     cr.set_defaults(func=cmd_calibrate_rim)
 
     p12 = sub.add_parser("phase12", help="VMS-0.2 Phase 12 offline release examples (synthetic; NOT investment advice)")

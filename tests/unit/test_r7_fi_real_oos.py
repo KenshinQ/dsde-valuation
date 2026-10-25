@@ -29,7 +29,7 @@ END = date(2022, 12, 31)
 FUND_DB = Path("/workspace/data/hithink_fundamentals.duckdb")
 MARKET_DB = Path("/workspace/data/market.duckdb")
 
-pytestmark = pytest.mark.skipif(
+requires_local_db = pytest.mark.skipif(
     not (FUND_DB.is_file() and MARKET_DB.is_file()),
     reason="local HiThink/market duckdb required for R7 real-panel tests",
 )
@@ -48,6 +48,7 @@ def _run_real(tmp_path: Path, *, prefer_local: bool = True, **kwargs):
 
 
 # ---- AC1: data_label non-SYNTHETIC; materialize not bank_synthetic ----
+@requires_local_db
 def test_ac1_data_label_not_synthetic_and_not_bank_synthetic(tmp_path: Path):
     uni = load_universe(UNI_REAL)
     assert "SYNTHETIC" not in uni.data_label.upper()
@@ -63,6 +64,7 @@ def test_ac1_data_label_not_synthetic_and_not_bank_synthetic(tmp_path: Path):
         assert any("hithink" in s or "em_" in s or "fi_" in s for s in load.sources)
 
 
+@requires_local_db
 def test_ac1_rejects_synthetic_label_with_fi_real(tmp_path: Path):
     uni = load_universe(UNI_REAL)
     bad = uni.model_copy(update={"data_label": "SYNTHETIC_FAKE"})
@@ -71,6 +73,7 @@ def test_ac1_rejects_synthetic_label_with_fi_real(tmp_path: Path):
 
 
 # ---- AC2: no --refresh → rest_calls==0 ----
+@requires_local_db
 def test_ac2_prefer_local_zero_rest(tmp_path: Path, monkeypatch):
     import vms.providers.eastmoney.client as em_client
 
@@ -97,6 +100,7 @@ def test_ac2_prefer_local_zero_rest(tmp_path: Path, monkeypatch):
 
 
 # ---- AC3: --refresh upsert allowed; fail → local/empty; no invent OEI ----
+@requires_local_db
 def test_ac3_refresh_fail_falls_back_no_invent_oei(tmp_path: Path, monkeypatch):
     import vms.providers.eastmoney.client as em_client
 
@@ -120,6 +124,7 @@ def test_ac3_refresh_fail_falls_back_no_invent_oei(tmp_path: Path, monkeypatch):
 
 
 # ---- AC4: chrono + forecast outcomes=null first persist ----
+@requires_local_db
 def test_ac4_forecast_before_outcome(tmp_path: Path):
     report = _run_real(tmp_path)
     assert report.n_forecasts_persisted > 0
@@ -132,11 +137,30 @@ def test_ac4_forecast_before_outcome(tmp_path: Path):
 
 
 # ---- AC5: pit_complete=false not in scores_unbiased ----
+@requires_local_db
 def test_ac5_pit_incomplete_excluded_from_unbiased(tmp_path: Path):
     report = _run_real(tmp_path)
-    # Real HiThink LATEST_ONLY ⇒ pit_complete typically false
-    assert report.n_excluded_pit_incomplete >= 0
-    # Prove filter: fabricate incomplete → excluded
+    # Real HiThink LATEST_ONLY ⇒ pit_complete typically false on lean panel
+    assert report.n_excluded_pit_incomplete >= 1
+    for ex in report.excluded_pit_incomplete:
+        assert ex["reason"] == "PIT_INCOMPLETE"
+
+    # Lock real report: scores_unbiased only counts pit_complete scored rows
+    origin_path = tmp_path / "rim_ev" / "origin_records.json"
+    body = json.loads(origin_path.read_text(encoding="utf-8"))
+    records = body["records"]
+    scored = [
+        r for r in records
+        if r.get("outcomes") and not (r.get("outcomes") or {}).get("pending")
+    ]
+    unbiased = [r for r in scored if r.get("pit_complete")]
+    assert int(report.scores_unbiased.get("n_records", 0)) == len(unbiased)
+    assert all(r.get("pit_complete") is True for r in unbiased)
+    assert report.n_excluded_pit_incomplete == sum(
+        1 for r in records if not r.get("pit_complete")
+    )
+
+    # Unit filter: fabricate incomplete → excluded from scorer input
     from vms.evaluation.rim_metrics import score_rim_targets
 
     rows = [
@@ -151,16 +175,14 @@ def test_ac5_pit_incomplete_excluded_from_unbiased(tmp_path: Path):
             "forecasts": {"driver_roe": {"point": 0.1}},
         },
     ]
-    unbiased = [r for r in rows if r.get("pit_complete")]
-    assert len(unbiased) == 1
-    s = score_rim_targets(unbiased)
+    only_complete = [r for r in rows if r.get("pit_complete")]
+    assert len(only_complete) == 1
+    s = score_rim_targets(only_complete)
     assert s.get("n_records", 0) == 1
-    # Report itself must keep incomplete out of unbiased n
-    for ex in report.excluded_pit_incomplete:
-        assert ex["reason"] == "PIT_INCOMPLETE"
 
 
 # ---- AC6: Track B hist<12 → SKIP (000001 honest) ----
+@requires_local_db
 def test_ac6_track_b_short_oei_skip(tmp_path: Path):
     report = _run_real(tmp_path)
     assert report.min_hist_pb_points == MIN_HIST_PB_POINTS == 12
@@ -198,6 +220,7 @@ def test_ac6_track_b_short_oei_skip(tmp_path: Path):
 
 
 # ---- AC7: MIN=12; no default pb ----
+@requires_local_db
 def test_ac7_min12_no_default_pb(tmp_path: Path):
     assert MIN_HIST_PB_POINTS == 12
     report = _run_real(tmp_path)
@@ -216,6 +239,7 @@ def test_ac7_min12_no_default_pb(tmp_path: Path):
 
 
 # ---- AC8: labels INSUFFICIENT + INVESTMENT_VALUE_NOT_ESTABLISHED ----
+@requires_local_db
 def test_ac8_labels_hard_locked(tmp_path: Path):
     report = _run_real(tmp_path)
     assert report.labels["CALIBRATION_CLAIM"] == ClaimStatus.CALIBRATION_INSUFFICIENT.value

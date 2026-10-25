@@ -61,6 +61,10 @@ PHASE_R7_FI_REAL_OOS_DONE.md
 | Repo `.venv` | R4/R5/R6 + sector lint + docs sync (regression) | **green** |
 | CLI | `vms calibrate-rim --universe config/universe.fi_deposit_lean_real.yaml` (no `--refresh`) | `data_label=HITHINK_EM_LEAN_FI`; forecasts=15; pit_excluded=15; Track B skips=15 eligible=0; `rest_calls=0`; `CALIBRATION_INSUFFICIENT`; `INVESTMENT_VALUE_NOT_ESTABLISHED` |
 
+
+## Arch gate (PR #7)
+- **REQUEST_CHANGES B1 closed**: `fetch_bundle` aligned with enrich/R4/R5 — `prefer_local=True` miss ⇒ local empty + flags, **no** Recipe E / forced REST; `prefer_local=False` (`--refresh`) unchanged.
+- SHOULD-FIX: empty-tmp zero-REST test; AC9/AC10 not hidden by module skipif; AC5 locks real `scores_unbiased`; `_count_rest` uses structured `rest_calls` (not `rest_notes` substrings).
 ## Known gaps (honest)
 - `CALIBRATION_PASS` / `ENSEMBLE_CALIBRATED` intentionally **not** emitted on R7-default
   (pit_complete typically false under HiThink LATEST_ONLY; OOS still thin).

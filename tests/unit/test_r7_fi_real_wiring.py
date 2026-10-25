@@ -50,6 +50,7 @@ def _empty_load() -> LoadResult:
 
 class _Diag:
     rest_notes: list = []
+    rest_calls: int = 0
     enrichment: dict = {}
     price_diag: dict = {"rest_used": False}
 
@@ -90,6 +91,7 @@ def test_prefer_local_false_refresh_wiring(monkeypatch, tmp_path):
 
     class DiagRest(_Diag):
         rest_notes = ["income/annual: Recipe E HiThink upsert + re-read"]
+        rest_calls = 2  # structured counter (not rest_notes substrings)
         enrichment = {"bank_f10": {"path": "rest_upsert"}}
         price_diag = {"rest_used": True}
 
@@ -202,3 +204,76 @@ def test_cli_refresh_sets_prefer_local_false(monkeypatch, tmp_path):
     ])
     assert rc == 0
     assert seen.get("prefer_local") is True
+
+
+def test_fetch_bundle_empty_tmp_prefer_local_zero_rest(tmp_path, monkeypatch):
+    """BLOCKER B1: empty tmp DuckDB + prefer_local ⇒ no Recipe E / zero REST."""
+    import duckdb
+    import pytest
+
+    from vms.providers.eastmoney import store as em_store
+    from vms.providers.hithink.adapter import HiThinkFetchError, fetch_bundle
+    from vms.providers.hithink.paths import duckdb_available
+
+    if not duckdb_available():
+        pytest.skip("duckdb required to create empty EM enrichment schema")
+
+    fdb = tmp_path / "fund.duckdb"
+    mdb = tmp_path / "market.duckdb"
+    em_store.ensure_tables(fdb)
+    duckdb.connect(str(mdb)).close()
+
+    calls: list[str] = []
+
+    def _boom(*_a, **_k):
+        calls.append("rest")
+        raise AssertionError("REST must not be called when prefer_local")
+
+    monkeypatch.setattr("vms.providers.hithink.adapter.load_lab_modules", _boom)
+    monkeypatch.setattr("vms.providers.hithink.adapter.recipe_e_ensure_prices", _boom)
+    monkeypatch.setattr(
+        "vms.providers.eastmoney.client.fetch_datacenter_all", _boom,
+    )
+    monkeypatch.setattr(
+        "vms.providers.eastmoney.client.fetch_bank_f10_bundle", _boom,
+    )
+    monkeypatch.setattr(
+        "vms.providers.eastmoney.client.fetch_company_survey", _boom,
+    )
+
+    with pytest.raises(HiThinkFetchError, match="no financials or market"):
+        fetch_bundle(
+            "000001.SZ",
+            prefer_local=True,
+            min_local=0,
+            fund_db=fdb,
+            market_db=mdb,
+        )
+    assert calls == []
+
+
+def test_count_rest_uses_structured_counters_not_note_substrings():
+    """SHOULD-FIX: _count_rest ignores rest_notes wording."""
+    from vms.evaluation.fi_real_panel import _count_rest
+
+    class Diag:
+        rest_calls = 0
+        rest_notes = [
+            "notices: Recipe E EM upsert + re-read",
+            "prices: Recipe E REST upsert + re-read",
+            "income/annual: Recipe E HiThink upsert + re-read",
+        ]
+        enrichment = {"bank_f10": {"path": "local_miss_no_rest"}}
+        price_diag = {"rest_used": True}
+
+    # Notes + rest_used alone must not inflate when rest_calls==0
+    assert _count_rest(Diag(), depth_rest=0, prefer_local=True) == 0
+
+    class DiagRest:
+        rest_calls = 3
+        rest_notes = []
+        enrichment = {"bank_f10": {"path": "rest_upsert"}, "equity": {"path": "local"}}
+        price_diag = {"rest_used": True}
+
+    # 3 fetch Recipe E + 1 enrich rest path + depth 2
+    assert _count_rest(DiagRest(), depth_rest=2, prefer_local=False) == 6

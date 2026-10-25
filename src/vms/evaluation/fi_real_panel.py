@@ -31,31 +31,19 @@ DEFAULT_AS_OF = datetime(2025, 6, 30, 15, 0, tzinfo=TZ)
 
 
 def _count_rest(diag: Any, depth_rest: int, prefer_local: bool) -> int:
-    """Tally REST attempts from fetch_bundle notes + subject-hist depth."""
-    n = int(depth_rest)
-    notes = list(getattr(diag, "rest_notes", None) or [])
-    for note in notes:
-        s = str(note).lower()
-        if "recipe e" in s or "upsert" in s or "rest" in s:
-            n += 1
+    """Tally REST from structured counters — not rest_notes substrings.
+
+    ``FetchDiagnostics.rest_calls`` counts Recipe E in notices/statements/prices.
+    Enrichment paths starting with ``rest`` count separately (eastmoney enrich).
+    ``prefer_local`` is accepted for call-site symmetry; counters already gate REST.
+    """
+    del prefer_local  # counters are authoritative; keep signature stable
+    n = int(depth_rest) + int(getattr(diag, "rest_calls", 0) or 0)
     enr = getattr(diag, "enrichment", None) or {}
     if isinstance(enr, dict):
         for v in enr.values():
             if isinstance(v, dict) and str(v.get("path") or "").startswith("rest"):
                 n += 1
-    price = getattr(diag, "price_diag", None) or {}
-    if isinstance(price, dict) and price.get("rest_used"):
-        n += 1
-    if prefer_local:
-        # Path labels alone from prior upserts must not inflate; only live notes.
-        # Recompute strictly from this-call rest_notes + depth.
-        n = int(depth_rest) + sum(
-            1
-            for note in notes
-            if ("recipe e" in str(note).lower() or "upsert" in str(note).lower())
-        )
-        if isinstance(price, dict) and price.get("rest_used"):
-            n += 1
     return n
 
 

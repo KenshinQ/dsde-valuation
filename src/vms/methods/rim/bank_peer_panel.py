@@ -214,8 +214,12 @@ def _load_bank_f10_for_ticker(
     fund_db: Path,
     prefer_local: bool,
     diag: TickerPathDiag,
+    max_annual: int = 12,
 ) -> list[FinancialObservation]:
-    """EM companyType=3 OEI/MI/… Local-only unless refresh; never invent OEI."""
+    """EM companyType=3 OEI/MI/… Local-only unless refresh; never invent OEI.
+
+    ``max_annual`` caps REST FY count (R4 peers default 12; R5 subject hist may raise).
+    """
     _ensure_tables(fund_db)
     n = em_store.count_bank_f10(thscode, db_path=fund_db) if fund_db.is_file() else 0
     balance_rows: list[dict] = []
@@ -234,7 +238,9 @@ def _load_bank_f10_for_ticker(
             return []
     else:
         try:
-            bundle = em_client.fetch_bank_f10_bundle(thscode, company_type=3)
+            bundle = em_client.fetch_bank_f10_bundle(
+                thscode, company_type=3, max_annual=int(max_annual),
+            )
             em_store.upsert_bank_f10(
                 thscode, statement="zcfzb", rows=bundle.get("balance") or [], db_path=fund_db,
             )

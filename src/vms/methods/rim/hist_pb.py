@@ -36,6 +36,13 @@ class HistPbPoint:
 
 
 @dataclass(frozen=True)
+class YearFunnelEntry:
+    year: int
+    status: str  # INCLUDED | SKIP_*
+    reason: str | None = None
+
+
+@dataclass(frozen=True)
 class HistPbSeries:
     ok: bool
     ineligible_reason: str | None
@@ -47,6 +54,7 @@ class HistPbSeries:
     p25: float | None
     p75: float | None
     detail: str = ""
+    year_funnel: list[YearFunnelEntry] = field(default_factory=list)
 
 
 def _raw_close_on_or_before(
@@ -93,6 +101,7 @@ def historical_common_pb(
     h = extract_annual(snap)
     as_of = snap.as_of
     points: list[HistPbPoint] = []
+    year_funnel: list[YearFunnelEntry] = []
 
     for y in h.years:
         be, comps, cflags, err = common_equity_components(
@@ -100,26 +109,32 @@ def historical_common_pb(
         )
         flags.extend(cflags)
         if err or be is None or be <= 0:
-            flags.append(f"PB_SKIP_NO_COMMON_EQUITY@{y}:{err}")
+            reason = err or "NONPOSITIVE_COMMON_EQUITY"
+            flags.append(f"PB_SKIP_NO_COMMON_EQUITY@{y}:{reason}")
+            year_funnel.append(YearFunnelEntry(year=y, status="SKIP_NO_COMMON_EQUITY", reason=reason))
             continue
         sh_pt = h.shares.get(y)
         shares = None if sh_pt is None else sh_pt.value
         if shares is None or not (math.isfinite(shares) and shares > 0):
             flags.append(f"PB_SKIP_NO_SHARES@{y}")
+            year_funnel.append(YearFunnelEntry(year=y, status="SKIP_NO_SHARES", reason="MISSING_OR_NONPOSITIVE_SHARES"))
             continue
         pe = date(y, 12, 31)
         px, ts, pflags = _raw_close_on_or_before(snap, on_or_before=pe, as_of=as_of)
         flags.extend(pflags)
         if px is None or ts is None:
             flags.append(f"PB_SKIP_NO_RAW_CLOSE@{y}")
+            year_funnel.append(YearFunnelEntry(year=y, status="SKIP_NO_RAW_CLOSE", reason="MISSING_RAW_CLOSE"))
             continue
         bps = float(be) / float(shares)
         if not (math.isfinite(bps) and bps > 0):
             flags.append(f"PB_SKIP_NONPOSITIVE_BPS@{y}")
+            year_funnel.append(YearFunnelEntry(year=y, status="SKIP_NONPOSITIVE_BPS", reason="NONPOSITIVE_BPS"))
             continue
         pb = float(px) / bps
         if not (math.isfinite(pb) and pb > 0):
             flags.append(f"PB_SKIP_NONPOSITIVE_PB@{y}")
+            year_funnel.append(YearFunnelEntry(year=y, status="SKIP_NONPOSITIVE_PB", reason="NONPOSITIVE_PB"))
             continue
         points.append(
             HistPbPoint(
@@ -134,6 +149,7 @@ def historical_common_pb(
                 flags=sorted(set(cflags)),
             )
         )
+        year_funnel.append(YearFunnelEntry(year=y, status="INCLUDED", reason=None))
 
     n = len(points)
     pbs = [p.pb for p in points]
@@ -153,6 +169,7 @@ def historical_common_pb(
             p25=p25,
             p75=p75,
             detail=f"need >={min_points} PIT FY common-P/B points; got {n}",
+            year_funnel=year_funnel,
         )
     return HistPbSeries(
         ok=True,
@@ -165,6 +182,7 @@ def historical_common_pb(
         p25=p25,
         p75=p75,
         detail=f"n={n}; median_pb={med}",
+        year_funnel=year_funnel,
     )
 
 

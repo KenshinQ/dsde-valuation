@@ -194,15 +194,19 @@ def run_rim_track_b(
         "flags": hist.flags,
         "assumption_ids": hist.assumption_ids,
         "detail": hist.detail,
+        "year_funnel": [
+            {"year": e.year, "status": e.status, "reason": e.reason}
+            for e in hist.year_funnel
+        ],
         "points": [
             {
-                "year": p.year,
-                "pb": p.pb,
-                "raw_close": p.raw_close,
-                "bps": p.bps,
-                "common_equity": p.common_equity,
+                "year": pt.year,
+                "pb": pt.pb,
+                "raw_close": pt.raw_close,
+                "bps": pt.bps,
+                "common_equity": pt.common_equity,
             }
-            for p in hist.points
+            for pt in hist.points
         ],
     }
     flags.extend(hist.flags)

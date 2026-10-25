@@ -12,6 +12,7 @@ from vms.methods.rim.bank_peers import EXCLUSION_MISSING_OEI
 from vms.methods.rim.hist_pb import PEER_FIELD_PB_COMMON
 from vms.pit.asof import parse_as_of
 from vms.providers.eastmoney.industry import deposit_taking_fi_sw_label
+from vms.methods.rim.bank_peer_panel import FiPeerPanelReport
 from vms.reporting.value_rim_bundle import build_value_rim_bundle
 from vms.schemas import (
     CorporateActionEvent,
@@ -153,11 +154,35 @@ def _load(*, with_peers_panel: bool = True, peers: list[PeerObservation] | None 
     )
 
 
-def _run(repo: Path, tmp_path: Path, load: LoadResult, *, auto_fi_peers: bool = True,
-         run_distribution: bool = False, run_track_b: bool = False):
+def _empty_panel(**kwargs):
+    """R3 wiring keeps synthetic load.financial peers; avoid real DuckDB panel I/O."""
+    sid = kwargs.get("subject_instrument_id", INST)
+    as_of = kwargs.get("as_of")
+    return FiPeerPanelReport(
+        subject_instrument_id=sid,
+        as_of=as_of.isoformat() if as_of is not None else "",
+        candidate_ids=[],
+        financial=[],
+        market=[],
+        classifications=[],
+        ticker_diagnostics=[],
+        flags=["FI_PEER_PANEL_BUILDER", "PANEL_STUB_EMPTY"],
+        assumption_ids=["RIM-FI-PEER-PANEL-v1"],
+        rest_calls=0,
+        detail="stub_empty_for_r3_wiring",
+    )
+
+
+def _run(repo: Path, tmp_path: Path, load: LoadResult, monkeypatch, *, auto_fi_peers: bool = True,
+         run_distribution: bool = False, run_track_b: bool = False,
+         prefer_local_fi_peers: bool = True, stub_panel: bool = True):
     loaded = load_config(repo / "config/default.yaml")
     as_of, note = parse_as_of("2025-06-30")
     out = tmp_path / "rim_out"
+    if stub_panel:
+        monkeypatch.setattr(
+            "vms.reporting.value_rim_bundle.build_fi_peer_panel", _empty_panel,
+        )
     return build_value_rim_bundle(
         out_dir=out,
         load=load,
@@ -177,12 +202,13 @@ def _run(repo: Path, tmp_path: Path, load: LoadResult, *, auto_fi_peers: bool = 
         seed=7,
         auto_fi_peers=auto_fi_peers,
         peer_min_count=5,
+        prefer_local_fi_peers=prefer_local_fi_peers,
     ), out
 
 
-def test_wiring_empty_peers_auto_on_builds(repo, tmp_path):
+def test_wiring_empty_peers_auto_on_builds(repo, tmp_path, monkeypatch):
     load = _load(with_peers_panel=True, peers=[])
-    summ, out = _run(repo, tmp_path, load, auto_fi_peers=True)
+    summ, out = _run(repo, tmp_path, load, monkeypatch, auto_fi_peers=True)
     assert "AUTO_FI_PEERS" in summ["flags"]
     assert "AUTO_FI_PEERS_DISABLED" not in summ["flags"]
     assert "AUTO_FI_PEERS_SKIPPED_NON_FI" not in summ["flags"]
@@ -200,7 +226,7 @@ def test_wiring_empty_peers_auto_on_builds(repo, tmp_path):
     assert summ["pb_roe"]["ok"] is True or summ["pb_roe"]["peer_n_included"] >= 5
 
 
-def test_wiring_existing_load_peers_skips_auto(repo, tmp_path):
+def test_wiring_existing_load_peers_skips_auto(repo, tmp_path, monkeypatch):
     as_of, _ = parse_as_of("2025-06-30")
     preexisting = [
         PeerObservation(
@@ -219,29 +245,29 @@ def test_wiring_existing_load_peers_skips_auto(repo, tmp_path):
         for i, pid in enumerate([PEER_A, PEER_B, PEER_C, PEER_D, PEER_E])
     ]
     load = _load(with_peers_panel=False, peers=preexisting)
-    summ, out = _run(repo, tmp_path, load, auto_fi_peers=True)
+    summ, out = _run(repo, tmp_path, load, monkeypatch, auto_fi_peers=True)
     assert "AUTO_FI_PEERS" not in summ["flags"]
     assert summ["fi_peers"] is None
     assert not (out / "rim_fi_peers.json").exists()
     assert summ["pb_roe"] is not None
 
 
-def test_wiring_no_auto_fi_peers_flag(repo, tmp_path):
+def test_wiring_no_auto_fi_peers_flag(repo, tmp_path, monkeypatch):
     load = _load(with_peers_panel=True, peers=[])
-    summ, out = _run(repo, tmp_path, load, auto_fi_peers=False)
+    summ, out = _run(repo, tmp_path, load, monkeypatch, auto_fi_peers=False)
     assert "AUTO_FI_PEERS_DISABLED" in summ["flags"]
     assert "AUTO_FI_PEERS" not in summ["flags"]
     assert summ["fi_peers"] is None
     assert not (out / "rim_fi_peers.json").exists()
 
 
-def test_wiring_fi_gate_skips_nonbank_fi_subject(repo, tmp_path):
+def test_wiring_fi_gate_skips_nonbank_fi_subject(repo, tmp_path, monkeypatch):
     """Real FI+非银: FINANCIAL_INSTITUTION profile + 非银金融 SW must skip auto bank peers.
 
     No monkeypatch — exercises subject_allows_auto_fi_peers with real classifications.
     """
     load = _load(with_peers_panel=True, peers=[], subject_industry="非银金融")
-    summ, out = _run(repo, tmp_path, load, auto_fi_peers=True)
+    summ, out = _run(repo, tmp_path, load, monkeypatch, auto_fi_peers=True)
     assert summ["profile_primary"] == "FINANCIAL_INSTITUTION"
     assert "AUTO_FI_PEERS_SKIPPED_NON_FI" in summ["flags"]
     assert "AUTO_FI_PEERS" not in summ["flags"]
@@ -249,7 +275,7 @@ def test_wiring_fi_gate_skips_nonbank_fi_subject(repo, tmp_path):
     assert not (out / "rim_fi_peers.json").exists()
 
 
-def test_wiring_fi_gate_skips_when_sw_missing(repo, tmp_path):
+def test_wiring_fi_gate_skips_when_sw_missing(repo, tmp_path, monkeypatch):
     """Honest missing-SW path: FI profile alone must not scan bank peer universe."""
     load = _load(with_peers_panel=True, peers=[])
     # Drop subject classification rows only; keep peer classes for panel realism.
@@ -262,7 +288,7 @@ def test_wiring_fi_gate_skips_when_sw_missing(repo, tmp_path):
         corporate_actions_provided=load.corporate_actions_provided,
         peers=list(load.peers or []),
     )
-    summ, out = _run(repo, tmp_path, load, auto_fi_peers=True)
+    summ, out = _run(repo, tmp_path, load, monkeypatch, auto_fi_peers=True)
     assert summ["profile_primary"] == "FINANCIAL_INSTITUTION"
     assert "AUTO_FI_PEERS_SKIPPED_NON_FI" in summ["flags"]
     assert "AUTO_FI_PEERS" not in summ["flags"]
@@ -270,9 +296,9 @@ def test_wiring_fi_gate_skips_when_sw_missing(repo, tmp_path):
     assert not (out / "rim_fi_peers.json").exists()
 
 
-def test_wiring_fi_gate_on_for_deposit_taking_sw(repo, tmp_path):
+def test_wiring_fi_gate_on_for_deposit_taking_sw(repo, tmp_path, monkeypatch):
     load = _load(with_peers_panel=True, peers=[])
-    summ, _ = _run(repo, tmp_path, load, auto_fi_peers=True)
+    summ, _ = _run(repo, tmp_path, load, monkeypatch, auto_fi_peers=True)
     assert summ["profile_primary"] == "FINANCIAL_INSTITUTION"
     assert "AUTO_FI_PEERS" in summ["flags"]
     assert "AUTO_FI_PEERS_SKIPPED_NON_FI" not in summ["flags"]

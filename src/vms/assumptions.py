@@ -430,6 +430,7 @@ ASSUMPTIONS: dict[str, str] = {
                      "(default {0.08, 0.09, 0.10} or config-driven). Each ke yields a VPS "
                      "distribution under P2; no ensemble blend across ke.",
 
+    "RIM-FI-PEER-PANEL-v1": "Deposit-taking FI peer panel for R2c/R3 merges multi-instrument TE (HiThink balance, NOTICE-aligned) + EM bank_f10 OEI/MI + raw_close/shares into one LoadResult-shaped panel so peer build is not subject-only. Local-first: prefer_local/no --refresh ⇒ zero REST even on miss (missing → per-ticker path diag / peer exclusion). Explicit --refresh allows Recipe E / EM upsert; fail → local fallback or exclude; never invent OEI (TE without OEI ⇒ MISSING_OTHER_EQUITY_INSTRUMENTS). Does not lift industry.unsupported; not 非银金融; INVESTMENT_VALUE_NOT_ESTABLISHED; pit_complete remains false.",
     "RIM-FI-PEER-UNIVERSE-v1": "Deposit-taking FI peer universe for R2c pb_common is built "
                               "from lean curated A-share tickers (ID allowlist in bank_peers) "
                               "union local SW L1 proxy classifications (LABEL SoT = "

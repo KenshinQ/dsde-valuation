@@ -113,11 +113,17 @@ does **not** replace synthetic `vms phase8` or the R8 demo scenarios).
 - Track A center: `method_result.values.value_per_share` preferred; else
   `rim_distribution.ke_grid[0].vps_p50`.
 - Optional `pb_common`: `rim_pb_roe.relative_vps` when ok.
-- Track B: `hist_n` from `rim_track_b.hist_pb.n`; center `rim_track_b.pb_center_used`;
-  enters weights only when `hist_n >= MIN_HIST_PB_POINTS` (=12) and center present;
-  else honest SKIP.
+- Track B: `hist_n` from `rim_track_b.hist_pb.n`. **PER_SHARE** center prefers
+  `rim_track_b.exit_prices.summaries[<horizon>].p50` (exit_price_per_share median;
+  first finite horizon in numeric key order) or an explicit `exit_vps_center`.
+  `rim_track_b.pb_center_used` is an own-hist **P/B multiple** kept for audit only
+  and is **never** fed as PER_SHARE into mixture weights
+  (`TRACK_B_CENTER_NOT_PER_SHARE` when `hist_n >= MIN` and no mapped VPS).
+  Enters weights only when `hist_n >= MIN_HIST_PB_POINTS` (=12) **and** a mapped
+  PER_SHARE center is present; else honest SKIP.
 - Samples still `samples_from_point(center)` for this minimal slice;
-  `diagnostics.synthetic=false` + source artifact paths.
+  `diagnostics.synthetic=false` + `sample_generation=samples_from_point` +
+  source artifact paths.
 - Production intent on the same components refuses mixture.
 - Hard labels unchanged: `PRIOR_ONLY` / `ENSEMBLE_UNCALIBRATED` /
   `CALIBRATION_INSUFFICIENT` / `INVESTMENT_VALUE_NOT_ESTABLISHED`.

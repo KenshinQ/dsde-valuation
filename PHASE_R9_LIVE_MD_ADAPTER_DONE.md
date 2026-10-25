@@ -7,7 +7,9 @@ Status: **R9 live value-rim → MethodDistribution adapter accepted** for resear
 PRIOR_ONLY path only. Label: `INVESTMENT_VALUE_NOT_ESTABLISHED`. **Not** investment
 advice. **No** `ENSEMBLE_CALIBRATED` / `CALIBRATION_PASS` / `INVESTMENT_VALUE_SUPPORTED`.
 Does **not** claim calibrated production ensemble. SCHEMA stays `vms-0.2.phase12`;
-package `0.2.0rc1`.
+package `0.2.0rc1`. Architecture gate B1 fix: Track B never feeds raw
+`pb_center_used` (P/B multiple) as PER_SHARE; maps `exit_prices.summaries[*].p50`
+or SKIP `TRACK_B_CENTER_NOT_PER_SHARE`.
 
 ## Scope
 Wire single-ticket `vms value-rim` out-dir artifacts into
@@ -41,8 +43,13 @@ PHASE_R9_LIVE_MD_ADAPTER_DONE.md                      this file
 ## Centers (pinned)
 - Track A: `method_result.values.value_per_share` preferred; else `rim_distribution.ke_grid[0].vps_p50`
 - pb_common optional: `rim_pb_roe.relative_vps` when ok
-- Track B: `hist_n` from `rim_track_b.hist_pb.n`; center `rim_track_b.pb_center_used`
-- Samples: `samples_from_point(center)`; `diagnostics.synthetic=false` + source paths
+- Track B PER_SHARE: prefer `rim_track_b.exit_prices.summaries[<h>].p50`
+  (exit_price_per_share median; first finite horizon) or explicit `exit_vps_center`.
+  `pb_center_used` is own-hist **P/B multiple** (audit only) — never PER_SHARE weights.
+  Both `hist_n >= MIN` **and** mapped PER_SHARE center required; else SKIP
+  (`HIST_PB_BELOW_MIN` / `TRACK_B_CENTER_NOT_PER_SHARE`).
+- Samples: `samples_from_point(center)`; `diagnostics.synthetic=false` +
+  `sample_generation=samples_from_point` + source paths
 
 ## Hard constraints honored
 - Never emit `ENSEMBLE_CALIBRATED` / `CALIBRATION_PASS` / `INVESTMENT_VALUE_SUPPORTED`
@@ -54,9 +61,11 @@ PHASE_R9_LIVE_MD_ADAPTER_DONE.md                      this file
 - Without `--from-value-rim`, R8 demo path unchanged
 
 ## Known gaps (honest)
-- Minimal slice still uses `samples_from_point` around centers (not full live sample paths).
-- Track B center is `pb_center_used` (own-hist PB multiple channel) per pin; research
-  disagreement only (`EVAL-IV-NOT-PRICE-TRUTH-v1`) — not intrinsic VPS truth.
+- Minimal slice still uses `samples_from_point` around centers (not full live sample paths);
+  stamped as `sample_generation=samples_from_point` with `synthetic=false`.
+- Track B requires a mapped PER_SHARE exit center (`exit_prices.summaries[*].p50`);
+  raw `pb_center_used` P/B multiple is audit-only and never enters PER_SHARE weights
+  (`EVAL-IV-NOT-PRICE-TRUTH-v1` still applies to the exit channel).
 - Production calibrated ensemble still blocked (`CALIBRATION_INSUFFICIENT` remains honest).
 
 ## Label

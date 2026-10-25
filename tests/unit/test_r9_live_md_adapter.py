@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 
 from vms import IMPLEMENTED_PHASE, SCHEMA_VERSION, __version__
-from vms.ensemble import EnsembleMode, build_ensemble
+from vms.ensemble import EnsembleMode, MethodDistribution, build_ensemble, samples_from_point
 from vms.methods.rim.hist_pb import MIN_HIST_PB_POINTS
 from vms.reporting.fi_method_distribution_adapter import (
     ARTIFACT_METHOD_RESULT,
@@ -17,6 +17,7 @@ from vms.reporting.fi_method_distribution_adapter import (
     ARTIFACT_RIM_TRACK_B,
     FiMethodDistributionAdapterError,
     LIVE_DATA_LABEL,
+    SKIP_TRACK_B_CENTER_NOT_PER_SHARE,
     adapt_value_rim_dir,
 )
 from vms.reporting.prior_only_fi_bundle import (
@@ -26,7 +27,7 @@ from vms.reporting.prior_only_fi_bundle import (
     PRIOR_ONLY_FI_STATUS,
     build_prior_only_fi_bundle,
 )
-from vms.schemas.contracts import ClaimStatus, OutputBasis, ValuationTarget
+from vms.schemas.contracts import ClaimStatus, MethodEligibilityStatus, OutputBasis, ValuationTarget
 
 TARGET = ValuationTarget.FUNDAMENTAL_VALUE_CURRENT
 INV = ClaimStatus.INVESTMENT_VALUE_NOT_ESTABLISHED.value
@@ -45,9 +46,16 @@ def _fixture_value_rim(
     pb_vps: float | None = 10.5,
     pb_ok: bool = True,
     track_b_hist_n: int | None = 5,
-    track_b_center: float | None = 0.85,
+    track_b_pb_multiple: float | None = 0.85,
+    track_b_exit_vps: float | None = None,
+    track_b_exit_horizon: str = "1",
 ) -> Path:
-    """Minimal value-rim out-dir fixture covering Track A / pb / Track B pins."""
+    """Minimal value-rim out-dir fixture covering Track A / pb / Track B pins.
+
+    ``track_b_pb_multiple`` is a realistic own-hist P/B ratio (~0.8–2).
+    ``track_b_exit_vps`` is optional PER_SHARE exit_price_per_share median under
+    ``exit_prices.summaries``.
+    """
     if use_method_result:
         _write(
             root,
@@ -73,7 +81,12 @@ def _fixture_value_rim(
             ARTIFACT_RIM_DISTRIBUTION,
             {
                 "ke_grid": [
-                    {"ke": 0.09, "vps_p05": rim_vps * 0.9, "vps_p50": rim_vps, "vps_p95": rim_vps * 1.1}
+                    {
+                        "ke": 0.09,
+                        "vps_p05": rim_vps * 0.9,
+                        "vps_p50": rim_vps,
+                        "vps_p95": rim_vps * 1.1,
+                    }
                 ]
             },
         )
@@ -88,16 +101,36 @@ def _fixture_value_rim(
             },
         )
     if track_b_hist_n is not None:
-        _write(
-            root,
-            ARTIFACT_RIM_TRACK_B,
-            {
-                "ok": track_b_hist_n >= MIN_HIST_PB_POINTS and track_b_center is not None,
-                "status": "VALID" if track_b_hist_n >= MIN_HIST_PB_POINTS else "INELIGIBLE",
-                "hist_pb": {"n": track_b_hist_n, "median": track_b_center},
-                "pb_center_used": track_b_center,
+        tb: dict = {
+            "ok": (
+                track_b_hist_n >= MIN_HIST_PB_POINTS
+                and track_b_exit_vps is not None
+            ),
+            "status": (
+                "VALID"
+                if track_b_hist_n >= MIN_HIST_PB_POINTS and track_b_exit_vps is not None
+                else "INELIGIBLE"
+            ),
+            "hist_pb": {
+                "n": track_b_hist_n,
+                "median": track_b_pb_multiple,
             },
-        )
+            "pb_center_used": track_b_pb_multiple,
+        }
+        if track_b_exit_vps is not None:
+            tb["exit_prices"] = {
+                "metric_id": "pb",
+                "summaries": {
+                    track_b_exit_horizon: {
+                        "n_valid": 32,
+                        "mean": float(track_b_exit_vps),
+                        "p50": float(track_b_exit_vps),
+                        "p05": float(track_b_exit_vps) * 0.9,
+                        "p95": float(track_b_exit_vps) * 1.1,
+                    }
+                },
+            }
+        _write(root, ARTIFACT_RIM_TRACK_B, tb)
     _write(root, "value_rim_summary.json", {"instrument_id": "000001.SZ", "status": "ok"})
     return root
 
@@ -106,19 +139,26 @@ def test_ac1_fixture_value_rim_research_prior_only(tmp_path: Path):
     vr = _fixture_value_rim(
         tmp_path / "vr",
         track_b_hist_n=5,
-        track_b_center=0.85,
+        track_b_pb_multiple=0.85,
     )
     comps, ledger, meta = adapt_value_rim_dir(vr, seed=7)
     assert meta["data_label"] == LIVE_DATA_LABEL
     assert meta["synthetic"] is False
+    assert meta["sample_generation"] == "samples_from_point"
     assert meta["rim_vps"] == 12.0
     assert meta["pb_vps"] == 10.5
+    assert meta["track_b_pb_center_used"] == pytest.approx(0.85)
+    assert meta["track_b_exit_vps_center"] is None
     assert all(c.diagnostics.get("synthetic") is False for c in comps)
+    assert all(
+        c.diagnostics.get("sample_generation") == "samples_from_point" for c in comps
+    )
     assert ARTIFACT_METHOD_RESULT in meta["source_artifacts"]
     assert ARTIFACT_RIM_PB_ROE in meta["source_artifacts"]
     assert ARTIFACT_RIM_TRACK_B in meta["source_artifacts"]
     assert ledger and ledger[0]["status"] == "SKIP"
     assert ledger[0]["in_weights"] is False
+    assert ledger[0]["skip_reason"] == "HIST_PB_BELOW_MIN"
 
     summary = build_prior_only_fi_bundle(
         tmp_path / "out",
@@ -146,17 +186,29 @@ def test_ac1_fixture_value_rim_research_prior_only(tmp_path: Path):
     assert METHOD_RIM_TRACK_A in summary["research_weight_method_ids"]
     assert METHOD_PB_COMMON in summary["research_weight_method_ids"]
     assert METHOD_TRACK_B_EXIT not in summary["research_weight_method_ids"]
+    assert summary["assumption"] == "ENSEMBLE-PRIOR-ONLY-FI-LIVE-MD-v1"
     assert "ENSEMBLE-PRIOR-ONLY-FI-LIVE-MD-v1" in summary["assumptions"]
     body = json.loads((tmp_path / "out" / "ensemble_report.json").read_text())
     assert body["calibrated_claim"] is False
     assert body["research_prior"]["mode"] == EnsembleMode.PRIOR_ONLY.value
+    assert "R9 live value-rim" in body["warning"]
     cfg = json.loads((tmp_path / "out" / "config_snapshot.json").read_text())
     assert cfg["data_label"] == LIVE_DATA_LABEL
+    sim = json.loads((tmp_path / "out" / "simulation_metadata.json").read_text())
+    assert "R9 live value-rim" in sim["warning"]
 
 
 def test_ac2_production_intent_refuses_mixture(tmp_path: Path):
-    vr = _fixture_value_rim(tmp_path / "vr2", track_b_hist_n=12, track_b_center=0.9)
+    # Realistic PB multiple without exit VPS → Track B SKIP (B1); production still null.
+    vr = _fixture_value_rim(
+        tmp_path / "vr2",
+        track_b_hist_n=12,
+        track_b_pb_multiple=0.9,
+        track_b_exit_vps=None,
+    )
     comps, ledger, meta = adapt_value_rim_dir(vr, seed=3)
+    assert meta["track_b_in_weights_eligible"] is False
+    assert ledger[0]["skip_reason"] == SKIP_TRACK_B_CENTER_NOT_PER_SHARE
     summary = build_prior_only_fi_bundle(
         tmp_path / "out2",
         scenario="live_value_rim",
@@ -172,7 +224,6 @@ def test_ac2_production_intent_refuses_mixture(tmp_path: Path):
     body = json.loads((tmp_path / "out2" / "ensemble_report.json").read_text())
     assert body["production_refusal"]["mixture"] is None
 
-    # Same components via build_ensemble production directly
     report = build_ensemble(
         comps,
         target=TARGET,
@@ -190,12 +241,16 @@ def test_ac3_track_b_hist_below_min_skipped(tmp_path: Path):
     vr = _fixture_value_rim(
         tmp_path / "vr3",
         track_b_hist_n=5,
-        track_b_center=0.85,
+        track_b_pb_multiple=0.85,
+        track_b_exit_vps=11.0,  # even with exit VPS, hist gate must fail closed
     )
     comps, ledger, meta = adapt_value_rim_dir(vr, seed=9)
     assert meta["track_b_in_weights_eligible"] is False
+    assert meta["track_b_exit_vps_center"] == pytest.approx(11.0)
+    assert meta["track_b_pb_center_used"] == pytest.approx(0.85)
     assert ledger[0]["status"] == "SKIP"
     assert ledger[0]["hist_n"] == 5
+    assert ledger[0]["skip_reason"] == "HIST_PB_BELOW_MIN"
     summary = build_prior_only_fi_bundle(
         tmp_path / "out3",
         scenario="live_value_rim",
@@ -214,17 +269,29 @@ def test_ac3_track_b_hist_below_min_skipped(tmp_path: Path):
     assert tb["eligible"] is False
     assert tb["n_samples"] == 0
     assert tb["diagnostics"]["synthetic"] is False
+    assert tb["diagnostics"]["sample_generation"] == "samples_from_point"
 
 
-def test_ac3_track_b_eligible_enters_weights(tmp_path: Path):
+def test_ac3_track_b_eligible_via_mapped_exit_vps(tmp_path: Path):
+    """B1: realistic PB multiple + exit_prices p50 → mapped PER_SHARE enters weights."""
     vr = _fixture_value_rim(
         tmp_path / "vr3b",
         track_b_hist_n=12,
-        track_b_center=11.0,  # research disagreement center on declared basis
+        track_b_pb_multiple=0.9,  # P/B multiple — must NOT be the mixture center
+        track_b_exit_vps=11.0,  # PER_SHARE exit median coherent with Track A ~12
     )
     comps, ledger, meta = adapt_value_rim_dir(vr, seed=11)
+    assert meta["track_b_pb_center_used"] == pytest.approx(0.9)
+    assert meta["track_b_exit_vps_center"] == pytest.approx(11.0)
+    assert meta["track_b_exit_vps_source"] == "exit_prices.summaries[1].p50"
     assert meta["track_b_in_weights_eligible"] is True
     assert ledger[0]["status"] == "ELIGIBLE"
+    tb_comp = next(c for c in comps if c.method_id == METHOD_TRACK_B_EXIT)
+    assert tb_comp.eligible is True
+    assert tb_comp.diagnostics["center"] == pytest.approx(11.0)
+    assert tb_comp.diagnostics["track_b_pb_center_used"] == pytest.approx(0.9)
+    # Center must be VPS-scale, not the raw PB multiple
+    assert abs(float(tb_comp.diagnostics["center"]) - 0.9) > 5.0
     summary = build_prior_only_fi_bundle(
         tmp_path / "out3b",
         scenario="live_value_rim",
@@ -240,6 +307,38 @@ def test_ac3_track_b_eligible_enters_weights(tmp_path: Path):
     assert summary["calibrated_claim"] is False
 
 
+def test_b1_pb_multiple_alone_skips_not_per_share(tmp_path: Path):
+    """B1 hole: hist_n>=12 + realistic pb_center_used≈0.9 without exit_prices → SKIP."""
+    vr = _fixture_value_rim(
+        tmp_path / "vr_b1",
+        track_b_hist_n=12,
+        track_b_pb_multiple=0.9,
+        track_b_exit_vps=None,
+    )
+    comps, ledger, meta = adapt_value_rim_dir(vr, seed=13)
+    assert meta["track_b_pb_center_used"] == pytest.approx(0.9)
+    assert meta["track_b_exit_vps_center"] is None
+    assert meta["track_b_in_weights_eligible"] is False
+    assert ledger[0]["status"] == "SKIP"
+    assert ledger[0]["skip_reason"] == SKIP_TRACK_B_CENTER_NOT_PER_SHARE
+    tb = next(c for c in comps if c.method_id == METHOD_TRACK_B_EXIT)
+    assert tb.eligible is False
+    assert tb.diagnostics["skip_reason"] == SKIP_TRACK_B_CENTER_NOT_PER_SHARE
+    assert not tb.samples
+    summary = build_prior_only_fi_bundle(
+        tmp_path / "out_b1",
+        scenario="live_value_rim",
+        components=comps,
+        track_b_ledger=ledger,
+        data_label=meta["data_label"],
+        source_meta=meta,
+        seed=13,
+        n_draws=200,
+    )
+    assert summary["track_b_in_weights"] is False
+    assert METHOD_TRACK_B_EXIT not in summary["research_weight_method_ids"]
+
+
 def test_ac4_demo_path_unchanged_without_from_value_rim(tmp_path: Path):
     """R8 synthetic demo behavior unchanged when components is None."""
     summary = build_prior_only_fi_bundle(
@@ -252,6 +351,7 @@ def test_ac4_demo_path_unchanged_without_from_value_rim(tmp_path: Path):
     assert summary["research_mixture"] is True
     assert summary["track_b_in_weights"] is False
     assert summary["calibrated_claim"] is False
+    assert summary["assumption"] == "ENSEMBLE-PRIOR-ONLY-FI-v1"
     rim = json.loads(
         (tmp_path / "demo" / "method_results" / f"{METHOD_RIM_TRACK_A}.json").read_text()
     )
@@ -270,7 +370,12 @@ def test_ac5_schema_package_and_forbidden_labels(tmp_path: Path):
         ALLOWED_INVESTMENT_VALUE,
     )
 
-    vr = _fixture_value_rim(tmp_path / "vr5", track_b_hist_n=12, track_b_center=11.0)
+    vr = _fixture_value_rim(
+        tmp_path / "vr5",
+        track_b_hist_n=12,
+        track_b_pb_multiple=0.9,
+        track_b_exit_vps=11.0,
+    )
     comps, ledger, meta = adapt_value_rim_dir(vr, seed=2)
     summary = build_prior_only_fi_bundle(
         tmp_path / "out5",
@@ -316,6 +421,19 @@ def test_missing_track_a_raises(tmp_path: Path):
         adapt_value_rim_dir(root)
 
 
+def test_missing_dir_raises(tmp_path: Path):
+    with pytest.raises(FiMethodDistributionAdapterError, match="does not exist"):
+        adapt_value_rim_dir(tmp_path / "no_such_dir")
+
+
+def test_malformed_json_raises(tmp_path: Path):
+    root = tmp_path / "bad_json"
+    root.mkdir()
+    (root / ARTIFACT_METHOD_RESULT).write_text("{not-json", encoding="utf-8")
+    with pytest.raises(FiMethodDistributionAdapterError, match="failed to read"):
+        adapt_value_rim_dir(root)
+
+
 def test_pb_ineligible_not_included(tmp_path: Path):
     vr = _fixture_value_rim(
         tmp_path / "vr_pb_bad",
@@ -326,3 +444,49 @@ def test_pb_ineligible_not_included(tmp_path: Path):
     comps, _, meta = adapt_value_rim_dir(vr, seed=1)
     assert meta["pb_vps"] is None
     assert not any(c.method_id == METHOD_PB_COMMON for c in comps)
+
+
+def test_live_path_sanitize_demotes_low_hist(tmp_path: Path):
+    """SHOULD-FIX-5: live→bundle sanitize still demotes hist_n=5 eligible-looking Track B."""
+    vr = _fixture_value_rim(
+        tmp_path / "vr_san",
+        track_b_hist_n=12,
+        track_b_pb_multiple=0.9,
+        track_b_exit_vps=11.0,
+    )
+    comps, ledger, meta = adapt_value_rim_dir(vr, seed=17)
+    assert meta["track_b_in_weights_eligible"] is True
+    # Mutate to eligible-looking Track B with hist_n=5 (adapter gate already passed)
+    mutated: list[MethodDistribution] = []
+    for c in comps:
+        if c.method_id != METHOD_TRACK_B_EXIT:
+            mutated.append(c)
+            continue
+        diag = dict(c.diagnostics)
+        diag["hist_n"] = 5
+        mutated.append(
+            MethodDistribution(
+                method_id=c.method_id,
+                samples=c.samples or samples_from_point(11.0, n=32, seed=99),
+                status=MethodEligibilityStatus.VALID,
+                target=c.target,
+                output_basis=c.output_basis,
+                eligible=True,
+                diagnostics=diag,
+            )
+        )
+    summary = build_prior_only_fi_bundle(
+        tmp_path / "out_san",
+        scenario="live_value_rim",
+        components=mutated,
+        track_b_ledger=ledger,
+        data_label=meta["data_label"],
+        source_meta=meta,
+        seed=17,
+        n_draws=200,
+    )
+    assert summary["track_b_in_weights"] is False
+    assert METHOD_TRACK_B_EXIT not in summary["research_weight_method_ids"]
+    assert summary["track_b_ledger"][0]["status"] == "SKIP"
+    assert summary["track_b_ledger"][0]["hist_n"] == 5
+    assert summary["track_b_ledger"][0].get("sanitized_on_inject") is True

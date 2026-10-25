@@ -11,13 +11,17 @@ Centers (pinned):
 - Track A: method_result.values.value_per_share preferred; else
   rim_distribution.ke_grid[0].vps_p50
 - pb_common optional: rim_pb_roe.relative_vps when ok
-- Track B: hist_n from rim_track_b.hist_pb.n; center rim_track_b.pb_center_used
-  (eligible for weights only when hist_n >= MIN_HIST_PB_POINTS and center present;
-  else SKIP via sanitize / ledger)
+- Track B PER_SHARE center: prefer rim_track_b.exit_prices.summaries[<h>].p50
+  (exit_price_per_share median; first finite horizon in numeric key order).
+  Optional explicit exit_vps_center / exit_price_per_share_p50 also accepted.
+  ``pb_center_used`` is an own-hist **P/B multiple** kept for audit only —
+  **never** fed as PER_SHARE into mixture weights. Both hist_n >= MIN_HIST_PB_POINTS
+  **and** a mapped PER_SHARE center are required to enter weights; else SKIP
+  (HIST_PB_BELOW_MIN or TRACK_B_CENTER_NOT_PER_SHARE / TRACK_B_EXIT_CENTER_MISSING).
 
 Samples still use ``samples_from_point(center)`` for this minimal slice;
-``diagnostics["synthetic"]=False`` and source artifact paths are cited.
-calibrate-rim is NOT a primary input.
+``diagnostics["synthetic"]=False``, ``sample_generation="samples_from_point"``,
+and source artifact paths are cited. calibrate-rim is NOT a primary input.
 """
 
 from __future__ import annotations
@@ -30,6 +34,7 @@ from vms.ensemble import MethodDistribution
 from vms.methods.rim.hist_pb import MIN_HIST_PB_POINTS
 from vms.reporting.prior_only_fi_bundle import (
     METHOD_RIM_TRACK_A,
+    METHOD_TRACK_B_EXIT,
     PriorOnlyFiBundleError,
     build_fi_method_components,
 )
@@ -46,6 +51,9 @@ ARTIFACT_RIM_PB_ROE = "rim_pb_roe.json"
 ARTIFACT_RIM_TRACK_B = "rim_track_b.json"
 ARTIFACT_SUMMARY = "value_rim_summary.json"
 
+SKIP_TRACK_B_CENTER_NOT_PER_SHARE = "TRACK_B_CENTER_NOT_PER_SHARE"
+SKIP_TRACK_B_EXIT_CENTER_MISSING = "TRACK_B_EXIT_CENTER_MISSING"
+
 
 class FiMethodDistributionAdapterError(PriorOnlyFiBundleError):
     """Raised when live value-rim artifacts cannot yield a Track A center."""
@@ -54,7 +62,13 @@ class FiMethodDistributionAdapterError(PriorOnlyFiBundleError):
 def _read_json(path: Path) -> dict[str, Any] | None:
     if not path.is_file():
         return None
-    raw = json.loads(path.read_text(encoding="utf-8"))
+    try:
+        text = path.read_text(encoding="utf-8")
+        raw = json.loads(text)
+    except (OSError, UnicodeError, json.JSONDecodeError) as e:
+        raise FiMethodDistributionAdapterError(
+            f"failed to read {path.name}: {e}"
+        ) from e
     if not isinstance(raw, dict):
         raise FiMethodDistributionAdapterError(
             f"{path.name} must be a JSON object, got {type(raw).__name__}"
@@ -117,10 +131,58 @@ def _pb_relative_vps(payload: dict[str, Any] | None) -> float | None:
     return _finite_positive(payload.get("relative_vps"))
 
 
-def _track_b_fields(payload: dict[str, Any] | None) -> tuple[int, float | None]:
-    """Return (hist_n, pb_center_used). Missing hist → 0; missing center → None."""
+def _horizon_sort_key(key: Any) -> tuple[int, float | str]:
+    try:
+        return (0, float(key))
+    except (TypeError, ValueError):
+        return (1, str(key))
+
+
+def _track_b_exit_vps(
+    payload: dict[str, Any] | None,
+) -> tuple[float | None, str | None]:
+    """PER_SHARE exit center from live Track B artifacts.
+
+    Preference order:
+    1. Explicit ``exit_vps_center`` / ``exit_price_per_share_p50`` on the payload
+    2. ``exit_prices.summaries[<horizon>].p50`` (exit_price_per_share median);
+       first finite horizon in numeric key order
+
+    Never returns ``pb_center_used`` (that is a P/B multiple, not PER_SHARE).
+    """
     if not payload:
-        return 0, None
+        return None, None
+    for key in ("exit_vps_center", "exit_price_per_share_p50"):
+        got = _finite_positive(payload.get(key))
+        if got is not None:
+            return got, key
+
+    exit_prices = payload.get("exit_prices")
+    if not isinstance(exit_prices, dict):
+        return None, None
+    summaries = exit_prices.get("summaries")
+    if not isinstance(summaries, dict) or not summaries:
+        return None, None
+    for hk in sorted(summaries.keys(), key=_horizon_sort_key):
+        cell = summaries[hk]
+        if not isinstance(cell, dict):
+            continue
+        got = _finite_positive(cell.get("p50"))
+        if got is not None:
+            return got, f"exit_prices.summaries[{hk}].p50"
+    return None, None
+
+
+def _track_b_fields(
+    payload: dict[str, Any] | None,
+) -> tuple[int, float | None, float | None, str | None]:
+    """Return (hist_n, pb_center_used_multiple, exit_vps_center, exit_vps_source).
+
+    ``pb_center_used`` is the own-hist P/B multiple (audit only).
+    ``exit_vps_center`` is the PER_SHARE center eligible for mixture weights.
+    """
+    if not payload:
+        return 0, None, None, None
     hist = payload.get("hist_pb") or {}
     hist_n = 0
     if isinstance(hist, dict):
@@ -128,8 +190,49 @@ def _track_b_fields(payload: dict[str, Any] | None) -> tuple[int, float | None]:
             hist_n = int(hist.get("n") or 0)
         except (TypeError, ValueError):
             hist_n = 0
-    center = _finite_positive(payload.get("pb_center_used"))
-    return hist_n, center
+    pb_multiple = _finite_positive(payload.get("pb_center_used"))
+    exit_vps, exit_src = _track_b_exit_vps(payload)
+    return hist_n, pb_multiple, exit_vps, exit_src
+
+
+def _rewrite_track_b_skip_reason(
+    components: list[MethodDistribution],
+    ledger: list[dict[str, Any]],
+    *,
+    skip_reason: str,
+    pb_center_used: float | None,
+) -> tuple[list[MethodDistribution], list[dict[str, Any]]]:
+    """Stamp honest SKIP reason when hist gate passed but center is not PER_SHARE."""
+    new_comps: list[MethodDistribution] = []
+    for c in components:
+        if c.method_id != METHOD_TRACK_B_EXIT or c.eligible:
+            new_comps.append(c)
+            continue
+        diag = dict(c.diagnostics)
+        diag["skip_reason"] = skip_reason
+        if pb_center_used is not None:
+            diag["track_b_pb_center_used"] = float(pb_center_used)
+            diag["track_b_pb_center_is_multiple"] = True
+        new_comps.append(
+            MethodDistribution(
+                method_id=c.method_id,
+                samples=c.samples,
+                status=c.status,
+                target=c.target,
+                output_basis=c.output_basis,
+                eligible=c.eligible,
+                diagnostics=diag,
+            )
+        )
+    new_ledger: list[dict[str, Any]] = []
+    for entry in ledger:
+        e = dict(entry)
+        if e.get("method_id") == METHOD_TRACK_B_EXIT and e.get("status") == "SKIP":
+            e["skip_reason"] = skip_reason
+            if pb_center_used is not None:
+                e["track_b_pb_center_used"] = float(pb_center_used)
+        new_ledger.append(e)
+    return new_comps, new_ledger
 
 
 def _mark_live(
@@ -137,17 +240,27 @@ def _mark_live(
     *,
     source_paths: list[str],
     rim_vps_source: str,
+    track_b_meta: dict[str, Any] | None = None,
 ) -> list[MethodDistribution]:
     """Rewrite diagnostics: synthetic=False + cite value-rim artifact paths."""
     out: list[MethodDistribution] = []
     for c in components:
         diag = dict(c.diagnostics)
         diag["synthetic"] = False
+        diag["sample_generation"] = "samples_from_point"
         diag["source"] = "value_rim"
         diag["source_artifacts"] = list(source_paths)
         diag["assumption"] = "ENSEMBLE-PRIOR-ONLY-FI-LIVE-MD-v1"
         if c.method_id == METHOD_RIM_TRACK_A:
             diag["rim_vps_source"] = rim_vps_source
+        if c.method_id == METHOD_TRACK_B_EXIT and track_b_meta:
+            if track_b_meta.get("pb_center_used") is not None:
+                diag["track_b_pb_center_used"] = track_b_meta["pb_center_used"]
+                diag["track_b_pb_center_is_multiple"] = True
+            if track_b_meta.get("exit_vps_center") is not None:
+                diag["track_b_exit_vps_center"] = track_b_meta["exit_vps_center"]
+            if track_b_meta.get("exit_vps_source"):
+                diag["track_b_exit_vps_source"] = track_b_meta["exit_vps_source"]
         out.append(
             MethodDistribution(
                 method_id=c.method_id,
@@ -215,20 +328,27 @@ def adapt_value_rim_dir(
     if pb_vps is not None:
         source_paths.append(ARTIFACT_RIM_PB_ROE)
 
-    hist_n, tb_center = _track_b_fields(track_b)
+    hist_n, pb_multiple, exit_vps, exit_vps_source = _track_b_fields(track_b)
     if track_b is not None:
         source_paths.append(ARTIFACT_RIM_TRACK_B)
 
     # Only emit Track B component / SKIP ledger when rim_track_b.json exists.
+    # Never pass raw pb_center_used (P/B multiple) as PER_SHARE center.
     if track_b is None:
         track_b_exit_center = None
         track_b_hist_n = 0
         include_skip = False
+        force_not_per_share_skip = False
     else:
         track_b_hist_n = hist_n
-        track_b_exit_center = (
-            tb_center if (tb_center is not None and hist_n >= MIN_HIST_PB_POINTS) else None
-        )
+        hist_ok = hist_n >= MIN_HIST_PB_POINTS
+        if hist_ok and exit_vps is not None:
+            track_b_exit_center = exit_vps
+            force_not_per_share_skip = False
+        else:
+            track_b_exit_center = None
+            # hist gate passed but only a PB multiple (or nothing) was available
+            force_not_per_share_skip = hist_ok and exit_vps is None
         include_skip = True
 
     components, ledger = build_fi_method_components(
@@ -242,14 +362,43 @@ def adapt_value_rim_dir(
         track_b_hist_n=track_b_hist_n,
         include_track_b_skip_record=include_skip,
     )
+
+    if force_not_per_share_skip:
+        # Prefer TRACK_B_CENTER_NOT_PER_SHARE when a PB multiple was present
+        # (unit mismatch) over generic TRACK_B_EXIT_CENTER_MISSING.
+        reason = (
+            SKIP_TRACK_B_CENTER_NOT_PER_SHARE
+            if pb_multiple is not None
+            else SKIP_TRACK_B_EXIT_CENTER_MISSING
+        )
+        components, ledger = _rewrite_track_b_skip_reason(
+            components,
+            ledger,
+            skip_reason=reason,
+            pb_center_used=pb_multiple,
+        )
+
+    track_b_meta = {
+        "pb_center_used": float(pb_multiple) if pb_multiple is not None else None,
+        "exit_vps_center": float(exit_vps) if exit_vps is not None else None,
+        "exit_vps_source": exit_vps_source,
+    }
     components = _mark_live(
-        components, source_paths=source_paths, rim_vps_source=rim_vps_source
+        components,
+        source_paths=source_paths,
+        rim_vps_source=rim_vps_source,
+        track_b_meta=track_b_meta if track_b is not None else None,
     )
 
     instrument_id = None
     if summary and summary.get("instrument_id"):
         instrument_id = summary.get("instrument_id")
 
+    in_weights_eligible = (
+        track_b is not None
+        and exit_vps is not None
+        and hist_n >= MIN_HIST_PB_POINTS
+    )
     meta: dict[str, Any] = {
         "data_label": LIVE_DATA_LABEL,
         "source": "value_rim",
@@ -259,16 +408,19 @@ def adapt_value_rim_dir(
         "rim_vps_source": rim_vps_source,
         "pb_vps": pb_vps,
         "track_b_hist_n": track_b_hist_n,
-        "track_b_pb_center_used": tb_center,
-        "track_b_in_weights_eligible": (
-            track_b is not None
-            and tb_center is not None
-            and hist_n >= MIN_HIST_PB_POINTS
+        "track_b_pb_center_used": (
+            float(pb_multiple) if pb_multiple is not None else None
         ),
+        "track_b_exit_vps_center": (
+            float(exit_vps) if exit_vps is not None else None
+        ),
+        "track_b_exit_vps_source": exit_vps_source,
+        "track_b_in_weights_eligible": in_weights_eligible,
         "min_hist_pb_points": MIN_HIST_PB_POINTS,
         "instrument_id": instrument_id,
         "assumption": "ENSEMBLE-PRIOR-ONLY-FI-LIVE-MD-v1",
         "synthetic": False,
+        "sample_generation": "samples_from_point",
     }
     return components, ledger, meta
 
@@ -280,5 +432,6 @@ __all__ = [
     "ARTIFACT_RIM_TRACK_B",
     "FiMethodDistributionAdapterError",
     "LIVE_DATA_LABEL",
+    "SKIP_TRACK_B_CENTER_NOT_PER_SHARE",
     "adapt_value_rim_dir",
 ]

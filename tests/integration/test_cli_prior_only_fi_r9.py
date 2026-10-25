@@ -22,37 +22,59 @@ def _write(dir_path: Path, name: str, payload: dict) -> None:
     (dir_path / name).write_text(json.dumps(payload), encoding="utf-8")
 
 
-def _fixture(root: Path, *, hist_n: int = 5) -> Path:
-    _write(
-        root,
-        ARTIFACT_METHOD_RESULT,
-        {
-            "method_id": "residual_income",
-            "status": "VALID",
-            "values": {"value_per_share": {"mean": 12.0, "p50": 12.0}},
-            "diagnostics": {},
-        },
-    )
+def _fixture(
+    root: Path,
+    *,
+    hist_n: int = 5,
+    pb_multiple: float = 0.85,
+    exit_vps: float | None = None,
+    include_track_a: bool = True,
+) -> Path:
+    if include_track_a:
+        _write(
+            root,
+            ARTIFACT_METHOD_RESULT,
+            {
+                "method_id": "residual_income",
+                "status": "VALID",
+                "values": {"value_per_share": {"mean": 12.0, "p50": 12.0}},
+                "diagnostics": {},
+            },
+        )
     _write(
         root,
         ARTIFACT_RIM_PB_ROE,
         {"ok": True, "status": "VALID", "relative_vps": 10.5},
     )
-    _write(
-        root,
-        ARTIFACT_RIM_TRACK_B,
-        {
-            "ok": hist_n >= MIN_HIST_PB_POINTS,
-            "status": "VALID" if hist_n >= MIN_HIST_PB_POINTS else "INELIGIBLE",
-            "hist_pb": {"n": hist_n},
-            "pb_center_used": 11.0 if hist_n >= MIN_HIST_PB_POINTS else 0.85,
-        },
-    )
+    tb: dict = {
+        "ok": hist_n >= MIN_HIST_PB_POINTS and exit_vps is not None,
+        "status": (
+            "VALID"
+            if hist_n >= MIN_HIST_PB_POINTS and exit_vps is not None
+            else "INELIGIBLE"
+        ),
+        "hist_pb": {"n": hist_n, "median": pb_multiple},
+        "pb_center_used": pb_multiple,
+    }
+    if exit_vps is not None:
+        tb["exit_prices"] = {
+            "metric_id": "pb",
+            "summaries": {
+                "1": {
+                    "n_valid": 16,
+                    "mean": float(exit_vps),
+                    "p50": float(exit_vps),
+                    "p05": float(exit_vps) * 0.9,
+                    "p95": float(exit_vps) * 1.1,
+                }
+            },
+        }
+    _write(root, ARTIFACT_RIM_TRACK_B, tb)
     return root
 
 
 def test_cli_from_value_rim_smoke(tmp_path, capsys):
-    vr = _fixture(tmp_path / "vr", hist_n=5)
+    vr = _fixture(tmp_path / "vr", hist_n=5, pb_multiple=0.85)
     out = tmp_path / "pofi_live"
     rc = main([
         "prior-only-fi",
@@ -75,10 +97,12 @@ def test_cli_from_value_rim_smoke(tmp_path, capsys):
     assert summ["track_b_in_weights"] is False
     assert summ["data_label"] == LIVE_DATA_LABEL
     assert summ["scenario"] == "live_value_rim"
+    assert summ["assumption"] == "ENSEMBLE-PRIOR-ONLY-FI-LIVE-MD-v1"
     assert (out / "ensemble_report.json").is_file()
     assert (out / "method_results" / "residual_income.json").is_file()
     rim = json.loads((out / "method_results" / "residual_income.json").read_text())
     assert rim["diagnostics"]["synthetic"] is False
+    assert rim["diagnostics"]["sample_generation"] == "samples_from_point"
     captured = capsys.readouterr().out
     payload = json.loads(captured)
     assert payload["calibrated_claim"] is False
@@ -113,5 +137,46 @@ def test_cli_demo_without_from_value_rim_unchanged(tmp_path, capsys):
     assert summ["data_label"].startswith("SYNTHETIC_FI_PRIOR_ONLY")
     assert summ["track_b_in_weights"] is False
     assert summ["research_mixture"] is True
+    assert summ["assumption"] == "ENSEMBLE-PRIOR-ONLY-FI-v1"
     rim = json.loads((out / "method_results" / "residual_income.json").read_text())
     assert rim["diagnostics"]["synthetic"] is True
+
+
+def test_cli_from_value_rim_missing_dir(tmp_path, capsys):
+    out = tmp_path / "missing_out"
+    rc = main([
+        "prior-only-fi",
+        "--out", str(out),
+        "--from-value-rim", str(tmp_path / "no_such_vr"),
+    ])
+    assert rc == 2
+    err = capsys.readouterr().err
+    assert "does not exist" in err
+
+
+def test_cli_from_value_rim_malformed_json(tmp_path, capsys):
+    vr = tmp_path / "bad_vr"
+    vr.mkdir()
+    (vr / ARTIFACT_METHOD_RESULT).write_text("{not-json", encoding="utf-8")
+    out = tmp_path / "bad_out"
+    rc = main([
+        "prior-only-fi",
+        "--out", str(out),
+        "--from-value-rim", str(vr),
+    ])
+    assert rc == 2
+    err = capsys.readouterr().err
+    assert "failed to read" in err
+
+
+def test_cli_from_value_rim_track_a_missing(tmp_path, capsys):
+    vr = _fixture(tmp_path / "no_ta", hist_n=5, include_track_a=False)
+    out = tmp_path / "no_ta_out"
+    rc = main([
+        "prior-only-fi",
+        "--out", str(out),
+        "--from-value-rim", str(vr),
+    ])
+    assert rc == 2
+    err = capsys.readouterr().err
+    assert "Track A" in err

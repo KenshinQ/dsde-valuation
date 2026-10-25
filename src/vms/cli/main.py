@@ -23,6 +23,7 @@ Implemented commands:
   phase9          VMS-0.2 Phase 9 market-pricing regime + exit-price engine (synthetic; NOT investment advice)
   phase10         VMS-0.2 Phase 10 Track B return distributions + DSDE contract (synthetic; NOT investment advice)
   phase11         VMS-0.2 Phase 11 walk-forward calibration + sensitivity (synthetic; NOT investment advice)
+  calibrate-rim   R6 deposit-taking FI RIM walk-forward calibration (lean curated; NOT investment advice)
   phase12         VMS-0.2 Phase 12 offline release examples (synthetic; NOT investment advice)
   validate-bundle Validate a result-bundle directory against a PHASE_CLI subset / §16.3
   profile         VMS-0.2 Phase 2 economic-profile classifier (NOT a valuation)
@@ -77,6 +78,9 @@ from vms.reporting.phase10_bundle import (PHASE10_STATUS, Phase10BundleError, bu
                                          dump_summary as dump_phase10_summary)
 from vms.reporting.phase11_bundle import (PHASE11_STATUS, Phase11BundleError, build_phase11_bundle,
                                          dump_summary as dump_phase11_summary)
+from vms.reporting.calibrate_rim_bundle import (CALIBRATE_RIM_STATUS, CalibrateRimBundleError,
+                                                build_calibrate_rim_bundle,
+                                                dump_summary as dump_calibrate_rim_summary)
 from vms.reporting.phase12_bundle import (PHASE12_STATUS, Phase12BundleError, ALL_PATTERNS,
                                          build_phase12_pattern, build_phase12_release,
                                          dump_summary as dump_phase12_summary)
@@ -1534,6 +1538,39 @@ def cmd_phase11(args: argparse.Namespace) -> int:
     return EXIT_OK
 
 
+def cmd_calibrate_rim(args: argparse.Namespace) -> int:
+    """R6 deposit-taking FI RIM walk-forward calibration. NOT investment advice."""
+    from datetime import date as date_cls
+    out = Path(args.out)
+    seed = 42 if args.seed is None else int(args.seed)
+    start = date_cls.fromisoformat(args.start) if args.start else date_cls(2016, 1, 1)
+    end = date_cls.fromisoformat(args.end) if args.end else date_cls(2022, 12, 31)
+    if end < start:
+        raise InputError("--end must be >= --start")
+    uni = args.universe
+    try:
+        summary = build_calibrate_rim_bundle(
+            out_dir=out,
+            config_path=args.config,
+            universe_path=uni,
+            start=start,
+            end=end,
+            seed=seed,
+        )
+    except CalibrateRimBundleError as e:
+        raise InputError(str(e)) from e
+    print(dump_calibrate_rim_summary(summary), end="")
+    assert summary["status"] == CALIBRATE_RIM_STATUS
+    assert summary["investment_value"] == "INVESTMENT_VALUE_NOT_ESTABLISHED"
+    assert summary["labels"]["ENSEMBLE_CALIBRATED"] is False
+    assert summary["labels"]["CALIBRATION_PASS"] is not True
+    assert summary["calibration_claim"] == "CALIBRATION_INSUFFICIENT"
+    assert summary["min_hist_pb_points"] == 12
+    assert (out / "rim_calibration_report.json").is_file()
+    assert (out / "frozen_weights.json").is_file()
+    return EXIT_OK
+
+
 def cmd_phase12(args: argparse.Namespace) -> int:
     """Five-pattern offline release examples. NOT investment advice."""
     out = Path(args.out)
@@ -2107,6 +2144,22 @@ def build_parser() -> argparse.ArgumentParser:
                     help="write evaluation_report only (skip sensitivity_report)")
     p11.set_defaults(func=cmd_phase11)
 
+    cr = sub.add_parser(
+        "calibrate-rim",
+        help="R6 deposit-taking FI RIM walk-forward calibration (lean curated; NOT investment advice)",
+    )
+    cr.add_argument("--out", required=True)
+    cr.add_argument("--config", default=str(_default_config_path()))
+    cr.add_argument(
+        "--universe",
+        default=None,
+        help="universe YAML (default: config/universe.fi_deposit_lean.yaml)",
+    )
+    cr.add_argument("--start", default="2016-01-01")
+    cr.add_argument("--end", default="2022-12-31")
+    cr.add_argument("--seed", type=int, default=None)
+    cr.set_defaults(func=cmd_calibrate_rim)
+
     p12 = sub.add_parser("phase12", help="VMS-0.2 Phase 12 offline release examples (synthetic; NOT investment advice)")
     p12.add_argument("--out", required=True)
     p12.add_argument("--config", default=str(_default_config_path()))
@@ -2143,7 +2196,7 @@ def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     try:
         return args.func(args)
-    except (ConfigError, InputError, Phase0BundleError, Phase3BundleError, Phase8BundleError, Phase9BundleError, Phase10BundleError, Phase11BundleError, Phase12BundleError, ValueRimBundleError, FixtureError, RegimeModelNotImplemented, RandomSplitProhibitedError) as e:
+    except (ConfigError, InputError, Phase0BundleError, Phase3BundleError, Phase8BundleError, Phase9BundleError, Phase10BundleError, Phase11BundleError, Phase12BundleError, CalibrateRimBundleError, ValueRimBundleError, FixtureError, RegimeModelNotImplemented, RandomSplitProhibitedError) as e:
         print(f"error: {e}", file=sys.stderr)
         return EXIT_INVALID
 

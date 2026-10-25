@@ -55,3 +55,19 @@ Otherwise mark `CALIBRATION_INSUFFICIENT` and keep method-specific distributions
 ## Weight freeze
 
 `freeze_weights_before_test` / `assert_weights_unchanged` — mutation after freeze fails closed (`ENSEMBLE_WEIGHTS_MUTATED_AFTER_FREEZE`).
+
+## Bank RIM walk-forward (R6)
+
+Deposit-taking FI lean curated universe (`config/universe.fi_deposit_lean.yaml`).
+
+CLI: `vms calibrate-rim` (does **not** replace synthetic `vms phase11`).
+
+At each chronological origin:
+
+1. Reconstruct PIT; build RIM Track A forecast (driver ROE + intrinsic VPS) + FI baselines.
+2. Persist forecast with `outcomes=null` and `persisted_before_outcomes=true`.
+3. Assess Track B eligibility: own-hist common P/B `n >= MIN_HIST_PB_POINTS` (=12); else **SKIP** (no invent OEI).
+4. After horizon matures, attach outcomes (driver ROE, later-origin VPS stability, market association).
+5. Score targets separately. `pit_complete=false` excluded from `scores_unbiased`.
+
+Assumption: `EVAL-RIM-FI-DEPOSIT-WF-v1`. Expected on R6-default: `CALIBRATION_INSUFFICIENT` + `INVESTMENT_VALUE_NOT_ESTABLISHED`. Schema stays `vms-0.2.phase12` — do not bump schema to claim PASS.

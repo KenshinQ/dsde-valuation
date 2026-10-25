@@ -71,3 +71,16 @@ At each chronological origin:
 5. Score targets separately. `pit_complete=false` excluded from `scores_unbiased`.
 
 Assumption: `EVAL-RIM-FI-DEPOSIT-WF-v1`. Expected on R6-default: `CALIBRATION_INSUFFICIENT` + `INVESTMENT_VALUE_NOT_ESTABLISHED`. Schema stays `vms-0.2.phase12` — do not bump schema to claim PASS.
+
+## Deposit-taking FI real OOS (R7)
+
+Lean curated HiThink + EM panel (`config/universe.fi_deposit_lean_real.yaml`).
+
+CLI: `vms calibrate-rim --universe config/universe.fi_deposit_lean_real.yaml`
+(default remains R6 synthetic lean). Optional `--refresh` allows Recipe E / EM REST;
+without it, materialize is local-first with **zero REST**.
+
+Inherits R6 protocol gates. Assumption: `EVAL-RIM-FI-DEPOSIT-REAL-OOS-v1`.
+Expected on R7-default: `CALIBRATION_INSUFFICIENT` + `INVESTMENT_VALUE_NOT_ESTABLISHED`
+(engineering success ≠ calibration PASS). Schema stays `vms-0.2.phase12`.
+

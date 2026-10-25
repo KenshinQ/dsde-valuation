@@ -430,6 +430,21 @@ ASSUMPTIONS: dict[str, str] = {
                      "(default {0.08, 0.09, 0.10} or config-driven). Each ke yields a VPS "
                      "distribution under P2; no ensemble blend across ke.",
 
+    "EVAL-RIM-FI-DEPOSIT-REAL-OOS-v1": "R7 deposit-taking FI RIM walk-forward on HiThink/EM lean "
+                          "real panel (config/universe.fi_deposit_lean_real.yaml). Reuses R6 "
+                          "protocol (EVAL-RIM-FI-DEPOSIT-WF-v1): chronological origins, "
+                          "forecast-before-outcome, separate targets, freeze-before-test, "
+                          "Track B hist_n >= MIN_HIST_PB_POINTS (=12) else SKIP, "
+                          "pit_complete=false excluded from scores_unbiased. Materialize via "
+                          "subject hist depth + EM F10 (local-first; REST only with explicit "
+                          "--refresh). data_label must not contain SYNTHETIC; never routes "
+                          "through bank_synthetic. Hard labels: CALIBRATION_INSUFFICIENT + "
+                          "INVESTMENT_VALUE_NOT_ESTABLISHED; never ENSEMBLE_CALIBRATED / "
+                          "INVESTMENT_VALUE_SUPPORTED / CALIBRATION_PASS on R7-default. Does "
+                          "not invent OEI, lower MIN, default pb=2.0, lift industry.unsupported "
+                          "/ 非银金融, or change legacy UNSUPPORTED_PROFILE. SCHEMA stays "
+                          "vms-0.2.phase12. CLI: vms calibrate-rim --universe "
+                          "config/universe.fi_deposit_lean_real.yaml.",
     "EVAL-RIM-FI-DEPOSIT-WF-v1": "R6 deposit-taking FI RIM walk-forward calibration (lean curated "
                           "universe). Chronological origins only (RandomSplitProhibitedError on "
                           "random splits). Forecasts persisted with outcomes=null before realization. "

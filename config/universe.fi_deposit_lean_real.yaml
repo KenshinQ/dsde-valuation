@@ -1,0 +1,19 @@
+# R7 lean curated deposit-taking FI real OOS universe (HiThink + EM local).
+# data_label must NOT contain SYNTHETIC. Includes 000001.SZ (short OEI → Track B SKIP).
+# Default prefer_local via CLI (no --refresh ⇒ zero REST). Not investment advice.
+universe_id: fi_deposit_lean_r7_v1
+data_label: HITHINK_EM_LEAN_FI
+split_mode: chronological
+forbid_random_splits: true
+horizons_years: [1]
+min_history_years: 3
+instruments:
+  - {instrument_id: 000001.SZ, data_dir: null, industry: 银行, scheme: SW2021_L1}
+  - {instrument_id: 600036.SH, data_dir: null, industry: 银行, scheme: SW2021_L1}
+  - {instrument_id: 601398.SH, data_dir: null, industry: 银行, scheme: SW2021_L1}
+fi_real:
+  instrument_ids: [000001.SZ, 600036.SH, 601398.SH]
+  as_of: "2025-06-30T15:00:00+08:00"
+  price_lookback_years: 20
+  max_annual_f10: 20
+  statement_limit: 40

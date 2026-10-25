@@ -1,7 +1,9 @@
 """Provider-neutral fetch_bundle for HiThink + Eastmoney NOTICE_DATE.
 
-Local-first (HITHINK-LOCAL-FIRST-v1). On miss: Recipe E — one REST upsert + re-read;
-never silently switch vendors. Never echo API keys.
+Local-first (HITHINK-LOCAL-FIRST-v1): ``prefer_local=True`` ⇒ zero REST even on
+miss (empty local + flags). Recipe E (one REST upsert + re-read) only when
+``prefer_local=False`` (``--refresh``). Never silently switch vendors. Never
+echo API keys.
 """
 
 from __future__ import annotations
@@ -50,6 +52,7 @@ class FetchDiagnostics:
     shares_outstanding: str = "pending enrichment"
     industry: str = "pending enrichment"
     enrichment: dict[str, Any] = field(default_factory=dict)
+    rest_calls: int = 0
 
     def as_dict(self) -> dict[str, Any]:
         return redact_secrets({
@@ -67,6 +70,7 @@ class FetchDiagnostics:
             "flags": sorted(set(self.flags)),
             "price_diag": self.price_diag,
             "rest_notes": self.rest_notes,
+            "rest_calls": self.rest_calls,
             "corporate_actions": self.corporate_actions,
             "shares_outstanding": self.shares_outstanding,
             "industry": self.industry,
@@ -128,9 +132,11 @@ def fetch_bundle(
     thscode:
         e.g. ``600519.SH``
     prefer_local:
-        Local DuckDB first; Recipe E REST only on miss / ``prefer_local=False``.
+        ``True`` (default / no ``--refresh``): local DuckDB only — miss ⇒ empty
+        + flags, never Recipe E. ``False`` (``--refresh``): allow Recipe E REST.
     min_local:
-        Minimum local statement rows to skip REST per kind/period.
+        On refresh: minimum local statement rows to skip REST per kind/period.
+        Ignored for REST gating when ``prefer_local=True`` (never REST).
     start, end:
         Optional price window (defaults: ~10y ending today Asia/Shanghai).
     """
@@ -164,7 +170,6 @@ def fetch_bundle(
     fdb = Path(fund_db) if fund_db else fund_db_path()
     mdb = Path(market_db) if market_db else market_db_path()
     if not fdb.is_file() and prefer_local:
-        # Still allow Recipe E refresh path if lab can create DB — but local-first needs file.
         diag.flags.append("FUND_DB_MISSING")
     if prefer_local and not fdb.is_file():
         raise HiThinkFetchError(
@@ -182,14 +187,27 @@ def fetch_bundle(
             prices_mod = labs["lib_prices"]
         return labs
 
-    # --- notices: local DuckDB first; Recipe E EM REST only on miss / refresh ---
-    notices = read_notices(thscode, db_path=fdb) if fdb.is_file() else []
-    if (not prefer_local) or (len(notices) < max(min_local, 1)):
+    # --- notices: prefer_local ⇒ local only (miss = empty + flag); refresh ⇒ Recipe E ---
+    notices: list = []
+    if fdb.is_file():
+        try:
+            notices = read_notices(thscode, db_path=fdb)
+        except Exception as e:  # noqa: BLE001 — empty/partial DuckDB fixtures
+            if prefer_local:
+                diag.flags.append(f"NOTICES_LOCAL_ERROR:{type(e).__name__}")
+                notices = []
+            else:
+                raise
+    if prefer_local:
+        if not notices:
+            diag.flags.append("NOTICES_LOCAL_MISS")
+    elif len(notices) < max(min_local, 1):
         try:
             em_mod = _ensure_labs()["lib_em_notices"]
             notices = em_mod.get_em_notices(
                 thscode, prefer_local=False, min_local=0, db_path=fdb,
             )
+            diag.rest_calls += 1
             diag.rest_notes.append("notices: Recipe E EM upsert + re-read")
         except Exception as e:  # noqa: BLE001
             diag.rest_notes.append(f"notices REST: {type(e).__name__}: {str(e)[:120]}")
@@ -206,26 +224,57 @@ def fetch_bundle(
     for kind in ("income", "balance", "cashflow"):
         for period in periods:
             rows: list = []
-            nloc = count_statements(thscode, kind, period, db_path=fdb) if fdb.is_file() else 0
-            if prefer_local and nloc >= min_local:
-                rows = read_statements(thscode, kind, period, db_path=fdb, limit=statement_limit)
+            nloc = 0
+            if fdb.is_file():
+                try:
+                    nloc = count_statements(thscode, kind, period, db_path=fdb)
+                except Exception as e:  # noqa: BLE001
+                    if prefer_local:
+                        diag.flags.append(
+                            f"STATEMENTS_LOCAL_ERROR:{kind}:{period}:{type(e).__name__}"
+                        )
+                        nloc = 0
+                    else:
+                        raise
+            if prefer_local:
+                # Zero REST even on miss / thin local (align enrich / R4 / R5).
+                if fdb.is_file() and nloc > 0:
+                    try:
+                        rows = read_statements(
+                            thscode, kind, period, db_path=fdb, limit=statement_limit,
+                        )
+                    except Exception as e:  # noqa: BLE001
+                        diag.flags.append(
+                            f"STATEMENTS_LOCAL_ERROR:{kind}:{period}:{type(e).__name__}"
+                        )
+                        rows = []
+                if not rows:
+                    diag.flags.append(f"STATEMENTS_LOCAL_MISS:{kind}:{period}")
             else:
                 try:
                     store = _ensure_labs()["lib_fund_store"].FundStore(db_path=fdb)
+                    # prefer_local=False ⇒ FundStore always Recipe E (ignore local count).
                     rows = _get_statements(
                         store, thscode, kind, period,
-                        prefer_local=prefer_local, min_local=min_local, limit=statement_limit,
+                        prefer_local=False, min_local=0, limit=statement_limit,
                     )
-                    if not prefer_local or nloc < min_local:
-                        diag.rest_notes.append(f"{kind}/{period}: Recipe E HiThink upsert + re-read")
+                    diag.rest_calls += 1
+                    diag.rest_notes.append(
+                        f"{kind}/{period}: Recipe E HiThink upsert + re-read"
+                    )
                 except Exception as e:  # noqa: BLE001
                     if fdb.is_file():
-                        rows = read_statements(thscode, kind, period, db_path=fdb, limit=statement_limit)
+                        rows = read_statements(
+                            thscode, kind, period, db_path=fdb, limit=statement_limit,
+                        )
                         diag.rest_notes.append(
-                            f"{kind}/{period}: REST failed ({type(e).__name__}); used local {len(rows)} rows"
+                            f"{kind}/{period}: REST failed ({type(e).__name__}); "
+                            f"used local {len(rows)} rows"
                         )
                     else:
-                        diag.rest_notes.append(f"{kind}/{period}: {type(e).__name__}: {str(e)[:120]}")
+                        diag.rest_notes.append(
+                            f"{kind}/{period}: {type(e).__name__}: {str(e)[:120]}"
+                        )
                         rows = []
             diag.statement_counts[f"{kind}:{period}"] = len(rows)
             for row in rows:
@@ -290,20 +339,51 @@ def fetch_bundle(
         p_end = end or today
         p_start = start or date(p_end.year - 10, 1, 1)
         try:
-            bars_local = read_raw_bars(thscode, start=p_start, end=p_end, db_path=mdb) if mdb.is_file() else []
-            pdiag = {"bars": bars_local, "local_bars": len(bars_local), "source": "marketdb_raw_kline_daily",
-                     "prefer_local": prefer_local, "rest_used": False}
-            if (not prefer_local) or (not bars_local):
+            bars_local: list = []
+            if mdb.is_file():
+                try:
+                    bars_local = read_raw_bars(
+                        thscode, start=p_start, end=p_end, db_path=mdb,
+                    )
+                except Exception as e:  # noqa: BLE001 — empty/partial marketdb
+                    if prefer_local:
+                        diag.flags.append(f"PRICES_LOCAL_ERROR:{type(e).__name__}")
+                        bars_local = []
+                    else:
+                        raise
+            pdiag: dict[str, Any] = {
+                "bars": bars_local,
+                "local_bars": len(bars_local),
+                "source": "marketdb_raw_kline_daily",
+                "prefer_local": prefer_local,
+                "rest_used": False,
+            }
+            if prefer_local:
+                if not bars_local:
+                    diag.flags.append("PRICES_LOCAL_MISS")
+                    pdiag["path"] = "local_miss_no_rest"
+            else:
                 try:
                     _ensure_labs()
                     pdiag = recipe_e_ensure_prices(
-                        thscode, start=p_start, end=p_end, prefer_local=prefer_local,
+                        thscode, start=p_start, end=p_end, prefer_local=False,
                         lab_prices=prices_mod,
                     )
-                    diag.rest_notes.append("prices: Recipe E REST upsert + re-read")
+                    if pdiag.get("rest_used"):
+                        diag.rest_calls += 1
+                        diag.rest_notes.append("prices: Recipe E REST upsert + re-read")
                 except Exception as e:  # noqa: BLE001
                     if bars_local:
-                        diag.rest_notes.append(f"prices REST failed ({type(e).__name__}); using local")
+                        pdiag = {
+                            "bars": bars_local,
+                            "local_bars": len(bars_local),
+                            "source": "marketdb_raw_kline_daily",
+                            "prefer_local": False,
+                            "rest_used": False,
+                        }
+                        diag.rest_notes.append(
+                            f"prices REST failed ({type(e).__name__}); using local"
+                        )
                     else:
                         raise
             diag.price_diag = {

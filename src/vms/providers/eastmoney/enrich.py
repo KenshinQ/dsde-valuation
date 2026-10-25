@@ -74,14 +74,17 @@ def _industry_source() -> SourceDescriptor:
 
 
 def _ensure_sharebonus(thscode: str, *, prefer_local: bool, min_local: int, db: Path) -> tuple[list[dict], str]:
-    local = em_store.read_sharebonus(thscode, db_path=db) if db.is_file() or True else []
     # ensure tables exist for count
     try:
         em_store.ensure_tables(db)
     except Exception:
         pass
     n = em_store.count_sharebonus(thscode, db_path=db)
-    if prefer_local and n >= min_local:
+    if prefer_local:
+        # R4/R5 / HITHINK-LOCAL-FIRST: zero REST even on miss
+        rows = em_store.read_sharebonus(thscode, db_path=db) if n else []
+        return rows, ("local" if n else "local_miss_no_rest")
+    if n >= min_local:
         return em_store.read_sharebonus(thscode, db_path=db), "local"
     code = em_client.security_code_from_thscode(thscode)
     try:
@@ -105,7 +108,10 @@ def _ensure_equity(thscode: str, *, prefer_local: bool, min_local: int, db: Path
     except Exception:
         pass
     n = em_store.count_equity(thscode, db_path=db)
-    if prefer_local and n >= min_local:
+    if prefer_local:
+        rows = em_store.read_equity(thscode, db_path=db) if n else []
+        return rows, ("local" if n else "local_miss_no_rest")
+    if n >= min_local:
         return em_store.read_equity(thscode, db_path=db), "local"
     code = em_client.security_code_from_thscode(thscode)
     try:
@@ -129,8 +135,10 @@ def _ensure_industry(thscode: str, *, prefer_local: bool, db: Path) -> tuple[dic
     except Exception:
         pass
     local = em_store.read_industry(thscode, db_path=db)
-    if prefer_local and local and local.get("sw_l1_proxy"):
-        return local, "local"
+    if prefer_local:
+        if local and local.get("sw_l1_proxy"):
+            return local, "local"
+        return local, "local_miss_no_rest"
     try:
         body = em_client.fetch_company_survey(thscode)
         parsed = parse_company_survey(body)
@@ -161,7 +169,10 @@ def _ensure_balance_lines(thscode: str, *, prefer_local: bool, min_local: int, d
     except Exception:
         pass
     n = em_store.count_balance_lines(thscode, db_path=db)
-    if prefer_local and n >= min_local:
+    if prefer_local:
+        rows = em_store.read_balance_lines(thscode, db_path=db) if n else []
+        return rows, ("local" if n else "local_miss_no_rest")
+    if n >= min_local:
         return em_store.read_balance_lines(thscode, db_path=db), "local"
     code = em_client.security_code_from_thscode(thscode)
     try:
@@ -201,7 +212,15 @@ def _ensure_bank_f10(thscode: str, *, prefer_local: bool, min_local: int, db: Pa
     except Exception:
         pass
     n = em_store.count_bank_f10(thscode, db_path=db)
-    if prefer_local and n >= min_local:
+    if prefer_local:
+        empty = {"balance": [], "income": []}
+        if not n:
+            return empty, "local_miss_no_rest"
+        return {
+            "balance": em_store.read_bank_f10(thscode, statement="zcfzb", db_path=db),
+            "income": em_store.read_bank_f10(thscode, statement="lrb", db_path=db),
+        }, "local"
+    if n >= min_local:
         return {
             "balance": em_store.read_bank_f10(thscode, statement="zcfzb", db_path=db),
             "income": em_store.read_bank_f10(thscode, statement="lrb", db_path=db),
@@ -238,8 +257,9 @@ def enrich_bundle(
     enable_bank_f10: bool = True,
     notice_by_period_end: dict | None = None,
 ) -> EnrichmentResult:
-    """Fetch/map EM enrichment. Local DuckDB cache first; REST on miss.
+    """Fetch/map EM enrichment. Local-first; REST only when prefer_local=False.
 
+    ``prefer_local=True`` ⇒ zero REST even on miss (empty + path diag).
     Does **not** use HiThink adjustment-factors announced_at (unavailable).
     Allotment/rights from marketdb without announce dates remain deferred.
     """

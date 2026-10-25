@@ -41,6 +41,24 @@ PRIOR_ONLY_FI_STATUS = "R8_PRIOR_ONLY_FI_ENSEMBLE_NOT_INVESTMENT_ADVICE"
 INVESTMENT_LABEL = ClaimStatus.INVESTMENT_VALUE_NOT_ESTABLISHED.value
 CST = timezone(timedelta(hours=8))
 
+# Allow-list (not deny-list) for R8 runtime claim labels.
+ALLOWED_ENSEMBLE_STATUS = frozenset(
+    {
+        ClaimStatus.ENSEMBLE_UNCALIBRATED.value,
+        "NOT_COMBINED_INCOMPATIBLE",
+    }
+)
+ALLOWED_CALIBRATION_STATUS = frozenset(
+    {
+        ClaimStatus.CALIBRATION_INSUFFICIENT.value,
+        # Production path may surface ENSEMBLE_UNCALIBRATED as calibration_status
+        # when evidence.adequate_for_production is True but Phase 8 still refuses
+        # the calibrated ensemble label (build.py production branch).
+        ClaimStatus.ENSEMBLE_UNCALIBRATED.value,
+    }
+)
+ALLOWED_INVESTMENT_VALUE = frozenset({INVESTMENT_LABEL})
+
 METHOD_RIM_TRACK_A = "residual_income"
 METHOD_PB_COMMON = "pb_common"
 METHOD_TRACK_B_EXIT = "rim_track_b_exit"
@@ -310,6 +328,104 @@ def demo_components(
     raise PriorOnlyFiBundleError(f"unknown demo scenario: {scenario}")
 
 
+
+def _track_b_hist_n(component: MethodDistribution) -> int:
+    """Read hist_n from diagnostics; missing → 0 (fail closed)."""
+    raw = component.diagnostics.get("hist_n", 0)
+    try:
+        return int(raw)
+    except (TypeError, ValueError):
+        return 0
+
+
+def _demote_track_b(
+    component: MethodDistribution,
+    *,
+    hist_n: int,
+    skip_reason: str,
+) -> MethodDistribution:
+    """Force Track B out of weights when hist gate fails (immutable rebuild)."""
+    diag = dict(component.diagnostics)
+    diag.update(
+        {
+            "channel": "track_b_exit",
+            "hist_n": hist_n,
+            "min_required": MIN_HIST_PB_POINTS,
+            "skip_reason": skip_reason,
+            "in_weights": False,
+            "sanitized_on_inject": True,
+        }
+    )
+    return MethodDistribution(
+        method_id=METHOD_TRACK_B_EXIT,
+        samples=(),
+        status=MethodEligibilityStatus.INELIGIBLE,
+        target=component.target,
+        output_basis=component.output_basis,
+        eligible=False,
+        diagnostics=diag,
+    )
+
+
+def sanitize_injected_components(
+    components: Sequence[MethodDistribution],
+    *,
+    track_b_ledger: Sequence[dict[str, Any]] | None = None,
+) -> tuple[list[MethodDistribution], list[dict[str, Any]]]:
+    """Re-check Track B ``hist_n >= MIN_HIST_PB_POINTS`` on injected ``components=``.
+
+    Callers may pass MethodDistribution objects that look eligible. R8 must not
+    trust that: any ``rim_track_b_exit`` with hist_n below MIN (or missing hist_n)
+    is demoted to SKIP / ineligible and kept out of weights.
+    """
+    out: list[MethodDistribution] = []
+    ledger: list[dict[str, Any]] = list(track_b_ledger or [])
+    saw_track_b = False
+    for c in components:
+        if c.method_id != METHOD_TRACK_B_EXIT:
+            out.append(c)
+            continue
+        saw_track_b = True
+        hist_n = _track_b_hist_n(c)
+        if c.eligible and hist_n >= MIN_HIST_PB_POINTS and c.samples:
+            out.append(c)
+            if not any(e.get("method_id") == METHOD_TRACK_B_EXIT for e in ledger):
+                ledger.append(
+                    {
+                        "method_id": METHOD_TRACK_B_EXIT,
+                        "status": "ELIGIBLE",
+                        "hist_n": hist_n,
+                        "min_required": MIN_HIST_PB_POINTS,
+                        "in_weights": True,
+                    }
+                )
+            continue
+        skip_reason = (
+            "HIST_PB_BELOW_MIN"
+            if hist_n < MIN_HIST_PB_POINTS
+            else "TRACK_B_INJECT_INELIGIBLE"
+        )
+        demoted = _demote_track_b(c, hist_n=hist_n, skip_reason=skip_reason)
+        out.append(demoted)
+        # Replace or append ledger entry for Track B
+        ledger = [e for e in ledger if e.get("method_id") != METHOD_TRACK_B_EXIT]
+        ledger.append(
+            {
+                "method_id": METHOD_TRACK_B_EXIT,
+                "status": "SKIP",
+                "hist_n": hist_n,
+                "min_required": MIN_HIST_PB_POINTS,
+                "skip_reason": skip_reason,
+                "in_weights": False,
+                "sanitized_on_inject": True,
+            }
+        )
+    if not saw_track_b:
+        # Preserve caller ledger if any; no Track B to sanitize.
+        pass
+    return out, ledger
+
+
 def build_prior_only_fi_bundle(
     out: Path,
     *,
@@ -333,8 +449,9 @@ def build_prior_only_fi_bundle(
     if components is None:
         comps, ledger = demo_components(scenario, target=tgt, seed=seed)
     else:
-        comps = list(components)
-        ledger = list(track_b_ledger or [])
+        comps, ledger = sanitize_injected_components(
+            components, track_b_ledger=track_b_ledger
+        )
         if not any(c.method_id == METHOD_RIM_TRACK_A and c.eligible for c in comps):
             raise PriorOnlyFiBundleError(
                 "FI PRIOR_ONLY requires eligible residual_income (Track A)"
@@ -377,15 +494,34 @@ def build_prior_only_fi_bundle(
         compute_l1o=False,
     )
 
-    # Hard guards — never emit forbidden labels
+    # Hard guards — allow-list only (never rely on deny-list of bad labels)
     for label, report in (("production", prod), ("research", research)):
-        blob = json.dumps(report.model_dump(mode="json"), ensure_ascii=False)
-        if "ENSEMBLE_CALIBRATED" in blob and report.ensemble_status == "ENSEMBLE_CALIBRATED":
-            raise PriorOnlyFiBundleError(f"{label} must not claim ENSEMBLE_CALIBRATED")
-        if report.investment_value != INVESTMENT_LABEL:
-            raise PriorOnlyFiBundleError(f"{label} must keep INVESTMENT_VALUE_NOT_ESTABLISHED")
-        if report.calibration_status == ClaimStatus.CALIBRATION_PASS.value:
-            raise PriorOnlyFiBundleError(f"{label} must not claim CALIBRATION_PASS")
+        if report.ensemble_status not in ALLOWED_ENSEMBLE_STATUS:
+            raise PriorOnlyFiBundleError(
+                f"{label} ensemble_status={report.ensemble_status!r} "
+                f"not in allow-list {sorted(ALLOWED_ENSEMBLE_STATUS)}"
+            )
+        if report.calibration_status not in ALLOWED_CALIBRATION_STATUS:
+            raise PriorOnlyFiBundleError(
+                f"{label} calibration_status={report.calibration_status!r} "
+                f"not in allow-list {sorted(ALLOWED_CALIBRATION_STATUS)}"
+            )
+        if report.investment_value not in ALLOWED_INVESTMENT_VALUE:
+            raise PriorOnlyFiBundleError(
+                f"{label} investment_value={report.investment_value!r} "
+                f"not in allow-list {sorted(ALLOWED_INVESTMENT_VALUE)}"
+            )
+
+    if incompat.ensemble_status not in ALLOWED_ENSEMBLE_STATUS:
+        raise PriorOnlyFiBundleError(
+            f"incompatible demo ensemble_status={incompat.ensemble_status!r} "
+            f"not in allow-list {sorted(ALLOWED_ENSEMBLE_STATUS)}"
+        )
+    if incompat.investment_value not in ALLOWED_INVESTMENT_VALUE:
+        raise PriorOnlyFiBundleError(
+            f"incompatible demo investment_value={incompat.investment_value!r} "
+            f"not in allow-list {sorted(ALLOWED_INVESTMENT_VALUE)}"
+        )
 
     if prod.mixture is not None:
         raise PriorOnlyFiBundleError("production intent must refuse mixture")
@@ -577,6 +713,9 @@ def dump_summary(summary: dict[str, Any]) -> str:
 
 
 __all__ = [
+    "ALLOWED_CALIBRATION_STATUS",
+    "ALLOWED_ENSEMBLE_STATUS",
+    "ALLOWED_INVESTMENT_VALUE",
     "PRIOR_ONLY_FI_STATUS",
     "METHOD_RIM_TRACK_A",
     "METHOD_PB_COMMON",
@@ -587,4 +726,5 @@ __all__ = [
     "demo_components",
     "dump_summary",
     "method_results_from_components",
+    "sanitize_injected_components",
 ]

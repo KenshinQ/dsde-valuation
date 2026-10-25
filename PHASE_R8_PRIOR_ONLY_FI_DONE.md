@@ -54,10 +54,19 @@ PHASE_R8_PRIOR_ONLY_FI_DONE.md              this file
 - calibrate-rim guards unchanged
 - prefer_local / Recipe E path untouched (R7 B1)
 
+## SHOULD-FIX follow-up (arch APPROVE on #8 @ d6b0556)
+Applied on branch (this pass):
+1. Injected `components=` path re-checks Track B `hist_n >= MIN_HIST_PB_POINTS` (`sanitize_injected_components`).
+2. Runtime claim guard switched to **allow-list** (`ALLOWED_ENSEMBLE_STATUS` / `ALLOWED_CALIBRATION_STATUS` / `ALLOWED_INVESTMENT_VALUE`).
+3. `test_ac4` hard-asserts status fields (not string deny-list).
+4. `assumptions.py` indentation cleaned for `ENSEMBLE-PRIOR-ONLY-FI-v1` / `EVAL-RIM-FI-DEPOSIT-WF-v1`.
+5. Live MethodDistribution adapter — **documented residual only** (below); not implemented here.
+
 ## Known gaps (honest)
 - Default demos are **synthetic FI-shaped centers** (engineering wiring), not live
-  HiThink value-rim artifact ingest. Live FI → MethodDistribution adapter from
-  `value-rim` / calibrate-rim forecast blobs is a follow-up.
+  HiThink value-rim artifact ingest. **Live FI → MethodDistribution adapter** from
+  `value-rim` / calibrate-rim forecast blobs remains a **known residual** — out of
+  scope for this SHOULD-FIX pass; do not claim live wiring.
 - Track B eligible path mixes exit-price channel on declared PER_SHARE basis for
   research disagreement only; still labeled PRIOR_ONLY / not IV truth
   (`EVAL-IV-NOT-PRICE-TRUTH-v1`).

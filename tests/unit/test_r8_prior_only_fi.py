@@ -133,6 +133,13 @@ def test_ac3_track_b_eligible_enters_weights(tmp_path: Path):
 
 
 def test_ac4_forbidden_labels_never_emitted(tmp_path: Path):
+    """Hard-assert status fields stay on the R8 allow-list (not string deny-list)."""
+    from vms.reporting.prior_only_fi_bundle import (
+        ALLOWED_CALIBRATION_STATUS,
+        ALLOWED_ENSEMBLE_STATUS,
+        ALLOWED_INVESTMENT_VALUE,
+    )
+
     for scenario in ("track_a_only", "track_a_pb", "track_b_skip", "track_b_eligible"):
         summary = build_prior_only_fi_bundle(
             tmp_path / scenario,
@@ -140,19 +147,91 @@ def test_ac4_forbidden_labels_never_emitted(tmp_path: Path):
             seed=2,
             n_draws=150,
         )
-        blob = json.dumps(summary)
-        assert "INVESTMENT_VALUE_SUPPORTED" not in blob
+        # Hard status-field assertions (allow-list)
+        assert summary["status"] == PRIOR_ONLY_FI_STATUS
+        assert summary["investment_value"] in ALLOWED_INVESTMENT_VALUE
+        assert summary["investment_value"] == INV
+        assert summary["research_ensemble_status"] in ALLOWED_ENSEMBLE_STATUS
+        assert summary["production_ensemble_status"] in ALLOWED_ENSEMBLE_STATUS
+        assert summary["research_calibration_status"] in ALLOWED_CALIBRATION_STATUS
+        assert summary["production_calibration_status"] in ALLOWED_CALIBRATION_STATUS
+        assert summary["research_ensemble_status"] == ClaimStatus.ENSEMBLE_UNCALIBRATED.value
+        assert summary["research_calibration_status"] == ClaimStatus.CALIBRATION_INSUFFICIENT.value
+        assert summary["production_ensemble_status"] == ClaimStatus.ENSEMBLE_UNCALIBRATED.value
+        assert summary["calibrated_claim"] is False
         assert summary["ENSEMBLE_CALIBRATED"] is False
         assert summary["CALIBRATION_PASS"] is False
-        assert summary["investment_value"] == INV
-        er = (tmp_path / scenario / "ensemble_report.json").read_text()
-        assert '"ensemble_status": "ENSEMBLE_CALIBRATED"' not in er
-        assert "CALIBRATION_PASS" not in er or '"CALIBRATION_PASS": false' in json.dumps(summary)
+
+        body = json.loads((tmp_path / scenario / "ensemble_report.json").read_text())
+        assert body["calibrated_claim"] is False
+        assert body["investment_value"] == INV
+        rp = body["research_prior"]
+        assert rp["ensemble_status"] == ClaimStatus.ENSEMBLE_UNCALIBRATED.value
+        assert rp["calibration_status"] == ClaimStatus.CALIBRATION_INSUFFICIENT.value
+        assert rp["investment_value"] == INV
+        pr = body["production_refusal"]
+        assert pr["ensemble_status"] == ClaimStatus.ENSEMBLE_UNCALIBRATED.value
+        assert pr["investment_value"] == INV
+        assert pr["mixture"] is None
 
 
 def test_ac4_requires_track_a(tmp_path: Path):
     with pytest.raises(PriorOnlyFiBundleError, match="residual_income"):
         build_prior_only_fi_bundle(tmp_path / "empty", components=[])
+
+
+def test_ac3_injected_components_track_b_hist_recheck(tmp_path: Path):
+    """Injected components= must re-check Track B hist_n; below MIN stays out of weights."""
+    from vms.ensemble import MethodDistribution, samples_from_point
+    from vms.schemas.contracts import MethodEligibilityStatus
+
+    # Craft an "eligible-looking" Track B with hist_n=5 (< MIN=12)
+    bad_tb = MethodDistribution(
+        method_id=METHOD_TRACK_B_EXIT,
+        samples=samples_from_point(11.0, n=32, seed=99),
+        status=MethodEligibilityStatus.VALID,
+        target=TARGET,
+        output_basis=OutputBasis.PER_SHARE,
+        eligible=True,
+        diagnostics={"channel": "track_b_exit", "hist_n": 5, "synthetic": True},
+    )
+    rim = MethodDistribution(
+        method_id=METHOD_RIM_TRACK_A,
+        samples=samples_from_point(12.0, n=32, seed=1),
+        status=MethodEligibilityStatus.VALID,
+        target=TARGET,
+        output_basis=OutputBasis.PER_SHARE,
+        eligible=True,
+        diagnostics={"channel": "track_a_rim", "synthetic": True},
+    )
+    pb = MethodDistribution(
+        method_id=METHOD_PB_COMMON,
+        samples=samples_from_point(10.0, n=32, seed=2),
+        status=MethodEligibilityStatus.VALID,
+        target=TARGET,
+        output_basis=OutputBasis.PER_SHARE,
+        eligible=True,
+        diagnostics={"channel": "pb_roe_relative", "synthetic": True},
+    )
+    summary = build_prior_only_fi_bundle(
+        tmp_path / "inject_tb",
+        scenario="track_a_pb",
+        components=[rim, pb, bad_tb],
+        seed=5,
+        n_draws=200,
+    )
+    assert summary["track_b_in_weights"] is False
+    assert METHOD_TRACK_B_EXIT not in summary["research_weight_method_ids"]
+    assert summary["calibrated_claim"] is False
+    ledger = summary["track_b_ledger"]
+    assert ledger and ledger[0]["status"] == "SKIP"
+    assert ledger[0]["hist_n"] == 5
+    assert ledger[0].get("sanitized_on_inject") is True
+    tb = json.loads(
+        (tmp_path / "inject_tb" / "method_results" / f"{METHOD_TRACK_B_EXIT}.json").read_text()
+    )
+    assert tb["eligible"] is False
+    assert tb["n_samples"] == 0
 
 
 def test_schema_and_package_unchanged():

@@ -430,7 +430,7 @@ ASSUMPTIONS: dict[str, str] = {
                      "(default {0.08, 0.09, 0.10} or config-driven). Each ke yields a VPS "
                      "distribution under P2; no ensemble blend across ke.",
 
-    "EVAL-RIM-BANK-WF-v1": "R6 bank RIM walk-forward calibration (deposit-taking FI lean curated "
+    "EVAL-RIM-FI-DEPOSIT-WF-v1": "R6 deposit-taking FI RIM walk-forward calibration (lean curated "
                           "universe). Chronological origins only (RandomSplitProhibitedError on "
                           "random splits). Forecasts persisted with outcomes=null before realization. "
                           "Evaluation targets declared separately: driver_roe (common ROE), "

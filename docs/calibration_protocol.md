@@ -70,4 +70,4 @@ At each chronological origin:
 4. After horizon matures, attach outcomes (driver ROE, later-origin VPS stability, market association).
 5. Score targets separately. `pit_complete=false` excluded from `scores_unbiased`.
 
-Assumption: `EVAL-RIM-BANK-WF-v1`. Expected on R6-default: `CALIBRATION_INSUFFICIENT` + `INVESTMENT_VALUE_NOT_ESTABLISHED`. Schema stays `vms-0.2.phase12` — do not bump schema to claim PASS.
+Assumption: `EVAL-RIM-FI-DEPOSIT-WF-v1`. Expected on R6-default: `CALIBRATION_INSUFFICIENT` + `INVESTMENT_VALUE_NOT_ESTABLISHED`. Schema stays `vms-0.2.phase12` — do not bump schema to claim PASS.

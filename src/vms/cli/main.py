@@ -23,7 +23,7 @@ Implemented commands:
   phase9          VMS-0.2 Phase 9 market-pricing regime + exit-price engine (synthetic; NOT investment advice)
   phase10         VMS-0.2 Phase 10 Track B return distributions + DSDE contract (synthetic; NOT investment advice)
   phase11         VMS-0.2 Phase 11 walk-forward calibration + sensitivity (synthetic; NOT investment advice)
-  calibrate-rim   R6 bank RIM walk-forward calibration (FI lean curated; NOT investment advice)
+  calibrate-rim   R6 deposit-taking FI RIM walk-forward calibration (lean curated; NOT investment advice)
   phase12         VMS-0.2 Phase 12 offline release examples (synthetic; NOT investment advice)
   validate-bundle Validate a result-bundle directory against a PHASE_CLI subset / §16.3
   profile         VMS-0.2 Phase 2 economic-profile classifier (NOT a valuation)
@@ -1539,7 +1539,7 @@ def cmd_phase11(args: argparse.Namespace) -> int:
 
 
 def cmd_calibrate_rim(args: argparse.Namespace) -> int:
-    """R6 bank RIM walk-forward calibration. NOT investment advice."""
+    """R6 deposit-taking FI RIM walk-forward calibration. NOT investment advice."""
     from datetime import date as date_cls
     out = Path(args.out)
     seed = 42 if args.seed is None else int(args.seed)
@@ -2146,7 +2146,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     cr = sub.add_parser(
         "calibrate-rim",
-        help="R6 bank RIM walk-forward calibration (FI lean curated; NOT investment advice)",
+        help="R6 deposit-taking FI RIM walk-forward calibration (lean curated; NOT investment advice)",
     )
     cr.add_argument("--out", required=True)
     cr.add_argument("--config", default=str(_default_config_path()))

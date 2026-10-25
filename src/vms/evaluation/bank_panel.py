@@ -1,4 +1,4 @@
-"""Synthetic deposit-taking FI panel for R6 bank RIM walk-forward (offline).
+"""Synthetic deposit-taking FI panel for R6 RIM walk-forward (offline).
 
 Labeled SYNTHETIC — never claims investment value. Includes lean-curated IDs
 (000001.SZ among them). One short-OEI name demonstrates Track B hist_n<12 skip;
@@ -77,7 +77,7 @@ def generate_bank_eval_panel(
     n_years: int = 16,
     short_oei_ids: frozenset[str] | None = None,
 ) -> dict[str, LoadResult]:
-    """Multi-name annual synthetic bank panel for chronological RIM walk-forward.
+    """Multi-name annual synthetic deposit-taking FI panel for chronological RIM walk-forward.
 
     ``short_oei_ids`` (default {000001.SZ}) get OEI only from mid-series onward
     so own-hist common P/B depth stays below MIN_HIST_PB_POINTS=12 — Track B
@@ -90,7 +90,7 @@ def generate_bank_eval_panel(
         source_id=syn.SYNTHETIC_SOURCE,
         reporting_convention=ReportingConvention.CN_CUMULATIVE_YTD,
         versioning=Versioning.FULL_HISTORY,
-        description="SYNTHETIC bank FI R6 eval panel — not real data",
+        description="SYNTHETIC deposit-taking FI R6 eval panel — not real data",
     )
     out: dict[str, LoadResult] = {}
     for i, iid in enumerate(ids):

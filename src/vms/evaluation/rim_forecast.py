@@ -1,4 +1,4 @@
-"""R6 bank RIM Track A forecast + FI baselines at a PIT origin (SPEC §17).
+"""R6 deposit-taking FI RIM Track A forecast + FI baselines at a PIT origin (SPEC §17).
 
 Driver (ROE) and intrinsic VPS are scored separately. Future market price is
 never treated as intrinsic ground truth (EVAL-IV-NOT-PRICE-TRUTH-v1).
@@ -42,7 +42,7 @@ def build_rim_track_a_forecast(
     """Build Track A RIM forecast + FI baselines at origin. Past-only (PIT)."""
     flags: list[str] = []
     assumptions = cite(
-        "EVAL-RIM-BANK-WF-v1",
+        "EVAL-RIM-FI-DEPOSIT-WF-v1",
         "EVAL-FORECAST-BEFORE-OUTCOME-v1",
         "EVAL-TARGETS-SEPARATE-v1",
         "EVAL-IV-NOT-PRICE-TRUTH-v1",
@@ -68,6 +68,24 @@ def build_rim_track_a_forecast(
         },
         "equity_basis": "common",
     }
+
+    # Track B hist depth is independent of RIM bridge success — assess always
+    # so status is ELIGIBLE|SKIP (never leave NOT_ASSESSED on return paths).
+    hist = historical_common_pb(snap, zeros_explicit=zeros_explicit)
+    out["track_b"] = {
+        "status": "ELIGIBLE" if hist.ok else "SKIP",
+        "hist_n": int(hist.n),
+        "min_required": MIN_HIST_PB_POINTS,
+        "median_pb": hist.median,
+        "skip_reason": None if hist.ok else (hist.ineligible_reason or "HIST_PB_BELOW_MIN"),
+        "year_funnel": [
+            {"year": e.year, "status": e.status, "reason": e.reason} for e in (hist.year_funnel or [])
+        ],
+        "assumption_ids": list(hist.assumption_ids),
+    }
+    if not hist.ok:
+        flags.append(f"TRACK_B_SKIP:hist_n={hist.n}<{MIN_HIST_PB_POINTS}")
+        out["flags"] = sorted(set(flags))
 
     feats = features_from_snapshot(snap)
     profile = classify_profile(feats)
@@ -198,22 +216,6 @@ def build_rim_track_a_forecast(
         "note": "Market-price association only; not intrinsic ground truth",
     }
 
-    # ---- Track B eligibility (assess only; do not invent) ----
-    hist = historical_common_pb(snap, zeros_explicit=zeros_explicit)
-    track_b: dict[str, Any] = {
-        "status": "ELIGIBLE" if hist.ok else "SKIP",
-        "hist_n": int(hist.n),
-        "min_required": MIN_HIST_PB_POINTS,
-        "median_pb": hist.median,
-        "skip_reason": None if hist.ok else (hist.ineligible_reason or "HIST_PB_BELOW_MIN"),
-        "year_funnel": [
-            {"year": e.year, "status": e.status, "reason": e.reason} for e in (hist.year_funnel or [])
-        ],
-        "assumption_ids": list(hist.assumption_ids),
-    }
-    if not hist.ok:
-        flags.append(f"TRACK_B_SKIP:hist_n={hist.n}<{MIN_HIST_PB_POINTS}")
-    out["track_b"] = track_b
     out["flags"] = sorted(set(flags))
     return out
 

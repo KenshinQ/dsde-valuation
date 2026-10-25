@@ -1,4 +1,4 @@
-"""Chronological bank RIM walk-forward calibration orchestrator (R6 / SPEC §17).
+"""Chronological deposit-taking FI RIM walk-forward calibration orchestrator (R6 / SPEC §17).
 
 Reuses Phase 11 protocol gates (chronological-only, freeze-before-test,
 forecast-before-outcome, CALIBRATION_INSUFFICIENT on thin OOS). Does NOT claim
@@ -101,7 +101,7 @@ def run_rim_calibration(
     split_mode: str | None = None,
     ensemble_weights: dict[str, float] | None = None,
 ) -> RimCalibrationReport:
-    """Walk-forward calibrate bank RIM Track A. Random splits rejected."""
+    """Walk-forward calibrate deposit-taking FI RIM Track A. Random splits rejected."""
     if isinstance(universe, (str, Path)):
         universe = load_universe(universe)
     mode = split_mode or universe.split_mode
@@ -173,7 +173,9 @@ def run_rim_calibration(
             tb = bundle.get("track_b") or {}
             if tb.get("status") == "ELIGIBLE":
                 n_track_b_eligible += 1
-            else:
+            elif tb.get("status") == "SKIP":
+                # Only explicit SKIP counts; NOT_ASSESSED / other must not default
+                # to HIST_PB_BELOW_MIN (architecture SHOULD-FIX).
                 skip_rec = {
                     "instrument_id": instrument_id,
                     "origin_as_of": origin.isoformat(),
@@ -294,7 +296,7 @@ def run_rim_calibration(
     assert labels["CALIBRATION_CLAIM"] == ClaimStatus.CALIBRATION_INSUFFICIENT.value
 
     notes = [
-        "R6 bank RIM chronological walk-forward (SPEC §17 / EVAL-RIM-BANK-WF-v1).",
+        "R6 deposit-taking FI RIM chronological walk-forward (SPEC §17 / EVAL-RIM-FI-DEPOSIT-WF-v1).",
         "Random splits raise RandomSplitProhibitedError.",
         "Forecasts persisted with outcomes=null before realization.",
         "PIT_INCOMPLETE origins excluded from scores_unbiased.",
@@ -349,7 +351,7 @@ def run_rim_calibration(
             "frozen_before_test": True,
         },
         assumptions=cite(
-            "EVAL-RIM-BANK-WF-v1",
+            "EVAL-RIM-FI-DEPOSIT-WF-v1",
             "EVAL-CHRONOLOGICAL-ONLY-v1",
             "EVAL-FORECAST-BEFORE-OUTCOME-v1",
             "EVAL-TARGETS-SEPARATE-v1",

@@ -21,7 +21,7 @@ gate lift, 非银金融, schema bump, invent OEI, or lower `MIN_HIST_PB_POINTS` 
   - Scorer (`evaluation/rim_metrics.py`): separate targets; `price_mae_forbidden`
   - Orchestrator (`evaluation/rim_run.py`) + bundle (`reporting/calibrate_rim_bundle.py`)
   - CLI: `vms calibrate-rim`
-- **Assumption**: `EVAL-RIM-BANK-WF-v1`
+- **Assumption**: `EVAL-RIM-FI-DEPOSIT-WF-v1`
 - Legacy `industry.unsupported` / `vms value|project` gate **untouched**. SCHEMA remains `vms-0.2.phase12`.
 
 ## Changed / added files
@@ -35,8 +35,8 @@ src/vms/evaluation/universe.py                bank_synthetic materialize
 src/vms/evaluation/__init__.py                export run_rim_calibration
 src/vms/reporting/calibrate_rim_bundle.py     NEW offline emitter
 src/vms/cli/main.py                           `vms calibrate-rim`
-src/vms/assumptions.py / docs/assumptions.md  EVAL-RIM-BANK-WF-v1
-docs/calibration_protocol.md                  Bank RIM R6 section
+src/vms/assumptions.py / docs/assumptions.md  EVAL-RIM-FI-DEPOSIT-WF-v1
+docs/calibration_protocol.md                  Deposit-taking FI RIM R6 section
 config/universe.fi_deposit_lean.yaml          NEW lean curated universe
 tests/unit/test_r6_rim_calibration.py         NEW AC1–AC12
 tests/integration/test_cli_calibrate_rim.py   NEW CLI smoke
@@ -75,3 +75,10 @@ PHASE_R6_BANK_RIM_WF_DONE.md
 
 ## Label
 `INVESTMENT_VALUE_NOT_ESTABLISHED` — engineering walk-forward ≠ investment advice.
+
+## Architecture follow-up (REQUEST_CHANGES → fixed)
+- Sector lint: FI prose; assumption renamed `EVAL-RIM-FI-DEPOSIT-WF-v1`; Chinese industry literals only in `assumptions.py`.
+- Track B ledger: only `status==SKIP` counted (NOT_ASSESSED ≠ HIST_PB_BELOW_MIN); Track B assessed before early returns.
+- AC11: unbiased filter proven with fabricated pit_complete mix + incomplete→excluded 1:1.
+- Smoke 21/skips=15 golden: deferred (ledger semantics fixed; counts may shift vs first smoke).
+

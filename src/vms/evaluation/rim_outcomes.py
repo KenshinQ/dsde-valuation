@@ -1,4 +1,4 @@
-"""Realize bank RIM outcomes AFTER forecast persist (SPEC §17.1 step 4).
+"""Realize deposit-taking FI RIM outcomes AFTER forecast persist (SPEC §17.1 step 4).
 
 Driver ROE and later-origin intrinsic VPS are scored separately from market
 price. Market price is never used as intrinsic ground truth.

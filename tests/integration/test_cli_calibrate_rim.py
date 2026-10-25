@@ -38,5 +38,5 @@ def test_cli_calibrate_rim_smoke(tmp_path, capsys):
     assert captured["status"] == CALIBRATE_RIM_STATUS
     assert captured["split_mode"] == "chronological"
     rep = json.loads((out / "rim_calibration_report.json").read_text())
-    assert "EVAL-RIM-BANK-WF-v1" in rep["assumptions"]
+    assert "EVAL-RIM-FI-DEPOSIT-WF-v1" in rep["assumptions"]
     assert rep["n_track_b_skipped"] >= 1

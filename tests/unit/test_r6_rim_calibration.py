@@ -1,4 +1,4 @@
-"""R6 bank RIM walk-forward calibration acceptance (EVAL-RIM-BANK-WF-v1)."""
+"""R6 deposit-taking FI RIM walk-forward calibration acceptance (EVAL-RIM-FI-DEPOSIT-WF-v1)."""
 
 from __future__ import annotations
 
@@ -174,21 +174,125 @@ def test_ac10_universe_includes_000001_and_skips_visible(tmp_path: Path):
 # ---- AC11: pit_complete=false not in scores_unbiased ----
 def test_ac11_pit_incomplete_excluded_from_unbiased(tmp_path: Path):
     report = _run(tmp_path)
-    # All synthetic bank origins may be pit_complete=false under HiThink-like rules;
-    # either way: excluded list + unbiased only contains pit_complete records.
     origin = json.loads((tmp_path / "rim_ev" / "origin_records.json").read_text())
-    incomplete = [r for r in origin["records"] if not r.get("pit_complete")]
-    if incomplete:
-        assert report.n_excluded_pit_incomplete >= len(incomplete) or report.n_excluded_pit_incomplete >= 1
-    # scores_unbiased n_records <= scored; never larger
+    records = origin["records"]
+    incomplete = [r for r in records if not r.get("pit_complete")]
+    # Excluded ledger matches incomplete origins 1:1
+    assert report.n_excluded_pit_incomplete == len(incomplete)
+    for ex in report.excluded_pit_incomplete:
+        assert ex["reason"] == "PIT_INCOMPLETE"
+    # scores_unbiased may only count pit_complete records (never larger than scored)
     assert report.scores_unbiased["n_records"] <= report.n_scored
+    # If every origin is incomplete (synthetic FULL_HISTORY still can be false under
+    # quality rules), unbiased must be empty — proves filter is not a no-op tautology
+    # that only checks n_unbiased <= n_scored.
+    if not any(r.get("pit_complete") for r in records):
+        assert report.scores_unbiased["n_records"] == 0
+        assert report.n_excluded_pit_incomplete == report.n_forecasts_persisted
+
+
+def test_ac11_unbiased_filter_only_pit_complete():
+    """Prove scores_unbiased input is filtered to pit_complete only (not tautology)."""
+    from vms.evaluation.rim_metrics import score_rim_targets
+
+    def _rec(pit: bool, inst: str) -> dict:
+        return {
+            "instrument_id": inst,
+            "origin_as_of": "2020-04-30T15:00:00+08:00",
+            "pit_complete": pit,
+            "forecasts": {
+                "driver_roe": {"point": 0.1},
+                "intrinsic_value": {"point": 10.0},
+                "market_price": {"point": 9.0},
+            },
+            "outcomes": {
+                "pending": False,
+                "driver_roe": {"realized": 0.11},
+                "intrinsic_value": {"later_origin_vps": 10.5},
+                "market_price": {"raw_close": 9.5},
+            },
+            "baselines": {"historical_roe_median": {"roe_median": 0.1}},
+            "track_b": {"status": "SKIP", "hist_n": 3, "min_required": 12,
+                        "skip_reason": "HIST_PB_BELOW_MIN"},
+        }
+
+    scored = [_rec(True, "A"), _rec(False, "B"), _rec(True, "C")]
+    unbiased = [r for r in scored if r.get("pit_complete")]
+    assert len(unbiased) == 2
+    assert all(r["pit_complete"] is True for r in unbiased)
+    s_all = score_rim_targets(scored)
+    s_unb = score_rim_targets(unbiased)
+    assert s_all["n_records"] == 3
+    assert s_unb["n_records"] == 2
+    # Incomplete must not appear in unbiased input set
+    assert {r["instrument_id"] for r in unbiased} == {"A", "C"}
+
+
+def test_track_b_ledger_only_counts_skip_status():
+    """SHOULD-FIX: NOT_ASSESSED must not be logged as HIST_PB_BELOW_MIN skip."""
+    from vms.evaluation.rim_metrics import score_rim_targets
+
+    records = [
+        {
+            "instrument_id": "ELIG",
+            "origin_as_of": "2020-01-01T00:00:00+08:00",
+            "pit_complete": True,
+            "forecasts": {"driver_roe": {"point": None}, "intrinsic_value": {"point": None},
+                          "market_price": {"point": None}},
+            "outcomes": {"pending": False, "driver_roe": {"realized": None},
+                         "intrinsic_value": {"later_origin_vps": None},
+                         "market_price": {"raw_close": None}},
+            "baselines": {},
+            "track_b": {"status": "ELIGIBLE", "hist_n": 12, "min_required": 12,
+                        "skip_reason": None},
+        },
+        {
+            "instrument_id": "SKIP1",
+            "origin_as_of": "2020-01-01T00:00:00+08:00",
+            "pit_complete": True,
+            "forecasts": {"driver_roe": {"point": None}, "intrinsic_value": {"point": None},
+                          "market_price": {"point": None}},
+            "outcomes": {"pending": False, "driver_roe": {"realized": None},
+                         "intrinsic_value": {"later_origin_vps": None},
+                         "market_price": {"raw_close": None}},
+            "baselines": {},
+            "track_b": {"status": "SKIP", "hist_n": 4, "min_required": 12,
+                        "skip_reason": "N_HIST_PB=4<12"},
+        },
+        {
+            "instrument_id": "NA1",
+            "origin_as_of": "2020-01-01T00:00:00+08:00",
+            "pit_complete": True,
+            "forecasts": {"driver_roe": {"point": None}, "intrinsic_value": {"point": None},
+                          "market_price": {"point": None}},
+            "outcomes": {"pending": False, "driver_roe": {"realized": None},
+                         "intrinsic_value": {"later_origin_vps": None},
+                         "market_price": {"raw_close": None}},
+            "baselines": {},
+            "track_b": {"status": "NOT_ASSESSED", "hist_n": 0, "min_required": 12,
+                        "skip_reason": None},
+        },
+    ]
+    scored = score_rim_targets(records)
+    tb = scored["track_b"]
+    assert tb["n_eligible"] == 1
+    assert tb["n_skipped"] == 1
+    assert tb["n_not_assessed"] == 1
+    assert len(tb["skips"]) == 1
+    assert tb["skips"][0]["instrument_id"] == "SKIP1"
+    assert tb["skips"][0]["skip_reason"] == "N_HIST_PB=4<12"
+    # NOT_ASSESSED must not appear as a fabricated HIST_PB_BELOW_MIN skip
+    assert all(s["instrument_id"] != "NA1" for s in tb["skips"])
+    assert all(s.get("skip_reason") != "HIST_PB_BELOW_MIN" or s["instrument_id"] == "SKIP1"
+               for s in tb["skips"])
+
 
 
 # ---- AC12: SCHEMA not claiming PASS; assumption present ----
 def test_ac12_schema_unchanged_and_assumption(tmp_path: Path):
     assert SCHEMA_VERSION == "vms-0.2.phase12"
     report = _run(tmp_path)
-    assert "EVAL-RIM-BANK-WF-v1" in report.assumptions
+    assert "EVAL-RIM-FI-DEPOSIT-WF-v1" in report.assumptions
     body = json.loads((tmp_path / "rim_ev" / "rim_calibration_report.json").read_text())
     assert body["schema_version"] == "vms-0.2.phase12"
     assert body["labels"]["CALIBRATION_PASS"] is not True

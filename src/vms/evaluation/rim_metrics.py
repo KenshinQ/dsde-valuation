@@ -1,4 +1,4 @@
-"""Separate-target scoring for bank RIM walk-forward (R6).
+"""Separate-target scoring for deposit-taking FI RIM walk-forward (R6).
 
 Never mix intrinsic scoring with price MAE as truth (EVAL-IV-NOT-PRICE-TRUTH-v1).
 Track B skips are counted, not silently treated as VALID.
@@ -50,14 +50,17 @@ def score_rim_targets(records: list[dict[str, Any]]) -> dict[str, Any]:
         "note": "Market-price forecast errors — separate from intrinsic; optional association block",
     }
 
-    # Track B accounting
+    # Track B accounting — only status==SKIP is a skip ledger row.
+    # NOT_ASSESSED / missing must not be defaulted to HIST_PB_BELOW_MIN.
     track_b_skips = []
     track_b_eligible = 0
+    track_b_not_assessed = 0
     for r in records:
         tb = r.get("track_b") or {}
-        if tb.get("status") == "ELIGIBLE":
+        status = tb.get("status")
+        if status == "ELIGIBLE":
             track_b_eligible += 1
-        else:
+        elif status == "SKIP":
             track_b_skips.append({
                 "instrument_id": r.get("instrument_id"),
                 "origin_as_of": r.get("origin_as_of"),
@@ -65,6 +68,8 @@ def score_rim_targets(records: list[dict[str, Any]]) -> dict[str, Any]:
                 "min_required": tb.get("min_required", MIN_HIST_PB_POINTS),
                 "skip_reason": tb.get("skip_reason") or "HIST_PB_BELOW_MIN",
             })
+        else:
+            track_b_not_assessed += 1
 
     # Baseline: ROE median vs driver forecast (same series — identity check)
     hist_roe = [
@@ -89,11 +94,13 @@ def score_rim_targets(records: list[dict[str, Any]]) -> dict[str, Any]:
         "track_b": {
             "n_eligible": track_b_eligible,
             "n_skipped": len(track_b_skips),
+            "n_not_assessed": track_b_not_assessed,
             "min_hist_pb_points": MIN_HIST_PB_POINTS,
             "skips": track_b_skips,
             "note": (
                 "Track B scored only when hist_n >= MIN_HIST_PB_POINTS at origin; "
-                "short OEI → honest SKIP (no invent OEI / no lower floor)."
+                "short OEI → honest SKIP (no invent OEI / no lower floor). "
+                "Ledger rows only for status==SKIP; NOT_ASSESSED is not HIST_PB_BELOW_MIN."
             ),
         },
         "n_records": len(records),

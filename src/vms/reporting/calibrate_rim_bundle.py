@@ -1,4 +1,4 @@
-"""R6 bank RIM walk-forward calibration offline emitter.
+"""R6 deposit-taking FI RIM walk-forward calibration offline emitter.
 
 Reuses Phase 11 evaluation protocol. Synthetic / thin lean panel ⇒
 CALIBRATION_INSUFFICIENT + INVESTMENT_VALUE_NOT_ESTABLISHED.
@@ -40,7 +40,7 @@ def build_calibrate_rim_bundle(
     evaluation_as_of: datetime | None = None,
     seed: int = 42,
 ) -> dict[str, Any]:
-    """Run bank RIM walk-forward; write rim_calibration_report + summary."""
+    """Run deposit-taking FI RIM walk-forward; write rim_calibration_report + summary."""
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
     repo_root = Path(__file__).resolve().parents[3]
@@ -115,9 +115,9 @@ def build_calibrate_rim_bundle(
             "implemented_phase": IMPLEMENTED_PHASE,
             "schema_version": SCHEMA_VERSION,
             "warning": (
-                "R6 bank RIM walk-forward. CALIBRATION_INSUFFICIENT for production. "
+                "R6 deposit-taking FI RIM walk-forward. CALIBRATION_INSUFFICIENT for production. "
                 "INVESTMENT_VALUE_NOT_ESTABLISHED. Not investment advice. "
-                "Does not lift industry.unsupported / 非银金融. "
+                "Does not lift industry.unsupported (see EVAL-RIM-FI-DEPOSIT-WF-v1). "
                 f"Track B requires hist_n>={MIN_HIST_PB_POINTS}."
             ),
             "labels": report.labels,
@@ -162,7 +162,7 @@ def build_calibrate_rim_bundle(
         "investment_value": INVESTMENT_LABEL,
         "calibration_claim": report.labels.get("CALIBRATION_CLAIM"),
         "content_hash": report.content_hash,
-        "assumption": "EVAL-RIM-BANK-WF-v1",
+        "assumption": "EVAL-RIM-FI-DEPOSIT-WF-v1",
     }
     write_artifact(out, "calibrate_rim_summary.json", summary, stamp)
     return summary

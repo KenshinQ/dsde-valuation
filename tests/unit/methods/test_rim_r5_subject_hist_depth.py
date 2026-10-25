@@ -17,7 +17,8 @@ from vms.methods.rim.track_b_exit import run_rim_track_b
 from vms.methods.rim.from_snapshot import rim_inputs_from_snapshot
 from vms.pit.asof import parse_as_of
 from vms.pit.snapshot import build_snapshot
-from vms.providers.hithink.paths import fund_db_path, market_db_path
+from vms.providers.eastmoney import store as em_store
+from vms.providers.hithink.paths import duckdb_available, fund_db_path, market_db_path
 from vms.reporting.value_rim_bundle import build_value_rim_bundle
 from vms.schemas import (
     CorporateActionEvent,
@@ -399,3 +400,172 @@ def test_wiring_disabled_sets_flag(repo, tmp_path, monkeypatch):
         track_b_paths=20,
     )
     assert "SUBJECT_HIST_DEPTH_DISABLED" in summary["flags"]
+
+
+def test_empty_tmp_duckdb_prefer_local_zero_rest(tmp_path, monkeypatch):
+    """SHOULD-FIX: empty tmp DuckDB + prefer_local ⇒ rest_calls=0 (no REST on miss)."""
+    if not duckdb_available():
+        pytest.skip("duckdb required to create empty EM enrichment schema")
+    fdb = tmp_path / "fund.duckdb"
+    mdb = tmp_path / "market.duckdb"
+    em_store.ensure_tables(fdb)
+
+    calls: list[str] = []
+
+    def _boom(*_a, **_k):
+        calls.append("rest")
+        raise AssertionError("REST must not be called when prefer_local")
+
+    monkeypatch.setattr(
+        "vms.methods.rim.bank_peer_panel.em_client.fetch_bank_f10_bundle", _boom,
+    )
+    monkeypatch.setattr(
+        "vms.methods.rim.bank_peer_panel.em_client.fetch_datacenter_all", _boom,
+    )
+    monkeypatch.setattr(
+        "vms.methods.rim.bank_peer_panel.em_client.fetch_company_survey", _boom,
+    )
+    as_of = _ts("2025-06-30", 15)
+    rep = build_subject_hist_depth(
+        instrument_id=INST, as_of=as_of, prefer_local=True, fund_db=fdb, market_db=mdb,
+    )
+    assert rep.rest_calls == 0
+    assert calls == []
+    assert "SUBJECT_HIST_PREFER_LOCAL" in rep.flags
+    assert "SUBJECT_HIST_REST_UNEXPECTED" not in rep.flags
+    assert rep.path_diag.rest_calls == 0
+    assert rep.path_diag.bank_f10_path == "local_miss_no_rest"
+    # Empty EM schema may lack TE tables → local_error:*; still no REST.
+    assert (
+        rep.path_diag.te_path in ("local_miss_no_rest", "fund_db_missing", "local")
+        or rep.path_diag.te_path.startswith("local_error:")
+    )
+
+
+def test_wiring_prefer_local_false_on_refresh(repo, tmp_path, monkeypatch):
+    """SHOULD-FIX: prefer_local_subject_hist=False (--refresh) ⇒ subject prefer_local=False."""
+    loaded = load_config(repo / "config/default.yaml")
+    load, as_of = _load_result(14)
+
+    from vms.methods.rim.subject_hist_depth import SubjectHistDepthReport
+    from vms.methods.rim.bank_peer_panel import TickerPathDiag
+
+    seen: dict = {}
+
+    def _fake_depth(**kwargs):
+        seen["prefer_local"] = kwargs.get("prefer_local")
+        return SubjectHistDepthReport(
+            instrument_id=kwargs["instrument_id"],
+            as_of=kwargs["as_of"].isoformat(),
+            financial=[],
+            market=[],
+            path_diag=TickerPathDiag(instrument_id=kwargs["instrument_id"]),
+            flags=["SUBJECT_HIST_DEPTH_BUILDER", "SUBJECT_HIST_REFRESH_ALLOWED"],
+            assumption_ids=["RIM-SUBJECT-HIST-DEPTH-v1"],
+            prefer_local=False,
+            detail="stub refresh",
+        )
+
+    monkeypatch.setattr(
+        "vms.reporting.value_rim_bundle.build_subject_hist_depth", _fake_depth,
+    )
+    out = tmp_path / "rim_r5_refresh"
+    summary = build_value_rim_bundle(
+        out_dir=out,
+        load=load,
+        input_dir=tmp_path,
+        instrument_id=INST,
+        as_of=as_of,
+        as_of_note="test",
+        loaded=loaded,
+        mode="exploratory",
+        override_reason="R5 SHOULD-FIX: --refresh prefer_local=False",
+        equity_basis="common",
+        run_distribution=False,
+        run_pb_roe=False,
+        auto_fi_peers=False,
+        deepen_subject_hist=True,
+        prefer_local_subject_hist=False,
+        n_paths=20,
+        seed=42,
+        track_b_paths=20,
+    )
+    assert seen.get("prefer_local") is False
+    assert "AUTO_SUBJECT_HIST_DEPTH" in summary["flags"]
+    assert summary["investment_value"] == "INVESTMENT_VALUE_NOT_ESTABLISHED"
+
+
+def test_wiring_prefer_local_inherits_refresh_from_fi_peers(repo, tmp_path, monkeypatch):
+    """CLI --refresh sets prefer_local_fi_peers=False; subject hist inherits when unset."""
+    loaded = load_config(repo / "config/default.yaml")
+    load, as_of = _load_result(14)
+
+    from vms.methods.rim.subject_hist_depth import SubjectHistDepthReport
+    from vms.methods.rim.bank_peer_panel import TickerPathDiag
+
+    seen: dict = {}
+
+    def _fake_depth(**kwargs):
+        seen["prefer_local"] = kwargs.get("prefer_local")
+        return SubjectHistDepthReport(
+            instrument_id=kwargs["instrument_id"],
+            as_of=kwargs["as_of"].isoformat(),
+            financial=[],
+            market=[],
+            path_diag=TickerPathDiag(instrument_id=kwargs["instrument_id"]),
+            flags=["SUBJECT_HIST_DEPTH_BUILDER", "SUBJECT_HIST_REFRESH_ALLOWED"],
+            assumption_ids=["RIM-SUBJECT-HIST-DEPTH-v1"],
+            prefer_local=False,
+            detail="stub inherit refresh",
+        )
+
+    monkeypatch.setattr(
+        "vms.reporting.value_rim_bundle.build_subject_hist_depth", _fake_depth,
+    )
+    summary = build_value_rim_bundle(
+        out_dir=tmp_path / "rim_r5_inherit_refresh",
+        load=load,
+        input_dir=tmp_path,
+        instrument_id=INST,
+        as_of=as_of,
+        as_of_note="test",
+        loaded=loaded,
+        mode="exploratory",
+        override_reason="R5 SHOULD-FIX: inherit prefer_local_fi_peers=False",
+        equity_basis="common",
+        run_distribution=False,
+        run_pb_roe=False,
+        auto_fi_peers=False,
+        deepen_subject_hist=True,
+        prefer_local_fi_peers=False,
+        # prefer_local_subject_hist left None → inherit
+        n_paths=20,
+        seed=42,
+        track_b_paths=20,
+    )
+    assert seen.get("prefer_local") is False
+    assert summary["investment_value"] == "INVESTMENT_VALUE_NOT_ESTABLISHED"
+
+
+def test_legacy_project_value_unsupported_profile_bank_regression(tmp_path, repo):
+    """SHOULD-FIX: legacy project/value on bank remains UNSUPPORTED_PROFILE (exit 4)."""
+    from tests.integration.test_cli_value_rim import _write_bank_dir
+    from vms.cli.main import main
+
+    data = _write_bank_dir(tmp_path, r2=True)
+    cfg = str(repo / "config/default.yaml")
+    out_p = tmp_path / "project_r5"
+    rc_p = main([
+        "project", "--input", str(data), "--ticker", "000001.SZ", "--as-of", "2025-06-30",
+        "--out", str(out_p), "--config", cfg, "--mode", "exploratory",
+        "--override-reason", "R5 SHOULD-FIX: legacy gate must remain",
+    ])
+    assert rc_p == 4
+    out_v = tmp_path / "value_r5"
+    rc_v = main([
+        "value", "--input", str(data), "--ticker", "000001.SZ", "--as-of", "2025-06-30",
+        "--out", str(out_v), "--config", cfg, "--mode", "exploratory",
+        "--override-reason", "R5 SHOULD-FIX: legacy gate must remain",
+        "--seed", "42", "--paths", "10", "--years", "3",
+    ])
+    assert rc_v == 4

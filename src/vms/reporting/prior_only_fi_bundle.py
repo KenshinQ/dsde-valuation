@@ -429,22 +429,37 @@ def sanitize_injected_components(
 def build_prior_only_fi_bundle(
     out: Path,
     *,
-    scenario: DemoScenario = "track_b_skip",
+    scenario: DemoScenario | str = "track_b_skip",
     seed: int = 42,
     n_draws: int = 1000,
     target: ValuationTarget | None = None,
     components: Sequence[MethodDistribution] | None = None,
     track_b_ledger: Sequence[dict[str, Any]] | None = None,
+    data_label: str | None = None,
+    source_meta: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    """Write R8 PRIOR_ONLY FI artifacts: method_results/, ensemble_report, summary."""
+    """Write R8 PRIOR_ONLY FI artifacts: method_results/, ensemble_report, summary.
+
+    When ``components`` are injected (e.g. R9 live value-rim adapter), pass
+    ``data_label`` so artifacts are not stamped SYNTHETIC. Demo path
+    (components is None) keeps the synthetic label.
+    """
     out = Path(out)
     out.mkdir(parents=True, exist_ok=True)
     tgt = target or ValuationTarget.FUNDAMENTAL_VALUE_CURRENT
-    assumptions = cite(
+    is_live = bool(source_meta and source_meta.get("source") == "value_rim")
+    primary_assumption = (
+        "ENSEMBLE-PRIOR-ONLY-FI-LIVE-MD-v1" if is_live else "ENSEMBLE-PRIOR-ONLY-FI-v1"
+    )
+    cite_ids = [
         "ENSEMBLE-PRIOR-ONLY-FI-v1",
         "EVAL-IV-NOT-PRICE-TRUTH-v1",
         "EVAL-RIM-FI-DEPOSIT-WF-v1",
-    )
+    ]
+    if is_live:
+        # Live path: stamp LIVE-MD as the primary assumption cite.
+        cite_ids.insert(0, "ENSEMBLE-PRIOR-ONLY-FI-LIVE-MD-v1")
+    assumptions = cite(*cite_ids)
 
     if components is None:
         comps, ledger = demo_components(scenario, target=tgt, seed=seed)
@@ -456,6 +471,16 @@ def build_prior_only_fi_bundle(
             raise PriorOnlyFiBundleError(
                 "FI PRIOR_ONLY requires eligible residual_income (Track A)"
             )
+
+    if data_label is None:
+        if components is None:
+            effective_data_label = "SYNTHETIC_FI_PRIOR_ONLY — not real market data"
+        else:
+            effective_data_label = (
+                "INJECTED_FI_PRIOR_ONLY — research path; not calibrated"
+            )
+    else:
+        effective_data_label = data_label
 
     method_results = method_results_from_components(
         [c for c in comps if c.eligible and c.samples]
@@ -579,7 +604,8 @@ def build_prior_only_fi_bundle(
             "assumptions": assumptions,
             "schema_version": SCHEMA_VERSION,
             "implemented_phase": IMPLEMENTED_PHASE,
-            "data_label": "SYNTHETIC_FI_PRIOR_ONLY — not real market data",
+            "data_label": effective_data_label,
+            "source_meta": dict(source_meta) if source_meta else None,
         },
         stamp,
     )
@@ -618,10 +644,16 @@ def build_prior_only_fi_bundle(
         "investment_value": INVESTMENT_LABEL,
         "calibrated_claim": False,
         "warning": (
-            "R8 FI PRIOR_ONLY research mixture (SPEC §13.3). "
-            "Equal-weight / exploratory baseline — NOT ENSEMBLE_CALIBRATED. "
-            "Not investment advice. INVESTMENT_VALUE_NOT_ESTABLISHED. "
-            f"Track B requires hist_n>={MIN_HIST_PB_POINTS}."
+            (
+                "R9 live value-rim → PRIOR_ONLY research mixture "
+                "(ENSEMBLE-PRIOR-ONLY-FI-LIVE-MD-v1). "
+                if is_live
+                else "R8 FI PRIOR_ONLY research mixture (SPEC §13.3). "
+            )
+            + "Equal-weight / exploratory baseline — NOT ENSEMBLE_CALIBRATED. "
+            + "Not investment advice. INVESTMENT_VALUE_NOT_ESTABLISHED. "
+            + f"Track B requires hist_n>={MIN_HIST_PB_POINTS} and a PER_SHARE "
+            + "exit center (never raw pb_center_used P/B multiple)."
         ),
     }
     write_artifact(out, "ensemble_report.json", ensemble_payload, stamp)
@@ -636,12 +668,22 @@ def build_prior_only_fi_bundle(
             "investment_value": INVESTMENT_LABEL,
             "calibrated_claim": False,
             "warning": (
-                "R8 deposit-taking FI PRIOR_ONLY wiring. Research path only. "
-                "Not investment advice. INVESTMENT_VALUE_NOT_ESTABLISHED. "
-                "Does not lift industry.unsupported (see ENSEMBLE-PRIOR-ONLY-FI-v1). "
-                f"Track B hist_n < {MIN_HIST_PB_POINTS} → SKIP, not in weights."
+                (
+                    "R9 live value-rim PRIOR_ONLY ingest "
+                    "(ENSEMBLE-PRIOR-ONLY-FI-LIVE-MD-v1). Research path only. "
+                    if is_live
+                    else "R8 deposit-taking FI PRIOR_ONLY wiring. Research path only. "
+                )
+                + "Not investment advice. INVESTMENT_VALUE_NOT_ESTABLISHED. "
+                + (
+                    "Does not lift industry.unsupported "
+                    f"(see {primary_assumption}). "
+                )
+                + f"Track B hist_n < {MIN_HIST_PB_POINTS} or missing PER_SHARE "
+                + "exit center → SKIP, not in weights."
             ),
-            "data_label": "SYNTHETIC_FI_PRIOR_ONLY — not real market data",
+            "data_label": effective_data_label,
+            "source_meta": dict(source_meta) if source_meta else None,
             "seed": seed,
             "scenario": scenario,
             "assumptions": assumptions,
@@ -696,8 +738,10 @@ def build_prior_only_fi_bundle(
         "track_b_ledger": list(ledger),
         "track_b_in_weights": METHOD_TRACK_B_EXIT in weight_ids,
         "min_hist_pb_points": MIN_HIST_PB_POINTS,
-        "assumption": "ENSEMBLE-PRIOR-ONLY-FI-v1",
+        "assumption": primary_assumption,
         "assumptions": assumptions,
+        "data_label": effective_data_label,
+        "source_meta": dict(source_meta) if source_meta else None,
         "artifacts": [
             "ensemble_report.json",
             "method_results/",

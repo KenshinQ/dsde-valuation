@@ -638,7 +638,7 @@ def build_prior_only_fi_bundle(
             "warning": (
                 "R8 deposit-taking FI PRIOR_ONLY wiring. Research path only. "
                 "Not investment advice. INVESTMENT_VALUE_NOT_ESTABLISHED. "
-                "Does not lift industry.unsupported (银行/非银). "
+                "Does not lift industry.unsupported (see ENSEMBLE-PRIOR-ONLY-FI-v1). "
                 f"Track B hist_n < {MIN_HIST_PB_POINTS} → SKIP, not in weights."
             ),
             "data_label": "SYNTHETIC_FI_PRIOR_ONLY — not real market data",

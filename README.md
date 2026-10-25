@@ -39,9 +39,11 @@ uv pip compile pyproject.toml --extra dev --python-version 3.11 -o requirements.
 Runtime deps: numpy, pandas, scipy, pydantic, pyyaml (SPEC §3.3 suggested set + YAML config),
 **pyarrow**. pyarrow is justified because Phase 1 requires Parquet ingestion (§18) and §13 path outputs
 use Parquet. It is the pandas Parquet engine and is never imported directly by `src/`.
-Dev deps: pytest, **hypothesis** — justification: SPEC §19 mandates property-based tests
+Dev deps: pytest, **hypothesis**, **duckdb** — justification: SPEC §19 mandates property-based tests
 (monotonicity, seed reproducibility, posterior normalization); hypothesis is the standard tool,
-is test-only and never imported by `src/`.
+is test-only and never imported by `src/`. duckdb is also under the `hithink` extra for live EM/HiThink
+caches; it is listed in `dev` so CI can exercise R4 empty-panel / EM enrichment unit paths without
+installing the full `hithink` extra (requests).
 scipy is used from Phase 3 (Student-t quantiles in `vms.drivers.distributions`).
 
 

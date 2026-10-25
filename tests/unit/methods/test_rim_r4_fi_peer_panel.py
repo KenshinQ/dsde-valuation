@@ -19,7 +19,7 @@ from vms.methods.rim.bank_peers import (
     build_fi_peer_observations,
 )
 from vms.providers.eastmoney import store as em_store
-from vms.providers.hithink.paths import fund_db_path, market_db_path
+from vms.providers.hithink.paths import duckdb_available, fund_db_path, market_db_path
 from vms.schemas.observations import (
     FinancialObservation,
     InstrumentClassification,
@@ -159,11 +159,16 @@ def test_panel_te_without_oei_excludes_missing_other_equity(as_of):
 
 
 def test_panel_refresh_fail_falls_back_or_excludes(as_of, monkeypatch, tmp_path):
-    """AC3: --refresh upsert allowed; fail → local fallback or exclude; no invent."""
+    """AC3: --refresh upsert allowed; fail → local fallback or exclude; no invent.
+
+    Empty / schema-only DBs: REST fails before upsert; panel must not explode and must
+    not invent OEI. CI may lack duckdb historically — schema init is best-effort.
+    """
     fdb = tmp_path / "fund.duckdb"
     mdb = tmp_path / "market.duckdb"
-    # Empty DBs: refresh REST fails → empty (exclude path), no invented OEI.
-    em_store.ensure_tables(fdb)
+    if duckdb_available():
+        em_store.ensure_tables(fdb)
+    # else: missing file is fine — panel._ensure_tables soft-fails; REST mocked below.
 
     def _fail(*_a, **_k):
         raise RuntimeError("simulated_rest_down")
@@ -443,3 +448,188 @@ def test_wiring_uses_panel_not_subject_only(repo, tmp_path, monkeypatch, as_of):
     assert summ["investment_value"] == "INVESTMENT_VALUE_NOT_ESTABLISHED"
     art = json.loads((out / "rim_fi_peers.json").read_text())
     assert art["panel"]["rest_calls"] == 0
+
+
+def test_panel_empty_tmp_duckdb_prefer_local_zero_rest(as_of, monkeypatch, tmp_path):
+    """SHOULD-FIX: empty tmp DuckDB + prefer_local ⇒ rest_calls=0 (no REST on miss)."""
+    if not duckdb_available():
+        pytest.skip("duckdb required to create empty EM enrichment schema")
+    fdb = tmp_path / "fund.duckdb"
+    mdb = tmp_path / "market.duckdb"
+    em_store.ensure_tables(fdb)
+    # market DB may be absent; prices path records miss without REST under prefer_local.
+
+    calls: list[str] = []
+
+    def _boom(*_a, **_k):
+        calls.append("rest")
+        raise AssertionError("REST must not be called when prefer_local")
+
+    monkeypatch.setattr(
+        "vms.methods.rim.bank_peer_panel.em_client.fetch_bank_f10_bundle", _boom,
+    )
+    monkeypatch.setattr(
+        "vms.methods.rim.bank_peer_panel.em_client.fetch_datacenter_all", _boom,
+    )
+    monkeypatch.setattr(
+        "vms.methods.rim.bank_peer_panel.em_client.fetch_company_survey", _boom,
+    )
+    rep = build_fi_peer_panel(
+        subject_instrument_id=SUBJ,
+        as_of=as_of,
+        prefer_local=True,
+        candidate_ids=[PEER],
+        fund_db=fdb,
+        market_db=mdb,
+    )
+    assert rep.rest_calls == 0
+    assert calls == []
+    assert "PANEL_PREFER_LOCAL" in rep.flags
+    assert "PANEL_REST_UNEXPECTED" not in rep.flags
+    d0 = rep.ticker_diagnostics[0]
+    assert d0.rest_calls == 0
+    assert d0.bank_f10_path == "local_miss_no_rest"
+
+
+def test_wiring_prefer_local_false_on_refresh(repo, tmp_path, monkeypatch, as_of):
+    """SHOULD-FIX: prefer_local_fi_peers=False (--refresh) ⇒ panel prefer_local=False."""
+    from vms.data.io import LoadResult
+    from vms.pit.asof import parse_as_of
+    from vms.providers.eastmoney.industry import deposit_taking_fi_sw_label
+    from vms.reporting.value_rim_bundle import build_value_rim_bundle
+    from vms.schemas import CorporateActionEvent, SourceDescriptor
+    from vms.schemas.config import load_config
+
+    seen: dict[str, Any] = {}
+
+    def _fake_panel(**kwargs):
+        seen["prefer_local"] = kwargs.get("prefer_local")
+        bank = deposit_taking_fi_sw_label()
+        fins, mkts, classes = [], [], []
+        for i, pid in enumerate(["600036.SH", "601398.SH", "601288.SH", "601939.SH", "601988.SH"]):
+            te = 800e9 + i * 10e9
+            fins.extend([
+                _f(pid, "2024-12-31", "total_equity", te, "2025-03-20"),
+                _f(pid, "2024-12-31", "other_equity_instruments", 40e9, "2025-03-20"),
+                _f(pid, "2024-12-31", "minority_interest", 0.0, "2025-03-20"),
+            ])
+            mkts.append(_m(pid, "2025-06-30", 10.0 + i, 25e9))
+            classes.append(InstrumentClassification(
+                instrument_id=pid, scheme="SW2021_L1", industry=bank,
+                published_at=_ts("2000-01-01"), source_id="em",
+            ))
+        return FiPeerPanelReport(
+            subject_instrument_id=SUBJ,
+            as_of=as_of.isoformat(),
+            candidate_ids=[c.instrument_id for c in classes],
+            financial=fins,
+            market=mkts,
+            classifications=classes,
+            ticker_diagnostics=[],
+            flags=["FI_PEER_PANEL_BUILDER", "PANEL_REFRESH_ALLOWED"],
+            assumption_ids=["RIM-FI-PEER-PANEL-v1"],
+            rest_calls=0,
+        )
+
+    monkeypatch.setattr("vms.reporting.value_rim_bundle.build_fi_peer_panel", _fake_panel)
+
+    sha = 1.9405918198e10
+    fins = []
+    for y, te, oei, eps, ni in [
+        (2019, 300e9, 40e9, 1.4, 28e9),
+        (2020, 330e9, 45e9, 1.5, 30e9),
+        (2021, 360e9, 50e9, 1.7, 35e9),
+        (2022, 400e9, 55e9, 1.9, 40e9),
+        (2023, 472.0e9, 69.55e9, 2.25, 46.455e9),
+        (2024, 494.842e9, 69.948e9, 2.15, 44.508e9),
+    ]:
+        pe, pub = f"{y}-12-31", f"{y+1}-03-15"
+        fins.extend([
+            _f(SUBJ, pe, "total_equity", te, pub),
+            _f(SUBJ, pe, "parent_net_income", ni, pub),
+            _f(SUBJ, pe, "revenue", 150e9, pub),
+            _f(SUBJ, pe, "dividends_paid", 20e9, pub),
+            _f(SUBJ, pe, "total_assets", te * 10, pub),
+            _f(SUBJ, pe, "total_liabilities", te * 9, pub),
+            _f(SUBJ, pe, "other_equity_instruments", oei, pub),
+            _f(SUBJ, pe, "minority_interest", 0.0, pub),
+            _f(SUBJ, pe, "basic_eps", eps, pub),
+            _f(SUBJ, pe, "goodwill", 7.568e9, pub),
+            _f(SUBJ, pe, "other_comprehensive_income", -0.3e9, pub),
+        ])
+    mkts = [_m(SUBJ, f"{y}-06-30", 12.0, sha) for y in range(2019, 2026)]
+    mkts.append(_m(SUBJ, "2025-06-30", 11.5, sha))
+    cas = [
+        CorporateActionEvent(
+            action_id="em:000001:2024-12-31:cash", instrument_id=SUBJ, action_type="cash_dividend",
+            announced_at=_ts("2025-03-15", 15), ex_date=date.fromisoformat("2025-06-12"),
+            cash_per_share=0.362, currency="CNY", source_id="em_sharebonus",
+        ),
+    ]
+    bank = deposit_taking_fi_sw_label()
+    load = LoadResult(
+        financial=fins,
+        market=mkts,
+        corporate_actions=cas,
+        sources={
+            "S": SourceDescriptor(source_id="S", reporting_convention="CN_CUMULATIVE_YTD",
+                                  versioning="FULL_HISTORY"),
+            "em_sharebonus": SourceDescriptor(source_id="em_sharebonus", reporting_convention="UNKNOWN",
+                                              versioning="LATEST_ONLY"),
+        },
+        classifications=[InstrumentClassification(
+            instrument_id=SUBJ, scheme="SW2021_L1", industry=bank,
+            published_at=_ts("2000-01-01"), source_id="em",
+        )],
+        corporate_actions_provided=True,
+        peers=[],
+    )
+    loaded = load_config(repo / "config/default.yaml")
+    asof, note = parse_as_of("2025-06-30")
+    out = tmp_path / "rim_r4_refresh"
+    summ = build_value_rim_bundle(
+        out_dir=out,
+        load=load,
+        input_dir=tmp_path / "data",
+        instrument_id=SUBJ,
+        as_of=asof,
+        as_of_note=note,
+        loaded=loaded,
+        mode="exploratory",
+        override_reason="R4 wiring: --refresh prefer_local=False",
+        years=5,
+        zeros_explicit=True,
+        run_distribution=False,
+        run_pb_roe=True,
+        run_track_b=False,
+        auto_fi_peers=True,
+        prefer_local_fi_peers=False,
+        peer_min_count=5,
+    )
+    assert seen.get("prefer_local") is False
+    assert "AUTO_FI_PEER_PANEL" in summ["flags"]
+    assert summ["investment_value"] == "INVESTMENT_VALUE_NOT_ESTABLISHED"
+
+
+def test_legacy_project_value_unsupported_profile_bank_regression(tmp_path, repo):
+    """SHOULD-FIX: legacy project/value on bank remains UNSUPPORTED_PROFILE (exit 4)."""
+    from tests.integration.test_cli_value_rim import _write_bank_dir
+    from vms.cli.main import main
+
+    data = _write_bank_dir(tmp_path, r2=True)
+    cfg = str(repo / "config/default.yaml")
+    out_p = tmp_path / "project_r4"
+    rc_p = main([
+        "project", "--input", str(data), "--ticker", "000001.SZ", "--as-of", "2025-06-30",
+        "--out", str(out_p), "--config", cfg, "--mode", "exploratory",
+        "--override-reason", "R4 SHOULD-FIX: legacy gate must remain",
+    ])
+    assert rc_p == 4
+    out_v = tmp_path / "value_r4"
+    rc_v = main([
+        "value", "--input", str(data), "--ticker", "000001.SZ", "--as-of", "2025-06-30",
+        "--out", str(out_v), "--config", cfg, "--mode", "exploratory",
+        "--override-reason", "R4 SHOULD-FIX: legacy gate must remain",
+        "--seed", "42", "--paths", "10", "--years", "3",
+    ])
+    assert rc_v == 4

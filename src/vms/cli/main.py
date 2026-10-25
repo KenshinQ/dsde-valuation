@@ -24,7 +24,7 @@ Implemented commands:
   phase10         VMS-0.2 Phase 10 Track B return distributions + DSDE contract (synthetic; NOT investment advice)
   phase11         VMS-0.2 Phase 11 walk-forward calibration + sensitivity (synthetic; NOT investment advice)
   calibrate-rim   Deposit-taking FI RIM walk-forward (R6 synthetic / R7 HiThink-EM lean; NOT investment advice)
-  prior-only-fi   R8 FI PRIOR_ONLY research ensemble wiring (NOT calibrated; NOT investment advice)
+  prior-only-fi   R8/R9 FI PRIOR_ONLY research ensemble (demo or --from-value-rim; NOT calibrated)
   phase12         VMS-0.2 Phase 12 offline release examples (synthetic; NOT investment advice)
   validate-bundle Validate a result-bundle directory against a PHASE_CLI subset / §16.3
   profile         VMS-0.2 Phase 2 economic-profile classifier (NOT a valuation)
@@ -85,6 +85,10 @@ from vms.reporting.calibrate_rim_bundle import (CALIBRATE_RIM_STATUS, CalibrateR
 from vms.reporting.prior_only_fi_bundle import (PRIOR_ONLY_FI_STATUS, PriorOnlyFiBundleError,
                                                  build_prior_only_fi_bundle,
                                                  dump_summary as dump_prior_only_fi_summary)
+from vms.reporting.fi_method_distribution_adapter import (
+    FiMethodDistributionAdapterError,
+    adapt_value_rim_dir,
+)
 from vms.reporting.phase12_bundle import (PHASE12_STATUS, Phase12BundleError, ALL_PATTERNS,
                                          build_phase12_pattern, build_phase12_release,
                                          dump_summary as dump_phase12_summary)
@@ -1578,7 +1582,7 @@ def cmd_calibrate_rim(args: argparse.Namespace) -> int:
 
 
 def cmd_prior_only_fi(args: argparse.Namespace) -> int:
-    """FI PRIOR_ONLY research ensemble wiring (R8). NOT calibrated. NOT investment advice."""
+    """FI PRIOR_ONLY research ensemble wiring (R8 demo / R9 live). NOT calibrated."""
     try:
         target = ValuationTarget(args.target) if args.target else None
     except ValueError as e:
@@ -1589,15 +1593,40 @@ def cmd_prior_only_fi(args: argparse.Namespace) -> int:
     out = Path(args.out)
     seed = 42 if args.seed is None else int(args.seed)
     n_draws = 1000 if args.n_draws is None else int(args.n_draws)
-    try:
-        summary = build_prior_only_fi_bundle(
-            out,
-            scenario=args.scenario,
-            seed=seed,
-            n_draws=n_draws,
-            target=target,
+    from_value_rim = getattr(args, "from_value_rim", None)
+    scenario = getattr(args, "scenario", None)  # SUPPRESS → absent unless passed
+    if from_value_rim and scenario is not None:
+        raise InputError(
+            "--from-value-rim and --scenario are mutually exclusive "
+            "(omit --scenario when ingesting live value-rim artifacts)"
         )
-    except PriorOnlyFiBundleError as e:
+    try:
+        if from_value_rim:
+            comps, ledger, meta = adapt_value_rim_dir(
+                Path(from_value_rim),
+                target=target or ValuationTarget.FUNDAMENTAL_VALUE_CURRENT,
+                seed=seed,
+            )
+            summary = build_prior_only_fi_bundle(
+                out,
+                scenario="live_value_rim",  # stamp only; components override demo
+                seed=seed,
+                n_draws=n_draws,
+                target=target,
+                components=comps,
+                track_b_ledger=ledger,
+                data_label=meta["data_label"],
+                source_meta=meta,
+            )
+        else:
+            summary = build_prior_only_fi_bundle(
+                out,
+                scenario=scenario or "track_b_skip",
+                seed=seed,
+                n_draws=n_draws,
+                target=target,
+            )
+    except (PriorOnlyFiBundleError, FiMethodDistributionAdapterError) as e:
         raise InputError(str(e)) from e
     print(dump_prior_only_fi_summary(summary), end="")
     assert summary["status"] == PRIOR_ONLY_FI_STATUS
@@ -2221,7 +2250,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     pofi.add_argument(
         "--scenario",
-        default="track_b_skip",
+        default=argparse.SUPPRESS,
         choices=[
             "track_a_only",
             "track_a_pb",
@@ -2229,9 +2258,18 @@ def build_parser() -> argparse.ArgumentParser:
             "track_b_eligible",
             "incompatible",
         ],
-        help="synthetic FI wiring demo (default track_b_skip mirrors R7 hist depth)",
+        help="synthetic FI wiring demo (default track_b_skip; mutually exclusive with --from-value-rim)",
     )
     pofi.add_argument("--target", default=None, help="ValuationTarget override")
+    pofi.add_argument(
+        "--from-value-rim",
+        dest="from_value_rim",
+        default=None,
+        help=(
+            "R9: ingest live value-rim out directory → MethodDistribution → "
+            "PRIOR_ONLY research mixture (do not also pass --scenario)"
+        ),
+    )
     pofi.set_defaults(func=cmd_prior_only_fi)
 
     p12 = sub.add_parser("phase12", help="VMS-0.2 Phase 12 offline release examples (synthetic; NOT investment advice)")

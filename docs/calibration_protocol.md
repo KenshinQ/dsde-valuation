@@ -101,3 +101,29 @@ CLI: `vms prior-only-fi` (does **not** replace synthetic `vms phase8`).
 - Does not lift `industry.unsupported` / 非银金融. Schema stays `vms-0.2.phase12`.
 
 Assumption: `ENSEMBLE-PRIOR-ONLY-FI-v1`.
+
+## Live MethodDistribution adapter (R9)
+
+Ingests a single-ticket `vms value-rim` out directory into
+`MethodDistribution[]` for the existing R8 PRIOR_ONLY research path.
+
+CLI: `vms prior-only-fi --from-value-rim DIR` (mutually exclusive with `--scenario`;
+does **not** replace synthetic `vms phase8` or the R8 demo scenarios).
+
+- Track A center: `method_result.values.value_per_share` preferred; else
+  `rim_distribution.ke_grid[0].vps_p50`.
+- Optional `pb_common`: `rim_pb_roe.relative_vps` when ok.
+- Track B: `hist_n` from `rim_track_b.hist_pb.n`; center `rim_track_b.pb_center_used`;
+  enters weights only when `hist_n >= MIN_HIST_PB_POINTS` (=12) and center present;
+  else honest SKIP.
+- Samples still `samples_from_point(center)` for this minimal slice;
+  `diagnostics.synthetic=false` + source artifact paths.
+- Production intent on the same components refuses mixture.
+- Hard labels unchanged: `PRIOR_ONLY` / `ENSEMBLE_UNCALIBRATED` /
+  `CALIBRATION_INSUFFICIENT` / `INVESTMENT_VALUE_NOT_ESTABLISHED`.
+  Never `ENSEMBLE_CALIBRATED` / `CALIBRATION_PASS` / `INVESTMENT_VALUE_SUPPORTED`.
+- `calibrate-rim` is **not** primary mixture input.
+- Schema stays `vms-0.2.phase12`; package `0.2.0rc1`.
+
+Assumption: `ENSEMBLE-PRIOR-ONLY-FI-LIVE-MD-v1` (extends `ENSEMBLE-PRIOR-ONLY-FI-v1`).
+

@@ -430,6 +430,24 @@ ASSUMPTIONS: dict[str, str] = {
                      "(default {0.08, 0.09, 0.10} or config-driven). Each ke yields a VPS "
                      "distribution under P2; no ensemble blend across ke.",
 
+    "EVAL-RIM-BANK-WF-v1": "R6 bank RIM walk-forward calibration (deposit-taking FI lean curated "
+                          "universe). Chronological origins only (RandomSplitProhibitedError on "
+                          "random splits). Forecasts persisted with outcomes=null before realization. "
+                          "Evaluation targets declared separately: driver_roe (common ROE), "
+                          "intrinsic_value (RIM Track A VPS stability vs later origin), optional "
+                          "market_price association — never price MAE as intrinsic truth "
+                          "(EVAL-IV-NOT-PRICE-TRUTH-v1). FI baselines = historical ROE median + "
+                          "central RIM; industrial FCFF/DCF remains unsupported. Weights/thresholds "
+                          "frozen before test window. Track B scored only when own-hist common P/B "
+                          "points >= MIN_HIST_PB_POINTS (=12); short OEI → honest SKIP (no invent "
+                          "OEI / no lower floor / no default pb=2.0). Inadequate OOS → "
+                          "CALIBRATION_INSUFFICIENT (not inferred PASS). Always "
+                          "INVESTMENT_VALUE_NOT_ESTABLISHED; never ENSEMBLE_CALIBRATED / "
+                          "INVESTMENT_VALUE_SUPPORTED on R6-default. Does not lift "
+                          "industry.unsupported / 非银金融; legacy vms value/project UNSUPPORTED_PROFILE "
+                          "unchanged. SCHEMA stays vms-0.2.phase12 (no bump to claim PASS). "
+                          "CLI: vms calibrate-rim. Reuses Phase 11 protocol; does not replace "
+                          "synthetic phase11.",
     "RIM-SUBJECT-HIST-DEPTH-v1": "Deposit-taking FI subject own-hist P/B depth loader merges TE (HiThink balance, NOTICE-aligned) + EM bank_f10 OEI/MI (+ related) + raw_close/shares into the subject LoadResult before PIT assess so Track B can reach MIN_HIST_PB_POINTS (=12) when data exist. Local-first: prefer_local/no --refresh ⇒ zero REST even on miss (missing → path diag / year-level skip funnel). Explicit --refresh allows Recipe E / EM upsert (subject F10 max_annual default 20); fail → local fallback or empty; never invent OEI (TE without OEI ⇒ year SKIP_NO_COMMON_EQUITY / MISSING_OTHER_EQUITY_INSTRUMENTS). Does not lower MIN_HIST_PB_POINTS; does not apply default pb=2.0; does not lift industry.unsupported; not 非银金融; INVESTMENT_VALUE_NOT_ESTABLISHED; pit_complete remains false.",
     "RIM-FI-PEER-PANEL-v1": "Deposit-taking FI peer panel for R2c/R3 merges multi-instrument TE (HiThink balance, NOTICE-aligned) + EM bank_f10 OEI/MI + raw_close/shares into one LoadResult-shaped panel so peer build is not subject-only. Local-first: prefer_local/no --refresh ⇒ zero REST even on miss (missing → per-ticker path diag / peer exclusion). Explicit --refresh allows Recipe E / EM upsert; fail → local fallback or exclude; never invent OEI (TE without OEI ⇒ MISSING_OTHER_EQUITY_INSTRUMENTS). Does not lift industry.unsupported; not 非银金融; INVESTMENT_VALUE_NOT_ESTABLISHED; pit_complete remains false.",
     "RIM-FI-PEER-UNIVERSE-v1": "Deposit-taking FI peer universe for R2c pb_common is built "

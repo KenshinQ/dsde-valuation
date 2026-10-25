@@ -63,6 +63,7 @@ vms phase8 --out /tmp/vms_phase8 --seed 42 --fixture mature     # ensemble PRIOR
 vms phase9 --out /tmp/vms_phase9 --seed 42 --paths 40           # market-pricing + exit prices; NOT investment advice
 vms phase10 --out /tmp/vms_phase10 --seed 42 --paths 40 --spot 10  # Track B returns + DSDE export; NOT investment advice
 vms phase11 --out /tmp/vms_phase11 --seed 42 --paths 20             # walk-forward + sensitivity; NOT investment advice
+vms calibrate-rim --out /tmp/vms_r6 --seed 42                       # R6 bank RIM WF (FI lean); CALIBRATION_INSUFFICIENT; NOT advice
 vms phase12 --out /tmp/vms_phase12 --seed 42 --paths 20             # five offline patterns; NOT investment advice
 vms validate-bundle --path /tmp/vms_phase12/mature_operating --subset phase12_mature_full
 scripts/run_offline_examples.sh /tmp/vms_offline

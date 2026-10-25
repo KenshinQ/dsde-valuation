@@ -45,6 +45,7 @@ class UniverseConfig(_M):
     horizons_years: list[int] = Field(default_factory=lambda: [1])
     min_history_years: int = Field(default=3, ge=1)
     synthetic: dict[str, Any] | None = None
+    bank_synthetic: dict[str, Any] | None = None
     forbid_random_splits: bool = True
 
 
@@ -149,7 +150,33 @@ def generate_eval_panel(*, seed: int, n_instruments: int = 2, start_year: int = 
 
 
 def materialize_universe(uni: UniverseConfig, *, work_dir: Path) -> dict[str, LoadResult]:
-    """Load per-instrument data dirs, or generate synthetic panel into work_dir."""
+    """Load per-instrument data dirs, or generate synthetic / bank_synthetic panel."""
+    if uni.bank_synthetic is not None:
+        from vms.evaluation.bank_panel import generate_bank_eval_panel
+
+        cfg = uni.bank_synthetic or {}
+        ids = list(cfg.get("instrument_ids") or [i.instrument_id for i in uni.instruments])
+        short = cfg.get("short_oei_ids")
+        short_set = frozenset(short) if short is not None else None
+        panel = generate_bank_eval_panel(
+            seed=int(cfg.get("seed", 42)),
+            instrument_ids=ids,
+            start_year=int(cfg.get("start_year", 2008)),
+            n_years=int(cfg.get("n_years", 16)),
+            short_oei_ids=short_set,
+        )
+        for gid, load in panel.items():
+            d = work_dir / "data" / gid
+            write_directory(
+                d,
+                load.financial,
+                load.market,
+                load.corporate_actions,
+                [load.sources[syn.SYNTHETIC_SOURCE]],
+                fmt="csv",
+                classifications=load.classifications,
+            )
+        return panel
     if uni.synthetic is not None or all(inst.data_dir is None for inst in uni.instruments):
         syn_cfg = uni.synthetic or {}
         n = int(syn_cfg.get("n_instruments", max(len(uni.instruments), 2)))

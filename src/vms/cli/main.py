@@ -24,6 +24,7 @@ Implemented commands:
   phase10         VMS-0.2 Phase 10 Track B return distributions + DSDE contract (synthetic; NOT investment advice)
   phase11         VMS-0.2 Phase 11 walk-forward calibration + sensitivity (synthetic; NOT investment advice)
   calibrate-rim   Deposit-taking FI RIM walk-forward (R6 synthetic / R7 HiThink-EM lean; NOT investment advice)
+  prior-only-fi   R8 FI PRIOR_ONLY research ensemble wiring (NOT calibrated; NOT investment advice)
   phase12         VMS-0.2 Phase 12 offline release examples (synthetic; NOT investment advice)
   validate-bundle Validate a result-bundle directory against a PHASE_CLI subset / §16.3
   profile         VMS-0.2 Phase 2 economic-profile classifier (NOT a valuation)
@@ -81,6 +82,9 @@ from vms.reporting.phase11_bundle import (PHASE11_STATUS, Phase11BundleError, bu
 from vms.reporting.calibrate_rim_bundle import (CALIBRATE_RIM_STATUS, CalibrateRimBundleError,
                                                 build_calibrate_rim_bundle,
                                                 dump_summary as dump_calibrate_rim_summary)
+from vms.reporting.prior_only_fi_bundle import (PRIOR_ONLY_FI_STATUS, PriorOnlyFiBundleError,
+                                                 build_prior_only_fi_bundle,
+                                                 dump_summary as dump_prior_only_fi_summary)
 from vms.reporting.phase12_bundle import (PHASE12_STATUS, Phase12BundleError, ALL_PATTERNS,
                                          build_phase12_pattern, build_phase12_release,
                                          dump_summary as dump_phase12_summary)
@@ -1573,6 +1577,39 @@ def cmd_calibrate_rim(args: argparse.Namespace) -> int:
     return EXIT_OK
 
 
+def cmd_prior_only_fi(args: argparse.Namespace) -> int:
+    """FI PRIOR_ONLY research ensemble wiring (R8). NOT calibrated. NOT investment advice."""
+    try:
+        target = ValuationTarget(args.target) if args.target else None
+    except ValueError as e:
+        allowed = ", ".join(tv.value for tv in ValuationTarget)
+        raise InputError(
+            f"--target {args.target!r} is not a ValuationTarget; expected one of: {allowed}"
+        ) from e
+    out = Path(args.out)
+    seed = 42 if args.seed is None else int(args.seed)
+    n_draws = 1000 if args.n_draws is None else int(args.n_draws)
+    try:
+        summary = build_prior_only_fi_bundle(
+            out,
+            scenario=args.scenario,
+            seed=seed,
+            n_draws=n_draws,
+            target=target,
+        )
+    except PriorOnlyFiBundleError as e:
+        raise InputError(str(e)) from e
+    print(dump_prior_only_fi_summary(summary), end="")
+    assert summary["status"] == PRIOR_ONLY_FI_STATUS
+    assert summary["investment_value"] == "INVESTMENT_VALUE_NOT_ESTABLISHED"
+    assert summary["calibrated_claim"] is False
+    assert summary["ENSEMBLE_CALIBRATED"] is False
+    assert summary["CALIBRATION_PASS"] is False
+    assert summary["production_mixture"] is False
+    assert summary["min_hist_pb_points"] == 12
+    return EXIT_OK
+
+
 def cmd_phase12(args: argparse.Namespace) -> int:
     """Five-pattern offline release examples. NOT investment advice."""
     out = Path(args.out)
@@ -2169,6 +2206,34 @@ def build_parser() -> argparse.ArgumentParser:
     )
     cr.set_defaults(func=cmd_calibrate_rim)
 
+    pofi = sub.add_parser(
+        "prior-only-fi",
+        help="R8 FI PRIOR_ONLY research ensemble wiring (NOT calibrated; NOT investment advice)",
+    )
+    pofi.add_argument("--out", required=True)
+    pofi.add_argument("--seed", type=int, default=None)
+    pofi.add_argument(
+        "--n-draws",
+        dest="n_draws",
+        type=int,
+        default=None,
+        help="mixture Monte Carlo draws for PRIOR_ONLY research path",
+    )
+    pofi.add_argument(
+        "--scenario",
+        default="track_b_skip",
+        choices=[
+            "track_a_only",
+            "track_a_pb",
+            "track_b_skip",
+            "track_b_eligible",
+            "incompatible",
+        ],
+        help="synthetic FI wiring demo (default track_b_skip mirrors R7 hist depth)",
+    )
+    pofi.add_argument("--target", default=None, help="ValuationTarget override")
+    pofi.set_defaults(func=cmd_prior_only_fi)
+
     p12 = sub.add_parser("phase12", help="VMS-0.2 Phase 12 offline release examples (synthetic; NOT investment advice)")
     p12.add_argument("--out", required=True)
     p12.add_argument("--config", default=str(_default_config_path()))
@@ -2205,7 +2270,7 @@ def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     try:
         return args.func(args)
-    except (ConfigError, InputError, Phase0BundleError, Phase3BundleError, Phase8BundleError, Phase9BundleError, Phase10BundleError, Phase11BundleError, Phase12BundleError, CalibrateRimBundleError, ValueRimBundleError, FixtureError, RegimeModelNotImplemented, RandomSplitProhibitedError) as e:
+    except (ConfigError, InputError, Phase0BundleError, Phase3BundleError, Phase8BundleError, Phase9BundleError, Phase10BundleError, Phase11BundleError, Phase12BundleError, CalibrateRimBundleError, PriorOnlyFiBundleError, ValueRimBundleError, FixtureError, RegimeModelNotImplemented, RandomSplitProhibitedError) as e:
         print(f"error: {e}", file=sys.stderr)
         return EXIT_INVALID
 

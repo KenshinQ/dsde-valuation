@@ -84,3 +84,20 @@ Inherits R6 protocol gates. Assumption: `EVAL-RIM-FI-DEPOSIT-REAL-OOS-v1`.
 Expected on R7-default: `CALIBRATION_INSUFFICIENT` + `INVESTMENT_VALUE_NOT_ESTABLISHED`
 (engineering success ≠ calibration PASS). Schema stays `vms-0.2.phase12`.
 
+## FI PRIOR_ONLY research ensemble wiring (R8)
+
+Wires deposit-taking FI RIM method distributions into Phase 8
+`build_ensemble(intent=research_prior)` for a labeled research mixture.
+
+CLI: `vms prior-only-fi` (does **not** replace synthetic `vms phase8`).
+
+- Track A `residual_income` required; `pb_common` optional when valid.
+- Track B `rim_track_b_exit` enters weights **only** when `hist_n >= MIN_HIST_PB_POINTS` (=12);
+  else honest SKIP (no invent OEI / no default pb=2.0).
+- Production intent on the same components refuses mixture.
+- Hard labels: `PRIOR_ONLY` / `ENSEMBLE_UNCALIBRATED` / `CALIBRATION_INSUFFICIENT` /
+  `INVESTMENT_VALUE_NOT_ESTABLISHED`. Never `ENSEMBLE_CALIBRATED` / `CALIBRATION_PASS` /
+  `INVESTMENT_VALUE_SUPPORTED`.
+- Does not lift `industry.unsupported` / 非银金融. Schema stays `vms-0.2.phase12`.
+
+Assumption: `ENSEMBLE-PRIOR-ONLY-FI-v1`.

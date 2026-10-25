@@ -2,6 +2,8 @@
 #    uv pip compile pyproject.toml --extra dev --python-version 3.11 -o requirements.lock
 annotated-types==0.8.0
     # via pydantic
+duckdb==2.0.0
+    # via dsde-valuation (pyproject.toml)
 hypothesis==6.170.5
     # via dsde-valuation (pyproject.toml)
 iniconfig==2.3.1

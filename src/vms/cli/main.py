@@ -1272,6 +1272,7 @@ def cmd_value_rim(args: argparse.Namespace) -> int:
             seed=seed,
             ke_grid=ke_grid,
             auto_fi_peers=not bool(getattr(args, "no_auto_fi_peers", False)),
+            prefer_local_fi_peers=not bool(getattr(args, "refresh", False)),
         )
     except GateError as e:
         print(f"error: {e}", file=sys.stderr)
@@ -2007,6 +2008,8 @@ def build_parser() -> argparse.ArgumentParser:
                     help="skip R2b P2 distribution / ke grid (P1 point only)")
     vr.add_argument("--no-auto-fi-peers", action="store_true",
                     help="disable R3 auto-build of deposit-taking FI peer_observations when load.peers empty")
+    vr.add_argument("--refresh", action="store_true",
+                    help="R4 FI peer panel: allow Recipe E / EM REST upsert for peer TE/OEI/shares (default local-only)")
     vr.add_argument("--target", default=None, help="ValuationTarget (default FUNDAMENTAL_VALUE_CURRENT)")
     _gate_args(vr)
     vr.set_defaults(func=cmd_value_rim)

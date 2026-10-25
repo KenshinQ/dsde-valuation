@@ -7,6 +7,8 @@ R2c: P/B-ROE relative sidecar (pb_common, raw close; PEER_SCARCITY ok).
 R2d: Track B returns via own-hist common P/B exit (UNAVAILABLE if hist < 12).
 R3: auto-build FI peer_observations for R2c when load.peers empty (default ON;
     subject latest PIT SW must equal deposit_taking_fi_sw_label(); profile alone never grants).
+R4: auto path builds multi-instrument FI peer panel (TE+OEI+market) before R3;
+    prefer_local unless explicit refresh; never invent OEI.
 Label always INVESTMENT_VALUE_NOT_ESTABLISHED.
 """
 
@@ -22,6 +24,7 @@ from vms.data.io import LoadResult
 from vms.methods import MethodConfig, build_registry_from_config
 from vms.methods.protocol import ValuationContext
 from vms.methods.rim.distribution import DEFAULT_KE_GRID, run_rim_distribution
+from vms.methods.rim.bank_peer_panel import build_fi_peer_panel
 from vms.methods.rim.bank_peers import (
     build_fi_peer_observations,
     subject_allows_auto_fi_peers,
@@ -75,6 +78,7 @@ def build_value_rim_bundle(
     track_b_horizons: Sequence[int] | None = None,
     track_b_paths: int | None = None,
     auto_fi_peers: bool = True,
+    prefer_local_fi_peers: bool = True,
 ) -> dict[str, Any]:
     """Assess PIT → classify → bridge rim_inputs → route → residual_income (+ optional P2 grid)."""
     out = Path(out_dir)
@@ -271,18 +275,33 @@ def build_value_rim_bundle(
                 as_of=as_of,
                 classifications=load.classifications,
             ):
+                panel = build_fi_peer_panel(
+                    subject_instrument_id=instrument_id,
+                    as_of=as_of,
+                    classifications=load.classifications,
+                    prefer_local=bool(prefer_local_fi_peers),
+                )
+                panel_financial = list(load.financial) + list(panel.financial)
+                panel_market = list(load.market) + list(panel.market)
+                panel_cls = list(load.classifications or []) + list(panel.classifications)
                 fi_rep = build_fi_peer_observations(
                     subject_instrument_id=instrument_id,
                     as_of=as_of,
-                    financial=load.financial,
-                    market=load.market,
-                    classifications=load.classifications,
+                    financial=panel_financial,
+                    market=panel_market,
+                    classifications=panel_cls,
                     zeros_explicit=zeros_explicit,
                 )
                 peer_obs = list(fi_rep.peers)
                 fi_peers_payload = fi_rep.as_dict()
+                fi_peers_payload["panel"] = panel.as_dict()
                 # Universe-level flags only (peer cflags stay in rim_fi_peers peer_diagnostics).
-                result_flags = sorted(set(result_flags) | set(fi_rep.flags) | {"AUTO_FI_PEERS"})
+                result_flags = sorted(
+                    set(result_flags)
+                    | set(fi_rep.flags)
+                    | set(panel.flags)
+                    | {"AUTO_FI_PEERS", "AUTO_FI_PEER_PANEL"}
+                )
             else:
                 result_flags = sorted(set(result_flags) | {"AUTO_FI_PEERS_SKIPPED_NON_FI"})
         elif run_pb_roe and not auto_fi_peers and not peer_obs:
@@ -426,6 +445,7 @@ def build_value_rim_bundle(
             "funnel": fi_peers_payload.get("funnel"),
             "candidate_n": len(fi_peers_payload.get("candidate_ids") or []),
             "source_id": fi_peers_payload.get("source_id"),
+            "panel": fi_peers_payload.get("panel"),
         },
         "pb_roe": None if pb_roe_payload is None else {
             "status": pb_roe_payload.get("status"),

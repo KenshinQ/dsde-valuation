@@ -2009,7 +2009,7 @@ def build_parser() -> argparse.ArgumentParser:
     vr.add_argument("--no-auto-fi-peers", action="store_true",
                     help="disable R3 auto-build of deposit-taking FI peer_observations when load.peers empty")
     vr.add_argument("--refresh", action="store_true",
-                    help="R4 FI peer panel: allow Recipe E / EM REST upsert for peer TE/OEI/shares (default local-only)")
+                    help="R4/R5: allow Recipe E / EM REST upsert for FI peer panel + subject hist depth (TE/OEI/shares/prices; default local-only)")
     vr.add_argument("--target", default=None, help="ValuationTarget (default FUNDAMENTAL_VALUE_CURRENT)")
     _gate_args(vr)
     vr.set_defaults(func=cmd_value_rim)

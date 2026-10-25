@@ -9,6 +9,9 @@ R3: auto-build FI peer_observations for R2c when load.peers empty (default ON;
     subject latest PIT SW must equal deposit_taking_fi_sw_label(); profile alone never grants).
 R4: auto path builds multi-instrument FI peer panel (TE+OEI+market) before R3;
     prefer_local unless explicit refresh; never invent OEI.
+R5: deepen subject own-hist TE+OEI+shares+raw_close before assess (Track B n≥12 when
+    data allow); year-level skip funnel; prefer_local unless --refresh; never invent OEI;
+    MIN_HIST_PB_POINTS unchanged; no default pb=2.0.
 Label always INVESTMENT_VALUE_NOT_ESTABLISHED.
 """
 
@@ -31,6 +34,10 @@ from vms.methods.rim.bank_peers import (
 )
 from vms.methods.rim.pb_roe import run_pb_roe_relative
 from vms.methods.rim.track_b_exit import run_rim_track_b
+from vms.methods.rim.subject_hist_depth import (
+    build_subject_hist_depth,
+    merge_subject_hist_into_load,
+)
 from vms.methods.rim.from_snapshot import (
     BOOK_EQUITY_COMMON_RULE,
     BOOK_EQUITY_TE_RULE,
@@ -79,6 +86,8 @@ def build_value_rim_bundle(
     track_b_paths: int | None = None,
     auto_fi_peers: bool = True,
     prefer_local_fi_peers: bool = True,
+    deepen_subject_hist: bool = True,
+    prefer_local_subject_hist: bool | None = None,
 ) -> dict[str, Any]:
     """Assess PIT → classify → bridge rim_inputs → route → residual_income (+ optional P2 grid)."""
     out = Path(out_dir)
@@ -90,6 +99,25 @@ def build_value_rim_bundle(
     if seed is None:
         seed = int(getattr(cfg.monte_carlo, "default_seed", 42) or 42)
     kes = list(ke_grid) if ke_grid is not None else list(DEFAULT_KE_GRID)
+
+    subject_hist_payload: dict[str, Any] | None = None
+    subject_hist_flags: list[str] = []
+    prefer_subj = (
+        bool(prefer_local_fi_peers)
+        if prefer_local_subject_hist is None
+        else bool(prefer_local_subject_hist)
+    )
+    if deepen_subject_hist and equity_basis == "common":
+        depth = build_subject_hist_depth(
+            instrument_id=instrument_id,
+            as_of=as_of,
+            prefer_local=prefer_subj,
+        )
+        load = merge_subject_hist_into_load(load, depth)
+        subject_hist_payload = depth.as_dict()
+        subject_hist_flags = list(depth.flags) + ["AUTO_SUBJECT_HIST_DEPTH"]
+    elif not deepen_subject_hist:
+        subject_hist_flags = ["SUBJECT_HIST_DEPTH_DISABLED"]
 
     snap, report = assess(
         load, instrument_id=instrument_id, as_of=as_of, cfg=cfg.quality,
@@ -165,7 +193,7 @@ def build_value_rim_bundle(
     rim_status = "INELIGIBLE"
     equity_value = None
     vps = None
-    result_flags: list[str] = list(bridge.flags)
+    result_flags: list[str] = sorted(set(list(bridge.flags) + subject_hist_flags))
     if bridge.ok:
         plugin = registry.plugin("residual_income")
         if plugin is None:
@@ -387,6 +415,8 @@ def build_value_rim_bundle(
         write_artifact(out, "rim_pb_roe.json", pb_roe_payload, stamp)
     if track_b_payload is not None:
         write_artifact(out, "rim_track_b.json", track_b_payload, stamp)
+    if subject_hist_payload is not None:
+        write_artifact(out, "rim_subject_hist.json", subject_hist_payload, stamp)
 
     primary_cell = None
     if dist_payload and dist_payload.get("ke_grid"):
@@ -464,10 +494,22 @@ def build_value_rim_bundle(
             "ok": track_b_payload.get("ok"),
             "ineligible_reason": track_b_payload.get("ineligible_reason"),
             "hist_pb_n": (track_b_payload.get("hist_pb") or {}).get("n"),
+            "year_funnel": (track_b_payload.get("hist_pb") or {}).get("year_funnel"),
             "pb_center_used": track_b_payload.get("pb_center_used"),
             "spot_price": track_b_payload.get("spot_price"),
             "n_book_paths": track_b_payload.get("n_book_paths"),
             "exit_n_valid": None if not track_b_payload.get("exit_prices") else track_b_payload["exit_prices"].get("n_valid"),
+        },
+        "subject_hist": None if subject_hist_payload is None else {
+            "n_financial": subject_hist_payload.get("n_financial"),
+            "n_market": subject_hist_payload.get("n_market"),
+            "n_financial_added": subject_hist_payload.get("n_financial_added"),
+            "n_market_added": subject_hist_payload.get("n_market_added"),
+            "rest_calls": subject_hist_payload.get("rest_calls"),
+            "prefer_local": subject_hist_payload.get("prefer_local"),
+            "path_diag": subject_hist_payload.get("path_diag"),
+            "flags": subject_hist_payload.get("flags"),
+            "detail": subject_hist_payload.get("detail"),
         },
         "flags": result_flags,
         "assumption_labels": list(bridge.assumption_labels),
@@ -523,6 +565,7 @@ def _write_run_report(path: Path, summary: dict[str, Any], *, bridge_detail: str
         f"- fi_peers: {json.dumps(summary.get('fi_peers'), ensure_ascii=False)}",
         f"- pb_roe: {json.dumps(summary.get('pb_roe'), ensure_ascii=False)}",
         f"- track_b: {json.dumps(summary.get('track_b'), ensure_ascii=False)}",
+        f"- subject_hist: {json.dumps(summary.get('subject_hist'), ensure_ascii=False)}",
         f"- flags: {', '.join(summary.get('flags') or [])}",
         f"- industrial FCFF disabled: {summary.get('industrial_fcff_disabled')}",
         f"- pit_complete / quality: {summary.get('pit_complete')} / {summary.get('quality_status')}",
@@ -533,7 +576,7 @@ def _write_run_report(path: Path, summary: dict[str, Any], *, bridge_detail: str
         "## Honesty",
         "- Legacy `vms project` / `vms value` remain `UNSUPPORTED_PROFILE` for industry.unsupported names.",
         "- Common equity / DPS / P2 ROE / ke grid are ASSUMPTIONs; OCI zeros explicit when used.",
-        "- R2c P/B-ROE sidecar (+ R3 auto FI peers when load.peers empty) + R2d Track B; PEER_SCARCITY / hist<12 → explicit UNAVAILABLE; no ensemble.",
+        "- R2c P/B-ROE sidecar (+ R3 auto FI peers when load.peers empty) + R2d Track B + R5 subject hist depth; PEER_SCARCITY / hist<12 → explicit UNAVAILABLE + year funnel; no ensemble.",
         "- `INVESTMENT_VALUE_NOT_ESTABLISHED`.",
         "",
     ]

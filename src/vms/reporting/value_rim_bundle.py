@@ -276,6 +276,15 @@ def build_value_rim_bundle(
                         "vps_p50": c.vps_p50,
                         "vps_p95": c.vps_p95,
                         "vps_mean": c.vps_mean,
+                        # R10: capped live path VPS (primary ke cell); absent on legacy.
+                        **(
+                            {
+                                "vps_samples": list(c.vps_samples),
+                                "n_vps_samples": int(c.n_vps_samples),
+                            }
+                            if c.vps_samples
+                            else {}
+                        ),
                     }
                     for c in dist.ke_grid
                 ],

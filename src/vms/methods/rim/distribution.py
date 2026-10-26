@@ -4,6 +4,8 @@ Primary NI policy: NI_t = ROE_path × beginning common equity_t (RIM-NI-P2-ROE-v
 ROE paths: bootstrap with replacement from PIT history (fixed seed).
 P1 constant last-FY common NI retained as control (single path).
 No ensemble across methods or ke values.
+R10: primary ke cell retains capped finite-positive path VPS samples
+(``vps_samples`` / ``n_vps_samples``) for PRIOR_ONLY live ingest.
 """
 
 from __future__ import annotations
@@ -36,6 +38,10 @@ class RoeHistory:
     flags: list[str] = field(default_factory=list)
 
 
+# Cap persisted path VPS samples in rim_distribution artifacts (R10).
+LIVE_SAMPLE_CAP = 96
+
+
 @dataclass(frozen=True)
 class KeGridCell:
     cost_of_equity: float
@@ -48,6 +54,9 @@ class KeGridCell:
     vps_p50: float | None
     vps_p95: float | None
     vps_mean: float | None
+    # R10: capped finite positive path VPS (primary ke cell only when retained).
+    vps_samples: tuple[float, ...] | None = None
+    n_vps_samples: int = 0
 
 
 @dataclass(frozen=True)
@@ -202,7 +211,7 @@ def run_rim_distribution(
     draws = rng.choice(np.asarray(hist.roe, dtype=float), size=int(n_paths), replace=True)
 
     cells: list[KeGridCell] = []
-    for ke in kes:
+    for ke_i, ke in enumerate(kes):
         vps_ok: list[float] = []
         eq_ok: list[float] = []
         n_invalid = 0
@@ -236,6 +245,13 @@ def run_rim_distribution(
                 continue
             vps_ok.append(float(res.value_per_share))
             eq_ok.append(float(res.equity_value))
+        # R10: retain capped finite-positive path VPS on primary ke cell only.
+        retain_src = [
+            v for v in vps_ok
+            if v == v and abs(v) != float("inf") and v > 0
+        ]
+        retain = ke_i == 0 and len(retain_src) >= 1
+        capped = tuple(retain_src[:LIVE_SAMPLE_CAP]) if retain else None
         cells.append(
             KeGridCell(
                 cost_of_equity=float(ke),
@@ -248,6 +264,8 @@ def run_rim_distribution(
                 vps_p50=_percentile(vps_ok, 50),
                 vps_p95=_percentile(vps_ok, 95),
                 vps_mean=(float(np.mean(vps_ok)) if vps_ok else None),
+                vps_samples=capped,
+                n_vps_samples=(len(capped) if capped is not None else 0),
             )
         )
 
@@ -290,6 +308,8 @@ def run_rim_distribution(
             flags.append("VPS_PERCENTILES_NOT_STRICTLY_ORDERED")
 
     ok = bool(cells) and any(c.n_valid > 0 for c in cells)
+    if cells and cells[0].vps_samples:
+        aids = sorted(set(aids) | set(cite("ENSEMBLE-PRIOR-ONLY-FI-LIVE-SAMPLES-v1")))
     return RimDistributionResult(
         ok=ok,
         ineligible_reason=None if ok else "NO_VALID_DISTRIBUTION_PATHS",

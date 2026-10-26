@@ -157,6 +157,9 @@ persisted by `vms value-rim` instead of always `samples_from_point(center)`.
   Never `ENSEMBLE_CALIBRATED` / `CALIBRATION_PASS` / `INVESTMENT_VALUE_SUPPORTED`.
 - `calibrate-rim` is **not** primary mixture input.
 - Schema stays `vms-0.2.phase12`; package `0.2.0rc1`.
+- **Prefix-cap (known gap, accepted):** capped samples are the first
+  `min(n_valid, 96)` finite-positive paths in path order, not a random subsample;
+  full-set percentiles remain on the artifact.
 
 Assumption: `ENSEMBLE-PRIOR-ONLY-FI-LIVE-SAMPLES-v1`
 (extends `ENSEMBLE-PRIOR-ONLY-FI-LIVE-MD-v1`).

@@ -143,7 +143,12 @@ def _live_track_b_exit_samples(
     exit_vps_source: str | None,
     cap: int,
 ) -> list[float] | None:
-    """Capped ``exit_vps_samples`` from the center horizon (else first finite)."""
+    """Capped ``exit_vps_samples`` from the **center** horizon only (SF1).
+
+    When the center horizon (parsed from ``exit_vps_source``) lacks samples,
+    return None so Track B falls back to ``samples_from_point`` — never steal
+    samples from a different horizon.
+    """
     if not payload:
         return None
     exit_prices = payload.get("exit_prices")
@@ -153,20 +158,13 @@ def _live_track_b_exit_samples(
     if not isinstance(summaries, dict) or not summaries:
         return None
     preferred = _horizon_from_exit_source(exit_vps_source)
-    order: list[Any] = []
-    if preferred is not None and preferred in summaries:
-        order.append(preferred)
-    for hk in sorted(summaries.keys(), key=_horizon_sort_key):
-        if hk not in order:
-            order.append(hk)
-    for hk in order:
-        cell = summaries[hk]
-        if not isinstance(cell, dict):
-            continue
-        got = _cap_live_list(cell.get("exit_vps_samples"), cap=cap)
-        if got is not None:
-            return got
-    return None
+    if preferred is None or preferred not in summaries:
+        # No mapped center horizon → no live samples (compat fallback upstream).
+        return None
+    cell = summaries[preferred]
+    if not isinstance(cell, dict):
+        return None
+    return _cap_live_list(cell.get("exit_vps_samples"), cap=cap)
 
 def _vps_from_method_result(payload: dict[str, Any] | None) -> float | None:
     if not payload:

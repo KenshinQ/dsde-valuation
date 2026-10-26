@@ -106,6 +106,16 @@ def method_results_from_components(
     return results
 
 
+def _finite_positive_sample(x: Any) -> float | None:
+    try:
+        f = float(x)
+    except (TypeError, ValueError):
+        return None
+    if f != f or abs(f) == float("inf") or f <= 0:
+        return None
+    return f
+
+
 def _samples_or_point(
     center: float,
     *,
@@ -115,11 +125,20 @@ def _samples_or_point(
 ) -> tuple[tuple[float, ...], str, int | None]:
     """Prefer live path samples when present (len >= 1); else samples_from_point.
 
+    Live arrays are **re-filtered** to finite positive floats (SF3) before use;
+    if nothing remains after filtering, fall back to ``samples_from_point``.
+
     Returns ``(samples, sample_generation, n_live_samples_or_None)``.
     """
     if live is not None and len(live) >= 1:
-        xs = tuple(float(x) for x in live)
-        return xs, "live_paths", len(xs)
+        xs_list: list[float] = []
+        for x in live:
+            got = _finite_positive_sample(x)
+            if got is not None:
+                xs_list.append(got)
+        if xs_list:
+            xs = tuple(xs_list)
+            return xs, "live_paths", len(xs)
     return samples_from_point(float(center), n=n, seed=seed), "samples_from_point", None
 
 
@@ -485,7 +504,7 @@ def build_prior_only_fi_bundle(
 ) -> dict[str, Any]:
     """Write R8 PRIOR_ONLY FI artifacts: method_results/, ensemble_report, summary.
 
-    When ``components`` are injected (e.g. R9 live value-rim adapter), pass
+    When ``components`` are injected (e.g. R9/R10 live value-rim adapter), pass
     ``data_label`` so artifacts are not stamped SYNTHETIC. Demo path
     (components is None) keeps the synthetic label.
     """
@@ -703,8 +722,15 @@ def build_prior_only_fi_bundle(
         "calibrated_claim": False,
         "warning": (
             (
-                f"R9 live value-rim → PRIOR_ONLY research mixture "
-                f"({primary_assumption}). "
+                (
+                    f"R10 live value-rim path samples → PRIOR_ONLY research mixture "
+                    f"({primary_assumption}). "
+                    if has_live_samples
+                    else (
+                        f"R9 live value-rim → PRIOR_ONLY research mixture "
+                        f"({primary_assumption}). "
+                    )
+                )
                 if is_live
                 else "R8 FI PRIOR_ONLY research mixture (SPEC §13.3). "
             )
@@ -727,8 +753,15 @@ def build_prior_only_fi_bundle(
             "calibrated_claim": False,
             "warning": (
                 (
-                    f"R9 live value-rim PRIOR_ONLY ingest "
-                    f"({primary_assumption}). Research path only. "
+                    (
+                        f"R10 live value-rim path samples PRIOR_ONLY ingest "
+                        f"({primary_assumption}). Research path only. "
+                        if has_live_samples
+                        else (
+                            f"R9 live value-rim PRIOR_ONLY ingest "
+                            f"({primary_assumption}). Research path only. "
+                        )
+                    )
                     if is_live
                     else "R8 deposit-taking FI PRIOR_ONLY wiring. Research path only. "
                 )

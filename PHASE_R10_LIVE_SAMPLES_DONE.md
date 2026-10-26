@@ -51,6 +51,11 @@ PHASE_R10_LIVE_SAMPLES_DONE.md                   this file
 - pb_common still point-expanded when only `relative_vps` exists (no ROE path bank in R10).
 - Production calibrated ensemble still blocked (`CALIBRATION_INSUFFICIENT`).
 - Adapter remains read-only over out-dir (does not re-run MC).
+- **Prefix-cap (accepted):** persisted live samples are the first `min(n_valid, LIVE_SAMPLE_CAP)`
+  finite-positive path values in path order (default cap 96), not a random or stratified
+  subsample of the full MC bank. Percentiles on the artifact still use the full valid set.
+  Closing this (reservoir / stride subsample) is deferred; mixture research PRIOR_ONLY does
+  not claim calibrated coverage from the capped bank.
 
 ## Label
 `INVESTMENT_VALUE_NOT_ESTABLISHED` — live PRIOR_ONLY path samples ≠ investment advice.

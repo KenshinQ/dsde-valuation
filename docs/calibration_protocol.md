@@ -157,9 +157,29 @@ persisted by `vms value-rim` instead of always `samples_from_point(center)`.
   Never `ENSEMBLE_CALIBRATED` / `CALIBRATION_PASS` / `INVESTMENT_VALUE_SUPPORTED`.
 - `calibrate-rim` is **not** primary mixture input.
 - Schema stays `vms-0.2.phase12`; package `0.2.0rc1`.
-- **Prefix-cap (known gap, accepted):** capped samples are the first
-  `min(n_valid, 96)` finite-positive paths in path order, not a random subsample;
-  full-set percentiles remain on the artifact.
+- **Prefix-cap:** CLOSED by R11 deterministic stride subsample
+  (`ENSEMBLE-PRIOR-ONLY-FI-LIVE-SAMPLES-STRIDE-CAP-v1`). When `n_valid > 96`,
+  persisted samples use systematic indices
+  `sorted({(i·n)//cap for i in range(cap)})` (defensive fill if needed);
+  when `n_valid <= 96`, retain all finite-positive. Track A/B collect the full
+  finite-positive bank first, then subsample (no early-break prefix).
+  Full-set percentiles remain on the artifact. **Subsample ≠ calibration coverage.**
 
 Assumption: `ENSEMBLE-PRIOR-ONLY-FI-LIVE-SAMPLES-v1`
 (extends `ENSEMBLE-PRIOR-ONLY-FI-LIVE-MD-v1`).
+Cap policy (new writes): `ENSEMBLE-PRIOR-ONLY-FI-LIVE-SAMPLES-STRIDE-CAP-v1`.
+
+
+## Live sample stride cap (R11)
+
+Closes R10 prefix-cap known gap. Same schema/package; research PRIOR_ONLY only.
+
+- Algorithm: deterministic stride (`subsample_cap` / `stride_cap_indices`);
+  no extra RNG. Output keeps relative path order.
+- Cap default remains `LIVE_SAMPLE_CAP=96`; no uncapped dumps.
+- Full-set p05/p50/p95 unchanged (computed before cap).
+- Never `ENSEMBLE_CALIBRATED` / `CALIBRATION_PASS` / `INVESTMENT_VALUE_SUPPORTED`.
+- Adapter read semantics unchanged (prefer live arrays → `live_paths`).
+
+Assumption: `ENSEMBLE-PRIOR-ONLY-FI-LIVE-SAMPLES-STRIDE-CAP-v1`
+(extends `ENSEMBLE-PRIOR-ONLY-FI-LIVE-SAMPLES-v1`).

@@ -4,8 +4,9 @@ Primary NI policy: NI_t = ROE_path × beginning common equity_t (RIM-NI-P2-ROE-v
 ROE paths: bootstrap with replacement from PIT history (fixed seed).
 P1 constant last-FY common NI retained as control (single path).
 No ensemble across methods or ke values.
-R10: primary ke cell retains capped finite-positive path VPS samples
+R10/R11: primary ke cell retains capped finite-positive path VPS samples
 (``vps_samples`` / ``n_vps_samples``) for PRIOR_ONLY live ingest.
+Cap policy: deterministic stride subsample (not path-order prefix).
 """
 
 from __future__ import annotations
@@ -38,8 +39,53 @@ class RoeHistory:
     flags: list[str] = field(default_factory=list)
 
 
-# Cap persisted path VPS samples in rim_distribution artifacts (R10).
+# Cap persisted path VPS samples in rim_distribution artifacts (R10/R11).
 LIVE_SAMPLE_CAP = 96
+
+
+def stride_cap_indices(n: int, cap: int = LIVE_SAMPLE_CAP) -> list[int]:
+    """Deterministic systematic indices for capping a length-``n`` bank to ``cap``.
+
+    Contract (ENSEMBLE-PRIOR-ONLY-FI-LIVE-SAMPLES-STRIDE-CAP-v1):
+    - ``n <= cap`` → ``list(range(n))``
+    - ``n > cap`` → primary ``[(i * n) // cap for i in range(cap)]``;
+      if collisions shrink the set (defensive; not expected when ``n >= cap``),
+      fill with the smallest unused indices in ascending walk until ``cap``.
+    - Return sorted ascending indices (preserves relative path order).
+    """
+    if n <= 0 or cap <= 0:
+        return []
+    if n <= cap:
+        return list(range(n))
+    primary = [(i * n) // cap for i in range(cap)]
+    seen: set[int] = set()
+    idx: list[int] = []
+    for k in primary:
+        if k not in seen:
+            seen.add(k)
+            idx.append(k)
+    j = 0
+    while len(idx) < cap and j < n:
+        if j not in seen:
+            seen.add(j)
+            idx.append(j)
+        j += 1
+    return sorted(idx)[:cap]
+
+
+def subsample_cap(
+    xs: Sequence[float],
+    cap: int = LIVE_SAMPLE_CAP,
+) -> list[float]:
+    """Finite-positive bank → at most ``cap`` values via deterministic stride.
+
+    Full-set percentiles must still be computed from the uncapped bank by the caller.
+    Subsample ≠ calibration coverage.
+    """
+    n = len(xs)
+    if n <= cap:
+        return [float(x) for x in xs]
+    return [float(xs[k]) for k in stride_cap_indices(n, cap)]
 
 
 @dataclass(frozen=True)
@@ -245,13 +291,13 @@ def run_rim_distribution(
                 continue
             vps_ok.append(float(res.value_per_share))
             eq_ok.append(float(res.equity_value))
-        # R10: retain capped finite-positive path VPS on primary ke cell only.
+        # R10/R11: retain stride-capped finite-positive path VPS on primary ke only.
         retain_src = [
             v for v in vps_ok
             if v == v and abs(v) != float("inf") and v > 0
         ]
         retain = ke_i == 0 and len(retain_src) >= 1
-        capped = tuple(retain_src[:LIVE_SAMPLE_CAP]) if retain else None
+        capped = tuple(subsample_cap(retain_src, LIVE_SAMPLE_CAP)) if retain else None
         cells.append(
             KeGridCell(
                 cost_of_equity=float(ke),
@@ -309,7 +355,9 @@ def run_rim_distribution(
 
     ok = bool(cells) and any(c.n_valid > 0 for c in cells)
     if cells and cells[0].vps_samples:
-        aids = sorted(set(aids) | set(cite("ENSEMBLE-PRIOR-ONLY-FI-LIVE-SAMPLES-v1")))
+        aids = sorted(
+            set(aids) | set(cite("ENSEMBLE-PRIOR-ONLY-FI-LIVE-SAMPLES-STRIDE-CAP-v1"))
+        )
     return RimDistributionResult(
         ok=ok,
         ineligible_reason=None if ok else "NO_VALID_DISTRIBUTION_PATHS",

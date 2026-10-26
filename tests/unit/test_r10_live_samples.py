@@ -342,7 +342,7 @@ def test_ac6_persist_distribution_primary_ke_samples(repo: Path):
     assert all(v > 0 for v in primary.vps_samples)
     assert dist.ke_grid[1].vps_samples is None
     assert dist.ke_grid[1].n_vps_samples == 0
-    assert "ENSEMBLE-PRIOR-ONLY-FI-LIVE-SAMPLES-v1" in dist.assumption_ids
+    assert "ENSEMBLE-PRIOR-ONLY-FI-LIVE-SAMPLES-STRIDE-CAP-v1" in dist.assumption_ids
 
 
 def test_ac6_persist_track_b_exit_samples(tmp_path: Path, repo: Path):
@@ -376,7 +376,7 @@ def test_ac6_persist_track_b_exit_samples(tmp_path: Path, repo: Path):
     assert all(float(v) > 0 for v in cell["exit_vps_samples"])
     # p50 still present
     assert "p50" in cell
-    assert "ENSEMBLE-PRIOR-ONLY-FI-LIVE-SAMPLES-v1" in tb.assumption_ids
+    assert "ENSEMBLE-PRIOR-ONLY-FI-LIVE-SAMPLES-STRIDE-CAP-v1" in tb.assumption_ids
 
 
 def test_single_live_sample_still_used(tmp_path: Path):
@@ -542,11 +542,16 @@ def test_sf3_samples_or_point_refilters_non_positive(tmp_path: Path):
     assert all(x == x and abs(x) != float("inf") for x in xs2)
 
 
-def test_sf4_prefix_cap_is_first_n_in_path_order(repo: Path):
-    """SF4: documented known gap — cap keeps path-order prefix, not a random subsample."""
+def test_sf4_replaced_by_stride_cap_formula(repo: Path):
+    """SF4 CLOSED-by-replacement: cap uses deterministic stride indices, not path-order prefix."""
     from tests.unit.methods.test_rim_r2_distribution import _multi_year_snap
 
-    from vms.methods.rim.distribution import LIVE_SAMPLE_CAP, run_rim_distribution
+    from vms.methods.rim.distribution import (
+        LIVE_SAMPLE_CAP,
+        run_rim_distribution,
+        stride_cap_indices,
+        subsample_cap,
+    )
     from vms.methods.rim.from_snapshot import rim_inputs_from_snapshot
     from vms.schemas.config import load_config
 
@@ -574,8 +579,17 @@ def test_sf4_prefix_cap_is_first_n_in_path_order(repo: Path):
     primary = dist.ke_grid[0]
     assert primary.n_valid > LIVE_SAMPLE_CAP
     assert primary.n_vps_samples == LIVE_SAMPLE_CAP
-    # Prefix property: capped list equals first LIVE_SAMPLE_CAP of the retained bank
-    # (we only persist the prefix; n_valid counts the full set used for percentiles).
     assert primary.vps_samples is not None
     assert len(primary.vps_samples) == LIVE_SAMPLE_CAP
     assert primary.vps_p50 is not None  # full-set percentile still present
+    # Index formula lock (AC2): synthetic bank of length n_valid follows stride.
+    n = primary.n_valid
+    idx = stride_cap_indices(n, LIVE_SAMPLE_CAP)
+    assert len(idx) == LIVE_SAMPLE_CAP
+    synth = [float(i) for i in range(n)]
+    assert subsample_cap(synth, LIVE_SAMPLE_CAP) == [synth[k] for k in idx]
+    if idx != list(range(LIVE_SAMPLE_CAP)):
+        assert subsample_cap(synth, LIVE_SAMPLE_CAP) != synth[:LIVE_SAMPLE_CAP]
+    assert (
+        "ENSEMBLE-PRIOR-ONLY-FI-LIVE-SAMPLES-STRIDE-CAP-v1" in dist.assumption_ids
+    )

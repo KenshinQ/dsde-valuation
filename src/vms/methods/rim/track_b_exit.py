@@ -4,7 +4,8 @@ Exit multiple family is centered on the subject's own historical common-equity P
 (raw close / common BPS). Default market-pricing pb center=2.0 is NOT used.
 If hist P/B points < MIN_HIST_PB_POINTS → channel status UNAVAILABLE (explicit).
 Never silently copies intrinsic VPS to future market exit price.
-R10: exit_prices.summaries[<h>] retain capped exit_vps_samples for PRIOR_ONLY ingest.
+R10/R11: exit_prices.summaries[<h>] retain stride-capped exit_vps_samples
+for PRIOR_ONLY ingest (collect all finite-positive, then subsample_cap).
 """
 
 from __future__ import annotations
@@ -21,7 +22,7 @@ from vms.market_pricing.config import (
 from vms.market_pricing.estimator import estimate_market_pricing_state
 from vms.market_pricing.exit_prices import ExitPriceBundle, generate_exit_prices
 from vms.methods.rim.book_paths import build_rim_book_path_bundle
-from vms.methods.rim.distribution import LIVE_SAMPLE_CAP
+from vms.methods.rim.distribution import LIVE_SAMPLE_CAP, subsample_cap
 from vms.methods.rim.hist_pb import MIN_HIST_PB_POINTS, historical_common_pb, subject_spot_raw_close
 from vms.methods.rim.from_snapshot import RimBridgeResult
 from vms.pit.snapshot import PITSnapshot
@@ -108,7 +109,11 @@ def _cap_exit_vps_samples(
     horizon_years: int,
     cap: int = LIVE_SAMPLE_CAP,
 ) -> list[float]:
-    """Finite positive exit_price_per_share paths for one horizon, capped (R10)."""
+    """Finite positive exit_price_per_share paths for one horizon, stride-capped.
+
+    Collect the full finite-positive bank first, then ``subsample_cap`` —
+    never early-break into a path-order prefix (R11 / STRIDE-CAP-v1).
+    """
     out: list[float] = []
     for p in bundle.paths:
         if int(p.horizon_years) != int(horizon_years) or not p.valid:
@@ -123,9 +128,7 @@ def _cap_exit_vps_samples(
         if v != v or abs(v) == float("inf") or v <= 0:
             continue
         out.append(v)
-        if len(out) >= cap:
-            break
-    return out
+    return subsample_cap(out, cap)
 
 
 def _exit_summary(bundle: ExitPriceBundle) -> dict[str, Any]:
@@ -405,7 +408,9 @@ def run_rim_track_b(
         for cell in (exit_payload.get("summaries") or {}).values()
     )
     if has_live_exit_samples:
-        aids = sorted(set(aids) | set(cite("ENSEMBLE-PRIOR-ONLY-FI-LIVE-SAMPLES-v1")))
+        aids = sorted(
+            set(aids) | set(cite("ENSEMBLE-PRIOR-ONLY-FI-LIVE-SAMPLES-STRIDE-CAP-v1"))
+        )
     return RimTrackBResult(
         ok=ok,
         status="VALID" if ok else "INELIGIBLE",

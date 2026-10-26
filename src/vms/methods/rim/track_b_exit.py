@@ -4,6 +4,7 @@ Exit multiple family is centered on the subject's own historical common-equity P
 (raw close / common BPS). Default market-pricing pb center=2.0 is NOT used.
 If hist P/B points < MIN_HIST_PB_POINTS → channel status UNAVAILABLE (explicit).
 Never silently copies intrinsic VPS to future market exit price.
+R10: exit_prices.summaries[<h>] retain capped exit_vps_samples for PRIOR_ONLY ingest.
 """
 
 from __future__ import annotations
@@ -20,6 +21,7 @@ from vms.market_pricing.config import (
 from vms.market_pricing.estimator import estimate_market_pricing_state
 from vms.market_pricing.exit_prices import ExitPriceBundle, generate_exit_prices
 from vms.methods.rim.book_paths import build_rim_book_path_bundle
+from vms.methods.rim.distribution import LIVE_SAMPLE_CAP
 from vms.methods.rim.hist_pb import MIN_HIST_PB_POINTS, historical_common_pb, subject_spot_raw_close
 from vms.methods.rim.from_snapshot import RimBridgeResult
 from vms.pit.snapshot import PITSnapshot
@@ -100,7 +102,59 @@ def _pb_family_from_hist(
     )
 
 
+def _cap_exit_vps_samples(
+    bundle: ExitPriceBundle,
+    *,
+    horizon_years: int,
+    cap: int = LIVE_SAMPLE_CAP,
+) -> list[float]:
+    """Finite positive exit_price_per_share paths for one horizon, capped (R10)."""
+    out: list[float] = []
+    for p in bundle.paths:
+        if int(p.horizon_years) != int(horizon_years) or not p.valid:
+            continue
+        raw = p.exit_price_per_share
+        if raw is None:
+            continue
+        try:
+            v = float(raw)
+        except (TypeError, ValueError):
+            continue
+        if v != v or abs(v) == float("inf") or v <= 0:
+            continue
+        out.append(v)
+        if len(out) >= cap:
+            break
+    return out
+
+
 def _exit_summary(bundle: ExitPriceBundle) -> dict[str, Any]:
+    # R10: attach capped exit_vps_samples per horizon summary (keep p50/etc).
+    summaries: dict[str, Any] = {}
+    for key, cell in (bundle.summaries or {}).items():
+        base = dict(cell) if isinstance(cell, dict) else {"raw": cell}
+        try:
+            h = int(float(key))
+        except (TypeError, ValueError):
+            h = None
+        if h is not None:
+            samples = _cap_exit_vps_samples(bundle, horizon_years=h)
+            if samples:
+                base["exit_vps_samples"] = samples
+                base["n_exit_vps_samples"] = len(samples)
+        summaries[str(key)] = base
+    # Also cover horizons present on the bundle but missing from summaries keys.
+    for h in bundle.horizons_years:
+        key = str(h)
+        if key in summaries and "exit_vps_samples" in summaries[key]:
+            continue
+        samples = _cap_exit_vps_samples(bundle, horizon_years=int(h))
+        if not samples:
+            continue
+        cell = dict(summaries.get(key) or {})
+        cell["exit_vps_samples"] = samples
+        cell["n_exit_vps_samples"] = len(samples)
+        summaries[key] = cell
     return {
         "version": bundle.version,
         "scenario_kind": bundle.scenario_kind,
@@ -109,7 +163,7 @@ def _exit_summary(bundle: ExitPriceBundle) -> dict[str, Any]:
         "n_input_paths": bundle.n_input_paths,
         "n_valid": bundle.n_valid,
         "n_failed": bundle.n_failed,
-        "summaries": bundle.summaries,
+        "summaries": summaries,
         "flags": list(bundle.flags),
         "assumptions": list(bundle.assumptions),
         "notes": list(bundle.notes),
@@ -345,6 +399,13 @@ def run_rim_track_b(
     flags.extend(returns.quality_flags)
 
     ok = exit_bundle.n_valid > 0 and returns.n_valid_cells_paths > 0
+    exit_payload = _exit_summary(exit_bundle)
+    has_live_exit_samples = any(
+        isinstance(cell, dict) and cell.get("exit_vps_samples")
+        for cell in (exit_payload.get("summaries") or {}).values()
+    )
+    if has_live_exit_samples:
+        aids = sorted(set(aids) | set(cite("ENSEMBLE-PRIOR-ONLY-FI-LIVE-SAMPLES-v1")))
     return RimTrackBResult(
         ok=ok,
         status="VALID" if ok else "INELIGIBLE",
@@ -352,7 +413,7 @@ def run_rim_track_b(
         flags=sorted(set(flags)),
         assumption_ids=aids,
         hist_pb=hist_payload,
-        exit_prices=_exit_summary(exit_bundle),
+        exit_prices=exit_payload,
         returns=_returns_summary(returns),
         spot_price=float(spot),
         pb_center_used=float(hist.median),

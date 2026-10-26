@@ -19,9 +19,13 @@ Centers (pinned):
   **and** a mapped PER_SHARE center are required to enter weights; else SKIP
   (HIST_PB_BELOW_MIN or TRACK_B_CENTER_NOT_PER_SHARE / TRACK_B_EXIT_CENTER_MISSING).
 
-Samples still use ``samples_from_point(center)`` for this minimal slice;
-``diagnostics["synthetic"]=False``, ``sample_generation="samples_from_point"``,
-and source artifact paths are cited. calibrate-rim is NOT a primary input.
+Samples (R10): prefer path-level arrays persisted by value-rim
+(``rim_distribution.ke_grid[0].vps_samples``,
+``rim_track_b.exit_prices.summaries[<h>].exit_vps_samples``) →
+``sample_generation=live_paths``, ``synthetic=false``, ``n_live_samples``.
+Missing arrays → R9 compat ``samples_from_point`` stamp. Optional pb_common
+may stay ``samples_from_point`` when only a point ``relative_vps`` exists.
+calibrate-rim is NOT a primary input.
 """
 
 from __future__ import annotations
@@ -85,6 +89,84 @@ def _finite_positive(x: Any) -> float | None:
         return None
     return f
 
+
+
+
+def _cap_live_list(raw: Any, *, cap: int) -> list[float] | None:
+    """Parse a JSON sample array into finite positive floats, capped."""
+    if not isinstance(raw, (list, tuple)):
+        return None
+    out: list[float] = []
+    for x in raw:
+        got = _finite_positive(x)
+        if got is None:
+            continue
+        out.append(got)
+        if len(out) >= cap:
+            break
+    return out if out else None
+
+
+def _live_rim_vps_samples(
+    payload: dict[str, Any] | None,
+    *,
+    cap: int,
+) -> list[float] | None:
+    """Primary ke cell ``vps_samples`` from rim_distribution.json (R10)."""
+    if not payload:
+        return None
+    grid = payload.get("ke_grid") or []
+    if not isinstance(grid, list) or not grid:
+        return None
+    cell0 = grid[0]
+    if not isinstance(cell0, dict):
+        return None
+    return _cap_live_list(cell0.get("vps_samples"), cap=cap)
+
+
+def _horizon_from_exit_source(exit_vps_source: str | None) -> str | None:
+    """Parse ``exit_prices.summaries[<h>].p50`` → ``<h>`` key."""
+    if not exit_vps_source:
+        return None
+    marker = "exit_prices.summaries["
+    if not exit_vps_source.startswith(marker):
+        return None
+    rest = exit_vps_source[len(marker) :]
+    if "]" not in rest:
+        return None
+    return rest.split("]", 1)[0]
+
+
+def _live_track_b_exit_samples(
+    payload: dict[str, Any] | None,
+    *,
+    exit_vps_source: str | None,
+    cap: int,
+) -> list[float] | None:
+    """Capped ``exit_vps_samples`` from the center horizon (else first finite)."""
+    if not payload:
+        return None
+    exit_prices = payload.get("exit_prices")
+    if not isinstance(exit_prices, dict):
+        return None
+    summaries = exit_prices.get("summaries")
+    if not isinstance(summaries, dict) or not summaries:
+        return None
+    preferred = _horizon_from_exit_source(exit_vps_source)
+    order: list[Any] = []
+    if preferred is not None and preferred in summaries:
+        order.append(preferred)
+    for hk in sorted(summaries.keys(), key=_horizon_sort_key):
+        if hk not in order:
+            order.append(hk)
+    for hk in order:
+        cell = summaries[hk]
+        if not isinstance(cell, dict):
+            continue
+        got = _cap_live_list(cell.get("exit_vps_samples"), cap=cap)
+        if got is not None:
+            return got
+    return None
 
 def _vps_from_method_result(payload: dict[str, Any] | None) -> float | None:
     if not payload:
@@ -241,16 +323,26 @@ def _mark_live(
     source_paths: list[str],
     rim_vps_source: str,
     track_b_meta: dict[str, Any] | None = None,
+    primary_assumption: str = "ENSEMBLE-PRIOR-ONLY-FI-LIVE-MD-v1",
 ) -> list[MethodDistribution]:
-    """Rewrite diagnostics: synthetic=False + cite value-rim artifact paths."""
+    """Rewrite diagnostics: synthetic=False + cite value-rim artifact paths.
+
+    Preserves per-component ``sample_generation`` / ``n_live_samples`` from
+    ``build_fi_method_components`` when live path samples were supplied (R10).
+    """
     out: list[MethodDistribution] = []
     for c in components:
         diag = dict(c.diagnostics)
+        gen = diag.get("sample_generation") or "samples_from_point"
+        if gen not in {"live_paths", "samples_from_point"}:
+            gen = "samples_from_point"
+        diag["sample_generation"] = gen
+        # Live ingest is never synthetic demo data, even when samples_from_point
+        # is the R9 compat fallback around a live center.
         diag["synthetic"] = False
-        diag["sample_generation"] = "samples_from_point"
         diag["source"] = "value_rim"
         diag["source_artifacts"] = list(source_paths)
-        diag["assumption"] = "ENSEMBLE-PRIOR-ONLY-FI-LIVE-MD-v1"
+        diag["assumption"] = primary_assumption
         if c.method_id == METHOD_RIM_TRACK_A:
             diag["rim_vps_source"] = rim_vps_source
         if c.method_id == METHOD_TRACK_B_EXIT and track_b_meta:
@@ -351,6 +443,17 @@ def adapt_value_rim_dir(
             force_not_per_share_skip = hist_ok and exit_vps is None
         include_skip = True
 
+    rim_live = _live_rim_vps_samples(rim_distribution, cap=n_samples)
+    tb_live = (
+        _live_track_b_exit_samples(
+            track_b, exit_vps_source=exit_vps_source, cap=n_samples
+        )
+        if track_b_exit_center is not None
+        else None
+    )
+    # Optional pb_common: only a point relative_vps today → keep samples_from_point.
+    pb_live = None
+
     components, ledger = build_fi_method_components(
         rim_vps=rim_vps,
         target=target,
@@ -361,6 +464,9 @@ def adapt_value_rim_dir(
         track_b_exit_center=track_b_exit_center,
         track_b_hist_n=track_b_hist_n,
         include_track_b_skip_record=include_skip,
+        rim_samples=rim_live,
+        pb_samples=pb_live,
+        track_b_samples=tb_live,
     )
 
     if force_not_per_share_skip:
@@ -383,11 +489,20 @@ def adapt_value_rim_dir(
         "exit_vps_center": float(exit_vps) if exit_vps is not None else None,
         "exit_vps_source": exit_vps_source,
     }
+    any_live = any(
+        c.diagnostics.get("sample_generation") == "live_paths" for c in components
+    )
+    primary_assumption = (
+        "ENSEMBLE-PRIOR-ONLY-FI-LIVE-SAMPLES-v1"
+        if any_live
+        else "ENSEMBLE-PRIOR-ONLY-FI-LIVE-MD-v1"
+    )
     components = _mark_live(
         components,
         source_paths=source_paths,
         rim_vps_source=rim_vps_source,
         track_b_meta=track_b_meta if track_b is not None else None,
+        primary_assumption=primary_assumption,
     )
 
     instrument_id = None
@@ -399,6 +514,7 @@ def adapt_value_rim_dir(
         and exit_vps is not None
         and hist_n >= MIN_HIST_PB_POINTS
     )
+    sample_generation = "live_paths" if any_live else "samples_from_point"
     meta: dict[str, Any] = {
         "data_label": LIVE_DATA_LABEL,
         "source": "value_rim",
@@ -418,9 +534,13 @@ def adapt_value_rim_dir(
         "track_b_in_weights_eligible": in_weights_eligible,
         "min_hist_pb_points": MIN_HIST_PB_POINTS,
         "instrument_id": instrument_id,
-        "assumption": "ENSEMBLE-PRIOR-ONLY-FI-LIVE-MD-v1",
+        "assumption": primary_assumption,
         "synthetic": False,
-        "sample_generation": "samples_from_point",
+        "sample_generation": sample_generation,
+        "rim_live_samples": bool(rim_live),
+        "track_b_live_samples": bool(tb_live),
+        "n_rim_live_samples": (len(rim_live) if rim_live else 0),
+        "n_track_b_live_samples": (len(tb_live) if tb_live else 0),
     }
     return components, ledger, meta
 

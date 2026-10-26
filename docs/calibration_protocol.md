@@ -121,9 +121,10 @@ does **not** replace synthetic `vms phase8` or the R8 demo scenarios).
   (`TRACK_B_CENTER_NOT_PER_SHARE` when `hist_n >= MIN` and no mapped VPS).
   Enters weights only when `hist_n >= MIN_HIST_PB_POINTS` (=12) **and** a mapped
   PER_SHARE center is present; else honest SKIP.
-- Samples still `samples_from_point(center)` for this minimal slice;
+- Samples (R9 minimal slice): `samples_from_point(center)`;
   `diagnostics.synthetic=false` + `sample_generation=samples_from_point` +
-  source artifact paths.
+  source artifact paths. R10 prefers persisted path samples when present
+  (`ENSEMBLE-PRIOR-ONLY-FI-LIVE-SAMPLES-v1`).
 - Production intent on the same components refuses mixture.
 - Hard labels unchanged: `PRIOR_ONLY` / `ENSEMBLE_UNCALIBRATED` /
   `CALIBRATION_INSUFFICIENT` / `INVESTMENT_VALUE_NOT_ESTABLISHED`.
@@ -133,3 +134,29 @@ does **not** replace synthetic `vms phase8` or the R8 demo scenarios).
 
 Assumption: `ENSEMBLE-PRIOR-ONLY-FI-LIVE-MD-v1` (extends `ENSEMBLE-PRIOR-ONLY-FI-v1`).
 
+
+## Live sample paths (R10)
+
+Extends R9 live MethodDistribution adapter: prefer **path-level samples**
+persisted by `vms value-rim` instead of always `samples_from_point(center)`.
+
+- Persist (value-rim write):
+  - Track A `rim_distribution.json`: primary ke cell
+    `vps_samples: float[]` + `n_vps_samples` (capped, default 96); percentiles kept.
+  - Track B `rim_track_b.json` → `exit_prices.summaries[<h>]`:
+    `exit_vps_samples` + `n_exit_vps_samples` (valid `exit_price_per_share`);
+    summaries / p50 unchanged.
+- Adapter (read): prefer live arrays when present (len ≥ 1) →
+  `sample_generation=live_paths`, `diagnostics.synthetic=false`,
+  `n_live_samples` + source artifact paths. Missing → R9 compat
+  `samples_from_point` stamp (legacy out-dirs keep working).
+- Optional `pb_common` may stay `samples_from_point` when only a point
+  `relative_vps` exists (no invented ROE path bank in R10).
+- Track B center rules unchanged (exit VPS PER_SHARE; `pb_center_used` audit-only).
+- Production intent still refuses mixture. Hard labels unchanged.
+  Never `ENSEMBLE_CALIBRATED` / `CALIBRATION_PASS` / `INVESTMENT_VALUE_SUPPORTED`.
+- `calibrate-rim` is **not** primary mixture input.
+- Schema stays `vms-0.2.phase12`; package `0.2.0rc1`.
+
+Assumption: `ENSEMBLE-PRIOR-ONLY-FI-LIVE-SAMPLES-v1`
+(extends `ENSEMBLE-PRIOR-ONLY-FI-LIVE-MD-v1`).

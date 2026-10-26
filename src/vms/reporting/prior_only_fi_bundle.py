@@ -106,6 +106,23 @@ def method_results_from_components(
     return results
 
 
+def _samples_or_point(
+    center: float,
+    *,
+    live: Sequence[float] | None,
+    n: int,
+    seed: int,
+) -> tuple[tuple[float, ...], str, int | None]:
+    """Prefer live path samples when present (len >= 1); else samples_from_point.
+
+    Returns ``(samples, sample_generation, n_live_samples_or_None)``.
+    """
+    if live is not None and len(live) >= 1:
+        xs = tuple(float(x) for x in live)
+        return xs, "live_paths", len(xs)
+    return samples_from_point(float(center), n=n, seed=seed), "samples_from_point", None
+
+
 def build_fi_method_components(
     *,
     rim_vps: float,
@@ -117,6 +134,9 @@ def build_fi_method_components(
     track_b_exit_center: float | None = None,
     track_b_hist_n: int = 0,
     include_track_b_skip_record: bool = True,
+    rim_samples: Sequence[float] | None = None,
+    pb_samples: Sequence[float] | None = None,
+    track_b_samples: Sequence[float] | None = None,
 ) -> tuple[list[MethodDistribution], list[dict[str, Any]]]:
     """Build FI-compatible MethodDistributions for PRIOR_ONLY research mixture.
 
@@ -124,6 +144,9 @@ def build_fi_method_components(
     is provided. Track B joins **only** when ``track_b_hist_n >= MIN_HIST_PB_POINTS``
     **and** ``track_b_exit_center`` is provided; otherwise SKIP (no invented OEI /
     no default PB / not in weights).
+
+    Optional ``rim_samples`` / ``pb_samples`` / ``track_b_samples`` (R10 live paths)
+    replace ``samples_from_point`` when length >= 1.
     """
     if not (rim_vps > 0) or not _finite(rim_vps):
         raise PriorOnlyFiBundleError("rim_vps (Track A) must be a finite positive center")
@@ -136,39 +159,53 @@ def build_fi_method_components(
     components: list[MethodDistribution] = []
     track_b_ledger: list[dict[str, Any]] = []
 
+    rim_xs, rim_gen, rim_n_live = _samples_or_point(
+        float(rim_vps), live=rim_samples, n=n_samples, seed=seed
+    )
+    rim_diag: dict[str, Any] = {
+        "center": float(rim_vps),
+        "channel": "track_a_rim",
+        "synthetic": rim_gen != "live_paths",
+        "sample_generation": rim_gen,
+        "assumption": "ENSEMBLE-PRIOR-ONLY-FI-v1",
+    }
+    if rim_n_live is not None:
+        rim_diag["n_live_samples"] = rim_n_live
     components.append(
         MethodDistribution(
             method_id=METHOD_RIM_TRACK_A,
-            samples=samples_from_point(float(rim_vps), n=n_samples, seed=seed),
+            samples=rim_xs,
             status=MethodEligibilityStatus.VALID,
             target=target,
             output_basis=basis,
             eligible=True,
-            diagnostics={
-                "center": float(rim_vps),
-                "channel": "track_a_rim",
-                "synthetic": True,
-                "assumption": "ENSEMBLE-PRIOR-ONLY-FI-v1",
-            },
+            diagnostics=rim_diag,
         )
     )
 
     if pb_vps is not None:
         if not (pb_vps > 0) or not _finite(pb_vps):
             raise PriorOnlyFiBundleError("pb_vps must be finite positive when provided")
+        pb_xs, pb_gen, pb_n_live = _samples_or_point(
+            float(pb_vps), live=pb_samples, n=n_samples, seed=seed + 17
+        )
+        pb_diag: dict[str, Any] = {
+            "center": float(pb_vps),
+            "channel": "pb_roe_relative",
+            "synthetic": pb_gen != "live_paths",
+            "sample_generation": pb_gen,
+        }
+        if pb_n_live is not None:
+            pb_diag["n_live_samples"] = pb_n_live
         components.append(
             MethodDistribution(
                 method_id=METHOD_PB_COMMON,
-                samples=samples_from_point(float(pb_vps), n=n_samples, seed=seed + 17),
+                samples=pb_xs,
                 status=MethodEligibilityStatus.VALID,
                 target=target,
                 output_basis=basis,
                 eligible=True,
-                diagnostics={
-                    "center": float(pb_vps),
-                    "channel": "pb_roe_relative",
-                    "synthetic": True,
-                },
+                diagnostics=pb_diag,
             )
         )
 
@@ -180,27 +217,35 @@ def build_fi_method_components(
         and float(track_b_exit_center) > 0
     )
     if track_b_ok:
+        tb_xs, tb_gen, tb_n_live = _samples_or_point(
+            float(track_b_exit_center),
+            live=track_b_samples,
+            n=n_samples,
+            seed=seed + 34,
+        )
+        tb_diag: dict[str, Any] = {
+            "center": float(track_b_exit_center),
+            "channel": "track_b_exit",
+            "hist_n": hist_n,
+            "min_required": MIN_HIST_PB_POINTS,
+            "synthetic": tb_gen != "live_paths",
+            "sample_generation": tb_gen,
+            "note": (
+                "Exit-price channel on declared basis; research PRIOR_ONLY only. "
+                "Not intrinsic ground truth (EVAL-IV-NOT-PRICE-TRUTH-v1)."
+            ),
+        }
+        if tb_n_live is not None:
+            tb_diag["n_live_samples"] = tb_n_live
         components.append(
             MethodDistribution(
                 method_id=METHOD_TRACK_B_EXIT,
-                samples=samples_from_point(
-                    float(track_b_exit_center), n=n_samples, seed=seed + 34
-                ),
+                samples=tb_xs,
                 status=MethodEligibilityStatus.VALID,
                 target=target,
                 output_basis=basis,
                 eligible=True,
-                diagnostics={
-                    "center": float(track_b_exit_center),
-                    "channel": "track_b_exit",
-                    "hist_n": hist_n,
-                    "min_required": MIN_HIST_PB_POINTS,
-                    "synthetic": True,
-                    "note": (
-                        "Exit-price channel on declared basis; research PRIOR_ONLY only. "
-                        "Not intrinsic ground truth (EVAL-IV-NOT-PRICE-TRUTH-v1)."
-                    ),
-                },
+                diagnostics=tb_diag,
             )
         )
         track_b_ledger.append(
@@ -448,17 +493,30 @@ def build_prior_only_fi_bundle(
     out.mkdir(parents=True, exist_ok=True)
     tgt = target or ValuationTarget.FUNDAMENTAL_VALUE_CURRENT
     is_live = bool(source_meta and source_meta.get("source") == "value_rim")
-    primary_assumption = (
-        "ENSEMBLE-PRIOR-ONLY-FI-LIVE-MD-v1" if is_live else "ENSEMBLE-PRIOR-ONLY-FI-v1"
+    has_live_samples = bool(
+        source_meta
+        and (
+            source_meta.get("sample_generation") == "live_paths"
+            or source_meta.get("assumption")
+            == "ENSEMBLE-PRIOR-ONLY-FI-LIVE-SAMPLES-v1"
+        )
     )
+    if is_live and has_live_samples:
+        primary_assumption = "ENSEMBLE-PRIOR-ONLY-FI-LIVE-SAMPLES-v1"
+    elif is_live:
+        primary_assumption = "ENSEMBLE-PRIOR-ONLY-FI-LIVE-MD-v1"
+    else:
+        primary_assumption = "ENSEMBLE-PRIOR-ONLY-FI-v1"
     cite_ids = [
         "ENSEMBLE-PRIOR-ONLY-FI-v1",
         "EVAL-IV-NOT-PRICE-TRUTH-v1",
         "EVAL-RIM-FI-DEPOSIT-WF-v1",
     ]
     if is_live:
-        # Live path: stamp LIVE-MD as the primary assumption cite.
+        # Live path: stamp LIVE-MD; R10 LIVE-SAMPLES when path samples present.
         cite_ids.insert(0, "ENSEMBLE-PRIOR-ONLY-FI-LIVE-MD-v1")
+        if has_live_samples:
+            cite_ids.insert(0, "ENSEMBLE-PRIOR-ONLY-FI-LIVE-SAMPLES-v1")
     assumptions = cite(*cite_ids)
 
     if components is None:
@@ -645,8 +703,8 @@ def build_prior_only_fi_bundle(
         "calibrated_claim": False,
         "warning": (
             (
-                "R9 live value-rim → PRIOR_ONLY research mixture "
-                "(ENSEMBLE-PRIOR-ONLY-FI-LIVE-MD-v1). "
+                f"R9 live value-rim → PRIOR_ONLY research mixture "
+                f"({primary_assumption}). "
                 if is_live
                 else "R8 FI PRIOR_ONLY research mixture (SPEC §13.3). "
             )
@@ -669,8 +727,8 @@ def build_prior_only_fi_bundle(
             "calibrated_claim": False,
             "warning": (
                 (
-                    "R9 live value-rim PRIOR_ONLY ingest "
-                    "(ENSEMBLE-PRIOR-ONLY-FI-LIVE-MD-v1). Research path only. "
+                    f"R9 live value-rim PRIOR_ONLY ingest "
+                    f"({primary_assumption}). Research path only. "
                     if is_live
                     else "R8 deposit-taking FI PRIOR_ONLY wiring. Research path only. "
                 )

@@ -111,7 +111,7 @@ def _cap_exit_vps_samples(
 ) -> list[float]:
     """Finite positive exit_price_per_share paths for one horizon, stride-capped.
 
-    Collect the full finite-positive bank first, then ``subsample_cap`` —
+    Collect the full finite-positive series first, then ``subsample_cap`` —
     never early-break into a path-order prefix (R11 / STRIDE-CAP-v1).
     """
     out: list[float] = []

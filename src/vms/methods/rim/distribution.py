@@ -44,7 +44,7 @@ LIVE_SAMPLE_CAP = 96
 
 
 def stride_cap_indices(n: int, cap: int = LIVE_SAMPLE_CAP) -> list[int]:
-    """Deterministic systematic indices for capping a length-``n`` bank to ``cap``.
+    """Deterministic systematic indices for capping a length-``n`` series to ``cap``.
 
     Contract (ENSEMBLE-PRIOR-ONLY-FI-LIVE-SAMPLES-STRIDE-CAP-v1):
     - ``n <= cap`` → ``list(range(n))``
@@ -77,9 +77,9 @@ def subsample_cap(
     xs: Sequence[float],
     cap: int = LIVE_SAMPLE_CAP,
 ) -> list[float]:
-    """Finite-positive bank → at most ``cap`` values via deterministic stride.
+    """Finite-positive series → at most ``cap`` values via deterministic stride.
 
-    Full-set percentiles must still be computed from the uncapped bank by the caller.
+    Full-set percentiles must still be computed from the uncapped series by the caller.
     Subsample ≠ calibration coverage.
     """
     n = len(xs)

@@ -2,7 +2,7 @@
 
 Date: 2026-10-26 (Asia/Shanghai). Repo: KenshinQ/dsde-valuation.
 Branch: `feat/prefix-cap-subsample`. Prior: [PHASE_R10_LIVE_SAMPLES_DONE.md](PHASE_R10_LIVE_SAMPLES_DONE.md).
-Spec: `/workspace/PREFIX_CAP_SUBSAMPLE_SPEC.md` (local design).
+Spec: in-repo — this PHASE + `docs/calibration_protocol.md` R11 section + assumption `ENSEMBLE-PRIOR-ONLY-FI-LIVE-SAMPLES-STRIDE-CAP-v1` (deterministic stride subsample; replaces path-order prefix).
 
 Status: **R10 Prefix-cap known gap CLOSED** by deterministic stride subsample.
 Label: `INVESTMENT_VALUE_NOT_ESTABLISHED`. **Not** investment advice.

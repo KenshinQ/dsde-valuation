@@ -157,15 +157,74 @@ def test_ac1_ac2_track_b_collect_then_stride(tmp_path: Path, repo: Path):
     """Track B must collect all finite-positive then stride (no early-break)."""
     from tests.unit.methods.test_rim_r2cd_track_b import _build_years
 
+    from vms.market_pricing.exit_prices import ExitPriceBundle, ExitPricePath
     from vms.methods.rim.from_snapshot import rim_inputs_from_snapshot
-    from vms.methods.rim.track_b_exit import run_rim_track_b
+    from vms.methods.rim.track_b_exit import _cap_exit_vps_samples, run_rim_track_b
     from vms.schemas.config import load_config
+
+    # SF1: synthetic identity series — prove collect+stride ≠ path-order prefix
+    # when n_finite > CAP and stride indices differ from range(CAP).
+    n_finite = LIVE_SAMPLE_CAP + 40
+    cap = LIVE_SAMPLE_CAP
+    idx = stride_cap_indices(n_finite, cap)
+    assert n_finite > cap
+    assert idx != list(range(cap))
+    uncapped = [float(i + 1) for i in range(n_finite)]
+    paths = [
+        ExitPricePath(
+            path_id=f"p{i}",
+            horizon_years=1,
+            calendar_year=2020,
+            valid=True,
+            scenario_kind="TERMINAL_MULTIPLE_DEFAULT",
+            transition_model_id="synth",
+            exit_price_per_share=uncapped[i],
+        )
+        for i in range(n_finite)
+    ]
+    # Noise that must be ignored (proves filter-then-stride, not early-break on raw paths).
+    paths.append(
+        ExitPricePath(
+            path_id="other-h",
+            horizon_years=3,
+            calendar_year=2020,
+            valid=True,
+            scenario_kind="TERMINAL_MULTIPLE_DEFAULT",
+            transition_model_id="synth",
+            exit_price_per_share=9999.0,
+        )
+    )
+    paths.append(
+        ExitPricePath(
+            path_id="invalid",
+            horizon_years=1,
+            calendar_year=2020,
+            valid=False,
+            scenario_kind="TERMINAL_MULTIPLE_DEFAULT",
+            transition_model_id="synth",
+            exit_price_per_share=8888.0,
+        )
+    )
+    synth_bundle = ExitPriceBundle(
+        scenario_kind="TERMINAL_MULTIPLE_DEFAULT",
+        transition_model_id="synth",
+        metric_id="pb",
+        horizons_years=[1, 3],
+        n_input_paths=len(paths),
+        n_valid=n_finite,
+        n_failed=1,
+        paths=paths,
+    )
+    samples = _cap_exit_vps_samples(synth_bundle, horizon_years=1, cap=cap)
+    assert len(samples) == cap
+    assert samples == [uncapped[k] for k in idx]
+    assert samples != uncapped[:cap]
 
     loaded = load_config(repo / "config/default.yaml")
     snap = _build_years(14)
     bridge = rim_inputs_from_snapshot(snap, loaded=loaded, equity_basis="common")
     assert bridge.ok
-    n_paths = LIVE_SAMPLE_CAP + 10
+    n_paths = LIVE_SAMPLE_CAP + 40
     tb1 = run_rim_track_b(
         snap,
         bridge=bridge,
@@ -206,3 +265,5 @@ def test_docs_mention_stride_closed():
     r11 = Path("PHASE_R11_PREFIX_CAP_SUBSAMPLE_DONE.md").read_text()
     assert "SF4 CLOSED-by-replacement" in r11
     assert "ENSEMBLE_CALIBRATED" in r11
+    # SF2: no out-of-repo /workspace SPEC path
+    assert "/workspace/PREFIX_CAP_SUBSAMPLE_SPEC.md" not in r11

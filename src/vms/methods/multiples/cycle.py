@@ -3,6 +3,11 @@
 Phase 5 ships flags / low-confidence markers when mid-cycle inputs are unavailable.
 Does not invent a full cycle model; never treats trailing peak earnings as sustainable
 by default without qualification.
+
+Skeleton PIT mid-cycle estimator lives in ``vms.methods.multiples.midcycle`` and is
+optionally invoked from ``common.run_multiple_method`` for cyclical profiles only.
+``assess_cycle_normalization`` remains the sole qualification hook: HIGH estimates
+may supply ``mid_cycle_denominator``; None / LOW still flag trailing-without-midcycle.
 """
 
 from __future__ import annotations

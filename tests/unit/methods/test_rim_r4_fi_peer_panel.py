@@ -150,6 +150,7 @@ def test_panel_te_without_oei_excludes_missing_other_equity(as_of):
         classifications=classes,
         use_lean_curated=False,
         extra_candidates=[PEER],
+        fund_db="/nonexistent/r4_no_oei.duckdb",
     )
     assert rep.peers == []
     assert rep.funnel.get(EXCLUSION_MISSING_OEI, 0) == 1
@@ -223,6 +224,7 @@ def test_panel_pit_leakage_future_rows_excluded(as_of):
         classifications=classes,
         use_lean_curated=False,
         extra_candidates=[PEER],
+        fund_db="/nonexistent/r4_future_pit.duckdb",
     )
     assert rep.peers == []
     # Future published_at ⇒ no usable FY under PIT ⇒ MISSING_FINANCIALS or similar
@@ -294,6 +296,7 @@ def test_local_panel_funnel_not_all_missing_financials_unload(as_of):
         market=panel.market,
         classifications=classes,
         use_lean_curated=True,
+        fund_db=fdb,
     )
     funnel = fi.funnel
     n_cand = len(fi.candidate_ids)

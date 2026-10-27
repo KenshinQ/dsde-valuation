@@ -40,7 +40,7 @@ from vms.schemas.observations import (
     QualityStatus,
 )
 
-SOURCE_ID = "fi_peer_universe_v1"
+SOURCE_ID = "fi_peer_universe_v2"
 
 # Exclusion codes: align peer funnel with subject bridge (rim/from_snapshot).
 # Canonical = MISSING_OTHER_EQUITY_INSTRUMENTS; MISSING_OEI is a short alias only.

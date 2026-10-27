@@ -1,23 +1,24 @@
-"""R3: deposit-taking FI peer PIT universe for pb_common (RIM-FI-PEER-UNIVERSE-v1).
+"""R3/R13: deposit-taking FI peer PIT universe for pb_common (RIM-FI-PEER-UNIVERSE-v2).
 
 Builds PeerObservation rows for R2c without lifting industry.unsupported.
-Candidate discovery = lean curated A-share deposit-taking FI tickers ∪ local
-SW L1 proxy classifications matching the unsupported deposit-taking FI label from
-config/em_industry_proxy.yaml. pb_common = raw_close / ((TE − MI − OEI) / shares)
-with PIT gates on financial published_at and market timestamp (NOTICE-aligned).
-Missing OEI ⇒ exclude with canonical code MISSING_OTHER_EQUITY_INSTRUMENTS
-(never treat total equity as common). Thin panels may emit empty peers + an
-exclusion funnel (PEER_SCARCITY remains honest).
+Candidate discovery SoT (default) = classifications plane only:
+  local DuckDB em_industry_profile (sw_l1_proxy == deposit_taking_fi_sw_label())
+  ∪ in-memory PIT InstrumentClassification matching the YAML deposit-taking FI label
+  ∪ extra_candidates − subject.
+Lean curated allowlist (LEAN_CURATED_DEPOSIT_TAKING_FI) is opt-in via
+use_lean_curated=True (synthetic panel / calibrate-rim / tests). Empty plane →
+empty peers + exclusion funnel (honest PEER_SCARCITY; no curated bootstrap).
 
-Ownership / dual-universe (lean v1):
+pb_common = raw_close / ((TE − MI − OEI) / shares) with PIT gates on financial
+published_at and market timestamp (NOTICE-aligned). Missing OEI ⇒ exclude with
+canonical code MISSING_OTHER_EQUITY_INSTRUMENTS (never treat TE as common).
+
+Ownership:
 - Industry LABEL SoT: config/em_industry_proxy.yaml via deposit_taking_fi_sw_label()
   — never hardcode industry label strings in this module.
-- Lean curated IDs: instrument-ID allowlist in LEAN_CURATED_DEPOSIT_TAKING_FI only
-  (data plane, not labels). Membership = curated ∪ PIT classifications matching
-  the YAML label. Curated IDs may be vetoed only by the *latest* PIT classification
-  that is non-deposit-taking.
-- Drift risk: curated IDs can drift from live SW membership; accept for lean v1.
-  Prefer a single classifications plane once the multi-name FI panel is rich enough.
+- Classifications plane: store scan + PIT classifications (R13 default).
+- Lean curated IDs: instrument-ID allowlist kept for opt-in / eval metadata only.
+  Latest PIT non-deposit-taking classification still vetoes a candidate.
 """
 
 from __future__ import annotations
@@ -25,6 +26,7 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass, field
 from datetime import date, datetime
+from pathlib import Path
 from typing import Any, Sequence
 
 from vms.assumptions import cite
@@ -55,10 +57,11 @@ _UNIVERSE_FLAG_SEED = (
 )
 
 
-# Lean curated v1 data plane: major A-share deposit-taking FI tickers only.
+# Lean curated data plane (opt-in): major A-share deposit-taking FI tickers only.
 # Ownership: instrument IDs live here; industry LABELS live in YAML
 # (deposit_taking_fi_sw_label). Do not duplicate label strings beside this tuple.
-# Dual-universe drift is an accepted lean-v1 tradeoff — see module docstring.
+# Default discovery is classifications-only (R13); curated unions only when
+# use_lean_curated=True — see module docstring.
 LEAN_CURATED_DEPOSIT_TAKING_FI: tuple[str, ...] = (
     "000001.SZ",
     "002142.SZ",
@@ -139,12 +142,22 @@ def discover_bank_candidates(
     subject_instrument_id: str,
     classifications: Sequence[InstrumentClassification] | None = None,
     as_of: datetime,
-    use_lean_curated: bool = True,
+    use_lean_curated: bool = False,
     extra_candidates: Sequence[str] | None = None,
+    fund_db: Path | str | None = None,
 ) -> list[str]:
-    """Union lean curated ∪ PIT SW-L1 deposit-taking FI classifications ∪ extras; drop subject."""
+    """Classifications-plane candidates (default); curated only when use_lean_curated=True.
+
+    Membership = store_ids (em_industry_profile sw_l1_proxy == YAML deposit-taking FI label)
+    ∪ PIT classifications matching deposit-taking FI label ∪ extras [∪ curated if opt-in]
+    − subject. Store miss / empty → no invent (local-first, zero REST).
+    """
+    from vms.providers.eastmoney.store import list_deposit_taking_fi_thscodes
+
     bank_label = deposit_taking_fi_sw_label()
     ids: set[str] = set()
+    # Classifications plane seed: local fund DuckDB (always; empty-safe).
+    ids.update(list_deposit_taking_fi_thscodes(fund_db))
     if use_lean_curated:
         ids.update(LEAN_CURATED_DEPOSIT_TAKING_FI)
     if extra_candidates:
@@ -406,13 +419,14 @@ def build_fi_peer_observations(
     financial: Sequence[FinancialObservation],
     market: Sequence[MarketObservation],
     classifications: Sequence[InstrumentClassification] | None = None,
-    use_lean_curated: bool = True,
+    use_lean_curated: bool = False,
     extra_candidates: Sequence[str] | None = None,
     zeros_explicit: bool = True,
+    fund_db: Path | str | None = None,
 ) -> FiPeerUniverseReport:
     """Emit PIT pb_common PeerObservations + exclusion funnel for deposit-taking FI peers."""
     aids = cite(
-        "RIM-FI-PEER-UNIVERSE-v1",
+        "RIM-FI-PEER-UNIVERSE-v2",
         "RIM-COMMON-EQUITY-v1",
         "RIM-PB-ROE-PEER-v1",
         "HITHINK-NO-VENDOR-QFQ-v1",
@@ -425,9 +439,12 @@ def build_fi_peer_observations(
         as_of=as_of,
         use_lean_curated=use_lean_curated,
         extra_candidates=extra_candidates,
+        fund_db=fund_db,
     )
     if use_lean_curated:
         flags.append("LEAN_CURATED_CANDIDATES")
+    else:
+        flags.append("CLASSIFICATIONS_ONLY_CANDIDATES")
 
     bank_label = deposit_taking_fi_sw_label()
     # Latest PIT classification per instrument — stale non-deposit rows must not veto curated FI names.
@@ -505,7 +522,7 @@ def build_fi_peer_observations(
                 metric_timestamp=mts,
                 source_id=SOURCE_ID,
                 quality_status=QualityStatus.DERIVED,
-                revision_id="pb_common=raw_close/(TE-MI-OEI)/shares;RIM-FI-PEER-UNIVERSE-v1",
+                revision_id="pb_common=raw_close/(TE-MI-OEI)/shares;RIM-FI-PEER-UNIVERSE-v2",
             )
         )
         peer_diagnostics.append({

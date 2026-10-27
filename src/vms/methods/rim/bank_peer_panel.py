@@ -439,7 +439,7 @@ def build_fi_peer_panel(
     as_of: datetime,
     classifications: Sequence[InstrumentClassification] | None = None,
     candidate_ids: Sequence[str] | None = None,
-    use_lean_curated: bool = True,
+    use_lean_curated: bool = False,
     extra_candidates: Sequence[str] | None = None,
     prefer_local: bool = True,
     fund_db: Path | str | None = None,
@@ -455,10 +455,13 @@ def build_fi_peer_panel(
     missing surfaces as per-ticker path diag / later peer exclusion.
     ``prefer_local=False``: allow Recipe E / EM upsert; on fail use local fallback
     or leave empty (never invent OEI).
+
+    Candidate discovery default is classifications-only (R13 /
+    ``RIM-FI-PEER-UNIVERSE-v2``); pass ``use_lean_curated=True`` to union curated IDs.
     """
     aids = cite(
         "RIM-FI-PEER-PANEL-v1",
-        "RIM-FI-PEER-UNIVERSE-v1",
+        "RIM-FI-PEER-UNIVERSE-v2",
         "RIM-COMMON-EQUITY-v1",
         "HITHINK-LOCAL-FIRST-v1",
         "EM-FI-F10-v1",
@@ -490,6 +493,7 @@ def build_fi_peer_panel(
             as_of=as_of,
             use_lean_curated=use_lean_curated,
             extra_candidates=extra_candidates,
+            fund_db=fdb,
         )
         if include_subject and subject_instrument_id not in candidates:
             # rare; discovery drops subject
@@ -497,6 +501,8 @@ def build_fi_peer_panel(
 
     if use_lean_curated:
         flags.append("LEAN_CURATED_CANDIDATES")
+    else:
+        flags.append("CLASSIFICATIONS_ONLY_CANDIDATES")
 
     p_end = as_of.date()
     p_start = date(p_end.year - int(price_lookback_years), 1, 1)

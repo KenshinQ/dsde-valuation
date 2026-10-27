@@ -210,6 +210,45 @@ def read_industry(thscode: str, db_path: Path | None = None) -> dict[str, Any] |
         con.close()
 
 
+def list_deposit_taking_fi_thscodes(db_path: Path | str | None = None) -> list[str]:
+    """Local-first: thscodes in em_industry_profile with sw_l1_proxy == bank YAML label.
+
+    Missing duckdb / DB file / table / empty label / query error → ``[]``.
+    Never hits REST — discovery seed for classifications-only peer universe.
+    """
+    # Lazy import: industry → yaml only; no store cycle.
+    from vms.providers.eastmoney.industry import deposit_taking_fi_sw_label
+
+    if not duckdb_available():
+        return []
+    label = deposit_taking_fi_sw_label()
+    if not label:
+        return []
+    path = Path(db_path) if db_path else fund_db_path()
+    if not path.is_file():
+        return []
+    con = _connect(path, read_only=True)
+    try:
+        rows = con.execute(
+            f"SELECT DISTINCT thscode FROM {INDUSTRY_TABLE} "
+            f"WHERE sw_l1_proxy = ? AND thscode IS NOT NULL AND CAST(thscode AS VARCHAR) != '' "
+            f"ORDER BY thscode",
+            [label],
+        ).fetchall()
+        out: list[str] = []
+        for r in rows or []:
+            if not r or r[0] is None:
+                continue
+            s = str(r[0]).strip()
+            if s:
+                out.append(s)
+        return out
+    except Exception:
+        return []
+    finally:
+        con.close()
+
+
 def _parse_date(v: Any):
     if v is None or (isinstance(v, float) and str(v) == "nan"):
         return None

@@ -270,12 +270,13 @@ def test_local_panel_funnel_not_all_missing_financials_unload(as_of):
         subject_instrument_id=SUBJ,
         as_of=as_of,
         prefer_local=True,
+        use_lean_curated=True,  # R13: opt-in curated for multi-bank TE load AC
     )
     assert panel.rest_calls == 0
     te_n = sum(1 for f in panel.financial if f.field_name == "total_equity")
     assert te_n > 0, "panel must load peer TE from local"
 
-    # Subject stub classification for discover (lean curated already used)
+    # Subject stub classification for discover (lean curated opt-in)
     from vms.providers.eastmoney.industry import deposit_taking_fi_sw_label
 
     classes = list(panel.classifications) + [
@@ -633,3 +634,48 @@ def test_legacy_project_value_unsupported_profile_bank_regression(tmp_path, repo
         "--seed", "42", "--paths", "10", "--years", "3",
     ])
     assert rc_v == 4
+
+
+def test_r13_panel_default_flags_classifications_only(as_of, tmp_path):
+    """R13 AC6 panel: default stamps CLASSIFICATIONS_ONLY_CANDIDATES."""
+    fdb = tmp_path / "empty_fund.duckdb"
+    mdb = tmp_path / "empty_market.duckdb"
+    from vms.providers.hithink.paths import duckdb_available
+    from vms.providers.eastmoney import store as em_store
+    if duckdb_available():
+        em_store.ensure_tables(fdb)
+    rep = build_fi_peer_panel(
+        subject_instrument_id=SUBJ,
+        as_of=as_of,
+        prefer_local=True,
+        fund_db=fdb,
+        market_db=mdb,
+        classifications=[],
+    )
+    assert "CLASSIFICATIONS_ONLY_CANDIDATES" in rep.flags
+    assert "LEAN_CURATED_CANDIDATES" not in rep.flags
+    assert "RIM-FI-PEER-UNIVERSE-v2" in rep.assumption_ids
+    assert rep.candidate_ids == []
+
+
+def test_r13_panel_lean_opt_in_flag(as_of, tmp_path):
+    fdb = tmp_path / "empty_fund.duckdb"
+    mdb = tmp_path / "empty_market.duckdb"
+    from vms.providers.hithink.paths import duckdb_available
+    from vms.providers.eastmoney import store as em_store
+    if duckdb_available():
+        em_store.ensure_tables(fdb)
+    rep = build_fi_peer_panel(
+        subject_instrument_id=SUBJ,
+        as_of=as_of,
+        prefer_local=True,
+        use_lean_curated=True,
+        fund_db=fdb,
+        market_db=mdb,
+        classifications=[],
+    )
+    assert "LEAN_CURATED_CANDIDATES" in rep.flags
+    assert "CLASSIFICATIONS_ONLY_CANDIDATES" not in rep.flags
+    assert SUBJ not in rep.candidate_ids
+    assert len(rep.candidate_ids) >= 5
+

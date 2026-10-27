@@ -164,7 +164,7 @@ def test_builder_emits_peers_and_funnel():
     assert len(rep.peers) == 5
     assert all(p.field_name == PEER_FIELD_PB_COMMON for p in rep.peers)
     assert all(p.value is not None and p.value > 0 for p in rep.peers)
-    assert "RIM-FI-PEER-UNIVERSE-v1" in rep.assumption_ids
+    assert "RIM-FI-PEER-UNIVERSE-v2" in rep.assumption_ids
     assert rep.funnel.get("INCLUDED") == 5
     assert rep.funnel.get(EXCLUSION_MISSING_OEI, 0) >= 1
     assert any(e.peer_instrument_id == "601166.SH" and EXCLUSION_MISSING_OEI in e.reasons for e in rep.excluded)
@@ -214,6 +214,7 @@ def test_thin_panel_empty_peers_with_funnel():
         market=mkts,
         classifications=[_bank_cls(SUBJ)],
         use_lean_curated=True,
+        fund_db="/nonexistent/r3_thin_panel.duckdb",
     )
     assert rep.peers == []
     assert len(rep.excluded) == len(rep.candidate_ids)
@@ -341,3 +342,135 @@ def test_subject_allows_auto_fi_peers_gate():
         primary_profile="GROWTH_OR_REINVESTMENT_HEAVY",
         instrument_id=SUBJ, as_of=as_of, classifications=[nonbank],
     )
+
+
+# ---- R13: classifications-only default (drop lean dual-universe) ----
+
+
+def test_r13_ac1_default_empty_plane_no_curated_bleed(tmp_path):
+    """AC1: empty classifications + missing store → [] (no curated bleed)."""
+    as_of, _ = parse_as_of("2025-06-30")
+    missing = tmp_path / "no_such_fund.duckdb"
+    ids = discover_bank_candidates(
+        subject_instrument_id=SUBJ,
+        classifications=[],
+        as_of=as_of,
+        fund_db=missing,
+    )
+    assert ids == []
+    assert SUBJ not in ids
+    assert not (set(LEAN_CURATED_DEPOSIT_TAKING_FI) & set(ids))
+
+
+def test_r13_ac2_bank_label_classifications_minus_subject(tmp_path):
+    """AC2: bank-label classifications → those IDs − subject."""
+    as_of, _ = parse_as_of("2025-06-30")
+    missing = tmp_path / "no_such_fund.duckdb"
+    ids = discover_bank_candidates(
+        subject_instrument_id=SUBJ,
+        classifications=[_bank_cls(SUBJ), _bank_cls(PEER_A), _bank_cls(PEER_B)],
+        as_of=as_of,
+        fund_db=missing,
+    )
+    assert set(ids) == {PEER_A, PEER_B}
+    assert SUBJ not in ids
+
+
+def test_r13_ac3_store_sw_l1_proxy_bank_in_default_candidates(tmp_path):
+    """AC3: store rows with sw_l1_proxy=bank_label appear in default candidates."""
+    from vms.providers.eastmoney import store as em_store
+    from vms.providers.hithink.paths import duckdb_available
+
+    if not duckdb_available():
+        pytest.skip("duckdb required for store fixture")
+    as_of, _ = parse_as_of("2025-06-30")
+    fdb = tmp_path / "fund_r13.duckdb"
+    em_store.ensure_tables(fdb)
+    bank = deposit_taking_fi_sw_label()
+    em_store.upsert_industry(
+        PEER_A,
+        {"em_board": "主板", "csrc_industry": "货币金融服务", "sw_l1_proxy": bank,
+         "listing_date": date(2002, 4, 9), "raw": {}},
+        db_path=fdb,
+    )
+    em_store.upsert_industry(
+        "600519.SH",
+        {"em_board": "主板", "csrc_industry": "酒", "sw_l1_proxy": "食品饮料",
+         "listing_date": date(2001, 8, 27), "raw": {}},
+        db_path=fdb,
+    )
+    ids = discover_bank_candidates(
+        subject_instrument_id=SUBJ,
+        classifications=[],
+        as_of=as_of,
+        fund_db=fdb,
+    )
+    assert PEER_A in ids
+    assert "600519.SH" not in ids
+    assert SUBJ not in ids
+    # curated must not bleed on default (601166 is curated but not in this store fixture)
+    assert "601166.SH" not in ids
+    assert not (set(LEAN_CURATED_DEPOSIT_TAKING_FI) - {PEER_A, SUBJ}) & set(ids)
+
+
+def test_r13_ac5_lean_curated_true_still_unions(tmp_path):
+    """AC5: use_lean_curated=True still unions curated (compat)."""
+    as_of, _ = parse_as_of("2025-06-30")
+    missing = tmp_path / "no_such_fund.duckdb"
+    ids = discover_bank_candidates(
+        subject_instrument_id=SUBJ,
+        classifications=[],
+        as_of=as_of,
+        use_lean_curated=True,
+        fund_db=missing,
+    )
+    assert SUBJ not in ids
+    assert set(LEAN_CURATED_DEPOSIT_TAKING_FI) - {SUBJ} <= set(ids)
+
+
+def test_r13_ac6_default_flags_classifications_only(tmp_path):
+    """AC6: default flags include CLASSIFICATIONS_ONLY_CANDIDATES, not LEAN_CURATED."""
+    as_of, _ = parse_as_of("2025-06-30")
+    fins, mkts = _peer_pack(PEER_A)
+    rep = build_fi_peer_observations(
+        subject_instrument_id=SUBJ,
+        as_of=as_of,
+        financial=fins,
+        market=mkts,
+        classifications=[_bank_cls(PEER_A)],
+        fund_db=tmp_path / "no_such_fund.duckdb",
+    )
+    assert "CLASSIFICATIONS_ONLY_CANDIDATES" in rep.flags
+    assert "LEAN_CURATED_CANDIDATES" not in rep.flags
+    assert "RIM-FI-PEER-UNIVERSE-v2" in rep.assumption_ids
+    lean = build_fi_peer_observations(
+        subject_instrument_id=SUBJ,
+        as_of=as_of,
+        financial=fins,
+        market=mkts,
+        classifications=[_bank_cls(PEER_A)],
+        use_lean_curated=True,
+        fund_db=tmp_path / "no_such_fund.duckdb",
+    )
+    assert "LEAN_CURATED_CANDIDATES" in lean.flags
+    assert "CLASSIFICATIONS_ONLY_CANDIDATES" not in lean.flags
+
+
+def test_r13_ac8_schema_package_min_iv_static():
+    """AC8: SCHEMA / package / MIN / IV unchanged."""
+    from vms import SCHEMA_VERSION, __version__
+    from vms.methods.rim.hist_pb import MIN_HIST_PB_POINTS
+
+    assert SCHEMA_VERSION == "vms-0.2.phase12"
+    assert __version__ == "0.2.0rc1"
+    assert MIN_HIST_PB_POINTS == 12
+    as_of, _ = parse_as_of("2025-06-30")
+    rep = build_fi_peer_observations(
+        subject_instrument_id=SUBJ,
+        as_of=as_of,
+        financial=[],
+        market=[],
+        classifications=[],
+        fund_db="/nonexistent/r13_ac8.duckdb",
+    )
+    assert rep.as_dict()["investment_value"] == "INVESTMENT_VALUE_NOT_ESTABLISHED"

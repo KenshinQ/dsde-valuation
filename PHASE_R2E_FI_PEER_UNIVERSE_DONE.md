@@ -15,8 +15,8 @@ Does **not** claim OOS calibration, ensemble, gate lift, 非银金融 support, o
 - **MISSING_OEI**: peer excluded with canonical code `MISSING_OTHER_EQUITY_INSTRUMENTS` (alias `MISSING_OEI`); **never** treat total equity as common.
 - **value-rim**: when `load.peers` empty and `auto_fi_peers=True` (default), auto-build and write `rim_fi_peers.json` **only if** subject latest PIT SW L1 == `deposit_taking_fi_sw_label()` (YAML). Profile `FINANCIAL_INSTITUTION` alone never grants — 非银金融 (insurance/broker) must skip. Missing SW ⇒ skip auto (`AUTO_FI_PEERS_SKIPPED_NON_FI`). CLI `--no-auto-fi-peers` → `AUTO_FI_PEERS_DISABLED`.
 - **Universe flags**: peer-level cflags (MI assumed 0, PB numerator/denominator) stay in `peer_diagnostics` / exclusion records — do **not** pollute bundle `result_flags`.
-- **Lean curated ownership**: ID allowlist in `bank_peers.LEAN_CURATED_*`; LABEL SoT = `em_industry_proxy.yaml` via `deposit_taking_fi_sw_label()`. Dual-universe drift accepted for lean v1; prefer classifications-only once panel is rich.
-- **Assumption**: `RIM-FI-PEER-UNIVERSE-v1`.
+- **Lean curated ownership**: ID allowlist in `bank_peers.LEAN_CURATED_*`; LABEL SoT = `em_industry_proxy.yaml` via `deposit_taking_fi_sw_label()`. Dual-universe **default** CLOSED by R13 (classifications-only SoT; curated opt-in) — see `PHASE_R13_FI_PEER_CLASSIFICATIONS_ONLY_DONE.md`.
+- **Assumption**: `RIM-FI-PEER-UNIVERSE-v1` (superseded by `RIM-FI-PEER-UNIVERSE-v2` in R13).
 - Legacy `industry.unsupported` / `vms value` gate **untouched**.
 - **Smoke wording**: builder ready; thin local panel may still report honest `PEER_SCARCITY` — not "production panel exited scarcity".
 
@@ -55,7 +55,8 @@ PHASE_R2E_FI_PEER_UNIVERSE_DONE.md
 Local panel still thin (em_bank_f10 / classifications only subject; HiThink BS has TE for many banks but no OEI). R3 auto-build therefore emits **empty peers + MISSING_* funnel** → R2c remains **PEER_SCARCITY** (honest). Subject P/B/ROE still reported. R2a/b/d numbers unchanged vs R2cd.
 
 ## Known gaps (honest)
-- Multi-bank OEI not yet in local panel → VALID peer set needs richer EM F10 / multi-instrument input (out of R3 data-plane scope beyond lean curated IDs).
+- Dual-universe default drift: **CLOSED by R13** (classifications-only default; curated opt-in).
+- Multi-bank OEI not yet in local panel → VALID peer set needs richer EM F10 / multi-instrument input (out of R3 data-plane scope; R13 does not silently fill with curated).
 - SCHEMA_VERSION remains `vms-0.2.phase12`.
 - Walk-forward calibration / ensemble / gate lift / 非银金融 / Track B hist length out of scope.
 

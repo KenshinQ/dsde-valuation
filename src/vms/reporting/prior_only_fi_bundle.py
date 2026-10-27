@@ -464,6 +464,30 @@ def sanitize_injected_components(
                     }
                 )
             continue
+        # Already SKIP / ineligible: preserve caller skip_reason (R9 B1 /
+        # R12 calibrate-rim blob reasons). Do not wipe TRACK_B_CENTER_NOT_PER_SHARE
+        # or explicit calibrate-rim skip_reason into a generic inject label.
+        if not c.eligible:
+            out.append(c)
+            existing = c.diagnostics.get("skip_reason")
+            if not any(e.get("method_id") == METHOD_TRACK_B_EXIT for e in ledger):
+                ledger.append(
+                    {
+                        "method_id": METHOD_TRACK_B_EXIT,
+                        "status": "SKIP",
+                        "hist_n": hist_n,
+                        "min_required": MIN_HIST_PB_POINTS,
+                        "skip_reason": existing
+                        or (
+                            "HIST_PB_BELOW_MIN"
+                            if hist_n < MIN_HIST_PB_POINTS
+                            else "TRACK_B_INJECT_INELIGIBLE"
+                        ),
+                        "in_weights": False,
+                    }
+                )
+            continue
+        # Eligible-looking but hist/samples gate failed → demote.
         skip_reason = (
             "HIST_PB_BELOW_MIN"
             if hist_n < MIN_HIST_PB_POINTS
@@ -504,14 +528,17 @@ def build_prior_only_fi_bundle(
 ) -> dict[str, Any]:
     """Write R8 PRIOR_ONLY FI artifacts: method_results/, ensemble_report, summary.
 
-    When ``components`` are injected (e.g. R9/R10 live value-rim adapter), pass
-    ``data_label`` so artifacts are not stamped SYNTHETIC. Demo path
-    (components is None) keeps the synthetic label.
+    When ``components`` are injected (e.g. R9/R10 live value-rim or R12
+    calibrate-rim forecast adapter), pass ``data_label`` so artifacts are
+    not stamped SYNTHETIC. Demo path (components is None) keeps the
+    synthetic label.
     """
     out = Path(out)
     out.mkdir(parents=True, exist_ok=True)
     tgt = target or ValuationTarget.FUNDAMENTAL_VALUE_CURRENT
-    is_live = bool(source_meta and source_meta.get("source") == "value_rim")
+    src = source_meta.get("source") if source_meta else None
+    is_live = src == "value_rim"
+    is_calibrate_rim = src == "calibrate_rim"
     has_live_samples = bool(
         source_meta
         and (
@@ -520,7 +547,9 @@ def build_prior_only_fi_bundle(
             == "ENSEMBLE-PRIOR-ONLY-FI-LIVE-SAMPLES-v1"
         )
     )
-    if is_live and has_live_samples:
+    if is_calibrate_rim:
+        primary_assumption = "ENSEMBLE-PRIOR-ONLY-FI-CALIBRATE-RIM-MD-v1"
+    elif is_live and has_live_samples:
         primary_assumption = "ENSEMBLE-PRIOR-ONLY-FI-LIVE-SAMPLES-v1"
     elif is_live:
         primary_assumption = "ENSEMBLE-PRIOR-ONLY-FI-LIVE-MD-v1"
@@ -531,7 +560,11 @@ def build_prior_only_fi_bundle(
         "EVAL-IV-NOT-PRICE-TRUTH-v1",
         "EVAL-RIM-FI-DEPOSIT-WF-v1",
     ]
-    if is_live:
+    if is_calibrate_rim:
+        # Parallel research ingest from calibrate-rim forecast blob (extends LIVE-MD).
+        cite_ids.insert(0, "ENSEMBLE-PRIOR-ONLY-FI-LIVE-MD-v1")
+        cite_ids.insert(0, "ENSEMBLE-PRIOR-ONLY-FI-CALIBRATE-RIM-MD-v1")
+    elif is_live:
         # Live path: stamp LIVE-MD; R10 LIVE-SAMPLES when path samples present.
         cite_ids.insert(0, "ENSEMBLE-PRIOR-ONLY-FI-LIVE-MD-v1")
         if has_live_samples:
@@ -723,16 +756,23 @@ def build_prior_only_fi_bundle(
         "warning": (
             (
                 (
-                    f"R10 live value-rim path samples → PRIOR_ONLY research mixture "
+                    f"calibrate-rim forecast → PRIOR_ONLY research mixture "
                     f"({primary_assumption}). "
-                    if has_live_samples
+                    if is_calibrate_rim
                     else (
-                        f"R9 live value-rim → PRIOR_ONLY research mixture "
-                        f"({primary_assumption}). "
+                        (
+                            f"R10 live value-rim path samples → PRIOR_ONLY research mixture "
+                            f"({primary_assumption}). "
+                            if has_live_samples
+                            else (
+                                f"R9 live value-rim → PRIOR_ONLY research mixture "
+                                f"({primary_assumption}). "
+                            )
+                        )
+                        if is_live
+                        else "R8 FI PRIOR_ONLY research mixture (SPEC §13.3). "
                     )
                 )
-                if is_live
-                else "R8 FI PRIOR_ONLY research mixture (SPEC §13.3). "
             )
             + "Equal-weight / exploratory baseline — NOT ENSEMBLE_CALIBRATED. "
             + "Not investment advice. INVESTMENT_VALUE_NOT_ESTABLISHED. "
@@ -754,16 +794,23 @@ def build_prior_only_fi_bundle(
             "warning": (
                 (
                     (
-                        f"R10 live value-rim path samples PRIOR_ONLY ingest "
+                        f"calibrate-rim forecast PRIOR_ONLY ingest "
                         f"({primary_assumption}). Research path only. "
-                        if has_live_samples
+                        if is_calibrate_rim
                         else (
-                            f"R9 live value-rim PRIOR_ONLY ingest "
-                            f"({primary_assumption}). Research path only. "
+                            (
+                                f"R10 live value-rim path samples PRIOR_ONLY ingest "
+                                f"({primary_assumption}). Research path only. "
+                                if has_live_samples
+                                else (
+                                    f"R9 live value-rim PRIOR_ONLY ingest "
+                                    f"({primary_assumption}). Research path only. "
+                                )
+                            )
+                            if is_live
+                            else "R8 deposit-taking FI PRIOR_ONLY wiring. Research path only. "
                         )
                     )
-                    if is_live
-                    else "R8 deposit-taking FI PRIOR_ONLY wiring. Research path only. "
                 )
                 + "Not investment advice. INVESTMENT_VALUE_NOT_ESTABLISHED. "
                 + (

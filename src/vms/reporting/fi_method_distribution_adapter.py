@@ -25,7 +25,9 @@ Samples (R10): prefer path-level arrays persisted by value-rim
 ``sample_generation=live_paths``, ``synthetic=false``, ``n_live_samples``.
 Missing arrays → R9 compat ``samples_from_point`` stamp. Optional pb_common
 may stay ``samples_from_point`` when only a point ``relative_vps`` exists.
-calibrate-rim is NOT a primary input.
+calibrate-rim is NOT a primary input for ``adapt_value_rim_dir``.
+A parallel research ingest ``adapt_calibrate_rim_forecast`` reads one
+calibrate-rim forecast blob (R12); it does not change value-rim semantics.
 """
 
 from __future__ import annotations
@@ -543,13 +545,314 @@ def adapt_value_rim_dir(
     return components, ledger, meta
 
 
+
+
+# ---------------------------------------------------------------------------
+# calibrate-rim forecast blob → MethodDistribution (research PRIOR_ONLY)
+# ---------------------------------------------------------------------------
+
+CALIBRATE_RIM_DATA_LABEL = (
+    "LIVE_CALIBRATE_RIM_FORECAST — research PRIOR_ONLY ingest from calibrate-rim "
+    "forecast blob; not calibrated; not investment advice"
+)
+
+CALIBRATE_RIM_ASSUMPTION = "ENSEMBLE-PRIOR-ONLY-FI-CALIBRATE-RIM-MD-v1"
+
+
+def _payload_from_path_or_dict(
+    path_or_payload: Path | str | dict[str, Any],
+) -> tuple[dict[str, Any], str | None]:
+    """Return (payload, source_path_str). path_or_payload may be a dict already."""
+    if isinstance(path_or_payload, dict):
+        return path_or_payload, None
+    path = Path(path_or_payload)
+    if not path.is_file():
+        raise FiMethodDistributionAdapterError(
+            f"calibrate-rim forecast file does not exist: {path}"
+        )
+    try:
+        raw = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError) as e:
+        raise FiMethodDistributionAdapterError(
+            f"failed to read calibrate-rim forecast {path.name}: {e}"
+        ) from e
+    if not isinstance(raw, dict):
+        raise FiMethodDistributionAdapterError(
+            f"calibrate-rim forecast must be a JSON object, got {type(raw).__name__}"
+        )
+    return raw, str(path.resolve())
+
+
+def _track_a_from_calibrate_rim(
+    payload: dict[str, Any],
+) -> tuple[float, str]:
+    """Track A PER_SHARE center from forecast blob.
+
+    Preference:
+    1. forecasts.intrinsic_value (status==VALID, finite positive point)
+    2. baselines.central_rim.vps (finite positive)
+    """
+    forecasts = payload.get("forecasts") or {}
+    if isinstance(forecasts, dict):
+        iv = forecasts.get("intrinsic_value") or {}
+        if isinstance(iv, dict):
+            status = str(iv.get("status") or "").upper()
+            if status == "VALID":
+                got = _finite_positive(iv.get("point"))
+                if got is not None:
+                    return got, "forecasts.intrinsic_value.point"
+
+    baselines = payload.get("baselines") or {}
+    if isinstance(baselines, dict):
+        central = baselines.get("central_rim") or {}
+        if isinstance(central, dict):
+            got = _finite_positive(central.get("vps"))
+            if got is not None:
+                return got, "baselines.central_rim.vps"
+
+    raise FiMethodDistributionAdapterError(
+        "Track A residual_income center missing: need "
+        "forecasts.intrinsic_value (status=VALID, finite positive point) or "
+        "baselines.central_rim.vps"
+    )
+
+
+def _calibrate_rim_track_b_fields(
+    track_b: dict[str, Any] | None,
+) -> tuple[int, float | None, str | None, str | None]:
+    """Return (hist_n, median_pb_multiple, status, skip_reason).
+
+    ``median_pb`` is an own-hist P/B multiple (audit only) — never PER_SHARE.
+    """
+    if not track_b or not isinstance(track_b, dict):
+        return 0, None, None, None
+    try:
+        hist_n = int(track_b.get("hist_n") or 0)
+    except (TypeError, ValueError):
+        hist_n = 0
+    median_pb = _finite_positive(track_b.get("median_pb"))
+    status = track_b.get("status")
+    status_s = str(status) if status is not None else None
+    skip_reason = track_b.get("skip_reason")
+    skip_s = str(skip_reason) if skip_reason else None
+    return hist_n, median_pb, status_s, skip_s
+
+
+def _mark_calibrate_rim(
+    components: list[MethodDistribution],
+    *,
+    source_path: str | None,
+    rim_vps_source: str,
+    track_b_meta: dict[str, Any] | None = None,
+) -> list[MethodDistribution]:
+    """Rewrite diagnostics: synthetic=False + cite calibrate-rim blob."""
+    out: list[MethodDistribution] = []
+    cite = [source_path] if source_path else []
+    for c in components:
+        diag = dict(c.diagnostics)
+        diag["sample_generation"] = "samples_from_point"
+        diag["synthetic"] = False
+        diag["source"] = "calibrate_rim"
+        if cite:
+            diag["source_artifacts"] = list(cite)
+        diag["assumption"] = CALIBRATE_RIM_ASSUMPTION
+        if c.method_id == METHOD_RIM_TRACK_A:
+            diag["rim_vps_source"] = rim_vps_source
+        if c.method_id == METHOD_TRACK_B_EXIT and track_b_meta:
+            if track_b_meta.get("pb_center_used") is not None:
+                diag["track_b_pb_center_used"] = track_b_meta["pb_center_used"]
+                diag["track_b_pb_center_is_multiple"] = True
+            if track_b_meta.get("blob_status") is not None:
+                diag["track_b_blob_status"] = track_b_meta["blob_status"]
+        out.append(
+            MethodDistribution(
+                method_id=c.method_id,
+                samples=c.samples,
+                status=c.status,
+                target=c.target,
+                output_basis=c.output_basis,
+                eligible=c.eligible,
+                diagnostics=diag,
+            )
+        )
+    return out
+
+
+def resolve_calibrate_rim_forecast_path(
+    calibrate_rim_dir: Path | str,
+    *,
+    instrument_id: str,
+    origin_as_of: str,
+) -> Path:
+    """Resolve ``DIR/forecasts/<ID>/<DATE>_h*.json`` with fail-closed disambiguation.
+
+    ``origin_as_of`` is a calendar date (``YYYY-MM-DD``); matches the filename
+    prefix. Zero matches or multiple horizon files for the same date → error
+    (never silently pick "latest").
+    """
+    root = Path(calibrate_rim_dir)
+    if not root.is_dir():
+        raise FiMethodDistributionAdapterError(
+            f"calibrate-rim directory does not exist: {root}"
+        )
+    date_key = str(origin_as_of).strip()
+    if "T" in date_key:
+        date_key = date_key.split("T", 1)[0]
+    # Accept full ISO; normalize to YYYY-MM-DD for filename match.
+    if len(date_key) >= 10:
+        date_key = date_key[:10]
+    forecast_dir = root / "forecasts" / instrument_id
+    if not forecast_dir.is_dir():
+        raise FiMethodDistributionAdapterError(
+            f"no forecasts directory for instrument {instrument_id!r} under {root}"
+        )
+    matches = sorted(forecast_dir.glob(f"{date_key}_h*.json"))
+    if not matches:
+        raise FiMethodDistributionAdapterError(
+            f"no calibrate-rim forecast matching instrument={instrument_id!r} "
+            f"origin_as_of={date_key!r} under {forecast_dir}"
+        )
+    if len(matches) > 1:
+        names = ", ".join(p.name for p in matches)
+        raise FiMethodDistributionAdapterError(
+            f"ambiguous calibrate-rim forecast for instrument={instrument_id!r} "
+            f"origin_as_of={date_key!r}: {names} "
+            "(pass --from-calibrate-rim-forecast PATH to select one)"
+        )
+    return matches[0]
+
+
+def adapt_calibrate_rim_forecast(
+    path_or_payload: Path | str | dict[str, Any],
+    *,
+    target: ValuationTarget = ValuationTarget.FUNDAMENTAL_VALUE_CURRENT,
+    basis: OutputBasis = OutputBasis.PER_SHARE,
+    seed: int = 42,
+    n_samples: int = 96,
+) -> tuple[list[MethodDistribution], list[dict[str, Any]], dict[str, Any]]:
+    """Adapt one calibrate-rim forecast JSON into MethodDistribution components.
+
+    Returns ``(components, track_b_ledger, meta)``. Research PRIOR_ONLY only —
+    never ENSEMBLE_CALIBRATED. This slice never produces pb_common and never
+    puts Track B into mixture weights (blob has no PER_SHARE exit VPS;
+    ``median_pb`` is audit-only).
+    """
+    payload, source_path = _payload_from_path_or_dict(path_or_payload)
+
+    rim_vps, rim_vps_source = _track_a_from_calibrate_rim(payload)
+
+    raw_tb = payload.get("track_b")
+    track_b = raw_tb if isinstance(raw_tb, dict) else None
+    hist_n, median_pb, tb_status, tb_skip = _calibrate_rim_track_b_fields(track_b)
+
+    if track_b is None:
+        track_b_exit_center = None
+        track_b_hist_n = 0
+        include_skip = False
+        force_not_per_share_skip = False
+        force_hist_skip_reason: str | None = None
+    else:
+        track_b_hist_n = hist_n
+        hist_ok = hist_n >= MIN_HIST_PB_POINTS
+        # This slice has no exit VPS → never enter weights.
+        track_b_exit_center = None
+        include_skip = True
+        if hist_ok:
+            force_not_per_share_skip = True
+            force_hist_skip_reason = None
+        else:
+            force_not_per_share_skip = False
+            # Preserve explicit SKIP reason; never default NOT_ASSESSED → HIST_PB_BELOW_MIN.
+            status_u = (tb_status or "").upper()
+            if status_u == "NOT_ASSESSED":
+                force_hist_skip_reason = tb_skip or "NOT_ASSESSED"
+            elif tb_skip:
+                force_hist_skip_reason = tb_skip
+            else:
+                force_hist_skip_reason = "HIST_PB_BELOW_MIN"
+
+    components, ledger = build_fi_method_components(
+        rim_vps=rim_vps,
+        target=target,
+        basis=basis,
+        seed=seed,
+        n_samples=n_samples,
+        pb_vps=None,  # no relative_vps / pb_common on calibrate-rim blob
+        track_b_exit_center=track_b_exit_center,
+        track_b_hist_n=track_b_hist_n,
+        include_track_b_skip_record=include_skip,
+        rim_samples=None,
+        pb_samples=None,
+        track_b_samples=None,
+    )
+
+    if force_not_per_share_skip:
+        components, ledger = _rewrite_track_b_skip_reason(
+            components,
+            ledger,
+            skip_reason=SKIP_TRACK_B_CENTER_NOT_PER_SHARE,
+            pb_center_used=median_pb,
+        )
+    elif force_hist_skip_reason is not None:
+        components, ledger = _rewrite_track_b_skip_reason(
+            components,
+            ledger,
+            skip_reason=force_hist_skip_reason,
+            pb_center_used=median_pb,
+        )
+
+    track_b_meta = None
+    if track_b is not None:
+        track_b_meta = {
+            "pb_center_used": float(median_pb) if median_pb is not None else None,
+            "blob_status": tb_status,
+        }
+
+    components = _mark_calibrate_rim(
+        components,
+        source_path=source_path,
+        rim_vps_source=rim_vps_source,
+        track_b_meta=track_b_meta,
+    )
+
+    meta: dict[str, Any] = {
+        "data_label": CALIBRATE_RIM_DATA_LABEL,
+        "source": "calibrate_rim",
+        "source_forecast": source_path,
+        "source_artifacts": [source_path] if source_path else [],
+        "rim_vps": rim_vps,
+        "rim_vps_source": rim_vps_source,
+        "pb_vps": None,
+        "track_b_hist_n": track_b_hist_n if track_b is not None else 0,
+        "track_b_pb_center_used": (
+            float(median_pb) if median_pb is not None else None
+        ),
+        "track_b_exit_vps_center": None,
+        "track_b_exit_vps_source": None,
+        "track_b_in_weights_eligible": False,
+        "track_b_blob_status": tb_status,
+        "min_hist_pb_points": MIN_HIST_PB_POINTS,
+        "instrument_id": payload.get("instrument_id"),
+        "origin_as_of": payload.get("origin_as_of"),
+        "horizon_years": payload.get("horizon_years"),
+        "assumption": CALIBRATE_RIM_ASSUMPTION,
+        "synthetic": False,
+        "sample_generation": "samples_from_point",
+        "pit_complete": payload.get("pit_complete"),
+    }
+    return components, ledger, meta
+
 __all__ = [
     "ARTIFACT_METHOD_RESULT",
     "ARTIFACT_RIM_DISTRIBUTION",
     "ARTIFACT_RIM_PB_ROE",
     "ARTIFACT_RIM_TRACK_B",
+    "CALIBRATE_RIM_ASSUMPTION",
+    "CALIBRATE_RIM_DATA_LABEL",
     "FiMethodDistributionAdapterError",
     "LIVE_DATA_LABEL",
     "SKIP_TRACK_B_CENTER_NOT_PER_SHARE",
+    "adapt_calibrate_rim_forecast",
     "adapt_value_rim_dir",
+    "resolve_calibrate_rim_forecast_path",
 ]

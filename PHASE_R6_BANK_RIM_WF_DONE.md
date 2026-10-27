@@ -80,5 +80,5 @@ PHASE_R6_BANK_RIM_WF_DONE.md
 - Sector lint: FI prose; assumption renamed `EVAL-RIM-FI-DEPOSIT-WF-v1`; Chinese industry literals only in `assumptions.py`.
 - Track B ledger: only `status==SKIP` counted (NOT_ASSESSED ≠ HIST_PB_BELOW_MIN); Track B assessed before early returns.
 - AC11: unbiased filter proven with fabricated pit_complete mix + incomplete→excluded 1:1.
-- Smoke 21/skips=15 golden: deferred (ledger semantics fixed; counts may shift vs first smoke).
+- Smoke golden **CLOSED** (2026-10-27 Asia/Shanghai): re-ran fixed CLI on master `@0459ab7` → `G_ORIGINS=G_FORECASTS=G_PIT_EXCLUDED=21`, `G_TB_SKIP=15`, `G_TB_ELIGIBLE=6` (unchanged vs prior candidate after ledger-only fix). Locked in `tests/integration/test_cli_calibrate_rim.py` as **engineering regression golden** — **≠** `CALIBRATION_PASS` / **≠** `ENSEMBLE_CALIBRATED` / **≠** investment advice. Synthetic still full `pit_complete=false` exclusion (`scores_unbiased.n_records=0`).
 

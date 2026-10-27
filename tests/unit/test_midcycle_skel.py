@@ -42,7 +42,7 @@ DIAG_KEYS = {
 
 def _complete_series():
     """7 annual points spanning 6y with clear peak/trough around a mid-cycle median."""
-    # values: trough … peak … mid — median of [40,50,60,70,80,90,100] = 70
+    # values sorted [40,50,55,60,80,90,100] → median = 60 (SF4: prior comment wrongly said 70)
     years = list(range(2018, 2025))  # 2018..2024 → span 6.0y
     values = [40.0, 55.0, 90.0, 100.0, 80.0, 60.0, 50.0]
     assert len(years) == len(values) == MIN_COMPLETE_POINTS
@@ -115,6 +115,47 @@ def test_pit_drops_post_asof_points():
     assert est.confidence is MidCycleConfidence.HIGH
     assert est.mid_cycle_denominator == pytest.approx(60.0)
     assert "PIT_DROPPED_POST_ASOF" in est.diagnostics["reason_codes"]
+
+
+
+def _complete_negative_series():
+    """7 annual points spanning 6y with peak/trough but non-positive median (SF1)."""
+    years = list(range(2018, 2025))
+    # sorted [-100,-50,-20,-10,-5,-2,-1] → median = -10; peak/trough vs med detectable
+    values = [-100.0, -50.0, -20.0, -1.0, -5.0, -2.0, -10.0]
+    assert len(years) == len(values) == MIN_COMPLETE_POINTS
+    return [(date(y, 12, 31), v) for y, v in zip(years, values)]
+
+
+def test_sf1_nonpositive_median_not_high():
+    est = estimate_mid_cycle_denominator(_complete_negative_series(), as_of=ASOF)
+    assert est.confidence is MidCycleConfidence.LOW
+    assert est.mid_cycle_denominator is None
+    assert "NONPOSITIVE_MEDIAN" in est.diagnostics["reason_codes"]
+    assert "COMPLETE_CYCLE_RULES_PASSED" not in est.diagnostics["reason_codes"]
+    assert est.diagnostics["median_value"] == pytest.approx(-10.0)
+    assert DIAG_KEYS <= set(est.diagnostics)
+
+
+def test_sf2_bad_date_string_drops_point_no_throw():
+    # One bad date amid an otherwise complete series → drop that point → may degrade short.
+    good = _complete_series()
+    tainted = list(good)
+    tainted[3] = ("not-a-date", 100.0)  # was peak year; drop → 6 points → SHORT
+    est = estimate_mid_cycle_denominator(tainted, as_of=ASOF)
+    assert est.confidence is MidCycleConfidence.LOW
+    assert est.mid_cycle_denominator is None
+    assert est.diagnostics["n_points"] == MIN_COMPLETE_POINTS - 1
+    assert "SERIES_TOO_SHORT" in est.diagnostics["reason_codes"]
+
+    # Mapping form with bad period_end also drops; bare bad as_of degrades without throw.
+    est2 = estimate_mid_cycle_denominator(
+        [{"period_end": "bogus", "value": 10.0}, {"period_end": "2020-12-31", "value": 20.0}],
+        as_of="also-bogus",
+    )
+    assert est2.confidence is MidCycleConfidence.LOW
+    assert "ASOF_UNPARSEABLE" in est2.diagnostics["reason_codes"]
+    assert est2.diagnostics["n_points"] == 1
 
 
 def _peer(pid: str, field: str, value: float) -> PeerObservation:

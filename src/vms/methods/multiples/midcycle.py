@@ -20,7 +20,10 @@ from pydantic import BaseModel, ConfigDict, Field
 # Explicit completeness rules for HIGH (skeleton; not a full cycle model).
 MIN_COMPLETE_POINTS = 7
 MIN_COMPLETE_SPAN_YEARS = 6.0
-# Peak/trough: require max > median and min < median (strict inequality).
+# Peak/trough skel proxy: require max > median and min < median (strict inequality).
+# This is NOT a true cycle extrema / turning-point detector — almost always true
+# whenever values are non-identical. Documented as skel proxy in DONE/assumption.
+# HIGH also requires median > 0 (NONPOSITIVE_MEDIAN otherwise).
 # Research-only sector prior never elevates confidence above LOW.
 
 
@@ -40,6 +43,7 @@ class MidCycleEstimate(BaseModel):
 
 
 def _parse_as_of(as_of: date | datetime | str | None) -> date | None:
+    """Parse as-of / period date. Raises ValueError on unparseable non-empty strings."""
     if as_of is None:
         return None
     if isinstance(as_of, datetime):
@@ -55,7 +59,10 @@ def _parse_as_of(as_of: date | datetime | str | None) -> date | None:
 
 
 def _coerce_point(raw: Any) -> tuple[date | None, float] | None:
-    """Accept (date|str, value), mapping with period_end/as_of/value, or bare number."""
+    """Accept (date|str, value), mapping with period_end/as_of/value, or bare number.
+
+    Bad date strings drop the whole point (SF2) instead of raising ValueError.
+    """
     if raw is None:
         return None
     if isinstance(raw, (int, float)) and not isinstance(raw, bool):
@@ -74,16 +81,25 @@ def _coerce_point(raw: Any) -> tuple[date | None, float] | None:
         if v != v:
             return None
         d_raw = raw.get("period_end", raw.get("as_of", raw.get("date")))
-        return (_parse_as_of(d_raw) if d_raw is not None else None, v)
+        if d_raw is None:
+            return (None, v)
+        try:
+            return (_parse_as_of(d_raw), v)
+        except (TypeError, ValueError):
+            return None  # drop point on bad date
     if isinstance(raw, (tuple, list)) and len(raw) >= 2:
-        d = _parse_as_of(raw[0]) if raw[0] is not None else None
         try:
             v = float(raw[1])
         except (TypeError, ValueError):
             return None
         if v != v:
             return None
-        return (d, v)
+        if raw[0] is None:
+            return (None, v)
+        try:
+            return (_parse_as_of(raw[0]), v)
+        except (TypeError, ValueError):
+            return None  # drop point on bad date
     return None
 
 
@@ -119,11 +135,17 @@ def estimate_mid_cycle_denominator(
     Returns
     -------
     MidCycleEstimate
-        ``mid_cycle_denominator`` is None + LOW when incomplete; finite + HIGH
-        only when explicit completeness rules pass. Never invents a denom.
+        ``mid_cycle_denominator`` is None + LOW when incomplete or non-positive
+        median; finite + HIGH only when explicit completeness rules pass and
+        median > 0. Never invents a denom. Bad date strings drop the point.
     """
     reason_codes: list[str] = []
-    as_of_d = _parse_as_of(as_of)
+    try:
+        as_of_d = _parse_as_of(as_of)
+    except (TypeError, ValueError):
+        # Unparseable as_of: degrade (no PIT filter) rather than throw.
+        reason_codes.append("ASOF_UNPARSEABLE")
+        as_of_d = None
 
     if series is None:
         reason_codes.append("SERIES_MISSING")
@@ -198,6 +220,18 @@ def estimate_mid_cycle_denominator(
             span=span,
             sector_prior=sector_prior,
             use_sector_prior_stub=use_sector_prior_stub,
+            extra=diagnostics_base,
+        )
+
+    # SF1: HIGH requires med > 0 (hook also gates denom>0; estimator must not claim HIGH).
+    if not (med == med and med > 0):
+        reason_codes.append("NONPOSITIVE_MEDIAN")
+        return _low(
+            None,
+            reason_codes,
+            n_points=n_points,
+            n_usable=n_points,
+            span=span,
             extra=diagnostics_base,
         )
 

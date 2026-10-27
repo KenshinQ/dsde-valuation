@@ -4,7 +4,7 @@ Date: 2026-10-27 (Asia/Shanghai). Repo: KenshinQ/dsde-valuation.
 Branch: `feat/cyc-midcycle-skel`. Base: master @ `45b02fd` (post PR#15).
 SPEC: `/workspace/CYCLICAL_MIDCYCLE_ENGINE_SPEC.md`. Pace: **cyc-midcycle-skel**.
 
-Status: **AC1–AC6 CLOSED** on branch + PR (merge authority kenshin).
+Status: **AC1–AC6 CLOSED** on branch + PR; SF1–SF4 follow-up CLOSED (merge authority kenshin).
 Label: `INVESTMENT_VALUE_NOT_ESTABLISHED`.
 Never claims `ENSEMBLE_CALIBRATED` / `CALIBRATION_PASS` / `INVESTMENT_VALUE_SUPPORTED`.
 
@@ -23,8 +23,19 @@ Never claims `ENSEMBLE_CALIBRATED` / `CALIBRATION_PASS` / `INVESTMENT_VALUE_SUPP
 
 - `n_usable >= MIN_COMPLETE_POINTS` (7)
 - dated span `>= MIN_COMPLETE_SPAN_YEARS` (6.0)
-- peak_detected AND trough_detected (max > median and min < median)
+- peak_detected AND trough_detected (**skel proxy**: max > median and min < median; not a true cycle extrema / turning-point detector — almost always true when values are non-identical)
+- `median > 0` required for HIGH (`NONPOSITIVE_MEDIAN` → LOW + denom None; hook also gates `denom>0`)
+- Bad date strings drop the point and degrade (no `ValueError`); unparseable `as_of` → `ASOF_UNPARSEABLE`, PIT filter off
 - Sector-prior stub never elevates above LOW; opt-in only (`use_sector_prior_stub`)
+
+## Architecture SHOULD-FIX follow-up (PR#16 SF1–SF4)
+
+| SF | Fix | Status |
+|----|-----|--------|
+| SF1 | HIGH path requires `med>0` + `NONPOSITIVE_MEDIAN` | CLOSED |
+| SF2 | Bad date strings drop point / degrade (no throw) | CLOSED |
+| SF3 | peak/trough marked skel proxy in DONE + assumption | CLOSED |
+| SF4 | `_complete_series` median comment corrected (60 not 70) | CLOSED |
 
 ## Unchanged (hard constraints)
 

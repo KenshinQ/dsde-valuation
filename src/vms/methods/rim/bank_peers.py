@@ -3,7 +3,7 @@
 Builds PeerObservation rows for R2c without lifting industry.unsupported.
 Candidate discovery SoT (default) = classifications plane only:
   local DuckDB em_industry_profile (sw_l1_proxy == deposit_taking_fi_sw_label())
-  ∪ in-memory PIT InstrumentClassification matching the YAML bank label
+  ∪ in-memory PIT InstrumentClassification matching the YAML deposit-taking FI label
   ∪ extra_candidates − subject.
 Lean curated allowlist (LEAN_CURATED_DEPOSIT_TAKING_FI) is opt-in via
 use_lean_curated=True (synthetic panel / calibrate-rim / tests). Empty plane →
@@ -148,8 +148,8 @@ def discover_bank_candidates(
 ) -> list[str]:
     """Classifications-plane candidates (default); curated only when use_lean_curated=True.
 
-    Membership = store_ids (em_industry_profile sw_l1_proxy == YAML bank label)
-    ∪ PIT classifications matching bank label ∪ extras [∪ curated if opt-in]
+    Membership = store_ids (em_industry_profile sw_l1_proxy == YAML deposit-taking FI label)
+    ∪ PIT classifications matching deposit-taking FI label ∪ extras [∪ curated if opt-in]
     − subject. Store miss / empty → no invent (local-first, zero REST).
     """
     from vms.providers.eastmoney.store import list_deposit_taking_fi_thscodes

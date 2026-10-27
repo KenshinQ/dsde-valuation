@@ -63,10 +63,13 @@ Applied on branch (this pass):
 5. Live MethodDistribution adapter — **documented residual only** (below); not implemented here.
 
 ## Known gaps (honest)
-- Default demos are **synthetic FI-shaped centers** (engineering wiring), not live
-  HiThink value-rim artifact ingest. **Live FI → MethodDistribution adapter** from
-  `value-rim` / calibrate-rim forecast blobs remains a **known residual** — out of
-  scope for this SHOULD-FIX pass; do not claim live wiring.
+- Default demos are **synthetic FI-shaped centers** (engineering wiring).
+  **Live FI → MethodDistribution adapter** residual:
+  - `value-rim` half → **CLOSED** by R9 (`PHASE_R9_LIVE_MD_ADAPTER_DONE.md`;
+    R10/R11 samples/stride).
+  - calibrate-rim forecast blob half → **CLOSED** by R12
+    (`PHASE_R12_CALIBRATE_RIM_MD_DONE.md`). Research PRIOR_ONLY only — still
+    **not** `ENSEMBLE_CALIBRATED`.
 - Track B eligible path mixes exit-price channel on declared PER_SHARE basis for
   research disagreement only; still labeled PRIOR_ONLY / not IV truth
   (`EVAL-IV-NOT-PRICE-TRUTH-v1`).

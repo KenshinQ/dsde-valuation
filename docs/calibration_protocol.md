@@ -185,3 +185,46 @@ Closes R10 prefix-cap known gap. Same schema/package; research PRIOR_ONLY only.
 
 Assumption: `ENSEMBLE-PRIOR-ONLY-FI-LIVE-SAMPLES-STRIDE-CAP-v1`
 (extends `ENSEMBLE-PRIOR-ONLY-FI-LIVE-SAMPLES-v1`).
+
+
+## calibrate-rim forecast → MethodDistribution (R12)
+
+Closes the R8 residual half for **calibrate-rim forecast blobs** (R9 already closed
+the `value-rim` half). Research PRIOR_ONLY ingest only — **not**
+`ENSEMBLE_CALIBRATED` / `CALIBRATION_PASS`.
+
+CLI (canonical): `vms prior-only-fi --from-calibrate-rim-forecast PATH`
+where `PATH` is one `forecasts/<instrument>/<YYYY-MM-DD>_hN.json`.
+
+Convenience: `vms prior-only-fi --from-calibrate-rim DIR --instrument ID --origin-as-of DATE`
+resolves `DIR/forecasts/<ID>/<DATE>_h*.json`; **0 or >1 match → fail closed**
+(never silently pick "latest"). Mutually exclusive with `--from-value-rim` /
+`--scenario`.
+
+- Track A center: `forecasts.intrinsic_value.point` when `status=VALID` and finite
+  positive; else `baselines.central_rim.vps`. Missing → fail closed.
+- **No** `pb_common` (blob has no `relative_vps`; never invent from ROE/spot).
+- Track B: ledger from `track_b.hist_n` / `skip_reason` / `median_pb`.
+  `median_pb` is an own-hist **P/B multiple** (audit only) and is **never** a
+  PER_SHARE weight center. Even when `hist_n >= MIN_HIST_PB_POINTS` (=12) /
+  blob `status=ELIGIBLE`, Track B **SKIP** `TRACK_B_CENTER_NOT_PER_SHARE`
+  (ELIGIBLE hist depth ≠ PER_SHARE exit VPS). `hist_n < MIN` → SKIP (preserve
+  blob `skip_reason` when explicit SKIP; never default `NOT_ASSESSED` to
+  `HIST_PB_BELOW_MIN`).
+- Samples: `samples_from_point(center)` only; `diagnostics.synthetic=false` +
+  `sample_generation=samples_from_point` + `source=calibrate_rim` + blob path.
+- One blob per ingest — does **not** aggregate multi-origin forecasts into one
+  mixture (that would look like a calibrated ensemble).
+- Does **not** rewrite calibrate-rim emitters to invent exit VPS; does not lower
+  MIN; does not invent OEI; does not change R9 `--from-value-rim` semantics.
+- Hard labels unchanged: `PRIOR_ONLY` / `ENSEMBLE_UNCALIBRATED` /
+  `CALIBRATION_INSUFFICIENT` / `INVESTMENT_VALUE_NOT_ESTABLISHED`.
+  Never `ENSEMBLE_CALIBRATED` / `CALIBRATION_PASS` / `INVESTMENT_VALUE_SUPPORTED`.
+- Schema stays `vms-0.2.phase12`; package `0.2.0rc1`.
+
+Assumption: `ENSEMBLE-PRIOR-ONLY-FI-CALIBRATE-RIM-MD-v1`
+(extends `ENSEMBLE-PRIOR-ONLY-FI-LIVE-MD-v1` / `ENSEMBLE-PRIOR-ONLY-FI-v1`).
+
+Note: R9/R10 text that "`calibrate-rim` is not primary mixture input" means the
+**value-rim** adapter must not take calibrate-rim as its primary input. R12 is a
+**parallel** research ingest path, not a change to R9 semantics.

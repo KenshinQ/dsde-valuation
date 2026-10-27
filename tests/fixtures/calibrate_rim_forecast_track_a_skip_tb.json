@@ -1,0 +1,59 @@
+{
+  "instrument_id": "600036.SH",
+  "origin_as_of": "2017-04-20T18:00:00+08:00",
+  "horizon_years": 1,
+  "spot_price": 73.64,
+  "profile_id": "FINANCIAL_INSTITUTION",
+  "pit_complete": false,
+  "rim_status": "VALID",
+  "forecasts": {
+    "driver_roe": {
+      "family": "common_roe",
+      "note": "Scored vs realized next-FY common ROE; separate from intrinsic VPS",
+      "point": 0.12520414116072542,
+      "policy": "HIST_MEDIAN_PERSISTENCE"
+    },
+    "intrinsic_value": {
+      "family": "residual_income_common_equity",
+      "note": "Intrinsic VPS from RIM Track A. Never scored by price MAE alone (EVAL-IV-NOT-PRICE-TRUTH-v1).",
+      "point": 39.016978286598786,
+      "status": "VALID"
+    },
+    "market_price": {
+      "family": "spot_persistence",
+      "note": "Market-price association only; not intrinsic ground truth",
+      "point": 73.64
+    }
+  },
+  "baselines": {
+    "central_rim": {
+      "equity_value": {
+        "mean": 409678272009.28723,
+        "n": 1,
+        "p05": 409678272009.28723,
+        "p50": 409678272009.28723,
+        "p95": 409678272009.28723
+      },
+      "label": "deterministic_central_rim_vps",
+      "status": "VALID",
+      "vps": 39.016978286598786
+    }
+  },
+  "track_b": {
+    "assumption_ids": [
+      "HITHINK-NO-VENDOR-QFQ-v1",
+      "MARKET-PRICING-NO-SILENT-INTRINSIC-EXIT-v1",
+      "RIM-COMMON-EQUITY-v1",
+      "RIM-EXIT-OWN-PB-HIST-v1"
+    ],
+    "hist_n": 9,
+    "median_pb": 2.476872029213876,
+    "min_required": 12,
+    "skip_reason": "INSUFFICIENT_OWN_PB_HISTORY",
+    "status": "SKIP"
+  },
+  "calibration_kind": "bank_rim_track_a",
+  "frozen_weights_hash": "048b3d5ef82306ef",
+  "persisted_before_outcomes": true,
+  "outcomes": null
+}

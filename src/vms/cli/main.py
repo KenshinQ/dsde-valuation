@@ -24,7 +24,7 @@ Implemented commands:
   phase10         VMS-0.2 Phase 10 Track B return distributions + DSDE contract (synthetic; NOT investment advice)
   phase11         VMS-0.2 Phase 11 walk-forward calibration + sensitivity (synthetic; NOT investment advice)
   calibrate-rim   Deposit-taking FI RIM walk-forward (R6 synthetic / R7 HiThink-EM lean; NOT investment advice)
-  prior-only-fi   R8/R9 FI PRIOR_ONLY research ensemble (demo or --from-value-rim; NOT calibrated)
+  prior-only-fi   R8/R9/R12 FI PRIOR_ONLY research ensemble (demo / --from-value-rim / --from-calibrate-rim-forecast; NOT calibrated)
   phase12         VMS-0.2 Phase 12 offline release examples (synthetic; NOT investment advice)
   validate-bundle Validate a result-bundle directory against a PHASE_CLI subset / §16.3
   profile         VMS-0.2 Phase 2 economic-profile classifier (NOT a valuation)
@@ -87,7 +87,9 @@ from vms.reporting.prior_only_fi_bundle import (PRIOR_ONLY_FI_STATUS, PriorOnlyF
                                                  dump_summary as dump_prior_only_fi_summary)
 from vms.reporting.fi_method_distribution_adapter import (
     FiMethodDistributionAdapterError,
+    adapt_calibrate_rim_forecast,
     adapt_value_rim_dir,
+    resolve_calibrate_rim_forecast_path,
 )
 from vms.reporting.phase12_bundle import (PHASE12_STATUS, Phase12BundleError, ALL_PATTERNS,
                                          build_phase12_pattern, build_phase12_release,
@@ -1582,7 +1584,7 @@ def cmd_calibrate_rim(args: argparse.Namespace) -> int:
 
 
 def cmd_prior_only_fi(args: argparse.Namespace) -> int:
-    """FI PRIOR_ONLY research ensemble wiring (R8 demo / R9 live). NOT calibrated."""
+    """FI PRIOR_ONLY research ensemble wiring (R8 demo / R9 live / R12 calibrate-rim). NOT calibrated."""
     try:
         target = ValuationTarget(args.target) if args.target else None
     except ValueError as e:
@@ -1594,12 +1596,38 @@ def cmd_prior_only_fi(args: argparse.Namespace) -> int:
     seed = 42 if args.seed is None else int(args.seed)
     n_draws = 1000 if args.n_draws is None else int(args.n_draws)
     from_value_rim = getattr(args, "from_value_rim", None)
+    from_cr_forecast = getattr(args, "from_calibrate_rim_forecast", None)
+    from_cr_dir = getattr(args, "from_calibrate_rim", None)
+    cr_instrument = getattr(args, "calibrate_rim_instrument", None)
+    cr_origin = getattr(args, "calibrate_rim_origin_as_of", None)
     scenario = getattr(args, "scenario", None)  # SUPPRESS → absent unless passed
-    if from_value_rim and scenario is not None:
+
+    ingest_flags = [
+        ("--from-value-rim", bool(from_value_rim)),
+        ("--from-calibrate-rim-forecast", bool(from_cr_forecast)),
+        ("--from-calibrate-rim", bool(from_cr_dir)),
+    ]
+    active_ingest = [name for name, on in ingest_flags if on]
+    if len(active_ingest) > 1:
         raise InputError(
-            "--from-value-rim and --scenario are mutually exclusive "
-            "(omit --scenario when ingesting live value-rim artifacts)"
+            f"{' and '.join(active_ingest)} are mutually exclusive "
+            "(choose one ingest source)"
         )
+    if active_ingest and scenario is not None:
+        raise InputError(
+            f"{active_ingest[0]} and --scenario are mutually exclusive "
+            "(omit --scenario when ingesting live artifacts)"
+        )
+    if from_cr_dir and (not cr_instrument or not cr_origin):
+        raise InputError(
+            "--from-calibrate-rim requires --instrument and --origin-as-of "
+            "(or pass --from-calibrate-rim-forecast PATH)"
+        )
+    if (cr_instrument or cr_origin) and not from_cr_dir and not from_cr_forecast:
+        raise InputError(
+            "--instrument / --origin-as-of only apply with --from-calibrate-rim"
+        )
+
     try:
         if from_value_rim:
             comps, ledger, meta = adapt_value_rim_dir(
@@ -1610,6 +1638,31 @@ def cmd_prior_only_fi(args: argparse.Namespace) -> int:
             summary = build_prior_only_fi_bundle(
                 out,
                 scenario="live_value_rim",  # stamp only; components override demo
+                seed=seed,
+                n_draws=n_draws,
+                target=target,
+                components=comps,
+                track_b_ledger=ledger,
+                data_label=meta["data_label"],
+                source_meta=meta,
+            )
+        elif from_cr_forecast or from_cr_dir:
+            if from_cr_forecast:
+                forecast_path = Path(from_cr_forecast)
+            else:
+                forecast_path = resolve_calibrate_rim_forecast_path(
+                    Path(from_cr_dir),
+                    instrument_id=str(cr_instrument),
+                    origin_as_of=str(cr_origin),
+                )
+            comps, ledger, meta = adapt_calibrate_rim_forecast(
+                forecast_path,
+                target=target or ValuationTarget.FUNDAMENTAL_VALUE_CURRENT,
+                seed=seed,
+            )
+            summary = build_prior_only_fi_bundle(
+                out,
+                scenario="live_calibrate_rim_forecast",
                 seed=seed,
                 n_draws=n_draws,
                 target=target,
@@ -2258,7 +2311,10 @@ def build_parser() -> argparse.ArgumentParser:
             "track_b_eligible",
             "incompatible",
         ],
-        help="synthetic FI wiring demo (default track_b_skip; mutually exclusive with --from-value-rim)",
+        help=(
+            "synthetic FI wiring demo (default track_b_skip; mutually exclusive "
+            "with --from-value-rim / --from-calibrate-rim*)"
+        ),
     )
     pofi.add_argument("--target", default=None, help="ValuationTarget override")
     pofi.add_argument(
@@ -2267,8 +2323,42 @@ def build_parser() -> argparse.ArgumentParser:
         default=None,
         help=(
             "R9: ingest live value-rim out directory → MethodDistribution → "
-            "PRIOR_ONLY research mixture (do not also pass --scenario)"
+            "PRIOR_ONLY research mixture (do not also pass --scenario / "
+            "--from-calibrate-rim*)"
         ),
+    )
+    pofi.add_argument(
+        "--from-calibrate-rim-forecast",
+        dest="from_calibrate_rim_forecast",
+        default=None,
+        help=(
+            "R12: ingest one calibrate-rim forecast JSON "
+            "(forecasts/<id>/<date>_hN.json) → MethodDistribution → "
+            "PRIOR_ONLY research mixture (mutually exclusive with "
+            "--from-value-rim / --scenario / --from-calibrate-rim)"
+        ),
+    )
+    pofi.add_argument(
+        "--from-calibrate-rim",
+        dest="from_calibrate_rim",
+        default=None,
+        help=(
+            "R12 convenience: calibrate-rim out-dir; requires --instrument and "
+            "--origin-as-of; resolves forecasts/<id>/<date>_h*.json "
+            "(0 or >1 match → fail closed)"
+        ),
+    )
+    pofi.add_argument(
+        "--instrument",
+        dest="calibrate_rim_instrument",
+        default=None,
+        help="with --from-calibrate-rim: instrument_id under forecasts/",
+    )
+    pofi.add_argument(
+        "--origin-as-of",
+        dest="calibrate_rim_origin_as_of",
+        default=None,
+        help="with --from-calibrate-rim: origin date YYYY-MM-DD (filename prefix)",
     )
     pofi.set_defaults(func=cmd_prior_only_fi)
 

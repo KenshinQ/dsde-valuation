@@ -72,6 +72,8 @@ At each chronological origin:
 
 Assumption: `EVAL-RIM-FI-DEPOSIT-WF-v1`. Expected on R6-default: `CALIBRATION_INSUFFICIENT` + `INVESTMENT_VALUE_NOT_ESTABLISHED`. Schema stays `vms-0.2.phase12` — do not bump schema to claim PASS.
 
+CI locks default lean **synthetic** smoke counts (`G_*` in `tests/integration/test_cli_calibrate_rim.py`) as an **engineering golden** (protocol regression). That golden is **not** `CALIBRATION_PASS` and does **not** cover R7 real-OOS counts.
+
 ## Deposit-taking FI real OOS (R7)
 
 Lean curated HiThink + EM panel (`config/universe.fi_deposit_lean_real.yaml`).

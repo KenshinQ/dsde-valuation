@@ -103,7 +103,11 @@ def _peer_pack(
 def test_lean_curated_nonempty_and_excludes_subject():
     as_of, _ = parse_as_of("2025-06-30")
     ids = discover_bank_candidates(
-        subject_instrument_id=SUBJ, classifications=[], as_of=as_of, use_lean_curated=True,
+        subject_instrument_id=SUBJ,
+        classifications=[],
+        as_of=as_of,
+        use_lean_curated=True,
+        fund_db="/nonexistent/r3_lean_curated.duckdb",
     )
     assert SUBJ not in ids
     assert PEER_A in ids
@@ -160,10 +164,13 @@ def test_builder_emits_peers_and_funnel():
         classifications=[_bank_cls(p) for p in [PEER_A, PEER_B, PEER_C, PEER_D, PEER_E, "601166.SH"]],
         use_lean_curated=True,
         zeros_explicit=True,
+        fund_db="/nonexistent/r3_builder.duckdb",
     )
     assert len(rep.peers) == 5
     assert all(p.field_name == PEER_FIELD_PB_COMMON for p in rep.peers)
     assert all(p.value is not None and p.value > 0 for p in rep.peers)
+    assert all(p.source_id == "fi_peer_universe_v2" for p in rep.peers)
+    assert rep.source_id == "fi_peer_universe_v2"
     assert "RIM-FI-PEER-UNIVERSE-v2" in rep.assumption_ids
     assert rep.funnel.get("INCLUDED") == 5
     assert rep.funnel.get(EXCLUSION_MISSING_OEI, 0) >= 1
@@ -187,6 +194,7 @@ def test_leakage_future_notice_and_price_excluded():
         classifications=[_bank_cls(PEER_A), _bank_cls(PEER_B), _bank_cls(PEER_C)],
         use_lean_curated=False,
         extra_candidates=[PEER_A, PEER_B, PEER_C],
+        fund_db="/nonexistent/r3_leakage.duckdb",
     )
     included_ids = {p.peer_instrument_id for p in rep.peers}
     assert included_ids == {PEER_C}
@@ -250,6 +258,7 @@ def test_nonbank_veto_uses_latest_pit_classification_only():
         classifications=[latest_bank, stale_nonbank],
         use_lean_curated=False,
         extra_candidates=[PEER_A],
+        fund_db="/nonexistent/r3_nonbank_veto.duckdb",
     )
     assert {p.peer_instrument_id for p in rep.peers} == {PEER_A}
     assert PEER_A not in {e.peer_instrument_id for e in rep.excluded if "NOT_DEPOSIT_TAKING_FI" in e.reasons}
@@ -274,6 +283,7 @@ def test_latest_nonbank_still_vetoes_curated():
         classifications=[old_bank, new_nonbank],
         use_lean_curated=False,
         extra_candidates=[PEER_A],
+        fund_db="/nonexistent/r3_latest_nonbank.duckdb",
     )
     assert rep.peers == []
     assert any("NOT_DEPOSIT_TAKING_FI" in e.reasons for e in rep.excluded if e.peer_instrument_id == PEER_A)
@@ -296,6 +306,7 @@ def test_peer_cflags_do_not_pollute_universe_flags():
         use_lean_curated=False,
         extra_candidates=[PEER_A],
         zeros_explicit=True,
+        fund_db="/nonexistent/r3_cflags.duckdb",
     )
     assert len(rep.peers) == 1
     assert not any(f.startswith("MINORITY_EQUITY_ASSUMED_ZERO") for f in rep.flags)
@@ -474,3 +485,35 @@ def test_r13_ac8_schema_package_min_iv_static():
         fund_db="/nonexistent/r13_ac8.duckdb",
     )
     assert rep.as_dict()["investment_value"] == "INVESTMENT_VALUE_NOT_ESTABLISHED"
+
+
+def test_sf2_list_helper_logs_warning_on_query_error(tmp_path, caplog, monkeypatch):
+    """SF2: query/schema Exception → [] + warning(exc_info); missing file stays silent."""
+    import logging
+
+    from vms.providers.eastmoney import store as em_store
+
+    missing = tmp_path / "no_such_fund.duckdb"
+    with caplog.at_level(logging.WARNING, logger="vms.providers.eastmoney.store"):
+        assert em_store.list_deposit_taking_fi_thscodes(missing) == []
+    assert not any("list_deposit_taking_fi_thscodes failed" in r.message for r in caplog.records)
+
+    if not em_store.duckdb_available():
+        return
+    fdb = tmp_path / "sf2_fund.duckdb"
+    em_store.ensure_tables(fdb)
+
+    class _Boom:
+        def execute(self, *_a, **_k):
+            raise RuntimeError("sf2_schema_boom")
+
+        def close(self):
+            pass
+
+    monkeypatch.setattr(em_store, "_connect", lambda *_a, **_k: _Boom())
+    with caplog.at_level(logging.WARNING, logger="vms.providers.eastmoney.store"):
+        assert em_store.list_deposit_taking_fi_thscodes(fdb) == []
+    hits = [r for r in caplog.records if "list_deposit_taking_fi_thscodes failed" in r.message]
+    assert len(hits) == 1
+    assert hits[0].levelno == logging.WARNING
+    assert hits[0].exc_info is not None

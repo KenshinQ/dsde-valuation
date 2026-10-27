@@ -3,12 +3,15 @@
 from __future__ import annotations
 
 import json
+import logging
 from datetime import datetime
 from pathlib import Path
 from typing import Any
 from zoneinfo import ZoneInfo
 
 from vms.providers.hithink.paths import duckdb_available, fund_db_path
+
+logger = logging.getLogger(__name__)
 
 TZ = ZoneInfo("Asia/Shanghai")
 
@@ -244,6 +247,11 @@ def list_deposit_taking_fi_thscodes(db_path: Path | str | None = None) -> list[s
                 out.append(s)
         return out
     except Exception:
+        logger.warning(
+            "list_deposit_taking_fi_thscodes failed for %s; returning []",
+            path,
+            exc_info=True,
+        )
         return []
     finally:
         con.close()

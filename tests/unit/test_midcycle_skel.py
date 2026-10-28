@@ -84,7 +84,7 @@ def test_incomplete_short_series_none_low_conf():
     assert est.diagnostics["sector_prior_applied"] is False
 
 
-def test_sector_prior_stub_research_only_low_never_silent():
+def test_sector_prior_stub_off_never_silent():
     # Without opt-in: prior present but not applied; denom still None.
     est = estimate_mid_cycle_denominator(
         [(date(2024, 12, 31), 10.0)],
@@ -97,18 +97,95 @@ def test_sector_prior_stub_research_only_low_never_silent():
     assert "SECTOR_PRIOR_PRESENT_BUT_STUB_OFF" in est.diagnostics["reason_codes"]
     assert est.diagnostics["sector_prior_applied"] is False
 
-    # With opt-in: research-only LOW fill, never HIGH.
-    est2 = estimate_mid_cycle_denominator(
+
+def test_sector_prior_empty_series_raw_prior_fill_low():
+    """Empty + stub + prior → raw prior fill (compat); never HIGH (AC2)."""
+    est = estimate_mid_cycle_denominator(
+        [],
+        as_of=ASOF,
+        sector_prior=50.0,
+        use_sector_prior_stub=True,
+    )
+    assert est.mid_cycle_denominator == pytest.approx(50.0)
+    assert est.confidence is MidCycleConfidence.LOW
+    assert est.diagnostics["research_only"] is True
+    assert est.diagnostics["sector_prior_applied"] is True
+    assert "SECTOR_PRIOR_STUB_RESEARCH_ONLY" in est.diagnostics["reason_codes"]
+    assert "SECTOR_PRIOR_SHRINK_EMPTY_SERIES" in est.diagnostics["reason_codes"]
+    assert est.diagnostics["shrink_lambda"] == pytest.approx(1.0)
+    assert est.diagnostics["sample_median"] is None
+    assert est.diagnostics["sector_prior"] == pytest.approx(50.0)
+    assert "CYCLE-MIDCYCLE-SECTOR-PRIOR-SHRINK-v1" in est.diagnostics["assumption_ids"]
+
+
+def test_sector_prior_shrink_incomplete_med_positive_low():
+    """Incomplete + stub + prior>0 + sample med>0 → shrink blend, LOW (AC1)."""
+    # n_usable=1, m=10, prior=50, MIN_COMPLETE_POINTS=7
+    # λ = 1 - 1/7 = 6/7; denom = (1/7)*10 + (6/7)*50 = 310/7
+    est = estimate_mid_cycle_denominator(
         [(date(2024, 12, 31), 10.0)],
         as_of=ASOF,
         sector_prior=50.0,
         use_sector_prior_stub=True,
     )
-    assert est2.mid_cycle_denominator == pytest.approx(50.0)
-    assert est2.confidence is MidCycleConfidence.LOW
-    assert est2.diagnostics["research_only"] is True
-    assert est2.diagnostics["sector_prior_applied"] is True
-    assert "SECTOR_PRIOR_STUB_RESEARCH_ONLY" in est2.diagnostics["reason_codes"]
+    expected_lam = 1.0 - (1.0 / MIN_COMPLETE_POINTS)
+    expected_denom = (1.0 - expected_lam) * 10.0 + expected_lam * 50.0
+    assert est.mid_cycle_denominator == pytest.approx(expected_denom)
+    assert est.mid_cycle_denominator == pytest.approx(310.0 / 7.0)
+    assert est.confidence is MidCycleConfidence.LOW
+    assert est.diagnostics["research_only"] is True
+    assert est.diagnostics["sector_prior_applied"] is True
+    assert "SECTOR_PRIOR_STUB_RESEARCH_ONLY" in est.diagnostics["reason_codes"]
+    assert "SECTOR_PRIOR_SHRINK_APPLIED" in est.diagnostics["reason_codes"]
+    assert est.diagnostics["shrink_lambda"] == pytest.approx(expected_lam)
+    assert est.diagnostics["sample_median"] == pytest.approx(10.0)
+    assert est.diagnostics["sector_prior"] == pytest.approx(50.0)
+    assert "CYCLE-MIDCYCLE-SECTOR-PRIOR-SHRINK-v1" in est.diagnostics["assumption_ids"]
+
+
+def test_sector_prior_complete_high_ignores_prior():
+    """Complete HIGH path unchanged; prior does not upgrade or replace (AC3)."""
+    series = _complete_series()
+    est = estimate_mid_cycle_denominator(
+        series,
+        as_of=ASOF,
+        sector_prior=999.0,
+        use_sector_prior_stub=True,
+    )
+    assert est.confidence is MidCycleConfidence.HIGH
+    assert est.mid_cycle_denominator == pytest.approx(60.0)
+    assert est.diagnostics["sector_prior_applied"] is False
+    assert est.diagnostics["research_only"] is False
+    assert "SECTOR_PRIOR_SHRINK_APPLIED" not in est.diagnostics["reason_codes"]
+    assert "COMPLETE_CYCLE_RULES_PASSED" in est.diagnostics["reason_codes"]
+
+
+def test_sector_prior_invalid_and_nonpositive_sample_no_invent():
+    """Stub off already covered; invalid prior / m≤0 → no invent (AC4)."""
+    # Invalid prior (nonpositive) with stub on → None
+    est_inv = estimate_mid_cycle_denominator(
+        [(date(2024, 12, 31), 10.0)],
+        as_of=ASOF,
+        sector_prior=-5.0,
+        use_sector_prior_stub=True,
+    )
+    assert est_inv.mid_cycle_denominator is None
+    assert est_inv.confidence is MidCycleConfidence.LOW
+    assert "SECTOR_PRIOR_STUB_INVALID" in est_inv.diagnostics["reason_codes"]
+    assert est_inv.diagnostics["sector_prior_applied"] is False
+
+    # Incomplete with nonpositive sample median → no invent even with stub+prior
+    series_neg = [(date(2020 + i, 12, 31), -10.0 - i) for i in range(3)]
+    est_neg = estimate_mid_cycle_denominator(
+        series_neg,
+        as_of=ASOF,
+        sector_prior=50.0,
+        use_sector_prior_stub=True,
+    )
+    assert est_neg.mid_cycle_denominator is None
+    assert est_neg.confidence is MidCycleConfidence.LOW
+    assert "SECTOR_PRIOR_SKIPPED_NONPOSITIVE_SAMPLE_MEDIAN" in est_neg.diagnostics["reason_codes"]
+    assert est_neg.diagnostics["sector_prior_applied"] is False
 
 
 def test_synthetic_complete_finite_denom_and_diagnostics():

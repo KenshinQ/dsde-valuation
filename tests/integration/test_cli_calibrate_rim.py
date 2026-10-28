@@ -71,15 +71,26 @@ def test_cli_calibrate_rim_smoke(tmp_path, capsys):
     assert tb["n_eligible"] == g["G_TB_ELIGIBLE"]
     assert g["G_TB_SKIP"] + g["G_TB_ELIGIBLE"] == g["G_FORECASTS"]
 
-    # AC5 — Track B ledger: SKIP-only rows; 000001 present; honest skip_reason
+    # AC5 — Track B ledger: SKIP-only rows; 000001 present; anti-disguise
+    # (replaces tautology `reason != HIST_PB_BELOW_MIN or instrument_id`)
     assert len(rep["track_b_skips"]) == g["G_TB_SKIP"]
     assert len(tb["skips"]) == g["G_TB_SKIP"]
     assert any(s.get("instrument_id") == "000001.SZ" for s in rep["track_b_skips"])
-    for s in rep["track_b_skips"]:
-        reason = s.get("skip_reason")
-        assert reason  # non-empty
-        # NOT_ASSESSED must not be disguised as HIST_PB_BELOW_MIN on the ledger
-        assert reason != "HIST_PB_BELOW_MIN" or s.get("instrument_id")
+    for ledger in (rep["track_b_skips"], tb["skips"]):
+        for s in ledger:
+            reason = s.get("skip_reason")
+            assert reason, "skip_reason must be non-empty on track_b_skips"
+            assert reason != "NOT_ASSESSED", (
+                "NOT_ASSESSED must not appear as skip_reason on the skips ledger"
+            )
+            # If status ever leaks onto a ledger row, it must be SKIP — never NOT_ASSESSED
+            if "status" in s:
+                assert s["status"] == "SKIP"
+            assert s.get("instrument_id"), "skip ledger row needs instrument_id"
+            # Depth fields exist on golden/emission payload — prove short-hist SKIP shape
+            assert s.get("hist_n") is not None
+            assert s.get("min_required") is not None
+            assert s["hist_n"] < s["min_required"]
 
     # AC6 — hard labels / gates (never PASS / never calibrated ensemble)
     assert summ["status"] == CALIBRATE_RIM_STATUS

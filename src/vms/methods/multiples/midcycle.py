@@ -4,8 +4,10 @@ PIT series → mid_cycle_denominator | None + confidence + diagnostics.
 Incomplete / short / missing series → None + LOW (no invent).
 HIGH only under explicit completeness rules below.
 Optional sector-prior stub is research-only / LOW and never silent-fills.
-Orthogonal to ``vms.regimes`` and Track B hist P/B.
-Label: INVESTMENT_VALUE_NOT_ESTABLISHED. Not ensemble-calibrated.
+Incomplete series with sample median > 0 may shrink toward the prior
+(``CYCLE-MIDCYCLE-SECTOR-PRIOR-SHRINK-v1``); empty series keeps raw prior fill.
+Prior never elevates confidence above LOW. Orthogonal to ``vms.regimes`` and
+Track B hist P/B. Label: INVESTMENT_VALUE_NOT_ESTABLISHED. Not ensemble-calibrated.
 """
 
 from __future__ import annotations
@@ -26,6 +28,10 @@ MIN_COMPLETE_SPAN_YEARS = 6.0
 # extremum → incomplete (NO_LOCAL_PEAK / NO_LOCAL_TROUGH). No invent.
 # HIGH also requires median > 0 (NONPOSITIVE_MEDIAN otherwise).
 # Research-only sector prior never elevates confidence above LOW.
+# Shrink (when stub on + prior>0 + incomplete + sample med>0):
+#   λ = clip(1 - n_usable / MIN_COMPLETE_POINTS, 0, 1)
+#   denom = (1-λ)*m + λ*prior  (always LOW / research_only)
+# Empty + stub + prior → raw prior fill (compat). m≤0 / stub off → no invent.
 
 
 class MidCycleConfidence(str, Enum):
@@ -152,8 +158,10 @@ def estimate_mid_cycle_denominator(
     sector_prior:
         Optional research-only prior. Applied only when ``use_sector_prior_stub``
         is True; always LOW confidence; never silent fill when stub is off.
+        Incomplete + sample median > 0 → shrink blend toward prior; empty series
+        → raw prior fill (compat). Never upgrades confidence to HIGH.
     use_sector_prior_stub:
-        Explicit opt-in for the research-only prior path.
+        Explicit opt-in for the research-only prior / shrink path.
 
     Returns
     -------
@@ -257,6 +265,7 @@ def estimate_mid_cycle_denominator(
             sector_prior=sector_prior,
             use_sector_prior_stub=use_sector_prior_stub,
             extra=diagnostics_base,
+            sample_median=med,
         )
 
     # SF1: HIGH requires med > 0 (hook also gates denom>0; estimator must not claim HIGH).
@@ -330,6 +339,32 @@ def _low(
     )
 
 
+def _with_prior_diag(
+    extra: dict[str, Any] | None,
+    *,
+    shrink_lambda: float | None,
+    sample_median: float | None,
+    sector_prior: float,
+) -> dict[str, Any]:
+    """Attach shrink diagnostics + CYCLE-MIDCYCLE-SECTOR-PRIOR-SHRINK-v1 assumption."""
+    base: dict[str, Any] = dict(extra or {})
+    ids = list(
+        base.get("assumption_ids")
+        or [
+            "CYCLE-MIDCYCLE-ESTIMATOR-SKEL-v1",
+            "CYCLE-MIDCYCLE-EXTREMA-v1",
+            "CYCLE-NORMALIZE-FLAG-v1",
+        ]
+    )
+    if "CYCLE-MIDCYCLE-SECTOR-PRIOR-SHRINK-v1" not in ids:
+        ids.append("CYCLE-MIDCYCLE-SECTOR-PRIOR-SHRINK-v1")
+    base["assumption_ids"] = ids
+    base["shrink_lambda"] = shrink_lambda
+    base["sample_median"] = sample_median
+    base["sector_prior"] = sector_prior
+    return base
+
+
 def _maybe_prior_or_low(
     reason_codes: list[str],
     *,
@@ -339,22 +374,107 @@ def _maybe_prior_or_low(
     sector_prior: float | None,
     use_sector_prior_stub: bool,
     extra: dict[str, Any] | None = None,
+    sample_median: float | None = None,
 ) -> MidCycleEstimate:
-    """Sector prior only when explicitly opted in; always LOW / research-only."""
+    """Sector prior only when explicitly opted in; always LOW / research-only.
+
+    When stub on and prior > 0:
+    - ``n_usable == 0`` or no finite sample median → raw prior fill (compat).
+    - Incomplete with finite sample median ``m > 0`` → shrink toward prior:
+      ``λ = clip(1 - n_usable / MIN_COMPLETE_POINTS, 0, 1)``,
+      ``denom = (1-λ)*m + λ*prior`` (if denom ≤ 0 → None + LOW).
+    - ``m ≤ 0`` → no invent (None + LOW).
+    Never elevates confidence above LOW; HIGH path never calls this helper.
+    """
     if use_sector_prior_stub and sector_prior is not None:
         try:
             prior = float(sector_prior)
         except (TypeError, ValueError):
             prior = None
         if prior is not None and prior == prior and prior > 0:
-            codes = list(reason_codes) + ["SECTOR_PRIOR_STUB_RESEARCH_ONLY"]
+            med_ok = (
+                sample_median is not None
+                and sample_median == sample_median  # not NaN
+            )
+            # Empty / unusable series: keep raw prior fill (compat).
+            if n_usable == 0 or not med_ok:
+                codes = list(reason_codes) + [
+                    "SECTOR_PRIOR_STUB_RESEARCH_ONLY",
+                    "SECTOR_PRIOR_SHRINK_EMPTY_SERIES",
+                ]
+                return _low(
+                    prior,
+                    codes,
+                    n_points=n_points,
+                    n_usable=n_usable,
+                    span=span,
+                    extra=_with_prior_diag(
+                        extra,
+                        shrink_lambda=1.0,
+                        sample_median=None,
+                        sector_prior=prior,
+                    ),
+                    sector_prior_applied=True,
+                    research_only=True,
+                )
+
+            m = float(sample_median)
+            if not (m > 0):
+                codes = list(reason_codes) + [
+                    "SECTOR_PRIOR_SKIPPED_NONPOSITIVE_SAMPLE_MEDIAN"
+                ]
+                skip_extra = dict(extra or {})
+                skip_extra["sample_median"] = m
+                skip_extra["sector_prior"] = prior
+                skip_extra["shrink_lambda"] = None
+                return _low(
+                    None,
+                    codes,
+                    n_points=n_points,
+                    n_usable=n_usable,
+                    span=span,
+                    extra=skip_extra,
+                    sector_prior_applied=False,
+                    research_only=False,
+                )
+
+            # Shrink blend: more weight on prior when fewer usable points.
+            lam = max(0.0, min(1.0, 1.0 - (float(n_usable) / float(MIN_COMPLETE_POINTS))))
+            denom = (1.0 - lam) * m + lam * prior
+            if not (denom == denom and denom > 0):
+                codes = list(reason_codes) + ["SECTOR_PRIOR_SHRINK_NONPOSITIVE_DENOM"]
+                return _low(
+                    None,
+                    codes,
+                    n_points=n_points,
+                    n_usable=n_usable,
+                    span=span,
+                    extra=_with_prior_diag(
+                        extra,
+                        shrink_lambda=lam,
+                        sample_median=m,
+                        sector_prior=prior,
+                    ),
+                    sector_prior_applied=False,
+                    research_only=True,
+                )
+
+            codes = list(reason_codes) + [
+                "SECTOR_PRIOR_STUB_RESEARCH_ONLY",
+                "SECTOR_PRIOR_SHRINK_APPLIED",
+            ]
             return _low(
-                prior,
+                denom,
                 codes,
                 n_points=n_points,
                 n_usable=n_usable,
                 span=span,
-                extra=extra,
+                extra=_with_prior_diag(
+                    extra,
+                    shrink_lambda=lam,
+                    sample_median=m,
+                    sector_prior=prior,
+                ),
                 sector_prior_applied=True,
                 research_only=True,
             )

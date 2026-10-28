@@ -37,6 +37,7 @@ DIAG_KEYS = {
     "peak_indices",
     "trough_indices",
     "peak_trough_method",
+    "local_extrema_window",
     "reason_codes",
     "estimator",
     "sector_prior_applied",
@@ -121,6 +122,7 @@ def test_synthetic_complete_finite_denom_and_diagnostics():
     assert est.diagnostics["peak_detected"] is True
     assert est.diagnostics["trough_detected"] is True
     assert est.diagnostics["peak_trough_method"] == "local_extrema_v1"
+    assert est.diagnostics["local_extrema_window"] == 1
     assert est.diagnostics["peak_indices"] == [3]
     assert est.diagnostics["trough_indices"] == [5]
     assert est.diagnostics["peak_value"] == pytest.approx(100.0)
@@ -140,9 +142,10 @@ def test_pit_drops_post_asof_points():
 
 
 def _complete_negative_series():
-    """7 annual points spanning 6y with peak/trough but non-positive median (SF1)."""
+    """7 annual points spanning 6y with local extrema but non-positive median (SF1)."""
     years = list(range(2018, 2025))
-    # sorted [-100,-50,-20,-10,-5,-2,-1] → median = -10; peak/trough vs med detectable
+    # Chronological local extrema (window=1 strict): peak i=3 (-1), trough i=4 (-5);
+    # sorted median = -10 → NONPOSITIVE_MEDIAN (HIGH still blocked).
     values = [-100.0, -50.0, -20.0, -1.0, -5.0, -2.0, -10.0]
     assert len(years) == len(values) == MIN_COMPLETE_POINTS
     return [(date(y, 12, 31), v) for y, v in zip(years, values)]
@@ -206,6 +209,40 @@ def test_local_extrema_flat_low():
     assert est.mid_cycle_denominator is None
     assert "NO_LOCAL_PEAK" in est.diagnostics["reason_codes"]
     assert "NO_LOCAL_TROUGH" in est.diagnostics["reason_codes"]
+
+
+def test_local_extrema_plateau_ridge_equality_fails_low():
+    """Flat ridge / plateau: neighbor equality is NOT a strict window=1 extremum.
+
+    Skel max>med&min<med would still pass on these shapes; local extrema must stay LOW.
+    """
+    # Ridge of equal peaks: neither interior 100 is strictly > both neighbors.
+    peaks, troughs = _local_extrema_indices([40.0, 55.0, 90.0, 100.0, 100.0, 45.0, 60.0])
+    assert peaks == []
+    assert troughs == [5]
+
+    ridge = _dated_values([40, 55, 90, 100, 100, 45, 60])
+    est_r = estimate_mid_cycle_denominator(ridge, as_of=ASOF)
+    assert est_r.confidence is MidCycleConfidence.LOW
+    assert est_r.mid_cycle_denominator is None
+    assert "NO_LOCAL_PEAK" in est_r.diagnostics["reason_codes"]
+    assert est_r.diagnostics["peak_indices"] == []
+    assert est_r.diagnostics["trough_indices"] == [5]
+    assert est_r.diagnostics["local_extrema_window"] == 1
+
+    # Flat trough plateau: neither interior 50 is strictly < both neighbors.
+    peaks2, troughs2 = _local_extrema_indices([40.0, 55.0, 90.0, 100.0, 50.0, 50.0, 80.0])
+    assert peaks2 == [3]
+    assert troughs2 == []
+
+    plateau = _dated_values([40, 55, 90, 100, 50, 50, 80])
+    est_p = estimate_mid_cycle_denominator(plateau, as_of=ASOF)
+    assert est_p.confidence is MidCycleConfidence.LOW
+    assert est_p.mid_cycle_denominator is None
+    assert "NO_LOCAL_TROUGH" in est_p.diagnostics["reason_codes"]
+    assert est_p.diagnostics["peak_indices"] == [3]
+    assert est_p.diagnostics["trough_indices"] == []
+    assert est_p.diagnostics["local_extrema_window"] == 1
 
 
 def test_local_extrema_endpoint_max_median_spread_without_local_extrema_low():

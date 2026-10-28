@@ -521,7 +521,10 @@ def _ensemble_report_warning(
     has_live_samples: bool,
     primary_assumption: str,
 ) -> str:
-    """Path-specific warning for ensemble_report.json (flat branch; copy-stable)."""
+    """Path-specific warning for ensemble_report.json (flat branch; copy-stable).
+
+    Copy frozen vs master @ 5e71897 (incl. capital-E ``Equal-weight``).
+    """
     if is_calibrate_rim:
         prefix = (
             f"calibrate-rim forecast → PRIOR_ONLY research mixture "
@@ -541,7 +544,7 @@ def _ensemble_report_warning(
         prefix = "R8 FI PRIOR_ONLY research mixture (SPEC §13.3). "
     return (
         prefix
-        + "equal-weight / exploratory baseline — NOT ENSEMBLE_CALIBRATED. "
+        + "Equal-weight / exploratory baseline — NOT ENSEMBLE_CALIBRATED. "
         + "Not investment advice. INVESTMENT_VALUE_NOT_ESTABLISHED. "
         + f"Track B requires hist_n>={MIN_HIST_PB_POINTS} and a PER_SHARE "
         + "exit center (never raw pb_center_used P/B multiple)."

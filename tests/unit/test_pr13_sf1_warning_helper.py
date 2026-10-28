@@ -18,7 +18,8 @@ from vms.schemas.contracts import ClaimStatus
 
 INV = ClaimStatus.INVESTMENT_VALUE_NOT_ESTABLISHED.value
 
-# Frozen pre-refactor warning copy (MIN=12 baked in). Do not regenerate from helpers.
+# Frozen pre-refactor warning copy vs master @ 5e71897 (MIN=12; capital-E Equal-weight).
+# Do not regenerate from helpers.
 _PINNED = {
     "calibrate_rim": {
         "flags": {
@@ -30,7 +31,7 @@ _PINNED = {
         "ensemble": (
             "calibrate-rim forecast → PRIOR_ONLY research mixture "
             "(ENSEMBLE-PRIOR-ONLY-FI-CALIBRATE-RIM-MD-v1). "
-            "equal-weight / exploratory baseline — NOT ENSEMBLE_CALIBRATED. "
+            "Equal-weight / exploratory baseline — NOT ENSEMBLE_CALIBRATED. "
             "Not investment advice. INVESTMENT_VALUE_NOT_ESTABLISHED. "
             "Track B requires hist_n>=12 and a PER_SHARE "
             "exit center (never raw pb_center_used P/B multiple)."
@@ -55,7 +56,7 @@ _PINNED = {
         "ensemble": (
             "R10 live value-rim path samples → PRIOR_ONLY research mixture "
             "(ENSEMBLE-PRIOR-ONLY-FI-LIVE-SAMPLES-v1). "
-            "equal-weight / exploratory baseline — NOT ENSEMBLE_CALIBRATED. "
+            "Equal-weight / exploratory baseline — NOT ENSEMBLE_CALIBRATED. "
             "Not investment advice. INVESTMENT_VALUE_NOT_ESTABLISHED. "
             "Track B requires hist_n>=12 and a PER_SHARE "
             "exit center (never raw pb_center_used P/B multiple)."
@@ -80,7 +81,7 @@ _PINNED = {
         "ensemble": (
             "R9 live value-rim → PRIOR_ONLY research mixture "
             "(ENSEMBLE-PRIOR-ONLY-FI-LIVE-MD-v1). "
-            "equal-weight / exploratory baseline — NOT ENSEMBLE_CALIBRATED. "
+            "Equal-weight / exploratory baseline — NOT ENSEMBLE_CALIBRATED. "
             "Not investment advice. INVESTMENT_VALUE_NOT_ESTABLISHED. "
             "Track B requires hist_n>=12 and a PER_SHARE "
             "exit center (never raw pb_center_used P/B multiple)."
@@ -104,7 +105,7 @@ _PINNED = {
         },
         "ensemble": (
             "R8 FI PRIOR_ONLY research mixture (SPEC §13.3). "
-            "equal-weight / exploratory baseline — NOT ENSEMBLE_CALIBRATED. "
+            "Equal-weight / exploratory baseline — NOT ENSEMBLE_CALIBRATED. "
             "Not investment advice. INVESTMENT_VALUE_NOT_ESTABLISHED. "
             "Track B requires hist_n>=12 and a PER_SHARE "
             "exit center (never raw pb_center_used P/B multiple)."

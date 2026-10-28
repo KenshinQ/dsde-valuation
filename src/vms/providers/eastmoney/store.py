@@ -216,7 +216,8 @@ def read_industry(thscode: str, db_path: Path | None = None) -> dict[str, Any] |
 def list_deposit_taking_fi_thscodes(db_path: Path | str | None = None) -> list[str]:
     """Local-first: thscodes in em_industry_profile with sw_l1_proxy == YAML deposit-taking FI label.
 
-    Missing duckdb / DB file / table / empty label / query error → ``[]``.
+    Early missing/unavailable paths (no duckdb / empty label / missing DB file) → silent ``[]``.
+    Query/schema/exception path → ``logger.warning(..., exc_info=True)`` then ``[]``.
     Never hits REST — discovery seed for classifications-only peer universe.
     """
     # Lazy import: industry → yaml only; no store cycle.

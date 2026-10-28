@@ -11,6 +11,7 @@ from vms.methods.multiples.midcycle import (
     MIN_COMPLETE_POINTS,
     MIN_COMPLETE_SPAN_YEARS,
     MidCycleConfidence,
+    _local_extrema_indices,
     estimate_mid_cycle_denominator,
 )
 from vms.methods.protocol import ValuationContext
@@ -33,6 +34,9 @@ DIAG_KEYS = {
     "trough_value",
     "peak_detected",
     "trough_detected",
+    "peak_indices",
+    "trough_indices",
+    "peak_trough_method",
     "reason_codes",
     "estimator",
     "sector_prior_applied",
@@ -40,11 +44,22 @@ DIAG_KEYS = {
 }
 
 
+
+def test_local_extrema_indices_window1_deterministic():
+    peaks, troughs = _local_extrema_indices([40.0, 55.0, 90.0, 100.0, 80.0, 45.0, 60.0])
+    assert peaks == [3]
+    assert troughs == [5]
+    assert _local_extrema_indices([1.0, 2.0, 3.0]) == ([], [])
+    assert _local_extrema_indices([1.0, 1.0]) == ([], [])
+    assert _local_extrema_indices([]) == ([], [])
+
+
 def _complete_series():
-    """7 annual points spanning 6y with clear peak/trough around a mid-cycle median."""
-    # values sorted [40,50,55,60,80,90,100] → median = 60 (SF4: prior comment wrongly said 70)
+    """7 annual points spanning 6y with local peak+trough (window=1) and mid-cycle median."""
+    # Chronological: peak at i=3 (100), trough at i=5 (45); sorted median = 60
+    # (skel-era series lacked a local trough — only a downhill after the peak.)
     years = list(range(2018, 2025))  # 2018..2024 → span 6.0y
-    values = [40.0, 55.0, 90.0, 100.0, 80.0, 60.0, 50.0]
+    values = [40.0, 55.0, 90.0, 100.0, 80.0, 45.0, 60.0]
     assert len(years) == len(values) == MIN_COMPLETE_POINTS
     assert (date(years[-1], 12, 31) - date(years[0], 12, 31)).days / 365.25 >= MIN_COMPLETE_SPAN_YEARS
     return [(date(y, 12, 31), v) for y, v in zip(years, values)]
@@ -105,6 +120,12 @@ def test_synthetic_complete_finite_denom_and_diagnostics():
     assert "COMPLETE_CYCLE_RULES_PASSED" in est.diagnostics["reason_codes"]
     assert est.diagnostics["peak_detected"] is True
     assert est.diagnostics["trough_detected"] is True
+    assert est.diagnostics["peak_trough_method"] == "local_extrema_v1"
+    assert est.diagnostics["peak_indices"] == [3]
+    assert est.diagnostics["trough_indices"] == [5]
+    assert est.diagnostics["peak_value"] == pytest.approx(100.0)
+    assert est.diagnostics["trough_value"] == pytest.approx(45.0)
+    assert "CYCLE-MIDCYCLE-EXTREMA-v1" in est.diagnostics["assumption_ids"]
     assert est.diagnostics["n_points"] == MIN_COMPLETE_POINTS
     assert est.diagnostics["window_span_years"] >= MIN_COMPLETE_SPAN_YEARS
 
@@ -156,6 +177,67 @@ def test_sf2_bad_date_string_drops_point_no_throw():
     assert est2.confidence is MidCycleConfidence.LOW
     assert "ASOF_UNPARSEABLE" in est2.diagnostics["reason_codes"]
     assert est2.diagnostics["n_points"] == 1
+
+
+def _dated_values(values):
+    """7 annual points spanning 6y with the given chronological values."""
+    years = list(range(2018, 2025))
+    assert len(values) == MIN_COMPLETE_POINTS
+    return [(date(y, 12, 31), float(v)) for y, v in zip(years, values)]
+
+
+def test_local_extrema_monotone_low():
+    """Monotone series: skel max>med&min<med would pass; local extrema must fail."""
+    series = _dated_values([40, 50, 55, 60, 80, 90, 100])
+    est = estimate_mid_cycle_denominator(series, as_of=ASOF)
+    assert est.confidence is MidCycleConfidence.LOW
+    assert est.mid_cycle_denominator is None
+    assert "NO_LOCAL_PEAK" in est.diagnostics["reason_codes"]
+    assert "NO_LOCAL_TROUGH" in est.diagnostics["reason_codes"]
+    assert est.diagnostics["peak_indices"] == []
+    assert est.diagnostics["trough_indices"] == []
+    assert est.diagnostics["peak_trough_method"] == "local_extrema_v1"
+
+
+def test_local_extrema_flat_low():
+    series = _dated_values([50, 50, 50, 50, 50, 50, 50])
+    est = estimate_mid_cycle_denominator(series, as_of=ASOF)
+    assert est.confidence is MidCycleConfidence.LOW
+    assert est.mid_cycle_denominator is None
+    assert "NO_LOCAL_PEAK" in est.diagnostics["reason_codes"]
+    assert "NO_LOCAL_TROUGH" in est.diagnostics["reason_codes"]
+
+
+def test_local_extrema_endpoint_max_median_spread_without_local_extrema_low():
+    """All equal except one max at endpoint — endpoints are NOT window=1 extrema.
+
+    Skel proxy (max>med & min could equal med) is irrelevant; must stay LOW.
+    """
+    # values: six 50s then 100 at end → max at endpoint; no interior local extrema
+    series = _dated_values([50, 50, 50, 50, 50, 50, 100])
+    est = estimate_mid_cycle_denominator(series, as_of=ASOF)
+    assert est.confidence is MidCycleConfidence.LOW
+    assert est.mid_cycle_denominator is None
+    assert "NO_LOCAL_PEAK" in est.diagnostics["reason_codes"]
+    assert "NO_LOCAL_TROUGH" in est.diagnostics["reason_codes"]
+    assert est.diagnostics["peak_indices"] == []
+    assert est.diagnostics["trough_indices"] == []
+
+
+def test_local_extrema_single_peak_no_trough_low():
+    """Interior peak but downhill-only after it (no local trough) → LOW."""
+    # mirrors the retired skel-era "complete" series shape
+    series = _dated_values([40, 55, 90, 100, 80, 60, 50])
+    est = estimate_mid_cycle_denominator(series, as_of=ASOF)
+    assert est.confidence is MidCycleConfidence.LOW
+    assert est.mid_cycle_denominator is None
+    assert "NO_LOCAL_TROUGH" in est.diagnostics["reason_codes"]
+    assert "NO_LOCAL_PEAK" not in est.diagnostics["reason_codes"]
+    assert est.diagnostics["peak_indices"] == [3]
+    assert est.diagnostics["trough_indices"] == []
+    assert est.diagnostics["peak_value"] == pytest.approx(100.0)
+    assert est.diagnostics["trough_value"] is None
+
 
 
 def _peer(pid: str, field: str, value: float) -> PeerObservation:

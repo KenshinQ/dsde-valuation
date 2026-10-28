@@ -514,6 +514,80 @@ def sanitize_injected_components(
     return out, ledger
 
 
+def _ensemble_report_warning(
+    *,
+    is_calibrate_rim: bool,
+    is_live: bool,
+    has_live_samples: bool,
+    primary_assumption: str,
+) -> str:
+    """Path-specific warning for ensemble_report.json (flat branch; copy-stable).
+
+    Copy frozen vs master @ 5e71897 (incl. capital-E ``Equal-weight``).
+    """
+    if is_calibrate_rim:
+        prefix = (
+            f"calibrate-rim forecast → PRIOR_ONLY research mixture "
+            f"({primary_assumption}). "
+        )
+    elif is_live and has_live_samples:
+        prefix = (
+            f"R10 live value-rim path samples → PRIOR_ONLY research mixture "
+            f"({primary_assumption}). "
+        )
+    elif is_live:
+        prefix = (
+            f"R9 live value-rim → PRIOR_ONLY research mixture "
+            f"({primary_assumption}). "
+        )
+    else:
+        prefix = "R8 FI PRIOR_ONLY research mixture (SPEC §13.3). "
+    return (
+        prefix
+        + "Equal-weight / exploratory baseline — NOT ENSEMBLE_CALIBRATED. "
+        + "Not investment advice. INVESTMENT_VALUE_NOT_ESTABLISHED. "
+        + f"Track B requires hist_n>={MIN_HIST_PB_POINTS} and a PER_SHARE "
+        + "exit center (never raw pb_center_used P/B multiple)."
+    )
+
+
+def _simulation_metadata_warning(
+    *,
+    is_calibrate_rim: bool,
+    is_live: bool,
+    has_live_samples: bool,
+    primary_assumption: str,
+) -> str:
+    """Path-specific warning for simulation_metadata.json (flat branch; copy-stable)."""
+    if is_calibrate_rim:
+        prefix = (
+            f"calibrate-rim forecast PRIOR_ONLY ingest "
+            f"({primary_assumption}). Research path only. "
+        )
+    elif is_live and has_live_samples:
+        prefix = (
+            f"R10 live value-rim path samples PRIOR_ONLY ingest "
+            f"({primary_assumption}). Research path only. "
+        )
+    elif is_live:
+        prefix = (
+            f"R9 live value-rim PRIOR_ONLY ingest "
+            f"({primary_assumption}). Research path only. "
+        )
+    else:
+        prefix = "R8 deposit-taking FI PRIOR_ONLY wiring. Research path only. "
+    return (
+        prefix
+        + "Not investment advice. INVESTMENT_VALUE_NOT_ESTABLISHED. "
+        + (
+            "Does not lift industry.unsupported "
+            f"(see {primary_assumption}). "
+        )
+        + f"Track B hist_n < {MIN_HIST_PB_POINTS} or missing PER_SHARE "
+        + "exit center → SKIP, not in weights."
+    )
+
+
 def build_prior_only_fi_bundle(
     out: Path,
     *,
@@ -753,31 +827,11 @@ def build_prior_only_fi_bundle(
         "track_b_ledger": list(ledger),
         "investment_value": INVESTMENT_LABEL,
         "calibrated_claim": False,
-        "warning": (
-            (
-                (
-                    f"calibrate-rim forecast → PRIOR_ONLY research mixture "
-                    f"({primary_assumption}). "
-                    if is_calibrate_rim
-                    else (
-                        (
-                            f"R10 live value-rim path samples → PRIOR_ONLY research mixture "
-                            f"({primary_assumption}). "
-                            if has_live_samples
-                            else (
-                                f"R9 live value-rim → PRIOR_ONLY research mixture "
-                                f"({primary_assumption}). "
-                            )
-                        )
-                        if is_live
-                        else "R8 FI PRIOR_ONLY research mixture (SPEC §13.3). "
-                    )
-                )
-            )
-            + "Equal-weight / exploratory baseline — NOT ENSEMBLE_CALIBRATED. "
-            + "Not investment advice. INVESTMENT_VALUE_NOT_ESTABLISHED. "
-            + f"Track B requires hist_n>={MIN_HIST_PB_POINTS} and a PER_SHARE "
-            + "exit center (never raw pb_center_used P/B multiple)."
+        "warning": _ensemble_report_warning(
+            is_calibrate_rim=is_calibrate_rim,
+            is_live=is_live,
+            has_live_samples=has_live_samples,
+            primary_assumption=primary_assumption,
         ),
     }
     write_artifact(out, "ensemble_report.json", ensemble_payload, stamp)
@@ -791,34 +845,11 @@ def build_prior_only_fi_bundle(
             "schema_version": SCHEMA_VERSION,
             "investment_value": INVESTMENT_LABEL,
             "calibrated_claim": False,
-            "warning": (
-                (
-                    (
-                        f"calibrate-rim forecast PRIOR_ONLY ingest "
-                        f"({primary_assumption}). Research path only. "
-                        if is_calibrate_rim
-                        else (
-                            (
-                                f"R10 live value-rim path samples PRIOR_ONLY ingest "
-                                f"({primary_assumption}). Research path only. "
-                                if has_live_samples
-                                else (
-                                    f"R9 live value-rim PRIOR_ONLY ingest "
-                                    f"({primary_assumption}). Research path only. "
-                                )
-                            )
-                            if is_live
-                            else "R8 deposit-taking FI PRIOR_ONLY wiring. Research path only. "
-                        )
-                    )
-                )
-                + "Not investment advice. INVESTMENT_VALUE_NOT_ESTABLISHED. "
-                + (
-                    "Does not lift industry.unsupported "
-                    f"(see {primary_assumption}). "
-                )
-                + f"Track B hist_n < {MIN_HIST_PB_POINTS} or missing PER_SHARE "
-                + "exit center → SKIP, not in weights."
+            "warning": _simulation_metadata_warning(
+                is_calibrate_rim=is_calibrate_rim,
+                is_live=is_live,
+                has_live_samples=has_live_samples,
+                primary_assumption=primary_assumption,
             ),
             "data_label": effective_data_label,
             "source_meta": dict(source_meta) if source_meta else None,

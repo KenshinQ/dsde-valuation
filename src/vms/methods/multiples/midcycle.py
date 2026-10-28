@@ -20,9 +20,10 @@ from pydantic import BaseModel, ConfigDict, Field
 # Explicit completeness rules for HIGH (skeleton; not a full cycle model).
 MIN_COMPLETE_POINTS = 7
 MIN_COMPLETE_SPAN_YEARS = 6.0
-# Peak/trough skel proxy: require max > median and min < median (strict inequality).
-# This is NOT a true cycle extrema / turning-point detector — almost always true
-# whenever values are non-identical. Documented as skel proxy in DONE/assumption.
+# Peak/trough HIGH gate: strict local extrema vs immediate neighbors (window=1).
+# See `_local_extrema_indices` / assumption CYCLE-MIDCYCLE-EXTREMA-v1.
+# Endpoints are never local extrema under window=1. Flat / monotone / single-
+# extremum → incomplete (NO_LOCAL_PEAK / NO_LOCAL_TROUGH). No invent.
 # HIGH also requires median > 0 (NONPOSITIVE_MEDIAN otherwise).
 # Research-only sector prior never elevates confidence above LOW.
 
@@ -110,6 +111,28 @@ def _span_years(dates: list[date]) -> float | None:
     return delta.days / 365.25
 
 
+def _local_extrema_indices(values: Sequence[float]) -> tuple[list[int], list[int]]:
+    """Strict local peak/trough indices (window=1 vs immediate neighbors).
+
+    Peak at i when ``values[i] > values[i-1]`` and ``values[i] > values[i+1]``.
+    Trough at i when ``values[i] < values[i-1]`` and ``values[i] < values[i+1]``.
+    Endpoints (i=0, i=n-1) are never extrema. Empty / length < 3 → no extrema.
+    Deterministic; no tie-breaking invent (equalities fail the strict test).
+    """
+    peaks: list[int] = []
+    troughs: list[int] = []
+    n = len(values)
+    if n < 3:
+        return peaks, troughs
+    for i in range(1, n - 1):
+        v, left, right = values[i], values[i - 1], values[i + 1]
+        if v > left and v > right:
+            peaks.append(i)
+        elif v < left and v < right:
+            troughs.append(i)
+    return peaks, troughs
+
+
 def estimate_mid_cycle_denominator(
     series: Sequence[Any] | None,
     *,
@@ -178,11 +201,13 @@ def estimate_mid_cycle_denominator(
             use_sector_prior_stub=use_sector_prior_stub,
         )
 
-    peak = max(values)
-    trough = min(values)
     med = float(median(values))
-    peak_detected = peak > med
-    trough_detected = trough < med
+    peak_indices, trough_indices = _local_extrema_indices(values)
+    peak_detected = len(peak_indices) >= 1
+    trough_detected = len(trough_indices) >= 1
+    # Extremum values among local extrema only (None when that class is empty).
+    peak = max(values[i] for i in peak_indices) if peak_indices else None
+    trough = min(values[i] for i in trough_indices) if trough_indices else None
 
     diagnostics_base: dict[str, Any] = {
         "n_points": n_points,
@@ -192,9 +217,17 @@ def estimate_mid_cycle_denominator(
         "trough_value": trough,
         "peak_detected": peak_detected,
         "trough_detected": trough_detected,
+        "peak_indices": list(peak_indices),
+        "trough_indices": list(trough_indices),
+        "peak_trough_method": "local_extrema_v1",
+        "local_extrema_window": 1,
         "median_value": med,
         "estimator": "median_of_pit_series_skel",
-        "assumption_ids": ["CYCLE-MIDCYCLE-ESTIMATOR-SKEL-v1", "CYCLE-NORMALIZE-FLAG-v1"],
+        "assumption_ids": [
+            "CYCLE-MIDCYCLE-ESTIMATOR-SKEL-v1",
+            "CYCLE-MIDCYCLE-EXTREMA-v1",
+            "CYCLE-NORMALIZE-FLAG-v1",
+        ],
         "sector_prior_applied": False,
         "research_only": False,
         "min_complete_points": MIN_COMPLETE_POINTS,
@@ -208,8 +241,11 @@ def estimate_mid_cycle_denominator(
     if span is None or span < MIN_COMPLETE_SPAN_YEARS:
         reason_codes.append("SERIES_SPAN_INSUFFICIENT")
         incomplete = True
-    if not (peak_detected and trough_detected):
-        reason_codes.append("PEAK_TROUGH_NOT_DETECTABLE")
+    if not peak_detected:
+        reason_codes.append("NO_LOCAL_PEAK")
+        incomplete = True
+    if not trough_detected:
+        reason_codes.append("NO_LOCAL_TROUGH")
         incomplete = True
 
     if incomplete:
@@ -263,8 +299,16 @@ def _low(
         "trough_value": None,
         "peak_detected": False,
         "trough_detected": False,
+        "peak_indices": [],
+        "trough_indices": [],
+        "peak_trough_method": "local_extrema_v1",
+        "local_extrema_window": 1,
         "estimator": "median_of_pit_series_skel",
-        "assumption_ids": ["CYCLE-MIDCYCLE-ESTIMATOR-SKEL-v1", "CYCLE-NORMALIZE-FLAG-v1"],
+        "assumption_ids": [
+            "CYCLE-MIDCYCLE-ESTIMATOR-SKEL-v1",
+            "CYCLE-MIDCYCLE-EXTREMA-v1",
+            "CYCLE-NORMALIZE-FLAG-v1",
+        ],
         "sector_prior_applied": sector_prior_applied,
         "research_only": research_only,
         "min_complete_points": MIN_COMPLETE_POINTS,

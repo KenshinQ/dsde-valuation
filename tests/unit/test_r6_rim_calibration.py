@@ -283,9 +283,53 @@ def test_track_b_ledger_only_counts_skip_status():
     assert tb["skips"][0]["skip_reason"] == "N_HIST_PB=4<12"
     # NOT_ASSESSED must not appear as a fabricated HIST_PB_BELOW_MIN skip
     assert all(s["instrument_id"] != "NA1" for s in tb["skips"])
-    assert all(s.get("skip_reason") != "HIST_PB_BELOW_MIN" or s["instrument_id"] == "SKIP1"
-               for s in tb["skips"])
+    _assert_track_b_skips_anti_disguise(tb["skips"])
 
+
+def _assert_track_b_skips_anti_disguise(skips: list) -> None:
+    """Meaningful anti-disguise contract for Track B skip ledger rows.
+
+    Fails if a NOT_ASSESSED-shaped row is pushed onto skips with a fabricated
+    HIST_PB_BELOW_MIN (or literal NOT_ASSESSED) reason. Shared conceptually with
+    CLI golden AC5 — CLI cannot inject a bad row, so this helper + sibling prove AC2.
+    """
+    for s in skips:
+        reason = s.get("skip_reason")
+        assert reason, "skip_reason must be non-empty on track_b_skips"
+        assert reason != "NOT_ASSESSED"
+        if "status" in s:
+            assert s["status"] == "SKIP"
+        assert s.get("instrument_id")
+        assert s.get("hist_n") is not None
+        assert s.get("min_required") is not None
+        assert s["hist_n"] < s["min_required"]
+
+
+def test_track_b_skips_anti_disguise_rejects_not_assessed_row():
+    """AC2 sibling: fabricated NOT_ASSESSED-as-HIST on skips ledger fails the contract."""
+    fabricated = [
+        {
+            "instrument_id": "NA1",
+            "origin_as_of": "2020-01-01T00:00:00+08:00",
+            "hist_n": 0,
+            "min_required": 12,
+            "skip_reason": "HIST_PB_BELOW_MIN",
+            "status": "NOT_ASSESSED",
+        }
+    ]
+    with pytest.raises(AssertionError):
+        _assert_track_b_skips_anti_disguise(fabricated)
+    # Also reject literal NOT_ASSESSED used as skip_reason
+    fabricated2 = [
+        {
+            "instrument_id": "NA2",
+            "hist_n": 0,
+            "min_required": 12,
+            "skip_reason": "NOT_ASSESSED",
+        }
+    ]
+    with pytest.raises(AssertionError):
+        _assert_track_b_skips_anti_disguise(fabricated2)
 
 
 # ---- AC12: SCHEMA not claiming PASS; assumption present ----

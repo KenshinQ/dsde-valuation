@@ -600,7 +600,7 @@ def build_midcycle_scenario_distribution(
         return None
 
     if not (peak >= base >= trough):
-        # Caller may surface SCENARIO_LEVEL_ORDER_INVALID; do not invent reorder.
+        # Attach path may append SCENARIO_LEVEL_ORDER_INVALID; do not invent reorder.
         return None
 
     p = 1.0 / 3.0
@@ -620,18 +620,65 @@ def build_midcycle_scenario_distribution(
     )
 
 
+def _scenario_levels_order_invalid(est: MidCycleEstimate) -> bool:
+    """True when peak/base/trough are all finite >0 but peak≥base≥trough fails.
+
+    Same level resolution as build_midcycle_scenario_distribution (prefer denom,
+    else median). Used only for optional SCENARIO_LEVEL_ORDER_INVALID observability.
+    """
+    diag = est.diagnostics or {}
+    if not diag.get("peak_detected") or not diag.get("trough_detected"):
+        return False
+
+    def _finite_pos(raw: Any) -> float | None:
+        if raw is None:
+            return None
+        try:
+            v = float(raw)
+        except (TypeError, ValueError):
+            return None
+        if not math.isfinite(v) or not (v > 0):
+            return None
+        return v
+
+    peak = _finite_pos(diag.get("peak_value"))
+    trough = _finite_pos(diag.get("trough_value"))
+    if peak is None or trough is None:
+        return False
+    base = _finite_pos(est.mid_cycle_denominator)
+    if base is None:
+        base = _finite_pos(diag.get("median_value"))
+    if base is None:
+        return False
+    return not (peak >= base >= trough)
+
+
 def attach_scenario_distribution(est: MidCycleEstimate) -> MidCycleEstimate:
-    """Attach diagnostics.scenario_distribution when builder emits; else unchanged."""
+    """Attach diagnostics.scenario_distribution when builder emits; else unchanged.
+
+    When levels would emit but order fails, append SCENARIO_LEVEL_ORDER_INVALID
+    to diagnostics.reason_codes (observability only; still no invented dist).
+    """
     dist = build_midcycle_scenario_distribution(est)
-    if dist is None:
-        return est
-    diag = dict(est.diagnostics)
-    diag["scenario_distribution"] = dist.model_dump(mode="json")
-    return MidCycleEstimate(
-        mid_cycle_denominator=est.mid_cycle_denominator,
-        confidence=est.confidence,
-        diagnostics=diag,
-    )
+    if dist is not None:
+        diag = dict(est.diagnostics)
+        diag["scenario_distribution"] = dist.model_dump(mode="json")
+        return MidCycleEstimate(
+            mid_cycle_denominator=est.mid_cycle_denominator,
+            confidence=est.confidence,
+            diagnostics=diag,
+        )
+    if _scenario_levels_order_invalid(est):
+        diag = dict(est.diagnostics)
+        codes = list(diag.get("reason_codes") or [])
+        codes.append("SCENARIO_LEVEL_ORDER_INVALID")
+        diag["reason_codes"] = sorted(set(codes))
+        return MidCycleEstimate(
+            mid_cycle_denominator=est.mid_cycle_denominator,
+            confidence=est.confidence,
+            diagnostics=diag,
+        )
+    return est
 
 
 def profile_is_cyclical(profile: Any) -> bool:

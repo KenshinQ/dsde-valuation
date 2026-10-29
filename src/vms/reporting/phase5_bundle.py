@@ -20,6 +20,11 @@ from vms.market_pricing import unavailable_market_pricing
 from vms.methods import build_registry_from_config
 from vms.methods.cash_flow import run_eligible_cashflow_methods
 from vms.methods.multiples import run_eligible_multiple_methods
+from vms.methods.multiples.midcycle import (
+    midcycle_estimate_dump,
+    profile_is_cyclical,
+    resolve_cyclical_midcycle,
+)
 from vms.pipeline import run_path_projection
 from vms.pit.asof import AS_OF_DATE_RULE, parse_as_of
 from vms.profiles import classify_profile
@@ -143,6 +148,9 @@ def build_phase5_bundle(
     data_format: str = "csv",
     target: ValuationTarget = ValuationTarget.RELATIVE_VALUE_CURRENT,
     include_cashflow: bool = True,
+    fixture: str = "mature_operating",
+    subject_metrics_override: dict[str, Any] | None = None,
+    midcycle_assumptions: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
@@ -164,7 +172,28 @@ def build_phase5_bundle(
     )
     load = load_directory(data_dir)
 
-    profile, available_fields = _profile_for_synthetic(as_of.isoformat())
+    # Default mature_operating; fixture="cyclical" for midcycle emitter wiring demos.
+    if fixture == "mature_operating":
+        profile, available_fields = _profile_for_synthetic(as_of.isoformat())
+    else:
+        from types import SimpleNamespace
+
+        from vms.schemas.contracts import ProfileFlag, ProfileLabel
+
+        data = load_fixture(fixtures_dir() / f"{fixture}.json")
+        feats = features_from_fixture(data)
+        feats = feats.model_copy(update={
+            "instrument_id": synthetic.SYNTHETIC_INSTRUMENT,
+            "as_of": as_of.date().isoformat(),
+        })
+        profile = classify_profile(feats)
+        if fixture == "cyclical":
+            # Honest cyclical route for midcycle emitter demos (flags may already include HIGH_CYCLICALITY).
+            profile = profile.model_copy(update={
+                "primary_profile": ProfileLabel.CYCLICAL_OPERATING,
+                "flags": list(dict.fromkeys([*(profile.flags or []), ProfileFlag.HIGH_CYCLICALITY])),
+            })
+        available_fields = frozenset(data.get("available_fields") or [])
     # Multiples need fields for eligibility
     available_fields = frozenset(set(available_fields) | {
         "parent_net_income", "total_equity", "ebit", "depreciation_amortization",
@@ -172,6 +201,8 @@ def build_phase5_bundle(
     })
     registry = build_registry_from_config(loaded.method_registry)
     subject_metrics = _subject_metrics_from_synthetic()
+    if subject_metrics_override:
+        subject_metrics = {**subject_metrics, **subject_metrics_override}
 
     multiples_run = run_eligible_multiple_methods(
         registry=registry,
@@ -247,6 +278,23 @@ def build_phase5_bundle(
         "subject_metrics": subject_metrics,
     }, stamp)
 
+    # Midcycle diagnostics fan-out (slice C): write honest estimate for cyclical only.
+    # Non-cyclical: omit artifact (no fake midcycle claim). Valuation inject unchanged.
+    midcycle_artifact = None
+    if profile_is_cyclical(profile):
+        from types import SimpleNamespace
+
+        est = resolve_cyclical_midcycle(
+            SimpleNamespace(profile=profile, as_of=as_of.isoformat(), subject_metrics=subject_metrics),
+            denom_field="parent_net_income",
+            assumptions=dict(midcycle_assumptions or {}),
+            subject=subject_metrics,
+        )
+        dumped = midcycle_estimate_dump(est)
+        if dumped is not None:
+            write_artifact(out, "midcycle_estimate.json", dumped, stamp)
+            midcycle_artifact = "midcycle_estimate.json"
+
     mp = unavailable_market_pricing()
     write_artifact(out, "simulation_metadata.json", {
         "status": PHASE5_STATUS,
@@ -290,6 +338,8 @@ def build_phase5_bundle(
         "ensemble": None,
         "peer_methods_with_diagnostics": sorted(multiples_run.peer_diagnostics),
         "data_hash": data_hash[:16],
+        "fixture": fixture,
+        "midcycle_estimate_artifact": midcycle_artifact,
     }
     (out / "phase5_summary.json").write_text(json.dumps(summary, indent=2, sort_keys=True) + "\n")
     return summary

@@ -6,6 +6,7 @@ from typing import Any
 
 from vms.equity_bridge.bridge import bridge_ev_to_equity
 from vms.methods.cash_flow.common import (
+    with_midcycle_diagnostics,
     agg_floats,
     append_gate,
     base_eligibility,
@@ -116,7 +117,11 @@ class FcffDcfMethod:
                 detail=f"all paths rejected; sample={failed[:3]}",
                 output_basis=list(self.entry.output_basis),
                 values={"n_valid": 0, "n_failed": len(failed), "failed": failed[:20]},
-                diagnostics={"discount_rate_kind": "WACC", "wacc": wacc_point.model_dump(mode="json")},
+                diagnostics=with_midcycle_diagnostics(
+                    context,
+                    config,
+                    {"discount_rate_kind": "WACC", "wacc": wacc_point.model_dump(mode="json")},
+                ),
             )
 
         def recompute(rate: float, gg: float) -> float | None:
@@ -155,7 +160,11 @@ class FcffDcfMethod:
             detail=f"FCFF DCF on {len(path_rows)} paths; WACC={wacc_point.wacc:.4f}; g={g:.4f}",
             output_basis=list(self.entry.output_basis),
             values=values,
-            diagnostics={"flags": flags, "assumptions": path_rows[0].get("assumptions", [])},
+            diagnostics=with_midcycle_diagnostics(
+                context,
+                config,
+                {"flags": flags, "assumptions": path_rows[0].get("assumptions", [])},
+            ),
         )
 
     def _one(

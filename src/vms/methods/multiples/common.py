@@ -12,7 +12,11 @@ from vms.methods.multiples.apply import MultipleValueResult, apply_equity_multip
 from vms.methods.multiples.cycle import CycleNormalizationReport, assess_cycle_normalization
 from vms.methods.multiples.definitions import MetricDefinition, get_definition
 from vms.methods.multiples.denominators import check_denominator, subject_metric
-from vms.methods.multiples.midcycle import MidCycleConfidence, estimate_mid_cycle_denominator
+from vms.methods.multiples.midcycle import (
+    injectable_mid_denominator,
+    midcycle_estimate_dump,
+    resolve_cyclical_midcycle,
+)
 from vms.methods.multiples.peers import (
     PeerAttributes,
     PeerFilterConfig,
@@ -20,7 +24,7 @@ from vms.methods.multiples.peers import (
     build_peer_set,
 )
 from vms.methods.protocol import MethodConfig, MethodResult, ValuationContext
-from vms.schemas.contracts import MethodEligibilityStatus, MethodRegistryEntry, ProfileFlag, ProfileLabel
+from vms.schemas.contracts import MethodEligibilityStatus, MethodRegistryEntry, ProfileFlag
 from vms.schemas.observations import PeerObservation
 
 
@@ -172,32 +176,17 @@ def run_multiple_method(
     midcycle_est = None
     # Skeleton estimator: only auto-call for cyclical profiles when mid_* not supplied.
     # Non-cyclical must not auto-normalize / claim mid-cycle (SPEC cyc-midcycle-skel).
-    cyclical = False
-    if context.profile is not None:
-        cyclical = (
-            context.profile.primary_profile is ProfileLabel.CYCLICAL_OPERATING
-            or any(f is ProfileFlag.HIGH_CYCLICALITY for f in context.profile.flags)
+    # Valuation inject stays HIGH∧denom>0 via injectable_mid_denominator (unchanged gate).
+    if mid is None:
+        midcycle_est = resolve_cyclical_midcycle(
+            context,
+            denom_field=denom_field,
+            assumptions=assumptions,
+            subject=subject,
         )
-    if mid is None and cyclical:
-        series = assumptions.get("pit_denominator_series")
-        if series is None:
-            series = subject.get(f"pit_{denom_field}_series")
-        if series is None:
-            series = subject.get("pit_denominator_series")
-        # Call even when series is None → honest None + LOW diagnostics (no invent).
-        midcycle_est = estimate_mid_cycle_denominator(
-            series,
-            as_of=context.as_of,
-            sector_prior=assumptions.get("sector_prior_mid_cycle"),
-            use_sector_prior_stub=bool(assumptions.get("use_sector_prior_stub")),
-        )
-        # Inject into assess only on HIGH + finite denom; LOW/None → trailing flags.
-        if (
-            midcycle_est.confidence is MidCycleConfidence.HIGH
-            and midcycle_est.mid_cycle_denominator is not None
-            and midcycle_est.mid_cycle_denominator > 0
-        ):
-            mid = midcycle_est.mid_cycle_denominator
+        injected = injectable_mid_denominator(midcycle_est)
+        if injected is not None:
+            mid = injected
 
     cycle = assess_cycle_normalization(
         context, trailing_denominator=trailing, mid_cycle_denominator=mid,
@@ -217,7 +206,7 @@ def run_multiple_method(
             diagnostics={
                 "denominator": dec.model_dump(mode="json"),
                 "cycle": cycle.model_dump(mode="json"),
-                **({"midcycle_estimate": midcycle_est.model_dump(mode="json")} if midcycle_est is not None else {}),
+                **({"midcycle_estimate": midcycle_estimate_dump(midcycle_est)} if midcycle_est is not None else {}),
             },
         )
 
@@ -374,6 +363,6 @@ def run_multiple_method(
             "cycle": cycle.model_dump(mode="json"),
             "denominator": dec.model_dump(mode="json"),
             "assumptions": valued.assumptions,
-            **({"midcycle_estimate": midcycle_est.model_dump(mode="json")} if midcycle_est is not None else {}),
+            **({"midcycle_estimate": midcycle_estimate_dump(midcycle_est)} if midcycle_est is not None else {}),
         },
     )

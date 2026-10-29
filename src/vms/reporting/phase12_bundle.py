@@ -32,6 +32,10 @@ from vms.reporting.metadata import ArtifactStamp, content_run_id, sha256_of, wri
 from vms.reporting.phase4_bundle import build_phase4_bundle
 from vms.reporting.phase9_bundle import build_phase9_bundle
 from vms.reporting.phase5_bundle import build_phase5_bundle
+from vms.methods.multiples.midcycle import (
+    midcycle_estimate_dump,
+    resolve_cyclical_midcycle,
+)
 from vms.reporting.phase6_bundle import build_phase6_bundle
 from vms.reporting.phase10_bundle import build_phase10_bundle
 from vms.router import method_eligibility_payload, route_methods
@@ -354,6 +358,16 @@ def build_phase12_pattern(
             "normalized / mid-cycle approaches required for meaningful output "
             "(SPEC Appendix A)."
         )
+        # Diagnostics fan-out only (slice C): honest midcycle_estimate (LOW/None ok).
+        from types import SimpleNamespace
+
+        mid_est = resolve_cyclical_midcycle(
+            SimpleNamespace(profile=profile, as_of=as_of.isoformat(), subject_metrics={}),
+            denom_field="parent_net_income",
+            assumptions={},
+            subject={},
+        )
+        diagnostics["midcycle_estimate"] = midcycle_estimate_dump(mid_est)
         # Still emit eligibility; method math may be LOW_CONFIDENCE / INELIGIBLE
         write_artifact(out, "method_results.json", {
             "status": "ROUTE_DIAGNOSIS_ONLY",

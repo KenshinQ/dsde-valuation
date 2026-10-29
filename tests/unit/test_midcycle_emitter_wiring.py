@@ -7,7 +7,12 @@ from pathlib import Path
 
 import pytest
 
-from vms.ensemble import MethodDistribution, diagnostics_with_midcycle_passthrough, samples_from_point
+from vms.ensemble import (
+    MethodDistribution,
+    diagnostics_with_midcycle_passthrough,
+    method_distribution_from_result,
+    samples_from_point,
+)
 from vms.methods import MethodConfig, build_registry_from_config
 from vms.methods.multiples.midcycle import (
     MidCycleConfidence,
@@ -259,3 +264,162 @@ def test_md_passthrough_preserves_midcycle():
     assert md.diagnostics["midcycle_estimate"]["confidence"] == "HIGH"
     assert passthrough_midcycle_diagnostics({"diagnostics": {}}) == {}
     assert passthrough_midcycle_diagnostics(None) == {}
+
+def _minimal_cf_bundle():
+    """Minimal VALID FinancialPathBundle for FCFF plugin identity pin."""
+    from vms.statements.paths import FinancialPathBundle, FinancialPathRecord
+
+    years = [2025, 2026, 2027]
+
+    def _rec(path_id: str, kind: str) -> FinancialPathRecord:
+        fcff = {str(y): float(100 + i * 5) for i, y in enumerate(years)}
+        return FinancialPathRecord(
+            path_id=path_id,
+            kind=kind,  # type: ignore[arg-type]
+            status="VALID",
+            excluded_from_aggregates=False,
+            projection=None,
+            shares={str(y): 10.0 for y in years},
+            fcff=fcff,
+            fcfe={str(y): float(60 + i * 3) for i, y in enumerate(years)},
+            fcff_per_share={str(y): fcff[str(y)] / 10.0 for y in years},
+            book_equity_per_share={str(y): 50.0 for y in years},
+            dividends={str(y): 5.0 for y in years},
+            share_repurchases={str(y): 0.0 for y in years},
+            share_issuance_proceeds={str(y): 0.0 for y in years},
+            net_borrowing={str(y): 0.0 for y in years},
+            cash={str(y): 20.0 for y in years},
+            debt={str(y): 50.0 for y in years},
+        )
+
+    central = _rec("central", "central")
+    mc = _rec("mc0", "monte_carlo")
+    return FinancialPathBundle(
+        policy={"name": "sf1-pin"},
+        base_year=2024,
+        years=years,
+        n_input_paths=2,
+        n_valid=2,
+        n_failed=0,
+        central=central,
+        paths=[central, mc],
+        valid_path_ids=["central", "mc0"],
+        failed=[],
+        aggregates={},
+        sampler_ref={},
+        assumptions=[],
+    )
+
+
+def test_sf1_fcff_plugin_equity_value_identity_with_without_midcycle_series(repo):
+    """SF1: plugin-level equity_value identity — midcycle diagnostics only.
+
+    Real FCFF plugin entry with identical cyclical fixture / path bundle;
+    with vs without PIT midcycle series → equity_value (and peer point fields)
+    bit-equal; midcycle_estimate appears only under diagnostics.
+    """
+    from vms.profiles.fixtures import fixtures_dir, load_fixture
+
+    data = load_fixture(fixtures_dir() / "cyclical.json")
+    af = frozenset(data["available_fields"])
+    loaded, ctx_series = _ctx(repo, cyclical=True, series=_complete_series())
+    ctx_series = ctx_series.model_copy(update={"available_fields": af})
+    _, ctx_none = _ctx(repo, cyclical=True, series=None)
+    ctx_none = ctx_none.model_copy(update={"available_fields": af})
+
+    bundle = _minimal_cf_bundle()
+    plugin = build_registry_from_config(loaded.method_registry).plugin("fcff_dcf")
+    cfg = MethodConfig(method_id="fcff_dcf", assumptions={})
+    r_series = plugin.value_paths(ctx_series, bundle, cfg)
+    r_none = plugin.value_paths(ctx_none, bundle, cfg)
+
+    assert r_series.status is MethodEligibilityStatus.VALID
+    assert r_none.status is MethodEligibilityStatus.VALID
+    # Point values identical — midcycle must not touch valuation math
+    for key in ("equity_value", "enterprise_value", "value_per_share"):
+        assert r_series.values[key] == r_none.values[key]
+    # Midcycle only under diagnostics
+    assert "midcycle_estimate" not in (r_series.values or {})
+    assert "midcycle_estimate" not in (r_none.values or {})
+    est_s = (r_series.diagnostics or {}).get("midcycle_estimate")
+    est_n = (r_none.diagnostics or {}).get("midcycle_estimate")
+    assert est_s is not None and est_s["confidence"] == "HIGH"
+    assert est_s["mid_cycle_denominator"] == pytest.approx(60.0)
+    assert est_n is not None and est_n["confidence"] == "LOW"
+    assert est_n.get("mid_cycle_denominator") is None
+
+
+def test_sf2_production_mr_to_md_preserves_midcycle():
+    """SF2: production method_distribution_from_result preserves midcycle_estimate."""
+    src = MethodResult(
+        method_id="fcff_dcf",
+        status=MethodEligibilityStatus.VALID,
+        diagnostics={
+            "flags": ["DEMO"],
+            "midcycle_estimate": {
+                "mid_cycle_denominator": 60.0,
+                "confidence": "HIGH",
+                "diagnostics": {},
+            },
+        },
+    )
+    md = method_distribution_from_result(
+        src,
+        samples=samples_from_point(1000.0, n=16, seed=3),
+        target=ValuationTarget.FUNDAMENTAL_VALUE_CURRENT,
+        output_basis=OutputBasis.EQUITY,
+        diagnostics={"center": 1000.0, "synthetic": True},
+    )
+    assert md.method_id == "fcff_dcf"
+    assert md.diagnostics["center"] == 1000.0
+    assert md.diagnostics["synthetic"] is True
+    assert md.diagnostics["midcycle_estimate"]["mid_cycle_denominator"] == pytest.approx(60.0)
+    assert md.diagnostics["midcycle_estimate"]["confidence"] == "HIGH"
+    # No invent when source lacks midcycle
+    bare = MethodResult(method_id="fcff_dcf", status=MethodEligibilityStatus.VALID, diagnostics={"flags": []})
+    md_bare = method_distribution_from_result(
+        bare,
+        samples=samples_from_point(900.0, n=8, seed=4),
+        target=ValuationTarget.FUNDAMENTAL_VALUE_CURRENT,
+        output_basis=OutputBasis.EQUITY,
+        diagnostics={"center": 900.0},
+    )
+    assert "midcycle_estimate" not in md_bare.diagnostics
+
+
+def test_sf2_phase8_production_builder_roundtrip_preserves_midcycle(repo, tmp_path):
+    """SF2: phase8 MR→MD production path keeps midcycle when present on source MR."""
+    from vms.reporting.phase8_bundle import (
+        _components_from_method_results,
+        _method_results_from_components,
+        _synthetic_components,
+    )
+
+    tgt = ValuationTarget.FUNDAMENTAL_VALUE_CURRENT
+    raw = _synthetic_components(tgt, seed=11)
+    # Attach midcycle onto first component diagnostics before MR dump
+    first = raw[0]
+    mid = {
+        "mid_cycle_denominator": 60.0,
+        "confidence": "HIGH",
+        "diagnostics": {},
+    }
+    raw_with = [
+        MethodDistribution(
+            method_id=first.method_id,
+            samples=first.samples,
+            status=first.status,
+            target=first.target,
+            output_basis=first.output_basis,
+            eligible=first.eligible,
+            diagnostics={**dict(first.diagnostics), "midcycle_estimate": mid},
+        ),
+        *raw[1:],
+    ]
+    mrs = _method_results_from_components(raw_with)
+    assert "midcycle_estimate" in (mrs[0].diagnostics or {})
+    rebuilt = _components_from_method_results(mrs, raw_with)
+    assert rebuilt[0].diagnostics["midcycle_estimate"]["confidence"] == "HIGH"
+    assert rebuilt[0].diagnostics["midcycle_estimate"]["mid_cycle_denominator"] == pytest.approx(60.0)
+    # Sibling without midcycle stays clean (no invent)
+    assert "midcycle_estimate" not in rebuilt[1].diagnostics

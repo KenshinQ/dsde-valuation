@@ -179,6 +179,44 @@ def diagnostics_with_midcycle_passthrough(
     return out
 
 
+def method_distribution_from_result(
+    result: Any,
+    *,
+    samples: tuple[float, ...] | Sequence[float],
+    target: ValuationTarget,
+    output_basis: OutputBasis,
+    diagnostics: dict[str, Any] | None = None,
+    eligible: bool | None = None,
+) -> MethodDistribution:
+    """Production MethodResult → MethodDistribution builder.
+
+    Preserves ``midcycle_estimate`` from source MethodResult diagnostics when
+    present via ``diagnostics_with_midcycle_passthrough`` (never invents).
+    Caller supplies samples / target / basis; FI adapters that rewrite
+    diagnostics may skip this helper and must still not invent midcycle.
+    """
+    method_id = str(getattr(result, "method_id", None) or (result.get("method_id") if isinstance(result, dict) else None) or "unknown")
+    status = getattr(result, "status", None)
+    if status is None and isinstance(result, dict):
+        raw = result.get("status")
+        status = MethodEligibilityStatus(raw) if raw is not None else MethodEligibilityStatus.INELIGIBLE
+    if not isinstance(status, MethodEligibilityStatus):
+        status = MethodEligibilityStatus.INELIGIBLE
+    xs = tuple(float(x) for x in samples)
+    if eligible is None:
+        eligible = status in ELIGIBLE_STATUSES and bool(xs)
+    diag = diagnostics_with_midcycle_passthrough(diagnostics, result)
+    return MethodDistribution(
+        method_id=method_id,
+        samples=xs,
+        status=status,
+        target=target,
+        output_basis=output_basis,
+        eligible=bool(eligible),
+        diagnostics=diag,
+    )
+
+
 def samples_from_point(
     center: float,
     *,
@@ -201,4 +239,5 @@ __all__ = [
     "mix_distributions",
     "samples_from_point",
     "diagnostics_with_midcycle_passthrough",
+    "method_distribution_from_result",
 ]

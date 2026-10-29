@@ -16,6 +16,7 @@ from vms import IMPLEMENTED_PHASE, SCHEMA_VERSION
 from vms.ensemble import (
     MethodDistribution,
     build_ensemble,
+    method_distribution_from_result,
     samples_from_point,
 )
 from vms.ensemble.protocols import EnsembleMode
@@ -128,6 +129,40 @@ def _method_results_from_components(
     return results
 
 
+def _components_from_method_results(
+    results: list[MethodResult],
+    sample_sources: list[MethodDistribution],
+) -> list[MethodDistribution]:
+    """Production MethodResult→MethodDistribution path (midcycle passthrough).
+
+    Rebuilds MD components from source MethodResults via
+    ``method_distribution_from_result``. Samples / eligibility come from the
+    paired sample_sources (Phase 8 synthetic demo); diagnostics base keys are
+    copied without inventing midcycle — passthrough preserves it when present
+    on the MethodResult.
+    """
+    if len(results) != len(sample_sources):
+        raise Phase8BundleError(
+            f"MR→MD length mismatch: results={len(results)} samples={len(sample_sources)}"
+        )
+    out: list[MethodDistribution] = []
+    for mr, src in zip(results, sample_sources):
+        base_diag = {
+            k: v for k, v in dict(src.diagnostics or {}).items() if k != "midcycle_estimate"
+        }
+        out.append(
+            method_distribution_from_result(
+                mr,
+                samples=src.samples,
+                target=src.target,
+                output_basis=src.output_basis,
+                diagnostics=base_diag,
+                eligible=src.eligible,
+            )
+        )
+    return out
+
+
 def build_phase8_bundle(
     out: Path,
     *,
@@ -181,8 +216,10 @@ def build_phase8_bundle(
         context_loaded=loaded,
     )
 
-    components = _synthetic_components(tgt, seed=seed)
-    method_results = _method_results_from_components(components)
+    raw_components = _synthetic_components(tgt, seed=seed)
+    method_results = _method_results_from_components(raw_components)
+    # Production MR→MD builder (preserves midcycle_estimate when present on MR)
+    components = _components_from_method_results(method_results, raw_components)
 
     # Production refusal (default)
     prod = build_ensemble(

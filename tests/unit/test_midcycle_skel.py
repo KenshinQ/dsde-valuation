@@ -143,6 +143,38 @@ def test_sector_prior_shrink_incomplete_med_positive_low():
     assert "CYCLE-MIDCYCLE-SECTOR-PRIOR-SHRINK-v1" in est.diagnostics["assumption_ids"]
 
 
+def test_sector_prior_shrink_lambda_zero_n_ge_min_but_incomplete():
+    """n≥MIN but incomplete (monotone / no extrema): λ=0 → denom=m, still LOW (SF1).
+
+    Pins clip(1 - n/MIN, 0, 1) at 0 so a future regression cannot silently
+    leave λ negative or re-elevate confidence.
+    """
+    # 7 annual points spanning 6y, monotone → NO_LOCAL_PEAK/TROUGH → incomplete.
+    # median = 60; prior=999 would dominate if λ were not clipped at 0.
+    series = _dated_values([40, 50, 55, 60, 80, 90, 100])
+    assert len(series) == MIN_COMPLETE_POINTS
+    est = estimate_mid_cycle_denominator(
+        series,
+        as_of=ASOF,
+        sector_prior=999.0,
+        use_sector_prior_stub=True,
+    )
+    assert est.diagnostics["n_usable"] >= MIN_COMPLETE_POINTS
+    assert est.mid_cycle_denominator == pytest.approx(60.0)  # λ=0 → sample median
+    assert est.confidence is MidCycleConfidence.LOW
+    assert est.diagnostics["research_only"] is True
+    assert est.diagnostics["sector_prior_applied"] is True
+    assert est.diagnostics["shrink_lambda"] == pytest.approx(0.0)
+    assert est.diagnostics["sample_median"] == pytest.approx(60.0)
+    assert est.diagnostics["sector_prior"] == pytest.approx(999.0)
+    assert "SECTOR_PRIOR_SHRINK_APPLIED" in est.diagnostics["reason_codes"]
+    assert "SECTOR_PRIOR_STUB_RESEARCH_ONLY" in est.diagnostics["reason_codes"]
+    assert "NO_LOCAL_PEAK" in est.diagnostics["reason_codes"]
+    assert "NO_LOCAL_TROUGH" in est.diagnostics["reason_codes"]
+    assert "COMPLETE_CYCLE_RULES_PASSED" not in est.diagnostics["reason_codes"]
+    assert "CYCLE-MIDCYCLE-SECTOR-PRIOR-SHRINK-v1" in est.diagnostics["assumption_ids"]
+
+
 def test_sector_prior_complete_high_ignores_prior():
     """Complete HIGH path unchanged; prior does not upgrade or replace (AC3)."""
     series = _complete_series()

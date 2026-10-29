@@ -238,6 +238,59 @@ def test_cyclical_trailing_without_midcycle_flagged(repo):
     assert r.status is MethodEligibilityStatus.LOW_CONFIDENCE
 
 
+def test_cyclical_low_shrink_denom_not_injected_into_mid(repo):
+    """LOW sector-prior shrink must not inject into production mid (PR#22 SF2).
+
+    Cyclical + stub+prior + short incomplete series → estimator returns a
+    positive research-only denom at LOW; Phase5 HIGH∧denom>0 gate must keep
+    trailing (no MID_CYCLE_DENOMINATOR_USED). Gate in common.py unchanged.
+    """
+    short_series = [(date(2020 + i, 12, 31), 10.0 + i) for i in range(3)]
+    peers = _peers_for("pe", [10, 11, 12, 13, 14, 15, 16, 17])
+    loaded, ctx = _mature_ctx(
+        repo,
+        peers=peers,
+        primary=ProfileLabel.CYCLICAL_OPERATING,
+        flags=[ProfileFlag.HIGH_CYCLICALITY],
+        subject={
+            "parent_net_income": 100.0,
+            "total_equity": 500.0,
+            "ebit": 140.0,
+            "ebitda": 160.0,
+            "depreciation_amortization": 20.0,
+            "revenue": 1000.0,
+            "cash": 50.0,
+            "interest_bearing_debt": 120.0,
+            "diluted_shares": 10.0,
+            "pit_parent_net_income_series": short_series,
+        },
+    )
+    r = build_registry_from_config(loaded.method_registry).plugin("pe").value_paths(
+        ctx,
+        None,
+        MethodConfig(
+            method_id="pe",
+            assumptions={
+                "use_sector_prior_stub": True,
+                "sector_prior_mid_cycle": 50.0,
+            },
+        ),
+    )
+    assert r.values
+    assert "MID_CYCLE_DENOMINATOR_USED" not in r.values["flags"]
+    assert "CYCLE_ESTIMATE_LOW_CONFIDENCE" in r.values["flags"]
+    assert r.values["denominator_value"] == pytest.approx(100.0)  # trailing
+    assert r.status is MethodEligibilityStatus.LOW_CONFIDENCE
+    est = (r.diagnostics or {}).get("midcycle_estimate")
+    assert est is not None
+    assert est["confidence"] == "LOW"
+    assert est["mid_cycle_denominator"] is not None
+    assert est["mid_cycle_denominator"] > 0
+    assert est["diagnostics"]["research_only"] is True
+    assert est["diagnostics"]["sector_prior_applied"] is True
+    assert "SECTOR_PRIOR_SHRINK_APPLIED" in est["diagnostics"]["reason_codes"]
+
+
 def test_hand_fixture_pe_equity_and_ev_ebit_bridge(repo):
     """Hand calc: peers median 14; NI=100 → equity 1400; EV/EBIT median 10 × 140 → EV 1400 → eq 1330."""
     peers = (

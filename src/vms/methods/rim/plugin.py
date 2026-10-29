@@ -16,6 +16,7 @@ from vms.methods.protocol import MethodConfig, MethodDiagnostics, MethodResult, 
 from vms.methods.rim.math import residual_income_value
 from vms.schemas.config import LoadedConfig
 from vms.schemas.contracts import MethodEligibilityStatus, MethodRegistryEntry
+from vms.methods.multiples.midcycle import attach_midcycle_diagnostics_for_context
 
 
 def _num(d: dict[str, Any], *keys: str) -> float | None:
@@ -239,15 +240,22 @@ class ResidualIncomeMethod:
                 detail=(result.clean_surplus.detail if result.clean_surplus else result.invalid_reason) or "",
                 output_basis=list(self.entry.output_basis),
                 values={},
-                diagnostics={
-                    "clean_surplus": result.clean_surplus.model_dump(mode="json") if result.clean_surplus else None,
-                    "flags": list(result.flags),
-                    "unsupported": result.invalid_reason in {
-                        "CLEAN_SURPLUS_UNASSESSABLE", "MISSING_BOOK_EQUITY", "MISSING_NET_INCOME_FORECAST",
+                diagnostics=attach_midcycle_diagnostics_for_context(
+                    context,
+                    denom_field="parent_net_income",
+                    assumptions=dict(config.assumptions or {}),
+                    subject=dict(context.subject_metrics or {}),
+                    diagnostics={
+                        "clean_surplus": result.clean_surplus.model_dump(mode="json") if result.clean_surplus else None,
+                        "flags": list(result.flags),
+                        "unsupported": result.invalid_reason in {
+                            "CLEAN_SURPLUS_UNASSESSABLE", "MISSING_BOOK_EQUITY", "MISSING_NET_INCOME_FORECAST",
+                        },
+                        "data_gap": [result.invalid_reason] if result.invalid_reason else [],
+                        "ev_bridge_applied": False,
                     },
-                    "data_gap": [result.invalid_reason] if result.invalid_reason else [],
-                    "ev_bridge_applied": False,
-                },
+                    skip_financial_institution=True,
+                ),
             )
         values = {
             "discount_rate_kind": "COST_OF_EQUITY",
@@ -284,11 +292,18 @@ class ResidualIncomeMethod:
             ),
             output_basis=list(self.entry.output_basis),
             values=values,
-            diagnostics={
-                "flags": list(result.flags),
-                "assumptions": list(result.assumptions),
-                "ev_bridge_applied": False,
-            },
+            diagnostics=attach_midcycle_diagnostics_for_context(
+                context,
+                denom_field="parent_net_income",
+                assumptions=dict(config.assumptions or {}),
+                subject=dict(context.subject_metrics or {}),
+                diagnostics={
+                    "flags": list(result.flags),
+                    "assumptions": list(result.assumptions),
+                    "ev_bridge_applied": False,
+                },
+                skip_financial_institution=True,
+            ),
         )
 
     def diagnostics(self, result: MethodResult) -> MethodDiagnostics:

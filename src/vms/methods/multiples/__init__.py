@@ -14,6 +14,9 @@ from vms.methods.multiples.midcycle import (
     MidCycleConfidence,
     MidCycleEstimate,
     estimate_mid_cycle_denominator,
+    injectable_mid_denominator,
+    passthrough_midcycle_diagnostics,
+    resolve_cyclical_midcycle,
 )
 from vms.methods.multiples.plugin_base import (
     EvEbitdaMethod,
@@ -53,4 +56,7 @@ __all__ = [
     "MidCycleConfidence",
     "MidCycleEstimate",
     "estimate_mid_cycle_denominator",
+    "resolve_cyclical_midcycle",
+    "injectable_mid_denominator",
+    "passthrough_midcycle_diagnostics",
 ]

@@ -162,6 +162,23 @@ def mix_distributions(
     )
 
 
+
+
+def diagnostics_with_midcycle_passthrough(
+    diagnostics: dict[str, Any] | None,
+    source: Any,
+) -> dict[str, Any]:
+    """Merge source midcycle_estimate into MD diagnostics when present (no invent).
+
+    FI adapters may strip/ignore; this helper never invents a midcycle blob.
+    """
+    from vms.methods.multiples.midcycle import passthrough_midcycle_diagnostics
+
+    out: dict[str, Any] = dict(diagnostics or {})
+    out.update(passthrough_midcycle_diagnostics(source))
+    return out
+
+
 def samples_from_point(
     center: float,
     *,
@@ -183,4 +200,5 @@ __all__ = [
     "filter_eligible_components",
     "mix_distributions",
     "samples_from_point",
+    "diagnostics_with_midcycle_passthrough",
 ]

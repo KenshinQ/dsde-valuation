@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from vms.methods.cash_flow.common import (
+    with_midcycle_diagnostics,
     agg_floats,
     append_gate,
     base_eligibility,
@@ -103,7 +104,7 @@ class DdmMethod:
                 detail="cost-of-equity / TV assumptions require LoadedConfig",
                 output_basis=list(self.entry.output_basis),
             )
-        return self._value(financial_paths, loaded, config)
+        return self._value(context, financial_paths, loaded, config)
 
     def _path_payout_gate(self, bundle: FinancialPathBundle, config: MethodConfig) -> dict[str, Any]:
         max_cv = float(config.assumptions.get("max_payout_cv", 1.0))
@@ -134,6 +135,7 @@ class DdmMethod:
 
     def _value(
         self,
+        context: ValuationContext,
         bundle: FinancialPathBundle,
         loaded: LoadedConfig,
         config: MethodConfig,
@@ -170,7 +172,9 @@ class DdmMethod:
                 detail="dividends absent/erratic across paths; refusing fabricated dividend stream",
                 output_basis=list(self.entry.output_basis),
                 values={},
-                diagnostics={"failed": failed[:20]},
+                diagnostics=with_midcycle_diagnostics(
+                    context, config, {"failed": failed[:20]},
+                ),
             )
 
         if not path_rows:
@@ -181,7 +185,11 @@ class DdmMethod:
                 detail=f"all DDM paths rejected; sample={failed[:3]}",
                 output_basis=list(self.entry.output_basis),
                 values={"n_valid": 0, "n_failed": len(failed), "failed": failed[:20]},
-                diagnostics={"discount_rate_kind": "COST_OF_EQUITY", "cost_of_equity": ke},
+                diagnostics=with_midcycle_diagnostics(
+                    context,
+                    config,
+                    {"discount_rate_kind": "COST_OF_EQUITY", "cost_of_equity": ke},
+                ),
             )
 
         def recompute(rate: float, gg: float) -> float | None:
@@ -219,7 +227,11 @@ class DdmMethod:
             detail=f"DDM on {len(path_rows)} paths; ke={ke:.4f}; g={g:.4f}; no EV bridge",
             output_basis=list(self.entry.output_basis),
             values=values,
-            diagnostics={"flags": flags, "assumptions": path_rows[0].get("assumptions", [])},
+            diagnostics=with_midcycle_diagnostics(
+                context,
+                config,
+                {"flags": flags, "assumptions": path_rows[0].get("assumptions", [])},
+            ),
         )
 
     def _one(

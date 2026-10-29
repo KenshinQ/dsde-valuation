@@ -8,7 +8,9 @@ silent-fills. Incomplete series with sample median > 0 may shrink toward the
 prior (``CYCLE-MIDCYCLE-SECTOR-PRIOR-SHRINK-v1``); empty series keeps raw prior
 fill. Prior never elevates confidence above LOW. Orthogonal to ``vms.regimes``
 and Track B hist P/B. Label: INVESTMENT_VALUE_NOT_ESTABLISHED. Not
-ensemble-calibrated.
+ensemble-calibrated. Diagnostics fan-out helpers (resolve / inject / MD
+passthrough) live here; valuation inject of mid_cycle_denominator remains
+multiples-only via HIGH∧denom>0 (CYCLE-MIDCYCLE-EMITTER-WIRING-v1).
 """
 
 from __future__ import annotations
@@ -490,3 +492,150 @@ def _maybe_prior_or_low(
         span=span,
         extra=extra,
     )
+
+
+def profile_is_cyclical(profile: Any) -> bool:
+    """True when primary is CYCLICAL_OPERATING or HIGH_CYCLICALITY is flagged."""
+    if profile is None:
+        return False
+    try:
+        from vms.schemas.contracts import ProfileFlag, ProfileLabel
+    except ImportError:  # pragma: no cover
+        return False
+    primary = getattr(profile, "primary_profile", None)
+    if primary is ProfileLabel.CYCLICAL_OPERATING:
+        return True
+    flags = getattr(profile, "flags", None) or ()
+    return any(f is ProfileFlag.HIGH_CYCLICALITY for f in flags)
+
+
+def profile_is_financial_institution(profile: Any) -> bool:
+    """FI / deposit-taking domain — industrial mid-cycle earnings denom is out of scope."""
+    if profile is None:
+        return False
+    try:
+        from vms.schemas.contracts import ProfileLabel
+    except ImportError:  # pragma: no cover
+        return False
+    return getattr(profile, "primary_profile", None) is ProfileLabel.FINANCIAL_INSTITUTION
+
+
+def resolve_cyclical_midcycle(
+    context: Any,
+    *,
+    denom_field: str,
+    assumptions: Mapping[str, Any] | None = None,
+    subject: Mapping[str, Any] | None = None,
+) -> MidCycleEstimate | None:
+    """Resolve PIT series + run estimator for cyclical profiles only.
+
+    Returns None when non-cyclical (do not auto-call). When cyclical, always
+    returns a MidCycleEstimate (honest None+LOW when series missing/incomplete).
+    Does not apply valuation inject — use ``injectable_mid_denominator``.
+    """
+    profile = getattr(context, "profile", None)
+    if not profile_is_cyclical(profile):
+        return None
+    assumptions = dict(assumptions or {})
+    if subject is None:
+        subject = dict(getattr(context, "subject_metrics", None) or {})
+    else:
+        subject = dict(subject)
+    series = assumptions.get("pit_denominator_series")
+    if series is None:
+        series = subject.get(f"pit_{denom_field}_series")
+    if series is None:
+        series = subject.get("pit_denominator_series")
+    return estimate_mid_cycle_denominator(
+        series,
+        as_of=getattr(context, "as_of", None),
+        sector_prior=assumptions.get("sector_prior_mid_cycle"),
+        use_sector_prior_stub=bool(assumptions.get("use_sector_prior_stub")),
+    )
+
+
+def injectable_mid_denominator(est: MidCycleEstimate | None) -> float | None:
+    """Phase5 inject gate: HIGH ∧ finite denom ∧ denom > 0; else None."""
+    if est is None:
+        return None
+    denom = est.mid_cycle_denominator
+    if (
+        est.confidence is MidCycleConfidence.HIGH
+        and denom is not None
+        and denom == denom
+        and denom > 0
+    ):
+        return float(denom)
+    return None
+
+
+def midcycle_estimate_dump(est: MidCycleEstimate | None) -> dict[str, Any] | None:
+    """JSON-ready dump for artifacts / diagnostics; None when no estimate."""
+    if est is None:
+        return None
+    return est.model_dump(mode="json")
+
+
+def merge_midcycle_diagnostics(
+    diagnostics: Mapping[str, Any] | None,
+    est: MidCycleEstimate | None,
+) -> dict[str, Any]:
+    """Copy diagnostics and attach midcycle_estimate when est is not None."""
+    out: dict[str, Any] = dict(diagnostics or {})
+    dumped = midcycle_estimate_dump(est)
+    if dumped is not None:
+        out["midcycle_estimate"] = dumped
+    return out
+
+
+def passthrough_midcycle_diagnostics(source: Any) -> dict[str, Any]:
+    """Preserve midcycle_estimate from a MethodResult or diagnostics mapping.
+
+    Returns ``{"midcycle_estimate": ...}`` when present; else ``{}``.
+    Never invents a midcycle blob (FI adapters may ignore / strip).
+    """
+    if source is None:
+        return {}
+    if isinstance(source, Mapping):
+        # Prefer nested diagnostics if this looks like a MethodResult dump.
+        if "diagnostics" in source and isinstance(source.get("diagnostics"), Mapping):
+            diag = source["diagnostics"]
+        elif "midcycle_estimate" in source:
+            diag = source
+        else:
+            diag = source
+    else:
+        diag = getattr(source, "diagnostics", None) or {}
+    if not isinstance(diag, Mapping):
+        return {}
+    if "midcycle_estimate" not in diag:
+        return {}
+    return {"midcycle_estimate": diag["midcycle_estimate"]}
+
+
+def attach_midcycle_diagnostics_for_context(
+    context: Any,
+    *,
+    denom_field: str = "parent_net_income",
+    assumptions: Mapping[str, Any] | None = None,
+    subject: Mapping[str, Any] | None = None,
+    diagnostics: Mapping[str, Any] | None = None,
+    skip_financial_institution: bool = False,
+) -> dict[str, Any]:
+    """Diagnostics-only attach for DCF / RIM / emitters.
+
+    When ``skip_financial_institution`` and profile is FI → return diagnostics
+    unchanged (explicit no-op; wrong domain for industrial mid-cycle denom).
+    Non-cyclical → unchanged. Cyclical → merge midcycle_estimate dump.
+    """
+    base = dict(diagnostics or {})
+    profile = getattr(context, "profile", None)
+    if skip_financial_institution and profile_is_financial_institution(profile):
+        return base
+    est = resolve_cyclical_midcycle(
+        context,
+        denom_field=denom_field,
+        assumptions=assumptions,
+        subject=subject,
+    )
+    return merge_midcycle_diagnostics(base, est)

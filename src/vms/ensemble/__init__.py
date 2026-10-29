@@ -27,6 +27,7 @@ from vms.ensemble.mixture import (
     filter_eligible_components,
     mix_distributions,
     samples_from_point,
+    diagnostics_with_midcycle_passthrough,
 )
 from vms.ensemble.protocols import (
     PROTOCOL_VERSIONS,
@@ -73,6 +74,7 @@ __all__ = [
     "filter_eligible_components",
     "mix_distributions",
     "samples_from_point",
+    "diagnostics_with_midcycle_passthrough",
     "BetweenMethodDisagreement",
     "LeaveOneOutCase",
     "LeaveOneOutReport",

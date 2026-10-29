@@ -145,3 +145,31 @@ def horizon_bridge_inputs(rec: FinancialPathRecord, loaded: LoadedConfig) -> dic
 def has_profile_flag(context: ValuationContext, flag: ProfileFlag | str) -> bool:
     name = flag.value if isinstance(flag, ProfileFlag) else flag
     return any(f.value == name for f in context.profile.flags)
+
+
+def with_midcycle_diagnostics(
+    context: ValuationContext,
+    config: Any,
+    diagnostics: dict[str, Any] | None,
+    *,
+    denom_field: str = "parent_net_income",
+) -> dict[str, Any]:
+    """Attach midcycle_estimate to cash-flow diagnostics when cyclical (no value change).
+
+    Non-cyclical → diagnostics unchanged. Series may come from config.assumptions
+    or context.subject_metrics. Never alters FCFE/FCFF/DDM point values.
+    """
+    from vms.methods.multiples.midcycle import attach_midcycle_diagnostics_for_context
+
+    assumptions = {}
+    if config is not None:
+        assumptions = dict(getattr(config, "assumptions", None) or {})
+    subject = dict(getattr(context, "subject_metrics", None) or {})
+    return attach_midcycle_diagnostics_for_context(
+        context,
+        denom_field=denom_field,
+        assumptions=assumptions,
+        subject=subject,
+        diagnostics=diagnostics,
+        skip_financial_institution=False,
+    )

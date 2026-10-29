@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from vms.methods.cash_flow.common import (
+    with_midcycle_diagnostics,
     agg_floats,
     base_eligibility,
     flag_exclusion,
@@ -70,10 +71,11 @@ class FcfeDcfMethod:
                 detail="cost-of-equity / TV assumptions require LoadedConfig",
                 output_basis=list(self.entry.output_basis),
             )
-        return self._value(financial_paths, loaded, config)
+        return self._value(context, financial_paths, loaded, config)
 
     def _value(
         self,
+        context: ValuationContext,
         bundle: FinancialPathBundle,
         loaded: LoadedConfig,
         config: MethodConfig,
@@ -105,11 +107,15 @@ class FcfeDcfMethod:
                 detail=f"all FCFE paths rejected; sample={failed[:3]}",
                 output_basis=list(self.entry.output_basis),
                 values={"n_valid": 0, "n_failed": len(failed), "failed": failed[:20]},
-                diagnostics={
-                    "discount_rate_kind": "COST_OF_EQUITY",
-                    "cost_of_equity": ke,
-                    "leverage_flags": leverage_flags,
-                },
+                diagnostics=with_midcycle_diagnostics(
+                    context,
+                    config,
+                    {
+                        "discount_rate_kind": "COST_OF_EQUITY",
+                        "cost_of_equity": ke,
+                        "leverage_flags": leverage_flags,
+                    },
+                ),
             )
 
         def recompute(rate: float, gg: float) -> float | None:
@@ -146,7 +152,11 @@ class FcfeDcfMethod:
             detail=f"FCFE DCF on {len(path_rows)} paths; ke={ke:.4f}; g={g:.4f}; no EV bridge",
             output_basis=list(self.entry.output_basis),
             values=values,
-            diagnostics={"flags": flags, "assumptions": path_rows[0].get("assumptions", [])},
+            diagnostics=with_midcycle_diagnostics(
+                context,
+                config,
+                {"flags": flags, "assumptions": path_rows[0].get("assumptions", [])},
+            ),
         )
 
     def _leverage_diagnostics(self, bundle: FinancialPathBundle) -> list[str]:

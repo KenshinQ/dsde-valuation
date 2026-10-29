@@ -11,16 +11,20 @@ and Track B hist P/B. Label: INVESTMENT_VALUE_NOT_ESTABLISHED. Not
 ensemble-calibrated. Diagnostics fan-out helpers (resolve / inject / MD
 passthrough) live here; valuation inject of mid_cycle_denominator remains
 multiples-only via HIGH∧denom>0 (CYCLE-MIDCYCLE-EMITTER-WIRING-v1).
+Research-only peak/base/trough scenario distribution
+(``CYCLE-MIDCYCLE-SCENARIO-DIST-v1``, equal_weight_v1) attaches under
+diagnostics when extrema+levels are valid; never feeds DCF/RIM/ensemble.
 """
 
 from __future__ import annotations
 
+import math
 from datetime import date, datetime
 from enum import Enum
 from statistics import median
-from typing import Any, Mapping, Sequence
+from typing import Any, Literal, Mapping, Sequence
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 # Explicit completeness rules for HIGH (skeleton; not a full cycle model).
 MIN_COMPLETE_POINTS = 7
@@ -50,6 +54,57 @@ class MidCycleEstimate(BaseModel):
     mid_cycle_denominator: float | None
     confidence: MidCycleConfidence = MidCycleConfidence.LOW
     diagnostics: dict[str, Any] = Field(default_factory=dict)
+
+
+MidCycleScenarioKind = Literal["peak", "base", "trough"]
+
+
+class MidCycleScenario(BaseModel):
+    """One peak/base/trough scenario level with research-only probability."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    kind: MidCycleScenarioKind
+    level: float
+    probability: float
+
+    @field_validator("level")
+    @classmethod
+    def _level_finite_positive(cls, v: float) -> float:
+        fv = float(v)
+        if not math.isfinite(fv) or not (fv > 0):
+            raise ValueError("level must be finite and > 0")
+        return fv
+
+    @field_validator("probability")
+    @classmethod
+    def _prob_finite_nonneg(cls, v: float) -> float:
+        fv = float(v)
+        if not math.isfinite(fv) or fv < 0:
+            raise ValueError("probability must be finite and >= 0")
+        return fv
+
+
+class MidCycleScenarioDistribution(BaseModel):
+    """Research-only equal-weight peak/base/trough distribution (not valuation inject)."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    scenarios: tuple[MidCycleScenario, ...]
+    method: str = "equal_weight_v1"
+    research_only: bool = True
+    assumption_ids: tuple[str, ...] = ()
+    reason_codes: tuple[str, ...] = ()
+    diagnostics: dict[str, Any] = Field(default_factory=dict)
+
+    @model_validator(mode="after")
+    def _probs_sum_one(self) -> "MidCycleScenarioDistribution":
+        if not self.scenarios:
+            raise ValueError("scenarios must be non-empty")
+        total = sum(s.probability for s in self.scenarios)
+        if abs(total - 1.0) > 1e-9:
+            raise ValueError("scenario probabilities must sum to 1.0 (±1e-9)")
+        return self
 
 
 def _parse_as_of(as_of: date | datetime | str | None) -> date | None:
@@ -183,7 +238,9 @@ def estimate_mid_cycle_denominator(
 
     if series is None:
         reason_codes.append("SERIES_MISSING")
-        return _low(None, reason_codes, n_points=0, n_usable=0)
+        return attach_scenario_distribution(
+            _low(None, reason_codes, n_points=0, n_usable=0)
+        )
 
     points: list[tuple[date | None, float]] = []
     for raw in series:
@@ -203,13 +260,15 @@ def estimate_mid_cycle_denominator(
 
     if n_points == 0:
         reason_codes.append("SERIES_EMPTY_OR_UNUSABLE")
-        return _maybe_prior_or_low(
-            reason_codes,
-            n_points=0,
-            n_usable=0,
-            span=span,
-            sector_prior=sector_prior,
-            use_sector_prior_stub=use_sector_prior_stub,
+        return attach_scenario_distribution(
+            _maybe_prior_or_low(
+                reason_codes,
+                n_points=0,
+                n_usable=0,
+                span=span,
+                sector_prior=sector_prior,
+                use_sector_prior_stub=use_sector_prior_stub,
+            )
         )
 
     med = float(median(values))
@@ -260,35 +319,41 @@ def estimate_mid_cycle_denominator(
         incomplete = True
 
     if incomplete:
-        return _maybe_prior_or_low(
-            reason_codes,
-            n_points=n_points,
-            n_usable=n_points,
-            span=span,
-            sector_prior=sector_prior,
-            use_sector_prior_stub=use_sector_prior_stub,
-            extra=diagnostics_base,
-            sample_median=med,
+        return attach_scenario_distribution(
+            _maybe_prior_or_low(
+                reason_codes,
+                n_points=n_points,
+                n_usable=n_points,
+                span=span,
+                sector_prior=sector_prior,
+                use_sector_prior_stub=use_sector_prior_stub,
+                extra=diagnostics_base,
+                sample_median=med,
+            )
         )
 
     # SF1: HIGH requires med > 0 (hook also gates denom>0; estimator must not claim HIGH).
     if not (med == med and med > 0):
         reason_codes.append("NONPOSITIVE_MEDIAN")
-        return _low(
-            None,
-            reason_codes,
-            n_points=n_points,
-            n_usable=n_points,
-            span=span,
-            extra=diagnostics_base,
+        return attach_scenario_distribution(
+            _low(
+                None,
+                reason_codes,
+                n_points=n_points,
+                n_usable=n_points,
+                span=span,
+                extra=diagnostics_base,
+            )
         )
 
     reason_codes.append("COMPLETE_CYCLE_RULES_PASSED")
     diagnostics_base["reason_codes"] = sorted(set(reason_codes))
-    return MidCycleEstimate(
-        mid_cycle_denominator=med,
-        confidence=MidCycleConfidence.HIGH,
-        diagnostics=diagnostics_base,
+    return attach_scenario_distribution(
+        MidCycleEstimate(
+            mid_cycle_denominator=med,
+            confidence=MidCycleConfidence.HIGH,
+            diagnostics=diagnostics_base,
+        )
     )
 
 
@@ -491,6 +556,81 @@ def _maybe_prior_or_low(
         n_usable=n_usable,
         span=span,
         extra=extra,
+    )
+
+
+def build_midcycle_scenario_distribution(
+    est: MidCycleEstimate,
+) -> MidCycleScenarioDistribution | None:
+    """Build equal-weight peak/base/trough dist when extrema+levels valid; else None.
+
+    Gates (all required; else None, no invent):
+    - diagnostics.peak_detected and trough_detected
+    - finite peak_value > 0, trough_value > 0
+    - finite base > 0: prefer mid_cycle_denominator, else diagnostics.median_value
+    - peak_value >= base >= trough_value (no reorder invent)
+
+    Probabilities: equal_weight_v1 → 1/3 each. Always research_only=True.
+    Not calibrated; not Kelly / ensemble / DCF/RIM inject.
+    """
+    diag = est.diagnostics or {}
+    if not diag.get("peak_detected") or not diag.get("trough_detected"):
+        return None
+
+    def _finite_pos(raw: Any) -> float | None:
+        if raw is None:
+            return None
+        try:
+            v = float(raw)
+        except (TypeError, ValueError):
+            return None
+        if not math.isfinite(v) or not (v > 0):
+            return None
+        return v
+
+    peak = _finite_pos(diag.get("peak_value"))
+    trough = _finite_pos(diag.get("trough_value"))
+    if peak is None or trough is None:
+        return None
+
+    base = _finite_pos(est.mid_cycle_denominator)
+    if base is None:
+        base = _finite_pos(diag.get("median_value"))
+    if base is None:
+        return None
+
+    if not (peak >= base >= trough):
+        # Caller may surface SCENARIO_LEVEL_ORDER_INVALID; do not invent reorder.
+        return None
+
+    p = 1.0 / 3.0
+    return MidCycleScenarioDistribution(
+        scenarios=(
+            MidCycleScenario(kind="peak", level=peak, probability=p),
+            MidCycleScenario(kind="base", level=base, probability=p),
+            MidCycleScenario(kind="trough", level=trough, probability=p),
+        ),
+        method="equal_weight_v1",
+        research_only=True,
+        assumption_ids=(
+            "CYCLE-MIDCYCLE-SCENARIO-DIST-v1",
+            "CYCLE-MIDCYCLE-EXTREMA-v1",
+            "CYCLE-MIDCYCLE-ESTIMATOR-SKEL-v1",
+        ),
+    )
+
+
+def attach_scenario_distribution(est: MidCycleEstimate) -> MidCycleEstimate:
+    """Attach diagnostics.scenario_distribution when builder emits; else unchanged."""
+    dist = build_midcycle_scenario_distribution(est)
+    if dist is None:
+        return est
+    diag = dict(est.diagnostics)
+    diag["scenario_distribution"] = dist.model_dump(mode="json")
+    return MidCycleEstimate(
+        mid_cycle_denominator=est.mid_cycle_denominator,
+        confidence=est.confidence,
+        diagnostics=diag,
     )
 
 

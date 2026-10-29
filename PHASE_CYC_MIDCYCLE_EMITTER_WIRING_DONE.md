@@ -24,7 +24,7 @@ Never claims `ENSEMBLE_CALIBRATED` / `CALIBRATION_PASS` / `INVESTMENT_VALUE_SUPP
 
 - **Valuation inject** of `mid_cycle_denominator` remains **multiples-only** (`HIGH ∧ denom>0` via `injectable_mid_denominator`). Unchanged gate.
 - Emitters / DCF / non-FI RIM / MD: **diagnostics provenance only**.
-- FI / bank / value-rim / calibrate-rim PRIOR_ONLY: **explicit no-op** (wrong domain for industrial mid-cycle earnings denom).
+- FI / deposit-taking / value-rim / calibrate-rim PRIOR_ONLY: **explicit no-op** (wrong domain for industrial mid-cycle earnings denom).
 - Assumption: `CYCLE-MIDCYCLE-EMITTER-WIRING-v1`.
 
 ## Unchanged (hard constraints)

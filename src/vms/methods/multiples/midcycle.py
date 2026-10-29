@@ -510,7 +510,7 @@ def profile_is_cyclical(profile: Any) -> bool:
 
 
 def profile_is_financial_institution(profile: Any) -> bool:
-    """FI / bank domain — industrial mid-cycle earnings denom is out of scope."""
+    """FI / deposit-taking domain — industrial mid-cycle earnings denom is out of scope."""
     if profile is None:
         return False
     try:

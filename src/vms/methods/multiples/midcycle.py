@@ -3,11 +3,12 @@
 PIT series → mid_cycle_denominator | None + confidence + diagnostics.
 Incomplete / short / missing series → None + LOW (no invent).
 HIGH only under explicit completeness rules below.
-Optional sector-prior stub is research-only / LOW and never silent-fills.
-Incomplete series with sample median > 0 may shrink toward the prior
-(``CYCLE-MIDCYCLE-SECTOR-PRIOR-SHRINK-v1``); empty series keeps raw prior fill.
-Prior never elevates confidence above LOW. Orthogonal to ``vms.regimes`` and
-Track B hist P/B. Label: INVESTMENT_VALUE_NOT_ESTABLISHED. Not ensemble-calibrated.
+Optional sector-prior shrink (opt-in stub) is research-only / LOW and never
+silent-fills. Incomplete series with sample median > 0 may shrink toward the
+prior (``CYCLE-MIDCYCLE-SECTOR-PRIOR-SHRINK-v1``); empty series keeps raw prior
+fill. Prior never elevates confidence above LOW. Orthogonal to ``vms.regimes``
+and Track B hist P/B. Label: INVESTMENT_VALUE_NOT_ESTABLISHED. Not
+ensemble-calibrated.
 """
 
 from __future__ import annotations

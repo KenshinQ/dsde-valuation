@@ -33,11 +33,11 @@ Never claims `ENSEMBLE_CALIBRATED` / `CALIBRATION_PASS` / `INVESTMENT_VALUE_SUPP
 - `INVESTMENT_VALUE_NOT_ESTABLISHED`
 - No invent OEI / default PB; no 非银 lift
 - No λ / HIGH gate / Phase5 inject condition change
-- No scenario peak/base/trough probabilities (slice D)
+- Scenario peak/base/trough probabilities: see CYCLE-MIDCYCLE-SCENARIO-DIST-v1 / PHASE_CYC_MIDCYCLE_SCENARIO_DIST_DONE.md (research-only; not valuation inject)
 
 ## Non-goals (still backlog #4 later)
 
-- D peak/base/trough scenario probabilities
+- D peak/base/trough scenario probabilities — landed as CYCLE-MIDCYCLE-SCENARIO-DIST-v1 (research-only)
 
 ## Touch list
 

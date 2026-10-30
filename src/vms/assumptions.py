@@ -281,7 +281,7 @@ ASSUMPTIONS: dict[str, str] = {
                                          "emitters, cash-flow (FCFF/FCFE/DDM), non-FI RIM, and "
                                          "MethodDistribution passthrough. Valuation inject of "
                                          "mid_cycle_denominator remains multiples-only via existing "
-                                         "Phase5 HIGH∧denom>0 gate (unchanged). FI / bank / "
+                                         "Phase5 HIGH∧denom>0 gate (unchanged). FI / deposit-taking / "
                                          "value-rim / calibrate-rim PRIOR_ONLY paths are explicit "
                                          "no-op (wrong domain for industrial mid-cycle earnings "
                                          "denom; no invented OEI/exit VPS). Not calibrated; scenario dist is "

@@ -69,7 +69,7 @@ def test_builder_none_when_missing_peak_or_trough():
 
 
 def test_builder_none_on_nonpositive_or_order_invalid():
-    # peak detected but trough missing in synthetic diagnostics
+    # peak/trough detected but order peak≥base≥trough fails
     bad = MidCycleEstimate(
         mid_cycle_denominator=50.0,
         confidence=MidCycleConfidence.LOW,
@@ -79,10 +79,14 @@ def test_builder_none_on_nonpositive_or_order_invalid():
             "peak_value": 10.0,
             "trough_value": 40.0,  # trough > peak → order invalid with base=50
             "median_value": 50.0,
+            "reason_codes": ["SYNTHETIC_FIXTURE"],
         },
     )
     assert build_midcycle_scenario_distribution(bad) is None
-    assert "scenario_distribution" not in attach_scenario_distribution(bad).diagnostics
+    attached = attach_scenario_distribution(bad)
+    assert "scenario_distribution" not in attached.diagnostics
+    assert "SCENARIO_LEVEL_ORDER_INVALID" in attached.diagnostics["reason_codes"]
+    assert "SYNTHETIC_FIXTURE" in attached.diagnostics["reason_codes"]
 
     nonpos = MidCycleEstimate(
         mid_cycle_denominator=50.0,
@@ -93,9 +97,39 @@ def test_builder_none_on_nonpositive_or_order_invalid():
             "peak_value": 80.0,
             "trough_value": 0.0,
             "median_value": 50.0,
+            "reason_codes": ["SYNTHETIC_FIXTURE"],
         },
     )
     assert build_midcycle_scenario_distribution(nonpos) is None
+    attached_nonpos = attach_scenario_distribution(nonpos)
+    assert "scenario_distribution" not in attached_nonpos.diagnostics
+    assert "SCENARIO_LEVEL_ORDER_INVALID" not in attached_nonpos.diagnostics.get(
+        "reason_codes", []
+    )
+
+
+def test_attach_order_invalid_appends_reason_without_inventing_dist():
+    """SF2: order-invalid → SCENARIO_LEVEL_ORDER_INVALID on estimate; no dist."""
+    est = MidCycleEstimate(
+        mid_cycle_denominator=60.0,
+        confidence=MidCycleConfidence.HIGH,
+        diagnostics={
+            "peak_detected": True,
+            "trough_detected": True,
+            "peak_value": 100.0,
+            "trough_value": 70.0,  # trough > base=60 → order invalid
+            "median_value": 60.0,
+            "reason_codes": ["COMPLETE_CYCLE_RULES_PASSED"],
+        },
+    )
+    assert build_midcycle_scenario_distribution(est) is None
+    out = attach_scenario_distribution(est)
+    assert "scenario_distribution" not in out.diagnostics
+    assert out.mid_cycle_denominator == pytest.approx(60.0)
+    assert out.confidence is MidCycleConfidence.HIGH
+    codes = out.diagnostics["reason_codes"]
+    assert "SCENARIO_LEVEL_ORDER_INVALID" in codes
+    assert "COMPLETE_CYCLE_RULES_PASSED" in codes
 
 
 def test_sector_prior_only_low_without_extrema_no_scenario_dist():

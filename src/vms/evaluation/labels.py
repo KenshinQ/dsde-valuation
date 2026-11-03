@@ -2,6 +2,9 @@
 
 Synthetic never claims investment value supported. Inadequate OOS evidence
 yields CALIBRATION_INSUFFICIENT — never an inferred calibration success.
+
+PASS requires ``pass_claim_authorized=True`` from validated PASS-claim plumbing
+(EVAL-CALIBRATION-PASS-CLAIM-PROTOCOL-v1). Plumbing ≠ evidence.
 """
 
 from __future__ import annotations
@@ -23,11 +26,14 @@ def assign_labels(
     ensemble_calibrated: bool = False,
     min_oos_for_calibration: int = 5,
     n_unbiased_scored: int | None = None,
+    pass_claim_authorized: bool = False,
 ) -> dict[str, Any]:
     """Always separate engineering success from investment alpha (SPEC §2.12 / §17.4).
 
     - ``calibration_ok is None`` or too-few OOS rows → ``CALIBRATION_INSUFFICIENT``
       (not an inferred PASS).
+    - ``calibration_ok is True`` without ``pass_claim_authorized`` → forced back to
+      ``CALIBRATION_INSUFFICIENT`` (fail-closed plumbing).
     - ``ENSEMBLE_CALIBRATED`` only when caller passes ``ensemble_calibrated=True``
       with real OOS evidence; synthetic Phase 11 demos never set this.
     - ``INVESTMENT_VALUE_SUPPORTED`` only with predeclared leakage-safe OOS alpha
@@ -46,6 +52,9 @@ def assign_labels(
 
     # Calibration gate: inadequate sample → INSUFFICIENT, not success.
     if n_unbiased_scored is not None and n_unbiased_scored < min_oos_for_calibration:
+        calibration_ok = None
+    # Fail-closed: True candidate without authorized pass-claim → INSUFFICIENT.
+    if calibration_ok is True and not pass_claim_authorized:
         calibration_ok = None
     if calibration_ok is None:
         cal_status = "INSUFFICIENT"
@@ -92,6 +101,7 @@ def assign_labels(
         "investment_value": inv,
         "investment_value_reason": inv_reason,
         "data_label": data_label,
+        "pass_claim_authorized": bool(pass_claim_authorized),
         "release_gates": release_gates,
     }
 

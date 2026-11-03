@@ -489,6 +489,7 @@ ASSUMPTIONS: dict[str, str] = {
                      "(default {0.08, 0.09, 0.10} or config-driven). Each ke yields a VPS "
                      "distribution under P2; no ensemble blend across ke.",
 
+    "EVAL-CALIBRATION-PASS-CLAIM-PROTOCOL-v1": "PASS-claim plumbing protocol. A validated pass-claim artifact (CLI --pass-claim-artifact) is required before calibration_ok / CALIBRATION_PASS may be set. Default path (no artifact) is forever CALIBRATION_INSUFFICIENT. Illegal / incomplete / SYNTHETIC-label artifacts fail closed (raise). Valid artifact with n_unbiased below MIN_UNBIASED_FOR_PASS (=5) stays INSUFFICIENT — plumbing ≠ evidence and does not invent OOS rows, lower MIN, claim ENSEMBLE_CALIBRATED, or INVESTMENT_VALUE_SUPPORTED. Wired on calibrate-rim / calibrate-mature / assign_labels. SCHEMA stays vms-0.2.phase12.",
     "EVAL-MATURE-LEAN-WF-v1": "MATURE_OPERATING lean walk-forward calibration harness "
                           "(config/universe.mature_lean.yaml). Reuses Phase 11 "
                           "evaluate protocol: chronological origins, "

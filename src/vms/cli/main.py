@@ -1563,6 +1563,7 @@ def cmd_calibrate_rim(args: argparse.Namespace) -> int:
         raise InputError("--end must be >= --start")
     uni = args.universe
     prefer_local = not bool(getattr(args, "refresh", False))
+    pass_claim_artifact = getattr(args, "pass_claim_artifact", None)
     try:
         summary = build_calibrate_rim_bundle(
             out_dir=out,
@@ -1572,6 +1573,7 @@ def cmd_calibrate_rim(args: argparse.Namespace) -> int:
             end=end,
             seed=seed,
             prefer_local=prefer_local,
+            pass_claim_artifact=pass_claim_artifact,
         )
     except CalibrateRimBundleError as e:
         raise InputError(str(e)) from e
@@ -1579,11 +1581,14 @@ def cmd_calibrate_rim(args: argparse.Namespace) -> int:
     assert summary["status"] == CALIBRATE_RIM_STATUS
     assert summary["investment_value"] == "INVESTMENT_VALUE_NOT_ESTABLISHED"
     assert summary["labels"]["ENSEMBLE_CALIBRATED"] is False
-    assert summary["labels"]["CALIBRATION_PASS"] is not True
-    assert summary["calibration_claim"] == "CALIBRATION_INSUFFICIENT"
+    authorized = bool((summary.get("pass_claim") or {}).get("authorized"))
+    if not authorized:
+        assert summary["labels"]["CALIBRATION_PASS"] is not True
+        assert summary["calibration_claim"] == "CALIBRATION_INSUFFICIENT"
     assert summary["min_hist_pb_points"] == 12
     assert (out / "rim_calibration_report.json").is_file()
     assert (out / "frozen_weights.json").is_file()
+    assert (out / "pass_claim_decision.json").is_file()
     return EXIT_OK
 
 
@@ -1598,6 +1603,7 @@ def cmd_calibrate_mature(args: argparse.Namespace) -> int:
         raise InputError("--end must be >= --start")
     uni = args.universe
     prefer_local = not bool(getattr(args, "refresh", False))
+    pass_claim_artifact = getattr(args, "pass_claim_artifact", None)
     try:
         summary = build_calibrate_mature_bundle(
             out_dir=out,
@@ -1607,6 +1613,7 @@ def cmd_calibrate_mature(args: argparse.Namespace) -> int:
             end=end,
             seed=seed,
             prefer_local=prefer_local,
+            pass_claim_artifact=pass_claim_artifact,
         )
     except CalibrateMatureBundleError as e:
         raise InputError(str(e)) from e
@@ -1614,12 +1621,15 @@ def cmd_calibrate_mature(args: argparse.Namespace) -> int:
     assert summary["status"] == CALIBRATE_MATURE_STATUS
     assert summary["investment_value"] == "INVESTMENT_VALUE_NOT_ESTABLISHED"
     assert summary["labels"]["ENSEMBLE_CALIBRATED"] is False
-    assert summary["labels"]["CALIBRATION_PASS"] is not True
-    assert summary["calibration_claim"] == "CALIBRATION_INSUFFICIENT"
+    authorized = bool((summary.get("pass_claim") or {}).get("authorized"))
+    if not authorized:
+        assert summary["labels"]["CALIBRATION_PASS"] is not True
+        assert summary["calibration_claim"] == "CALIBRATION_INSUFFICIENT"
     assert summary["not_rim"] is True
     assert (out / "evaluation_report.json").is_file()
     assert (out / "frozen_weights.json").is_file()
     assert (out / "calibrate_mature_summary.json").is_file()
+    assert (out / "pass_claim_decision.json").is_file()
     return EXIT_OK
 
 
@@ -2326,6 +2336,15 @@ def build_parser() -> argparse.ArgumentParser:
         default=False,
         help="fi_real only: allow Recipe E / EM REST upsert (default local-first, zero REST)",
     )
+    cr.add_argument(
+        "--pass-claim-artifact",
+        dest="pass_claim_artifact",
+        default=None,
+        help=(
+            "optional PASS-claim protocol artifact (JSON/YAML); default omitted → "
+            "CALIBRATION_INSUFFICIENT. Illegal/synthetic/incomplete → fail closed."
+        ),
+    )
     cr.set_defaults(func=cmd_calibrate_rim)
 
     cm = sub.add_parser(
@@ -2355,6 +2374,15 @@ def build_parser() -> argparse.ArgumentParser:
         help=(
             "mature_real only: reserved refresh flag (default local-first, "
             "zero REST; scaffold does not invent panel)"
+        ),
+    )
+    cm.add_argument(
+        "--pass-claim-artifact",
+        dest="pass_claim_artifact",
+        default=None,
+        help=(
+            "optional PASS-claim protocol artifact (JSON/YAML); default omitted → "
+            "CALIBRATION_INSUFFICIENT. Illegal/synthetic/incomplete → fail closed."
         ),
     )
     cm.set_defaults(func=cmd_calibrate_mature)

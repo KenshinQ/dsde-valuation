@@ -161,6 +161,19 @@ def test_cli_refresh_sets_prefer_local_false(monkeypatch, tmp_path):
 
     def fake_bundle(**kwargs):
         seen.update(kwargs)
+        out_dir = Path(kwargs["out_dir"])
+        out_dir.mkdir(parents=True, exist_ok=True)
+        pass_claim = {
+            "authorized": False,
+            "reason": "NO_ARTIFACT",
+            "protocol_id": None,
+            "artifact_path": None,
+            "run_n_unbiased": 0,
+        }
+        (out_dir / "pass_claim_decision.json").write_text(
+            json.dumps(pass_claim, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
         return {
             "status": "R6_BANK_RIM_WALK_FORWARD_CALIBRATION_NOT_INVESTMENT_ADVICE",
             "investment_value": "INVESTMENT_VALUE_NOT_ESTABLISHED",
@@ -175,6 +188,7 @@ def test_cli_refresh_sets_prefer_local_false(monkeypatch, tmp_path):
             "split_mode": "chronological",
             "prefer_local": kwargs.get("prefer_local"),
             "fi_real_rest_calls": 0,
+            "pass_claim": pass_claim,
         }
 
     monkeypatch.setattr(cli_main, "build_calibrate_rim_bundle", fake_bundle)

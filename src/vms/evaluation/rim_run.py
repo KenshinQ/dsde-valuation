@@ -19,6 +19,11 @@ from pydantic import BaseModel, ConfigDict, Field
 from vms import SCHEMA_VERSION
 from vms.assumptions import cite
 from vms.evaluation.labels import assign_labels
+from vms.evaluation.pass_claim import (
+    PassClaimArtifactError,
+    gate_calibration_ok,
+    resolve_pass_claim,
+)
 from vms.evaluation.protocol import (
     enumerate_fy_origins,
     freeze_weights_before_test,
@@ -101,11 +106,15 @@ def run_rim_calibration(
     split_mode: str | None = None,
     ensemble_weights: dict[str, float] | None = None,
     prefer_local: bool = True,
+    pass_claim_artifact: str | Path | None = None,
 ) -> RimCalibrationReport:
     """Walk-forward calibrate deposit-taking FI RIM Track A. Random splits rejected.
 
     ``prefer_local`` (default True) is honored for ``fi_real`` universes only —
     no REST unless caller passes prefer_local=False (CLI ``--refresh``).
+
+    ``pass_claim_artifact`` optional PASS-claim plumbing path; default None keeps
+    CALIBRATION_INSUFFICIENT. Illegal artifacts raise PassClaimArtifactError.
     """
     if isinstance(universe, (str, Path)):
         universe = load_universe(universe)
@@ -261,21 +270,31 @@ def run_rim_calibration(
     scores_unbiased = score_rim_targets(unbiased)
 
     n_unbiased = int(scores_unbiased.get("n_records", 0))
-    # Default lean / thin OOS → INSUFFICIENT (do not silently PASS)
+    # Default lean / thin OOS → INSUFFICIENT (do not silently PASS).
+    # PASS only via validated pass-claim artifact + sufficient n_unbiased.
+    pass_claim = resolve_pass_claim(
+        pass_claim_artifact,
+        run_data_label=universe.data_label,
+        run_n_unbiased=n_unbiased,
+    )
     cal_ok: bool | None = None
+    if pass_claim.reason == "INSUFFICIENT_N_UNBIASED":
+        flags.append("PASS_CLAIM_VALID_BUT_N_UNBIASED_INSUFFICIENT")
     if n_unbiased < 5:
         cal_ok = None
         flags.append("CALIBRATION_INSUFFICIENT_FEW_ORIGINS")
-    else:
-        # Even with enough rows, R6-default does not auto-claim PASS without
-        # a predeclared real-OOS protocol — leave None (INSUFFICIENT) unless
-        # explicitly upgraded later.
+    elif not pass_claim.authorized:
         cal_ok = None
         flags.append(
             "CALIBRATION_INSUFFICIENT_NO_PREDECLARED_PASS_CLAIM"
             if is_real
             else "CALIBRATION_INSUFFICIENT_NO_PREDECLARED_OOS_PROTOCOL"
         )
+    else:
+        cal_ok = True
+        flags.append("PASS_CLAIM_AUTHORIZED")
+
+    cal_ok = gate_calibration_ok(cal_ok, pass_claim=pass_claim)
 
     engineering_ok = (
         mode == "chronological"
@@ -299,11 +318,13 @@ def run_rim_calibration(
         ensemble_calibrated=False,
         n_unbiased_scored=n_unbiased,
         min_oos_for_calibration=5,
+        pass_claim_authorized=pass_claim.authorized,
     )
-    # Hard: never claim investment supported / ensemble calibrated on R6/R7-default path
+    # Hard: never claim investment supported / ensemble calibrated on R6/R7 path
     assert labels["investment_value"] == ClaimStatus.INVESTMENT_VALUE_NOT_ESTABLISHED.value
     assert labels["ENSEMBLE_CALIBRATED"] is False
-    assert labels["CALIBRATION_CLAIM"] == ClaimStatus.CALIBRATION_INSUFFICIENT.value
+    if not pass_claim.authorized:
+        assert labels["CALIBRATION_CLAIM"] == ClaimStatus.CALIBRATION_INSUFFICIENT.value
 
     notes = [
         (
@@ -384,6 +405,7 @@ def run_rim_calibration(
                 if is_real
                 else ["EVAL-RIM-FI-DEPOSIT-WF-v1"]
             ),
+            "EVAL-CALIBRATION-PASS-CLAIM-PROTOCOL-v1",
             "EVAL-CHRONOLOGICAL-ONLY-v1",
             "EVAL-FORECAST-BEFORE-OUTCOME-v1",
             "EVAL-TARGETS-SEPARATE-v1",

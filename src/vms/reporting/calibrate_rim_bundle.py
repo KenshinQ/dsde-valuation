@@ -15,6 +15,7 @@ from typing import Any
 from zoneinfo import ZoneInfo
 
 from vms import IMPLEMENTED_PHASE, SCHEMA_VERSION
+from vms.evaluation.pass_claim import PassClaimArtifactError, resolve_pass_claim
 from vms.evaluation.rim_run import run_rim_calibration
 from vms.methods.rim.bank_peers import LEAN_CURATED_DEPOSIT_TAKING_FI
 from vms.methods.rim.hist_pb import MIN_HIST_PB_POINTS
@@ -40,11 +41,15 @@ def build_calibrate_rim_bundle(
     evaluation_as_of: datetime | None = None,
     seed: int = 42,
     prefer_local: bool = True,
+    pass_claim_artifact: str | Path | None = None,
 ) -> dict[str, Any]:
     """Run deposit-taking FI RIM walk-forward; write rim_calibration_report + summary.
 
     ``prefer_local=True`` (default): fi_real universes make zero REST.
     ``prefer_local=False`` (CLI ``--refresh``): allow Recipe E / EM upsert.
+
+    ``pass_claim_artifact`` optional; default None keeps CALIBRATION_INSUFFICIENT.
+    Illegal artifacts raise CalibrateRimBundleError.
     """
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
@@ -75,29 +80,45 @@ def build_calibrate_rim_bundle(
         )
     )
 
-    report = run_rim_calibration(
-        universe=uni,
-        loaded=loaded,
-        start=start,
-        end=end,
-        out_dir=out,
-        evaluation_as_of=eval_as_of,
-        prefer_local=prefer_local,
-    )
+    try:
+        report = run_rim_calibration(
+            universe=uni,
+            loaded=loaded,
+            start=start,
+            end=end,
+            out_dir=out,
+            evaluation_as_of=eval_as_of,
+            prefer_local=prefer_local,
+            pass_claim_artifact=pass_claim_artifact,
+        )
+    except PassClaimArtifactError as e:
+        raise CalibrateRimBundleError(str(e)) from e
+
+    n_unbiased = int((report.scores_unbiased or {}).get("n_records") or 0)
+    try:
+        pass_claim = resolve_pass_claim(
+            pass_claim_artifact,
+            run_data_label=report.data_label,
+            run_n_unbiased=n_unbiased,
+        )
+    except PassClaimArtifactError as e:
+        raise CalibrateRimBundleError(str(e)) from e
 
     if report.labels.get("investment_value") != INVESTMENT_LABEL:
         raise CalibrateRimBundleError("calibrate-rim must keep INVESTMENT_VALUE_NOT_ESTABLISHED")
     if report.labels.get("ENSEMBLE_CALIBRATED"):
         raise CalibrateRimBundleError("calibrate-rim must not claim ENSEMBLE_CALIBRATED")
-    if report.labels.get("CALIBRATION_PASS") is True:
+    if report.labels.get("CALIBRATION_PASS") is True and not pass_claim.authorized:
         raise CalibrateRimBundleError(
-            "calibrate-rim default must not silently claim CALIBRATION_PASS "
-            "(expected CALIBRATION_INSUFFICIENT without predeclared OOS protocol)"
+            "calibrate-rim must not silently claim CALIBRATION_PASS "
+            "without authorized pass-claim artifact"
         )
-    if report.labels.get("CALIBRATION_CLAIM") != ClaimStatus.CALIBRATION_INSUFFICIENT.value:
-        raise CalibrateRimBundleError(
-            f"expected CALIBRATION_INSUFFICIENT, got {report.labels.get('CALIBRATION_CLAIM')}"
-        )
+    if not pass_claim.authorized:
+        if report.labels.get("CALIBRATION_CLAIM") != ClaimStatus.CALIBRATION_INSUFFICIENT.value:
+            raise CalibrateRimBundleError(
+                f"expected CALIBRATION_INSUFFICIENT without pass-claim auth, "
+                f"got {report.labels.get('CALIBRATION_CLAIM')}"
+            )
     if report.min_hist_pb_points != MIN_HIST_PB_POINTS:
         raise CalibrateRimBundleError("MIN_HIST_PB_POINTS must remain 12")
 
@@ -175,6 +196,7 @@ def build_calibrate_rim_bundle(
         ),
         "prefer_local": prefer_local,
         "fi_real_rest_calls": None,
+        "pass_claim": pass_claim.as_dict(),
     }
     mat_path = out / "fi_real_materialize.json"
     if mat_path.is_file():
@@ -186,6 +208,7 @@ def build_calibrate_rim_bundle(
             raise CalibrateRimBundleError(
                 f"prefer_local=True but fi_real rest_calls={mat.get('rest_calls')}"
             )
+    write_artifact(out, "pass_claim_decision.json", pass_claim.as_dict(), stamp)
     write_artifact(out, "calibrate_rim_summary.json", summary, stamp)
     return summary
 

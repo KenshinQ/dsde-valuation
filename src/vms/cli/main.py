@@ -24,6 +24,7 @@ Implemented commands:
   phase10         VMS-0.2 Phase 10 Track B return distributions + DSDE contract (synthetic; NOT investment advice)
   phase11         VMS-0.2 Phase 11 walk-forward calibration + sensitivity (synthetic; NOT investment advice)
   calibrate-rim   Deposit-taking FI RIM walk-forward (R6 synthetic / R7 HiThink-EM lean; NOT investment advice)
+  calibrate-mature MATURE_OPERATING lean walk-forward (Phase11 evaluate path; NOT RIM; NOT investment advice)
   prior-only-fi   R8/R9/R12 FI PRIOR_ONLY research ensemble (demo / --from-value-rim / --from-calibrate-rim-forecast; NOT calibrated)
   phase12         VMS-0.2 Phase 12 offline release examples (synthetic; NOT investment advice)
   validate-bundle Validate a result-bundle directory against a PHASE_CLI subset / §16.3
@@ -82,6 +83,9 @@ from vms.reporting.phase11_bundle import (PHASE11_STATUS, Phase11BundleError, bu
 from vms.reporting.calibrate_rim_bundle import (CALIBRATE_RIM_STATUS, CalibrateRimBundleError,
                                                 build_calibrate_rim_bundle,
                                                 dump_summary as dump_calibrate_rim_summary)
+from vms.reporting.calibrate_mature_bundle import (CALIBRATE_MATURE_STATUS, CalibrateMatureBundleError,
+                                                   build_calibrate_mature_bundle,
+                                                   dump_summary as dump_calibrate_mature_summary)
 from vms.reporting.prior_only_fi_bundle import (PRIOR_ONLY_FI_STATUS, PriorOnlyFiBundleError,
                                                  build_prior_only_fi_bundle,
                                                  dump_summary as dump_prior_only_fi_summary)
@@ -1583,6 +1587,42 @@ def cmd_calibrate_rim(args: argparse.Namespace) -> int:
     return EXIT_OK
 
 
+def cmd_calibrate_mature(args: argparse.Namespace) -> int:
+    """MATURE_OPERATING lean walk-forward (Phase 11 evaluate; NOT RIM). NOT investment advice."""
+    from datetime import date as date_cls
+    out = Path(args.out)
+    seed = 42 if args.seed is None else int(args.seed)
+    start = date_cls.fromisoformat(args.start) if args.start else date_cls(2018, 1, 1)
+    end = date_cls.fromisoformat(args.end) if args.end else date_cls(2022, 12, 31)
+    if end < start:
+        raise InputError("--end must be >= --start")
+    uni = args.universe
+    prefer_local = not bool(getattr(args, "refresh", False))
+    try:
+        summary = build_calibrate_mature_bundle(
+            out_dir=out,
+            config_path=args.config,
+            universe_path=uni,
+            start=start,
+            end=end,
+            seed=seed,
+            prefer_local=prefer_local,
+        )
+    except CalibrateMatureBundleError as e:
+        raise InputError(str(e)) from e
+    print(dump_calibrate_mature_summary(summary), end="")
+    assert summary["status"] == CALIBRATE_MATURE_STATUS
+    assert summary["investment_value"] == "INVESTMENT_VALUE_NOT_ESTABLISHED"
+    assert summary["labels"]["ENSEMBLE_CALIBRATED"] is False
+    assert summary["labels"]["CALIBRATION_PASS"] is not True
+    assert summary["calibration_claim"] == "CALIBRATION_INSUFFICIENT"
+    assert summary["not_rim"] is True
+    assert (out / "evaluation_report.json").is_file()
+    assert (out / "frozen_weights.json").is_file()
+    assert (out / "calibrate_mature_summary.json").is_file()
+    return EXIT_OK
+
+
 def cmd_prior_only_fi(args: argparse.Namespace) -> int:
     """FI PRIOR_ONLY research ensemble wiring (R8 demo / R9 live / R12 calibrate-rim). NOT calibrated."""
     try:
@@ -2287,6 +2327,37 @@ def build_parser() -> argparse.ArgumentParser:
         help="fi_real only: allow Recipe E / EM REST upsert (default local-first, zero REST)",
     )
     cr.set_defaults(func=cmd_calibrate_rim)
+
+    cm = sub.add_parser(
+        "calibrate-mature",
+        help=(
+            "MATURE_OPERATING lean walk-forward via Phase 11 evaluate "
+            "(operating/CF/multiples; NOT RIM; NOT investment advice)"
+        ),
+    )
+    cm.add_argument("--out", required=True)
+    cm.add_argument("--config", default=str(_default_config_path()))
+    cm.add_argument(
+        "--universe",
+        default=None,
+        help=(
+            "universe YAML (default: config/universe.mature_lean.yaml; "
+            "real scaffold: config/universe.mature_lean_real.yaml)"
+        ),
+    )
+    cm.add_argument("--start", default="2018-01-01")
+    cm.add_argument("--end", default="2022-12-31")
+    cm.add_argument("--seed", type=int, default=None)
+    cm.add_argument(
+        "--refresh",
+        action="store_true",
+        default=False,
+        help=(
+            "mature_real only: reserved refresh flag (default local-first, "
+            "zero REST; scaffold does not invent panel)"
+        ),
+    )
+    cm.set_defaults(func=cmd_calibrate_mature)
 
     pofi = sub.add_parser(
         "prior-only-fi",

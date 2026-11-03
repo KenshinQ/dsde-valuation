@@ -89,8 +89,13 @@ def run_evaluation(
     evaluation_as_of: datetime | None = None,
     split_mode: str | None = None,
     ensemble_weights: dict[str, float] | None = None,
+    prefer_local: bool = True,
 ) -> EvaluationReport:
-    """Walk-forward evaluate a universe. Random splits are rejected (SPEC §17.1)."""
+    """Walk-forward evaluate a universe. Random splits are rejected (SPEC §17.1).
+
+    ``prefer_local`` is forwarded to ``materialize_universe`` (fi_real /
+    mature_real). Synthetic panels never call REST.
+    """
     if isinstance(universe, (str, Path)):
         universe = load_universe(universe)
     mode = split_mode or universe.split_mode
@@ -100,7 +105,7 @@ def run_evaluation(
 
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
-    loads = materialize_universe(universe, work_dir=out)
+    loads = materialize_universe(universe, work_dir=out, prefer_local=prefer_local)
     horizons = list(universe.horizons_years) or list(loaded.config.horizons_years)
     horizon = min(horizons)
     eval_as_of = evaluation_as_of or datetime.now(TZ)

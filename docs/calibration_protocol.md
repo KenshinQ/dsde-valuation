@@ -86,7 +86,26 @@ Inherits R6 protocol gates. Assumption: `EVAL-RIM-FI-DEPOSIT-REAL-OOS-v1`.
 Expected on R7-default: `CALIBRATION_INSUFFICIENT` + `INVESTMENT_VALUE_NOT_ESTABLISHED`
 (engineering success ≠ calibration PASS). Schema stays `vms-0.2.phase12`.
 
+## MATURE lean walk-forward (calibrate-mature)
+
+`MATURE_OPERATING` lean harness (`config/universe.mature_lean.yaml`; optional
+real scaffold `config/universe.mature_lean_real.yaml`).
+
+CLI: `vms calibrate-mature --universe config/universe.mature_lean.yaml`
+(default universe is the synthetic lean YAML). Optional `--refresh` is reserved
+for `mature_real` (scaffold: local-first, **zero REST**, no invented panel).
+
+Reuses Phase 11 `evaluate` operating / cash-flow / relative-multiples path —
+**not** RIM / not FI Track B. Chronological-only, forecast-before-outcome,
+weights frozen before test, `pit_complete=false` excluded from `scores_unbiased`.
+
+Assumption: `EVAL-MATURE-LEAN-WF-v1` (synthetic); `EVAL-MATURE-LEAN-REAL-OOS-v1`
+(real scaffold). Expected on default: `CALIBRATION_INSUFFICIENT` +
+`INVESTMENT_VALUE_NOT_ESTABLISHED`. Schema stays `vms-0.2.phase12`.
+Does not replace synthetic `vms phase11` / `vms evaluate`.
+
 ## FI PRIOR_ONLY research ensemble wiring (R8)
+
 
 Wires deposit-taking FI RIM method distributions into Phase 8
 `build_ensemble(intent=research_prior)` for a labeled research mixture.

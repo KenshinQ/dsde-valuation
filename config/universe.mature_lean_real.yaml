@@ -1,0 +1,20 @@
+# MATURE_OPERATING lean REAL-OOS scaffold (no invented panel).
+# data_label must NOT contain SYNTHETIC. Without local data_dirs / panel → honest
+# DATA_GAP materialize + CALIBRATION_INSUFFICIENT (not a silent PASS).
+# CLI: vms calibrate-mature --universe config/universe.mature_lean_real.yaml
+# Optional --refresh reserved for future REST; default local-first, zero REST.
+# Not investment advice.
+universe_id: mature_lean_real_scaffold_v1
+data_label: HITHINK_EM_LEAN_MATURE_SCAFFOLD
+split_mode: chronological
+forbid_random_splits: true
+horizons_years: [1]
+min_history_years: 3
+instruments:
+  # Placeholder tickers for scaffold wiring only — no fabricated fundamentals.
+  - {instrument_id: 600519.SH, data_dir: null, industry: 食品饮料, scheme: SW2021_L1}
+mature_real:
+  instrument_ids: [600519.SH]
+  as_of: "2025-06-30T15:00:00+08:00"
+  # Scaffold: no fund_db/market_db override required; missing local panel ⇒ DATA_GAP.
+  scaffold: true

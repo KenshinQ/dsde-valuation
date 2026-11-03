@@ -489,6 +489,28 @@ ASSUMPTIONS: dict[str, str] = {
                      "(default {0.08, 0.09, 0.10} or config-driven). Each ke yields a VPS "
                      "distribution under P2; no ensemble blend across ke.",
 
+    "EVAL-MATURE-LEAN-WF-v1": "MATURE_OPERATING lean walk-forward calibration harness "
+                          "(config/universe.mature_lean.yaml). Reuses Phase 11 "
+                          "evaluate protocol: chronological origins, "
+                          "forecast-before-outcome, separate operating/CF/multiples "
+                          "targets, freeze-before-test, pit_complete=false excluded "
+                          "from scores_unbiased. Methods are operating/CF/relative "
+                          "multiples — NOT RIM / not FI Track B. Hard labels: "
+                          "CALIBRATION_INSUFFICIENT + INVESTMENT_VALUE_NOT_ESTABLISHED; "
+                          "never ENSEMBLE_CALIBRATED / INVESTMENT_VALUE_SUPPORTED / "
+                          "CALIBRATION_PASS on default. Does not invent OEI, lower "
+                          "MIN_HIST_PB_POINTS, inject midcycle into DCF/RIM/ensemble, "
+                          "or bump SCHEMA. CLI: vms calibrate-mature. Does not replace "
+                          "synthetic phase11 / evaluate.",
+    "EVAL-MATURE-LEAN-REAL-OOS-v1": "MATURE lean REAL-OOS scaffold "
+                          "(config/universe.mature_lean_real.yaml). Inherits "
+                          "EVAL-MATURE-LEAN-WF-v1 gates. materialize mature_real is "
+                          "local-first (zero REST without --refresh); missing "
+                          "data_dir / panel ⇒ honest DATA_GAP and empty loads — "
+                          "never invent fundamentals. Expected default: "
+                          "CALIBRATION_INSUFFICIENT + INVESTMENT_VALUE_NOT_ESTABLISHED. "
+                          "SCHEMA stays vms-0.2.phase12. CLI: vms calibrate-mature "
+                          "--universe config/universe.mature_lean_real.yaml.",
     "EVAL-RIM-FI-DEPOSIT-REAL-OOS-v1": "R7 deposit-taking FI RIM walk-forward on HiThink/EM lean "
                           "real panel (config/universe.fi_deposit_lean_real.yaml). Reuses R6 "
                           "protocol (EVAL-RIM-FI-DEPOSIT-WF-v1): chronological origins, "

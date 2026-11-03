@@ -105,7 +105,7 @@ def materialize_fi_real_panel(
         "EM-SHARES-EQUITY-v1",
         "HITHINK-NO-VENDOR-QFQ-v1",
         "INDUSTRY-SW-L1-PROXY-EM-v1",
-        "PIT-INCOMPLETE-v1",
+        "PIT-INCOMPLETE-v2", "PIT-ASSUMED-VENDOR-LATEST-v1",
     )
     flags: list[str] = [
         "FI_REAL_OOS_PANEL",

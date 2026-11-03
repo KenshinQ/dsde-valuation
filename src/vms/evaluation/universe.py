@@ -231,7 +231,8 @@ def materialize_universe(
             "assumption_ids": [
                 "EVAL-MATURE-LEAN-REAL-OOS-v1",
                 "HITHINK-LOCAL-FIRST-v1",
-                "PIT-INCOMPLETE-v1",
+                "PIT-INCOMPLETE-v2",
+                "PIT-ASSUMED-VENDOR-LATEST-v1",
             ],
             "flags": [
                 "MATURE_REAL_SCAFFOLD",

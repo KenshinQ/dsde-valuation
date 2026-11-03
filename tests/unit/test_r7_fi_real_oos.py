@@ -136,49 +136,82 @@ def test_ac4_forecast_before_outcome(tmp_path: Path):
         assert body.get("frozen_weights_hash")
 
 
-# ---- AC5: pit_complete=false not in scores_unbiased ----
+# ---- AC5: LATEST_ONLY → PIT_ASSUMED research scores; true incompletes excluded; PASS still impossible ----
 @requires_local_db
-def test_ac5_pit_incomplete_excluded_from_unbiased(tmp_path: Path):
-    report = _run_real(tmp_path)
-    # Real HiThink LATEST_ONLY ⇒ pit_complete typically false on lean panel
-    assert report.n_excluded_pit_incomplete >= 1
-    for ex in report.excluded_pit_incomplete:
-        assert ex["reason"] == "PIT_INCOMPLETE"
+def test_ac5_pit_assumed_research_scores_pass_fail_closed(tmp_path: Path):
+    from vms.pit.policy import research_score_eligible
 
-    # Lock real report: scores_unbiased only counts pit_complete scored rows
+    report = _run_real(tmp_path)
     origin_path = tmp_path / "rim_ev" / "origin_records.json"
     body = json.loads(origin_path.read_text(encoding="utf-8"))
     records = body["records"]
-    scored = [
-        r for r in records
-        if r.get("outcomes") and not (r.get("outcomes") or {}).get("pending")
-    ]
-    unbiased = [r for r in scored if r.get("pit_complete")]
-    assert int(report.scores_unbiased.get("n_records", 0)) == len(unbiased)
-    assert all(r.get("pit_complete") is True for r in unbiased)
+    # HiThink LATEST_ONLY ⇒ pit_complete false, but pit_policy should be PIT_ASSUMED
+    assert any(not r.get("pit_complete") for r in records)
+    assumed = [r for r in records if r.get("pit_policy") == "PIT_ASSUMED"]
+    assert assumed, "expected declared LATEST_ONLY origins labeled PIT_ASSUMED"
+    assert all(r.get("vendor_latest_as_of") is True for r in assumed)
+    assert all(r.get("pit_complete") is False for r in assumed)
+
+    # origin_records is a slim ledger (no outcomes); use report counts + forecast files.
+    n_unbiased = int(report.scores_unbiased.get("n_records", 0))
+    assert n_unbiased >= 1, "LATEST_ONLY research path should produce scores_unbiased under PIT_ASSUMED"
+    assert report.n_pit_assumed >= 1
+    assert int(report.n_unbiased_pit_complete) <= n_unbiased
+    assert int(report.n_unbiased_pit_complete) <= int(report.n_scored)
+    # Real HiThink LATEST_ONLY ⇒ typically zero true pit_complete rows
+    assert all(not r.get("pit_complete") for r in assumed)
+    # Excluded ledger is true incompletes only (not PIT_ASSUMED)
+    for ex in report.excluded_pit_incomplete:
+        assert ex["reason"] == "PIT_INCOMPLETE"
+        assert ex.get("pit_policy", "PIT_INCOMPLETE") == "PIT_INCOMPLETE"
     assert report.n_excluded_pit_incomplete == sum(
-        1 for r in records if not r.get("pit_complete")
+        1 for r in records if r.get("pit_policy") == "PIT_INCOMPLETE"
+    )
+    # PASS still impossible without authorized pass-claim + strict pit_complete depth
+    assert report.labels.get("CALIBRATION_PASS") is not True
+    assert report.labels.get("ENSEMBLE_CALIBRATED") is False
+    assert report.labels.get("investment_value") == "INVESTMENT_VALUE_NOT_ESTABLISHED"
+    assert "PIT_ASSUMED_IN_RESEARCH_SCORES" in (report.flags or []) or report.n_pit_assumed >= 1
+    # Spot-check one assumed forecast artifact
+    from pathlib import Path as _P
+    fdir = tmp_path / "rim_ev" / "forecasts"
+    assumed_files = list(fdir.rglob("*.json"))
+    assert assumed_files
+    import json as _json
+    bodies = [_json.loads(f.read_text()) for f in assumed_files]
+    assert any(b.get("pit_policy") == "PIT_ASSUMED" for b in bodies)
+    assert all(
+        (b.get("pit_complete") is False) or (b.get("pit_policy") == "PIT_COMPLETE")
+        for b in bodies
     )
 
-    # Unit filter: fabricate incomplete → excluded from scorer input
+    # Unit filter: fabricate incomplete vs assumed
     from vms.evaluation.rim_metrics import score_rim_targets
 
     rows = [
         {
             "pit_complete": False,
+            "pit_policy": "PIT_INCOMPLETE",
+            "outcomes": {"driver_roe": {"realized": 0.1}, "pending": False},
+            "forecasts": {"driver_roe": {"point": 0.1}},
+        },
+        {
+            "pit_complete": False,
+            "pit_policy": "PIT_ASSUMED",
             "outcomes": {"driver_roe": {"realized": 0.1}, "pending": False},
             "forecasts": {"driver_roe": {"point": 0.1}},
         },
         {
             "pit_complete": True,
+            "pit_policy": "PIT_COMPLETE",
             "outcomes": {"driver_roe": {"realized": 0.1}, "pending": False},
             "forecasts": {"driver_roe": {"point": 0.1}},
         },
     ]
-    only_complete = [r for r in rows if r.get("pit_complete")]
-    assert len(only_complete) == 1
-    s = score_rim_targets(only_complete)
-    assert s.get("n_records", 0) == 1
+    eligible = [r for r in rows if research_score_eligible(r)]
+    assert len(eligible) == 2
+    s = score_rim_targets(eligible)
+    assert s.get("n_records", 0) == 2
 
 
 # ---- AC6: Track B hist<12 → SKIP (000001 honest) ----

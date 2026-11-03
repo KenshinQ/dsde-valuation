@@ -118,8 +118,10 @@ class PITSnapshot(_M):
     as_of: datetime
     base_currency: str = BASE_CURRENCY
     sources: dict[str, SourceDescriptor | None]
-    pit_complete: bool = Field(description="all used sources declared FULL_HISTORY (PIT-INCOMPLETE-v1: Phase 9 "
-                               "must exclude snapshots with pit_complete=false from unbiased metrics)")
+    pit_complete: bool = Field(description="all used sources declared FULL_HISTORY. Declared LATEST_ONLY "
+                               "keeps pit_complete=false; research scores may still include them under "
+                               "pit_policy=PIT_ASSUMED (PIT-ASSUMED-VENDOR-LATEST-v1 / PIT-INCOMPLETE-v2). "
+                               "True undeclared/UNKNOWN incompletes stay excluded from scores_unbiased.")
     classification: InstrumentClassification | None = Field(description="latest classification known at as_of")
     financials: list[SnapshotFinancial]
     market: list[SnapshotMarket]

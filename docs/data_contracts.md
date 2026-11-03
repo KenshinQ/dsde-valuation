@@ -151,7 +151,7 @@ sources:
 
 ## 5. PIT snapshot (`pit_snapshot.json`, PIT-SNAPSHOT-2)
 - **PIT-SNAPSHOT-2 additions:** `pit_complete` is true only if every used source is declared `FULL_HISTORY`.
-  Phase 9 must exclude `pit_complete == false` from unbiased metrics (PIT-INCOMPLETE-v1). `classification` holds the
+  True undeclared/UNKNOWN incompletes stay excluded from research scores_unbiased (PIT-INCOMPLETE-v2). Declared LATEST_ONLY keeps `pit_complete=false` but may enter research scores under `pit_policy=PIT_ASSUMED` / `VENDOR_LATEST_AS_OF` (PIT-ASSUMED-VENDOR-LATEST-v1); PASS stays fail-closed. `classification` holds the
   latest known industry classification, or null.
 - A record is included only if its known-at time ≤ as_of. The snapshot is a pure function of the
   records known at as_of. Information known later (new periods, restatements, prices, corporate
@@ -323,7 +323,7 @@ price; per-record reporting-convention overrides.
 | `source_id` | `hithink_em_notice` |
 | `reporting_convention` | `CN_CUMULATIVE_YTD` |
 | `versioning` | `LATEST_ONLY` (no restatement history) |
-| Effect | Snapshots are **`PIT_INCOMPLETE` / `pit_complete=false`**; Phase 9 unbiased metrics exclude them (PIT-INCOMPLETE-v1 / HITHINK-LATEST-ONLY-v1). |
+| Effect | Snapshots keep **`pit_complete=false`** (quality may still report PIT_INCOMPLETE for LATEST_ONLY). Research scores_unbiased may include them under **`pit_policy=PIT_ASSUMED` / `VENDOR_LATEST_AS_OF`** (PIT-ASSUMED-VENDOR-LATEST-v1 / HITHINK-LATEST-ONLY-v2 / PIT-INCOMPLETE-v2). Never claims FULL_HISTORY; never authorizes CALIBRATION_PASS / ENSEMBLE_CALIBRATED alone. |
 
 **PIT published_at (HITHINK-PIT-NOTICE-v1)**
 

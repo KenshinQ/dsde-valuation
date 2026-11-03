@@ -90,7 +90,8 @@ def _source_descriptor() -> SourceDescriptor:
         description=(
             "HiThink fundamentals joined to Eastmoney NOTICE_DATE for published_at "
             "(HITHINK-PIT-NOTICE-v1). Store is LATEST_ONLY (no restatement history) → "
-            "snapshots are PIT_INCOMPLETE / pit_complete=false."
+            "pit_complete=false; research may use pit_policy=PIT_ASSUMED / "
+            "VENDOR_LATEST_AS_OF (PIT-ASSUMED-VENDOR-LATEST-v1)."
         ),
     )
 
@@ -150,7 +151,7 @@ def fetch_bundle(
         prefer_local=prefer_local,
         assumptions=cite(
             "HITHINK-PIT-NOTICE-v1",
-            "HITHINK-LATEST-ONLY-v1",
+            "HITHINK-LATEST-ONLY-v2",
             "HITHINK-UNITS-YUAN-v1",
             "HITHINK-NO-VENDOR-QFQ-v1",
             "HITHINK-LOCAL-FIRST-v1",
@@ -163,7 +164,8 @@ def fetch_bundle(
             "INDUSTRY-NO-RECLASS-HISTORY-v1",
             "HITHINK-ALLOTMENT-DEFER-v1",
             "ASOF-DATE-CLOSE-v1",
-            "PIT-INCOMPLETE-v1",
+            "PIT-INCOMPLETE-v2",
+            "PIT-ASSUMED-VENDOR-LATEST-v1",
         ),
     )
 

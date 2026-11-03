@@ -68,7 +68,7 @@ At each chronological origin:
 2. Persist forecast with `outcomes=null` and `persisted_before_outcomes=true`.
 3. Assess Track B eligibility: own-hist common P/B `n >= MIN_HIST_PB_POINTS` (=12); else **SKIP** (no invent OEI).
 4. After horizon matures, attach outcomes (driver ROE, later-origin VPS stability, market association).
-5. Score targets separately. `pit_complete=false` excluded from `scores_unbiased`.
+5. Score targets separately. True `PIT_INCOMPLETE` (undeclared/UNKNOWN) excluded from `scores_unbiased`; declared `LATEST_ONLY` may enter under `pit_policy=PIT_ASSUMED` / `VENDOR_LATEST_AS_OF` (PIT-ASSUMED-VENDOR-LATEST-v1) while `pit_complete` stays false. PASS-claim still counts only `pit_complete` rows.
 
 Assumption: `EVAL-RIM-FI-DEPOSIT-WF-v1`. Expected on R6-default: `CALIBRATION_INSUFFICIENT` + `INVESTMENT_VALUE_NOT_ESTABLISHED`. Schema stays `vms-0.2.phase12` — do not bump schema to claim PASS.
 
@@ -97,12 +97,23 @@ for `mature_real` (scaffold: local-first, **zero REST**, no invented panel).
 
 Reuses Phase 11 `evaluate` operating / cash-flow / relative-multiples path —
 **not** RIM / not FI Track B. Chronological-only, forecast-before-outcome,
-weights frozen before test, `pit_complete=false` excluded from `scores_unbiased`.
+weights frozen before test; research `scores_unbiased` may include `PIT_ASSUMED` (declared LATEST_ONLY) under PIT-ASSUMED-VENDOR-LATEST-v1 — never claims FULL_HISTORY / PASS.
 
 Assumption: `EVAL-MATURE-LEAN-WF-v1` (synthetic); `EVAL-MATURE-LEAN-REAL-OOS-v1`
 (real scaffold). Expected on default: `CALIBRATION_INSUFFICIENT` +
 `INVESTMENT_VALUE_NOT_ESTABLISHED`. Schema stays `vms-0.2.phase12`.
 Does not replace synthetic `vms phase11` / `vms evaluate`.
+
+## Vendor LATEST_ONLY as research-usable (PIT_ASSUMED)
+
+Policy (user-authorized): declared vendor `versioning=LATEST_ONLY` panels are research-usable
+under explicit `pit_policy=PIT_ASSUMED` / `VENDOR_LATEST_AS_OF`. NOTICE_DATE still gates
+availability timing. Artifacts must cite `PIT-ASSUMED-VENDOR-LATEST-v1` + `PIT-INCOMPLETE-v2`
+(+ `HITHINK-LATEST-ONLY-v2` on HiThink paths).
+
+Hard gates unchanged: never `ENSEMBLE_CALIBRATED` / `CALIBRATION_PASS` from this alone;
+`INVESTMENT_VALUE_NOT_ESTABLISHED`; PASS-claim plumbing fail-closed on **strict**
+`pit_complete` counts (`n_unbiased_pit_complete`).
 
 ## FI PRIOR_ONLY research ensemble wiring (R8)
 

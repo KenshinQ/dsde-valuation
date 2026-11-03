@@ -164,7 +164,7 @@ def test_pit_complete_flag_and_classification():
     from vms.schemas import InstrumentClassification
     fin = [fobs("2024-03-31", "revenue", 100, "2024-04-28")]
     assert snap(fin)[0].pit_complete is True
-    assert snap(fin, sources=[src(versioning="LATEST_ONLY")])[0].pit_complete is False   # PIT-INCOMPLETE-v1
+    assert snap(fin, sources=[src(versioning="LATEST_ONLY")])[0].pit_complete is False   # pit_complete stays false for LATEST_ONLY (PIT-INCOMPLETE-v2 / PIT-ASSUMED path)
     cst = timezone(timedelta(hours=8))
     cls = [InstrumentClassification(instrument_id=INST, scheme="SW2021_L1", industry=ind, source_id="S",
                                     published_at=datetime(*d, 18, tzinfo=cst))

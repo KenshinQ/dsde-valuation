@@ -14,6 +14,7 @@ from vms import SCHEMA_VERSION
 from vms.assumptions import cite
 from vms.evaluation.baselines import build_baselines
 from vms.evaluation.labels import assign_labels
+from vms.evaluation.pass_claim import gate_calibration_ok, resolve_pass_claim
 from vms.evaluation.metrics import score_targets
 from vms.evaluation.outcomes import realize_outcomes
 from vms.evaluation.protocol import (
@@ -90,11 +91,15 @@ def run_evaluation(
     split_mode: str | None = None,
     ensemble_weights: dict[str, float] | None = None,
     prefer_local: bool = True,
+    pass_claim_artifact: str | Path | None = None,
 ) -> EvaluationReport:
     """Walk-forward evaluate a universe. Random splits are rejected (SPEC §17.1).
 
     ``prefer_local`` is forwarded to ``materialize_universe`` (fi_real /
     mature_real). Synthetic panels never call REST.
+
+    ``pass_claim_artifact`` optional; without a validated authorized artifact,
+    ``calibration_ok`` cannot become PASS (plumbing fail-closed).
     """
     if isinstance(universe, (str, Path)):
         universe = load_universe(universe)
@@ -229,10 +234,23 @@ def run_evaluation(
     )
     n_unbiased = int(scores_unbiased.get("n_records", 0))
     if n_unbiased >= 5 and brier is not None:
-        cal_ok = brier <= 0.35  # loose synthetic threshold only
+        cal_ok = brier <= 0.35  # candidate only; PASS still needs pass-claim auth
     else:
         cal_ok = None
         flags.append("CALIBRATION_INSUFFICIENT_FEW_ORIGINS")
+
+    pass_claim = resolve_pass_claim(
+        pass_claim_artifact,
+        run_data_label=universe.data_label,
+        run_n_unbiased=n_unbiased,
+    )
+    if cal_ok is True and not pass_claim.authorized:
+        flags.append("CALIBRATION_INSUFFICIENT_NO_PASS_CLAIM_ARTIFACT")
+    if pass_claim.reason == "INSUFFICIENT_N_UNBIASED":
+        flags.append("PASS_CLAIM_VALID_BUT_N_UNBIASED_INSUFFICIENT")
+    if pass_claim.authorized:
+        flags.append("PASS_CLAIM_AUTHORIZED")
+    cal_ok = gate_calibration_ok(cal_ok, pass_claim=pass_claim)
 
     engineering_ok = (
         mode == "chronological"
@@ -259,6 +277,7 @@ def run_evaluation(
         ensemble_calibrated=False,
         n_unbiased_scored=n_unbiased,
         min_oos_for_calibration=5,
+        pass_claim_authorized=pass_claim.authorized,
     )
 
     if "SYNTHETIC" in universe.data_label.upper():

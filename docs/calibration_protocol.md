@@ -247,3 +247,32 @@ Assumption: `ENSEMBLE-PRIOR-ONLY-FI-CALIBRATE-RIM-MD-v1`
 Note: R9/R10 text that "`calibrate-rim` is not primary mixture input" means the
 **value-rim** adapter must not take calibrate-rim as its primary input. R12 is a
 **parallel** research ingest path, not a change to R9 semantics.
+
+## PASS-claim plumbing (slice C)
+
+Assumption: `EVAL-CALIBRATION-PASS-CLAIM-PROTOCOL-v1`.
+
+**Plumbing ≠ evidence.** This wiring only decides whether a run is *allowed* to
+set `calibration_ok` / `CALIBRATION_PASS`. It does **not** create OOS rows, lower
+`MIN_UNBIASED_FOR_PASS` (=5), invent PIT completeness, or claim
+`ENSEMBLE_CALIBRATED` / `INVESTMENT_VALUE_SUPPORTED`.
+
+| Condition | Result |
+|---|---|
+| No `--pass-claim-artifact` (default) | Forever `CALIBRATION_INSUFFICIENT` |
+| Illegal / incomplete / `SYNTHETIC` label artifact | Fail closed (error) |
+| Valid artifact but `n_unbiased` < 5 (artifact or run) | Still `CALIBRATION_INSUFFICIENT` |
+| Valid artifact + sufficient `n_unbiased` + `pit_incomplete_excluded=true` | Authorization only; metrics still decide candidate |
+
+CLI (optional):
+
+```
+vms calibrate-rim --out DIR [--pass-claim-artifact PATH]
+vms calibrate-mature --out DIR [--pass-claim-artifact PATH]
+```
+
+Artifact minimal fields: `protocol_id`, `universe_data_label` (non-synthetic),
+`n_unbiased` (≥0 int), `pit_incomplete_excluded` (must be `true`).
+SCHEMA stays `vms-0.2.phase12`; package `0.2.0rc1`. This slice does **not**
+produce any real-run PASS evidence pack.
+

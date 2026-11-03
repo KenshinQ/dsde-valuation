@@ -17,6 +17,7 @@ from zoneinfo import ZoneInfo
 
 from vms import IMPLEMENTED_PHASE, SCHEMA_VERSION
 from vms.evaluation import run_evaluation
+from vms.evaluation.pass_claim import PassClaimArtifactError, resolve_pass_claim
 from vms.evaluation.universe import load_universe
 from vms.reporting.metadata import ArtifactStamp, content_run_id, sha256_of, write_artifact
 from vms.schemas.config import load_config
@@ -42,11 +43,15 @@ def build_calibrate_mature_bundle(
     evaluation_as_of: datetime | None = None,
     seed: int = 42,
     prefer_local: bool = True,
+    pass_claim_artifact: str | Path | None = None,
 ) -> dict[str, Any]:
     """Run MATURE lean walk-forward via Phase 11 evaluate; write summary artifacts.
 
     ``prefer_local=True`` (default): mature_real scaffold makes zero REST.
     ``prefer_local=False`` (CLI ``--refresh``): reserved; scaffold still no invent.
+
+    ``pass_claim_artifact`` optional; default None keeps CALIBRATION_INSUFFICIENT.
+    Illegal artifacts raise CalibrateMatureBundleError.
     """
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
@@ -93,15 +98,29 @@ def build_calibrate_mature_bundle(
         )
     )
 
-    report = run_evaluation(
-        universe=uni_cfg,
-        loaded=loaded,
-        start=start,
-        end=end,
-        out_dir=out,
-        evaluation_as_of=eval_as_of,
-        prefer_local=prefer_local,
-    )
+    try:
+        report = run_evaluation(
+            universe=uni_cfg,
+            loaded=loaded,
+            start=start,
+            end=end,
+            out_dir=out,
+            evaluation_as_of=eval_as_of,
+            prefer_local=prefer_local,
+            pass_claim_artifact=pass_claim_artifact,
+        )
+    except PassClaimArtifactError as e:
+        raise CalibrateMatureBundleError(str(e)) from e
+
+    n_unbiased = int((report.scores_unbiased or {}).get("n_records") or 0)
+    try:
+        pass_claim = resolve_pass_claim(
+            pass_claim_artifact,
+            run_data_label=report.data_label,
+            run_n_unbiased=n_unbiased,
+        )
+    except PassClaimArtifactError as e:
+        raise CalibrateMatureBundleError(str(e)) from e
 
     if report.labels.get("investment_value") != INVESTMENT_LABEL:
         raise CalibrateMatureBundleError(
@@ -111,15 +130,17 @@ def build_calibrate_mature_bundle(
         raise CalibrateMatureBundleError(
             "calibrate-mature must not claim ENSEMBLE_CALIBRATED"
         )
-    if report.labels.get("CALIBRATION_PASS") is True:
+    if report.labels.get("CALIBRATION_PASS") is True and not pass_claim.authorized:
         raise CalibrateMatureBundleError(
-            "calibrate-mature default must not silently claim CALIBRATION_PASS "
-            "(expected CALIBRATION_INSUFFICIENT without predeclared OOS protocol)"
+            "calibrate-mature must not silently claim CALIBRATION_PASS "
+            "without authorized pass-claim artifact"
         )
-    if report.labels.get("CALIBRATION_CLAIM") != ClaimStatus.CALIBRATION_INSUFFICIENT.value:
-        raise CalibrateMatureBundleError(
-            f"expected CALIBRATION_INSUFFICIENT, got {report.labels.get('CALIBRATION_CLAIM')}"
-        )
+    if not pass_claim.authorized:
+        if report.labels.get("CALIBRATION_CLAIM") != ClaimStatus.CALIBRATION_INSUFFICIENT.value:
+            raise CalibrateMatureBundleError(
+                f"expected CALIBRATION_INSUFFICIENT without pass-claim auth, "
+                f"got {report.labels.get('CALIBRATION_CLAIM')}"
+            )
 
     # Stamp evaluation_report with run_id + mature assumption cite
     rep_path = out / "evaluation_report.json"
@@ -216,7 +237,9 @@ def build_calibrate_mature_bundle(
         "materialize_prefer_local": mat_prefer,
         "methods": "phase11_evaluate_operating_cf_multiples",
         "not_rim": True,
+        "pass_claim": pass_claim.as_dict(),
     }
+    write_artifact(out, "pass_claim_decision.json", pass_claim.as_dict(), stamp)
     write_artifact(out, "calibrate_mature_summary.json", summary, stamp)
     return summary
 

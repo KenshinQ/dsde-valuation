@@ -1,4 +1,4 @@
-"""Universe loading: synthetic / deposit-taking synthetic / HiThink-EM real panels."""
+"""Universe loading: synthetic / FI lean / FI real / MATURE lean synthetic+real scaffold."""
 
 from __future__ import annotations
 
@@ -47,6 +47,8 @@ class UniverseConfig(_M):
     synthetic: dict[str, Any] | None = None
     bank_synthetic: dict[str, Any] | None = None
     fi_real: dict[str, Any] | None = None
+    mature_synthetic: dict[str, Any] | None = None
+    mature_real: dict[str, Any] | None = None
     forbid_random_splits: bool = True
 
 
@@ -156,15 +158,138 @@ def materialize_universe(
     work_dir: Path,
     prefer_local: bool = True,
 ) -> dict[str, LoadResult]:
-    """Load per-instrument data dirs, or generate synthetic / fi_real panel.
+    """Load per-instrument data dirs, or generate synthetic / FI / MATURE panels.
 
-    ``prefer_local`` applies to ``fi_real`` (HiThink/EM) only. Synthetic paths
-    never call REST. ``fi_real`` and ``bank_synthetic`` are mutually exclusive.
+    ``prefer_local`` applies to ``fi_real`` / ``mature_real`` only. Synthetic
+    paths never call REST. Explicit kind blocks are mutually exclusive.
     """
     import json
 
-    if uni.fi_real is not None and uni.bank_synthetic is not None:
-        raise ValueError("universe cannot set both fi_real and bank_synthetic")
+    kind_flags = {
+        "synthetic": uni.synthetic is not None,
+        "bank_synthetic": uni.bank_synthetic is not None,
+        "fi_real": uni.fi_real is not None,
+        "mature_synthetic": uni.mature_synthetic is not None,
+        "mature_real": uni.mature_real is not None,
+    }
+    active = [k for k, on in kind_flags.items() if on]
+    if len(active) > 1:
+        raise ValueError(
+            "universe cannot set multiple materialize kinds at once: "
+            + ", ".join(active)
+        )
+
+    if uni.mature_real is not None:
+        if "SYNTHETIC" in (uni.data_label or "").upper():
+            raise ValueError(
+                "mature_real universe data_label must not contain SYNTHETIC "
+                f"(got {uni.data_label!r})"
+            )
+        work_dir.mkdir(parents=True, exist_ok=True)
+        cfg = uni.mature_real or {}
+        ids = list(cfg.get("instrument_ids") or [i.instrument_id for i in uni.instruments])
+        loads: dict[str, LoadResult] = {}
+        gaps: list[dict[str, Any]] = []
+        for inst in uni.instruments:
+            if ids and inst.instrument_id not in ids:
+                continue
+            if not inst.data_dir:
+                gaps.append({
+                    "instrument_id": inst.instrument_id,
+                    "reason": "DATA_GAP_NO_DATA_DIR",
+                    "note": "mature_real scaffold: missing data_dir; no invented panel",
+                })
+                continue
+            res = load_directory(inst.data_dir)
+            if not res.ok:
+                gaps.append({
+                    "instrument_id": inst.instrument_id,
+                    "reason": "DATA_GAP_LOAD_FAILED",
+                    "errors": list(res.errors),
+                })
+                continue
+            loads[inst.instrument_id] = res
+        if not prefer_local:
+            gaps.append({
+                "instrument_id": None,
+                "reason": "REFRESH_NOOP_SCAFFOLD",
+                "note": (
+                    "mature_real --refresh has no Recipe-E panel yet; "
+                    "left local/empty (no invent)"
+                ),
+            })
+        diag = {
+            "source_id": "mature_real_scaffold_v1",
+            "prefer_local": prefer_local,
+            "rest_calls": 0,
+            "instrument_ids": ids,
+            "n_loaded": len(loads),
+            "gaps": gaps,
+            "scaffold": bool(cfg.get("scaffold", True)),
+            "as_of": cfg.get("as_of"),
+            "investment_value": "INVESTMENT_VALUE_NOT_ESTABLISHED",
+            "assumption_ids": [
+                "EVAL-MATURE-LEAN-REAL-OOS-v1",
+                "HITHINK-LOCAL-FIRST-v1",
+                "PIT-INCOMPLETE-v1",
+            ],
+            "flags": [
+                "MATURE_REAL_SCAFFOLD",
+                "NO_INVENT_PANEL",
+                "CALIBRATION_INSUFFICIENT_DEFAULT",
+            ],
+            "notes": [
+                "mature_real scaffold: missing local panel => DATA_GAP, not PASS",
+            ],
+        }
+        (work_dir / "mature_real_materialize.json").write_text(
+            json.dumps(diag, sort_keys=True, indent=2, ensure_ascii=False) + "\n",
+            encoding="utf-8",
+        )
+        return loads
+
+    if uni.mature_synthetic is not None:
+        cfg = uni.mature_synthetic or {}
+        n = int(cfg.get("n_instruments", max(len(uni.instruments), 2)))
+        panel = generate_eval_panel(
+            seed=int(cfg.get("seed", 42)),
+            n_instruments=n,
+            start_year=int(cfg.get("start_year", 2015)),
+            n_years=int(cfg.get("n_years", 9)),
+        )
+        work_dir.mkdir(parents=True, exist_ok=True)
+        for gid, load in panel.items():
+            d = work_dir / "data" / gid
+            write_directory(
+                d,
+                load.financial,
+                load.market,
+                load.corporate_actions,
+                [load.sources[syn.SYNTHETIC_SOURCE]],
+                fmt="csv",
+                classifications=load.classifications,
+            )
+        (work_dir / "mature_synthetic_materialize.json").write_text(
+            json.dumps(
+                {
+                    "source_id": "mature_synthetic_panel_v1",
+                    "n_instruments": len(panel),
+                    "instrument_ids": sorted(panel),
+                    "seed": int(cfg.get("seed", 42)),
+                    "data_label": uni.data_label,
+                    "assumption_ids": ["EVAL-MATURE-LEAN-WF-v1"],
+                    "investment_value": "INVESTMENT_VALUE_NOT_ESTABLISHED",
+                    "rest_calls": 0,
+                },
+                sort_keys=True,
+                indent=2,
+                ensure_ascii=False,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        return panel
+
     if uni.fi_real is not None:
         if "SYNTHETIC" in (uni.data_label or "").upper():
             raise ValueError(

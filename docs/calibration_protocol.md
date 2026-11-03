@@ -254,8 +254,9 @@ Assumption: `EVAL-CALIBRATION-PASS-CLAIM-PROTOCOL-v1`.
 
 **Plumbing ≠ evidence.** This wiring only decides whether a run is *allowed* to
 set `calibration_ok` / `CALIBRATION_PASS`. It does **not** create OOS rows, lower
-`MIN_UNBIASED_FOR_PASS` (=5), invent PIT completeness, or claim
-`ENSEMBLE_CALIBRATED` / `INVESTMENT_VALUE_SUPPORTED`.
+`MIN_UNBIASED_FOR_PASS` (=5), or invent PIT completeness. It **never** claims
+`ENSEMBLE_CALIBRATED` / `INVESTMENT_VALUE_SUPPORTED` (forbidden without a separate
+OOS research protocol; this gate stays closed).
 
 | Condition | Result |
 |---|---|

@@ -1,4 +1,4 @@
-"""Universe loading: synthetic / FI bank / FI real / MATURE lean synthetic+real scaffold."""
+"""Universe loading: synthetic / FI lean / FI real / MATURE lean synthetic+real scaffold."""
 
 from __future__ import annotations
 

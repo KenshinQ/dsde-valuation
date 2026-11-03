@@ -301,5 +301,8 @@ def test_ac10_synthetic_r6_path_still_green(tmp_path: Path):
 def test_ac10_mutually_exclusive_blocks(tmp_path: Path):
     uni = load_universe(UNI_REAL)
     bad = uni.model_copy(update={"bank_synthetic": {"seed": 1}})
-    with pytest.raises(ValueError, match="both fi_real and bank_synthetic"):
+    with pytest.raises(
+        ValueError,
+        match=r"(both fi_real and bank_synthetic|multiple materialize kinds at once)",
+    ):
         materialize_universe(bad, work_dir=tmp_path / "x", prefer_local=True)

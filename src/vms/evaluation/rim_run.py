@@ -35,6 +35,12 @@ from vms.evaluation.rim_metrics import score_rim_targets
 from vms.evaluation.rim_outcomes import realize_rim_outcomes
 from vms.evaluation.universe import UniverseConfig, load_universe, materialize_universe
 from vms.methods.rim.hist_pb import MIN_HIST_PB_POINTS
+from vms.pit.policy import (
+    PitPolicy,
+    classify_pit_policy,
+    research_score_eligible,
+    vendor_latest_as_of,
+)
 from vms.reporting.metadata import sha256_of
 from vms.schemas.config import LoadedConfig
 from vms.schemas.contracts import ClaimStatus
@@ -61,6 +67,8 @@ class RimCalibrationReport(_M):
     n_forecasts_persisted: int
     n_scored: int
     n_excluded_pit_incomplete: int
+    n_pit_assumed: int = 0
+    n_unbiased_pit_complete: int = 0
     n_pending_outcomes: int
     n_track_b_skipped: int
     n_track_b_eligible: int
@@ -201,6 +209,16 @@ def run_rim_calibration(
                 }
                 track_b_skips.append(skip_rec)
 
+            pit_complete_flag = bool(bundle.get("pit_complete", snap.pit_complete))
+            pit_policy = (
+                PitPolicy.PIT_COMPLETE
+                if pit_complete_flag
+                else classify_pit_policy(snap.sources)
+            )
+            if pit_complete_flag and pit_policy is not PitPolicy.PIT_COMPLETE:
+                pit_policy = PitPolicy.PIT_COMPLETE
+            if (not pit_complete_flag) and pit_policy is PitPolicy.PIT_COMPLETE:
+                pit_policy = PitPolicy.PIT_INCOMPLETE
             forecast_payload = {
                 "instrument_id": instrument_id,
                 "origin_fy": fy_year,
@@ -209,7 +227,9 @@ def run_rim_calibration(
                 "spot_price": spot,
                 "profile_id": bundle.get("profile_id") or "UNKNOWN",
                 "fundamental_regime": bundle.get("fundamental_regime"),
-                "pit_complete": bundle.get("pit_complete", snap.pit_complete),
+                "pit_complete": pit_complete_flag,
+                "pit_policy": pit_policy.value,
+                "vendor_latest_as_of": vendor_latest_as_of(pit_policy),
                 "quality_status": report.status.value,
                 "rim_status": bundle.get("rim_status"),
                 "forecasts": bundle.get("forecasts"),
@@ -226,13 +246,16 @@ def run_rim_calibration(
             _persist_forecast(fpath, forecast_payload)
             n_persisted += 1
 
-            if not forecast_payload["pit_complete"]:
+            if pit_policy is PitPolicy.PIT_INCOMPLETE:
                 excluded_pit.append({
                     "instrument_id": instrument_id,
                     "origin_as_of": origin.isoformat(),
                     "reason": "PIT_INCOMPLETE",
+                    "pit_policy": pit_policy.value,
                     "forecast_path": str(fpath.relative_to(out)),
                 })
+            elif pit_policy is PitPolicy.PIT_ASSUMED:
+                flags.append("PIT_ASSUMED_VENDOR_LATEST")
 
             origin_vps = (bundle.get("forecasts") or {}).get("intrinsic_value", {}).get("point")
             outcomes = realize_rim_outcomes(
@@ -264,25 +287,33 @@ def run_rim_calibration(
             records.append({**forecast_payload, "forecast_path": str(fpath.relative_to(out))})
 
     scored = [r for r in records if r.get("outcomes") and not r["outcomes"].get("pending")]
-    # pit_complete=false excluded from unbiased scores (AC11)
-    unbiased = [r for r in scored if r.get("pit_complete")]
+    # Research scores: pit_complete OR PIT_ASSUMED (vendor LATEST_ONLY under assumption).
+    # True PIT_INCOMPLETE (undeclared/UNKNOWN) still excluded (PIT-INCOMPLETE-v2).
+    unbiased = [r for r in scored if research_score_eligible(r)]
+    unbiased_strict = [r for r in scored if r.get("pit_complete")]
     scores_all = score_rim_targets(scored)
     scores_unbiased = score_rim_targets(unbiased)
+    n_pit_assumed = sum(1 for r in unbiased if not r.get("pit_complete"))
+    n_unbiased_pit_complete = len(unbiased_strict)
 
     n_unbiased = int(scores_unbiased.get("n_records", 0))
-    # Default lean / thin OOS → INSUFFICIENT (do not silently PASS).
-    # PASS only via validated pass-claim artifact + sufficient n_unbiased.
+    # PASS only via validated pass-claim + sufficient *strict* pit_complete n.
     pass_claim = resolve_pass_claim(
         pass_claim_artifact,
         run_data_label=universe.data_label,
-        run_n_unbiased=n_unbiased,
+        run_n_unbiased=n_unbiased_pit_complete,
     )
     cal_ok: bool | None = None
     if pass_claim.reason == "INSUFFICIENT_N_UNBIASED":
         flags.append("PASS_CLAIM_VALID_BUT_N_UNBIASED_INSUFFICIENT")
+    if n_pit_assumed > 0:
+        flags.append("PIT_ASSUMED_IN_RESEARCH_SCORES")
     if n_unbiased < 5:
         cal_ok = None
         flags.append("CALIBRATION_INSUFFICIENT_FEW_ORIGINS")
+    elif n_unbiased_pit_complete < 5:
+        cal_ok = None
+        flags.append("CALIBRATION_INSUFFICIENT_PIT_ASSUMED")
     elif not pass_claim.authorized:
         cal_ok = None
         flags.append(
@@ -336,7 +367,9 @@ def run_rim_calibration(
         ),
         "Random splits raise RandomSplitProhibitedError.",
         "Forecasts persisted with outcomes=null before realization.",
-        "PIT_INCOMPLETE origins excluded from scores_unbiased.",
+        "True PIT_INCOMPLETE (undeclared/UNKNOWN) excluded from scores_unbiased; "
+        "declared LATEST_ONLY may enter under pit_policy=PIT_ASSUMED / VENDOR_LATEST_AS_OF; "
+        "pit_complete stays false; PASS still fail-closed on strict pit_complete counts.",
         "Targets declared separately: driver_roe, intrinsic_value, market_price (association).",
         "Intrinsic never judged solely by matching future market prices.",
         f"Track B: hist_n < {MIN_HIST_PB_POINTS} → SKIP (no invent OEI / no lower floor).",
@@ -384,6 +417,8 @@ def run_rim_calibration(
         n_forecasts_persisted=n_persisted,
         n_scored=len(scored),
         n_excluded_pit_incomplete=len(excluded_pit),
+        n_pit_assumed=n_pit_assumed,
+        n_unbiased_pit_complete=n_unbiased_pit_complete,
         n_pending_outcomes=pending,
         n_track_b_skipped=len(track_b_skips),
         n_track_b_eligible=n_track_b_eligible,
@@ -415,8 +450,13 @@ def run_rim_calibration(
             "EVAL-IV-NOT-PRICE-TRUTH-v1",
             "RIM-COMMON-EQUITY-v1",
             "RIM-EXIT-OWN-PB-HIST-v1",
-            "PIT-INCOMPLETE-v1",
-            *(["RIM-SUBJECT-HIST-DEPTH-v1", "HITHINK-LOCAL-FIRST-v1"] if is_real else []),
+            "PIT-INCOMPLETE-v2",
+            "PIT-ASSUMED-VENDOR-LATEST-v1",
+            *(
+                ["RIM-SUBJECT-HIST-DEPTH-v1", "HITHINK-LOCAL-FIRST-v1", "HITHINK-LATEST-ONLY-v2"]
+                if is_real
+                else []
+            ),
         ),
         flags=sorted(set(flags)),
         notes=notes,
@@ -446,6 +486,8 @@ def run_rim_calibration(
                             "horizon_years",
                             "profile_id",
                             "pit_complete",
+                            "pit_policy",
+                            "vendor_latest_as_of",
                             "quality_status",
                             "rim_status",
                             "forecast_path",

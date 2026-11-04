@@ -95,11 +95,12 @@ def build_calibrate_rim_bundle(
         raise CalibrateRimBundleError(str(e)) from e
 
     n_unbiased = int((report.scores_unbiased or {}).get("n_records") or 0)
+    n_unbiased_strict = int(getattr(report, "n_unbiased_pit_complete", 0) or 0)
     try:
         pass_claim = resolve_pass_claim(
             pass_claim_artifact,
             run_data_label=report.data_label,
-            run_n_unbiased=n_unbiased,
+            run_n_unbiased=n_unbiased_strict,
         )
     except PassClaimArtifactError as e:
         raise CalibrateRimBundleError(str(e)) from e

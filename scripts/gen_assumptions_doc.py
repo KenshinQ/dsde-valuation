@@ -23,8 +23,8 @@ MODEL-SELECTION-WF-v2 eval gates; Phase 6 WACC-INPUTS-v1 (same day); Phase 4 fol
 - **Phase 7 (done):** entry-price returns with DIVIDEND-NO-REINVEST-v1; horizon equity via remaining FCFF PV (HORIZON-EQUITY-REMAINING-PV-v1); holders at as_of also receive announced dividends with ex_date > as_of (ANNOUNCED-DIVIDEND-BASE-v1) via the path cash/DPS construction.
 - **Phase 8 (done):** OAT/joint sensitivity, process vs param, driver ablation, MC percentile ≠ CI.
 - **Phase 9 (done):** chronological walk-forward evaluation; synthetic => INVESTMENT_VALUE_NOT_ESTABLISHED.
-- **Phase 9 note:** exclude snapshots with `pit_complete == false` from unbiased evaluation metrics (PIT-INCOMPLETE-v1).
-- **Real A-share adapter:** HiThink + Eastmoney NOTICE_DATE (HITHINK-PIT-NOTICE-v1); LATEST_ONLY ⇒ pit_complete=false; no vendor qfq in adjusted_close; CA deferred.
+- **Phase 9 note:** true PIT_INCOMPLETE (undeclared/UNKNOWN) excluded from research scores_unbiased (PIT-INCOMPLETE-v2). Declared LATEST_ONLY may enter under pit_policy=PIT_ASSUMED / VENDOR_LATEST_AS_OF (PIT-ASSUMED-VENDOR-LATEST-v1); pit_complete stays false; PASS remains fail-closed.
+- **Real A-share adapter:** HiThink + Eastmoney NOTICE_DATE (HITHINK-PIT-NOTICE-v1); LATEST_ONLY ⇒ pit_complete=false + research PIT_ASSUMED (HITHINK-LATEST-ONLY-v2); no vendor qfq in adjusted_close; CA deferred.
 
 | ID | Status | Assumption |
 |---|---|---|

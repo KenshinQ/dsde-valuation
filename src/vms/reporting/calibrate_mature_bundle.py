@@ -113,11 +113,13 @@ def build_calibrate_mature_bundle(
         raise CalibrateMatureBundleError(str(e)) from e
 
     n_unbiased = int((report.scores_unbiased or {}).get("n_records") or 0)
+    # PASS plumbing counts only true pit_complete rows (PIT_ASSUMED research scores do not authorize PASS).
+    n_unbiased_strict = int(getattr(report, "n_unbiased_pit_complete", 0) or 0)
     try:
         pass_claim = resolve_pass_claim(
             pass_claim_artifact,
             run_data_label=report.data_label,
-            run_n_unbiased=n_unbiased,
+            run_n_unbiased=n_unbiased_strict,
         )
     except PassClaimArtifactError as e:
         raise CalibrateMatureBundleError(str(e)) from e
@@ -146,6 +148,9 @@ def build_calibrate_mature_bundle(
     rep_path = out / "evaluation_report.json"
     body = json.loads(rep_path.read_text(encoding="utf-8"))
     assumps = list(body.get("assumptions") or [])
+    for extra in ("PIT-ASSUMED-VENDOR-LATEST-v1", "PIT-INCOMPLETE-v2"):
+        if extra not in assumps:
+            assumps.append(extra)
     if assumption not in assumps:
         assumps.append(assumption)
     if ASSUMPTION_SYN not in assumps and assumption == ASSUMPTION_REAL:
@@ -155,6 +160,11 @@ def build_calibrate_mature_bundle(
     notes.append(
         "MATURE lean calibrate-mature reuses Phase 11 operating/CF/multiples "
         "evaluate path (NOT RIM). Hard CALIBRATION_INSUFFICIENT on default."
+    )
+    notes.append(
+        "Declared LATEST_ONLY panels may contribute to research scores_unbiased under "
+        "pit_policy=PIT_ASSUMED / VENDOR_LATEST_AS_OF (PIT-ASSUMED-VENDOR-LATEST-v1); "
+        "pit_complete stays false; PASS / ENSEMBLE_CALIBRATED remain forbidden."
     )
     body = {
         "run_id": stamp.run_id,
@@ -220,6 +230,8 @@ def build_calibrate_mature_bundle(
         "n_forecasts_persisted": report.n_forecasts_persisted,
         "n_scored": report.n_scored,
         "n_excluded_pit_incomplete": report.n_excluded_pit_incomplete,
+        "n_pit_assumed": int(getattr(report, "n_pit_assumed", 0) or 0),
+        "n_unbiased_pit_complete": int(getattr(report, "n_unbiased_pit_complete", 0) or 0),
         "scores_unbiased_n_records": int((report.scores_unbiased or {}).get("n_records") or 0),
         "baselines_present": report.baselines_present,
         "labels": report.labels,

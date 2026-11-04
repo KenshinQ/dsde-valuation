@@ -186,20 +186,29 @@ def test_ac11_pit_incomplete_excluded_from_unbiased(tmp_path: Path):
     # If every origin is incomplete (synthetic FULL_HISTORY still can be false under
     # quality rules), unbiased must be empty — proves filter is not a no-op tautology
     # that only checks n_unbiased <= n_scored.
+    # True incompletes excluded; PIT_ASSUMED may still enter research scores_unbiased.
     if not any(r.get("pit_complete") for r in records):
-        assert report.scores_unbiased["n_records"] == 0
-        assert report.n_excluded_pit_incomplete == report.n_forecasts_persisted
+        assumed = [r for r in records if r.get("pit_policy") == "PIT_ASSUMED"]
+        if not assumed:
+            assert report.scores_unbiased["n_records"] == 0
+            assert report.n_excluded_pit_incomplete == report.n_forecasts_persisted
+        else:
+            assert report.n_excluded_pit_incomplete == sum(
+                1 for r in records if r.get("pit_policy") == "PIT_INCOMPLETE"
+            )
 
 
-def test_ac11_unbiased_filter_only_pit_complete():
-    """Prove scores_unbiased input is filtered to pit_complete only (not tautology)."""
+def test_ac11_unbiased_filter_research_eligible():
+    """Research scores: pit_complete OR PIT_ASSUMED; true PIT_INCOMPLETE excluded."""
     from vms.evaluation.rim_metrics import score_rim_targets
+    from vms.pit.policy import research_score_eligible
 
-    def _rec(pit: bool, inst: str) -> dict:
+    def _rec(pit: bool, policy: str, inst: str) -> dict:
         return {
             "instrument_id": inst,
             "origin_as_of": "2020-04-30T15:00:00+08:00",
             "pit_complete": pit,
+            "pit_policy": policy,
             "forecasts": {
                 "driver_roe": {"point": 0.1},
                 "intrinsic_value": {"point": 10.0},
@@ -216,16 +225,20 @@ def test_ac11_unbiased_filter_only_pit_complete():
                         "skip_reason": "HIST_PB_BELOW_MIN"},
         }
 
-    scored = [_rec(True, "A"), _rec(False, "B"), _rec(True, "C")]
-    unbiased = [r for r in scored if r.get("pit_complete")]
-    assert len(unbiased) == 2
-    assert all(r["pit_complete"] is True for r in unbiased)
+    scored = [
+        _rec(True, "PIT_COMPLETE", "A"),
+        _rec(False, "PIT_INCOMPLETE", "B"),
+        _rec(True, "PIT_COMPLETE", "C"),
+        _rec(False, "PIT_ASSUMED", "D"),
+    ]
+    unbiased = [r for r in scored if research_score_eligible(r)]
+    assert {r["instrument_id"] for r in unbiased} == {"A", "C", "D"}
+    strict = [r for r in scored if r.get("pit_complete")]
+    assert {r["instrument_id"] for r in strict} == {"A", "C"}
     s_all = score_rim_targets(scored)
     s_unb = score_rim_targets(unbiased)
-    assert s_all["n_records"] == 3
-    assert s_unb["n_records"] == 2
-    # Incomplete must not appear in unbiased input set
-    assert {r["instrument_id"] for r in unbiased} == {"A", "C"}
+    assert s_all["n_records"] == 4
+    assert s_unb["n_records"] == 3
 
 
 def test_track_b_ledger_only_counts_skip_status():

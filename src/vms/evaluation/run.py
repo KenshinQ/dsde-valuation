@@ -24,6 +24,12 @@ from vms.evaluation.protocol import (
     require_chronological,
 )
 from vms.evaluation.universe import UniverseConfig, load_universe, materialize_universe
+from vms.pit.policy import (
+    PitPolicy,
+    classify_pit_policy,
+    research_score_eligible,
+    vendor_latest_as_of,
+)
 from vms.reporting.metadata import sha256_of
 from vms.schemas.config import LoadedConfig
 from vms.schemas.contracts import ClaimStatus
@@ -50,6 +56,8 @@ class EvaluationReport(_M):
     n_forecasts_persisted: int
     n_scored: int
     n_excluded_pit_incomplete: int
+    n_pit_assumed: int = 0
+    n_unbiased_pit_complete: int = 0
     n_pending_outcomes: int
     baselines_present: list[str]
     scores: dict[str, Any]
@@ -163,6 +171,18 @@ def run_evaluation(
                 horizon_years=horizon,
             )
             baseline_keys |= set(bundle.get("baselines", {}).keys())
+            pit_complete_flag = bool(bundle.get("pit_complete", snap.pit_complete))
+            pit_policy = (
+                PitPolicy.PIT_COMPLETE
+                if pit_complete_flag
+                else classify_pit_policy(snap.sources)
+            )
+            # Never claim PIT_COMPLETE for non-FULL_HISTORY; keep classifier honest.
+            if pit_complete_flag and pit_policy is not PitPolicy.PIT_COMPLETE:
+                pit_policy = PitPolicy.PIT_COMPLETE
+            if (not pit_complete_flag) and pit_policy is PitPolicy.PIT_COMPLETE:
+                # sources empty / unexpected: fall back to incomplete exclusion
+                pit_policy = PitPolicy.PIT_INCOMPLETE
             forecast_payload = {
                 "instrument_id": instrument_id,
                 "origin_fy": fy_year,
@@ -171,7 +191,9 @@ def run_evaluation(
                 "spot_price": spot,
                 "profile_id": bundle.get("profile_id") or "UNKNOWN",
                 "fundamental_regime": bundle.get("fundamental_regime"),
-                "pit_complete": bundle.get("pit_complete", snap.pit_complete),
+                "pit_complete": pit_complete_flag,
+                "pit_policy": pit_policy.value,
+                "vendor_latest_as_of": vendor_latest_as_of(pit_policy),
                 "quality_status": report.status.value,
                 "forecasts": bundle.get("forecasts"),
                 "baselines": bundle.get("baselines"),
@@ -185,13 +207,16 @@ def run_evaluation(
             _persist_forecast(fpath, forecast_payload)
             n_persisted += 1
 
-            if not forecast_payload["pit_complete"]:
+            if pit_policy is PitPolicy.PIT_INCOMPLETE:
                 excluded_pit.append({
                     "instrument_id": instrument_id,
                     "origin_as_of": origin.isoformat(),
                     "reason": "PIT_INCOMPLETE",
+                    "pit_policy": pit_policy.value,
                     "forecast_path": str(fpath.relative_to(out)),
                 })
+            elif pit_policy is PitPolicy.PIT_ASSUMED:
+                flags.append("PIT_ASSUMED_VENDOR_LATEST")
 
             # Outcomes ONLY after forecast was persisted
             outcomes = realize_outcomes(
@@ -221,9 +246,13 @@ def run_evaluation(
             records.append({**forecast_payload, "forecast_path": str(fpath.relative_to(out))})
 
     scored = [r for r in records if r.get("outcomes") and not r["outcomes"].get("pending")]
-    unbiased = [r for r in scored if r.get("pit_complete")]
+    # Research scores: pit_complete OR PIT_ASSUMED (vendor LATEST_ONLY under explicit assumption).
+    unbiased = [r for r in scored if research_score_eligible(r)]
+    unbiased_strict = [r for r in scored if r.get("pit_complete")]
     scores_all = score_targets(scored)
     scores_unbiased = score_targets(unbiased)
+    n_pit_assumed = sum(1 for r in unbiased if not r.get("pit_complete"))
+    n_unbiased_pit_complete = len(unbiased_strict)
 
     # Calibration: inadequate synthetic OOS → CALIBRATION_INSUFFICIENT, not inferred success
     cal_ok: bool | None = None
@@ -238,11 +267,18 @@ def run_evaluation(
     else:
         cal_ok = None
         flags.append("CALIBRATION_INSUFFICIENT_FEW_ORIGINS")
+    if n_pit_assumed > 0:
+        flags.append("PIT_ASSUMED_IN_RESEARCH_SCORES")
+        # Assumed-PIT research scores never unlock PASS (strict pit_complete only).
+        if cal_ok is True:
+            cal_ok = None
+            flags.append("CALIBRATION_INSUFFICIENT_PIT_ASSUMED")
 
+    # PASS plumbing counts only true pit_complete rows (fail-closed under PIT_ASSUMED).
     pass_claim = resolve_pass_claim(
         pass_claim_artifact,
         run_data_label=universe.data_label,
-        run_n_unbiased=n_unbiased,
+        run_n_unbiased=n_unbiased_pit_complete,
     )
     if cal_ok is True and not pass_claim.authorized:
         flags.append("CALIBRATION_INSUFFICIENT_NO_PASS_CLAIM_ARTIFACT")
@@ -290,7 +326,9 @@ def run_evaluation(
     notes = [
         "Chronological walk-forward only; random splits raise RandomSplitProhibitedError (SPEC §17.1).",
         "Forecasts persisted with outcomes=null before realization (persisted_before_outcomes).",
-        "PIT_INCOMPLETE origins excluded from scores_unbiased.",
+        "True PIT_INCOMPLETE (undeclared/UNKNOWN) excluded from scores_unbiased; "
+        "declared LATEST_ONLY may enter under pit_policy=PIT_ASSUMED / VENDOR_LATEST_AS_OF "
+        "(PIT-ASSUMED-VENDOR-LATEST-v1); pit_complete stays false; PASS still fail-closed.",
         "Cash-flow, intrinsic, market-price, and TSR scored in separate blocks (SPEC §17.2).",
         "Intrinsic is never judged solely by matching future market prices; market-price association is labeled.",
         "Baselines include historical median, central DCF, no-regime, exit multiple, current-multiple persistence.",
@@ -325,6 +363,8 @@ def run_evaluation(
         n_forecasts_persisted=n_persisted,
         n_scored=len(scored),
         n_excluded_pit_incomplete=len(excluded_pit),
+        n_pit_assumed=n_pit_assumed,
+        n_unbiased_pit_complete=n_unbiased_pit_complete,
         n_pending_outcomes=pending,
         baselines_present=sorted(baseline_keys),
         scores=scores_all,
@@ -338,7 +378,8 @@ def run_evaluation(
             "frozen_before_test": True,
         },
         assumptions=cite(
-            "PIT-INCOMPLETE-v1",
+            "PIT-INCOMPLETE-v2",
+            "PIT-ASSUMED-VENDOR-LATEST-v1",
             "DIVIDEND-NO-REINVEST-v1",
             "TV-GORDON-v1",
             "EXIT-MULTIPLE-SEPARATE-v1",
@@ -379,6 +420,8 @@ def run_evaluation(
                             "horizon_years",
                             "profile_id",
                             "pit_complete",
+                            "pit_policy",
+                            "vendor_latest_as_of",
                             "quality_status",
                             "forecast_path",
                             "persisted_before_outcomes",

@@ -14,6 +14,18 @@ ASSUMPTIONS: dict[str, str] = {
     "SCOPE-CNY-v1": "Scope is A-share main board, CNY only. Any non-CNY amount is CRITICAL (BLOCKED). No FX table.",
     "PIT-INCOMPLETE-v1": "PIT_INCOMPLETE does not block a single valuation. Phase 9 evaluation must exclude "
                          "PIT-incomplete snapshots (snapshot.pit_complete == false) from unbiased metrics.",
+    "PIT-INCOMPLETE-v2": "PIT_INCOMPLETE / undeclared-or-UNKNOWN versioning does not block a single valuation. "
+                         "Research scores_unbiased exclude only true PIT_INCOMPLETE (undeclared/UNKNOWN). "
+                         "Declared LATEST_ONLY may enter research scores under PIT-ASSUMED-VENDOR-LATEST-v1 "
+                         "with pit_policy=PIT_ASSUMED; pit_complete stays false. Never authorizes "
+                         "CALIBRATION_PASS / ENSEMBLE_CALIBRATED / INVESTMENT_VALUE_SUPPORTED.",
+    "PIT-ASSUMED-VENDOR-LATEST-v1": "Vendor panels declared versioning=LATEST_ONLY (NOTICE_DATE still gates "
+                                   "availability timing) are research-usable under explicit "
+                                   "pit_policy=PIT_ASSUMED / VENDOR_LATEST_AS_OF. Values are vendor-as-of and "
+                                   "may embed later restatements. Does NOT set pit_complete=true. Does NOT "
+                                   "authorize CALIBRATION_PASS / ENSEMBLE_CALIBRATED / INVESTMENT_VALUE_SUPPORTED; "
+                                   "PASS-claim plumbing stays fail-closed and counts only pit_complete rows "
+                                   "toward PASS authorization.",
     "PRICE-REVISION-DEFER-v1": "Market rows carry no revision/publication field. A close is assumed known at its own "
                                "timestamp and vendor price corrections are not versioned (deferred).",
     "RIGHTS-ADJ-DEFER-v1": "Rights issues/placements are not price-adjusted. Only bonus shares/splits adjust prices. "
@@ -429,6 +441,11 @@ ASSUMPTIONS: dict[str, str] = {
     "HITHINK-LATEST-ONLY-v1": "HiThink fundamentals store has no restatement history (versioning=LATEST_ONLY). "
                              "SourceDescriptor source_id=hithink_em_notice ⇒ snapshots are PIT_INCOMPLETE / "
                              "pit_complete=false so Phase 9 unbiased metrics exclude them (PIT-INCOMPLETE-v1).",
+    "HITHINK-LATEST-ONLY-v2": "HiThink fundamentals store has no restatement history (versioning=LATEST_ONLY). "
+                             "SourceDescriptor source_id=hithink_em_notice ⇒ pit_complete=false (never claim "
+                             "FULL_HISTORY). Research scores_unbiased may include these origins under "
+                             "pit_policy=PIT_ASSUMED / VENDOR_LATEST_AS_OF (PIT-ASSUMED-VENDOR-LATEST-v1 / "
+                             "PIT-INCOMPLETE-v2). PASS / ENSEMBLE_CALIBRATED still forbidden on this path.",
     "HITHINK-UNITS-YUAN-v1": "HiThink statement amounts are treated as CNY yuan (元), unit_scale=unit. "
                             "Confirmed on CSI300 samples (e.g. 600519.SH annual revenue ~1e11). If a feed "
                             "were in 万元, convert ×10000 and label — not observed in the local store.",
@@ -753,6 +770,8 @@ SUPERSEDED: dict[str, str] = {
     "MODEL-SELECTION-WF-v1": "MODEL-SELECTION-WF-v2",
     "DRIVER-DEPENDENCE-PHASE4-v1": "DRIVER-DEPENDENCE-v1",
     "RIM-FI-PEER-UNIVERSE-v1": "RIM-FI-PEER-UNIVERSE-v2",
+    "PIT-INCOMPLETE-v1": "PIT-INCOMPLETE-v2",
+    "HITHINK-LATEST-ONLY-v1": "HITHINK-LATEST-ONLY-v2",
 }
 
 

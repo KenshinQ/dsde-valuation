@@ -258,17 +258,25 @@ def build_baselines(*, load, instrument_id, as_of, loaded: LoadedConfig, spot: f
     # return point forecast at horizon H under DIVIDEND-NO-REINVEST
     # Terminal = exit-price persistence (NOT as-of central DCF VPS — negative VPS biased TSR).
     cum_dps = 0.0
-    dividends_observed = False
+    n_dps_computable = 0
+    n_div_incomplete = 0  # div present but shares missing/non-positive
     for y in proj.years[:horizon_years]:
         div = _item(proj, "dividends", y)
         sh = _item(proj, "diluted_shares", y)
-        if div is not None:
-            dividends_observed = True
-            if sh is not None and sh > 0:
-                cum_dps += div / sh
-    if dividends_observed:
+        if div is None:
+            continue
+        if sh is not None and sh > 0:
+            n_dps_computable += 1
+            cum_dps += div / sh
+        else:
+            n_div_incomplete += 1
+    # SF1′: CUM_DPS_ZERO only when DPS was computable (div + valid shares) and sums to 0.
+    # Div present but shares invalid → PATH_DPS_INCOMPLETE (not ZERO). All-missing → MISSING.
+    if n_dps_computable > 0:
         if cum_dps == 0.0:
             flags.append("CUM_DPS_ZERO")
+    elif n_div_incomplete > 0:
+        flags.append("PATH_DPS_INCOMPLETE")
     else:
         flags.append("PATH_DIVIDENDS_MISSING")
     exit_px = persist.get("exit_price_point")
@@ -328,7 +336,8 @@ def build_baselines(*, load, instrument_id, as_of, loaded: LoadedConfig, spot: f
                 "Point forecast = (exit_price_persistence + path DPS − spot) / spot. "
                 "Does not use as-of central DCF VPS as terminal (avoids negative-VPS TSR bias). "
                 "terminal_source is current_multiple_persistence only when exit_price is available. "
-                "CUM_DPS_ZERO when path dividends observed and cumulative DPS is 0; "
+                "CUM_DPS_ZERO when DPS computable (div + valid shares) and cumulative DPS is 0; "
+                "PATH_DPS_INCOMPLETE when dividends present but shares missing/non-positive; "
                 "PATH_DIVIDENDS_MISSING when no path dividend observation."
             ),
         },

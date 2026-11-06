@@ -198,9 +198,10 @@ def test_p1_tsr_uses_exit_price_not_vps_and_flags_cum_dps_zero():
     if vps is not None and float(vps) != float(exit_px):
         old_vps_ret = (float(vps) + float(tsr["cum_dps"]) - spot) / spot
         assert tsr["point"] != pytest.approx(old_vps_ret)
-    if tsr["cum_dps"] == 0.0 and "PATH_DIVIDENDS_MISSING" not in bundle["flags"]:
+    incompleteish = {"PATH_DIVIDENDS_MISSING", "PATH_DPS_INCOMPLETE"}
+    if tsr["cum_dps"] == 0.0 and not (incompleteish & set(bundle["flags"])):
         assert "CUM_DPS_ZERO" in bundle["flags"]
-    if "PATH_DIVIDENDS_MISSING" in bundle["flags"]:
+    if incompleteish & set(bundle["flags"]):
         assert "CUM_DPS_ZERO" not in bundle["flags"]
 
 
@@ -250,6 +251,33 @@ def test_sf3_path_dividends_missing_when_div_none(monkeypatch):
     assert bundle["forecasts"]["total_shareholder_return"]["cum_dps"] == 0.0
     assert "PATH_DIVIDENDS_MISSING" in bundle["flags"]
     assert "CUM_DPS_ZERO" not in bundle["flags"]
+
+
+def test_sf1prime_path_dps_incomplete_when_div_without_valid_shares(monkeypatch):
+    """SF1′: div present but shares invalid → PATH_DPS_INCOMPLETE, not CUM_DPS_ZERO."""
+    from vms.evaluation import baselines as bl
+
+    load, as_of = company(years=(2019, 2020, 2021, 2022), growth=0.05, price=15.0)
+    spot = _spot_from_load(load, as_of)
+    iid = load.market[0].instrument_id
+
+    real_item = bl._item
+
+    def _item_div_no_shares(proj, name, year, default=None):
+        if name == "dividends":
+            return 100.0
+        if name == "diluted_shares":
+            return None
+        return real_item(proj, name, year, default)
+
+    monkeypatch.setattr(bl, "_item", _item_div_no_shares)
+    bundle = bl.build_baselines(
+        load=load, instrument_id=iid, as_of=as_of, loaded=L, spot=spot, horizon_years=1,
+    )
+    assert bundle["forecasts"]["total_shareholder_return"]["cum_dps"] == 0.0
+    assert "PATH_DPS_INCOMPLETE" in bundle["flags"]
+    assert "CUM_DPS_ZERO" not in bundle["flags"]
+    assert "PATH_DIVIDENDS_MISSING" not in bundle["flags"]
 
 
 def test_sf2_terminal_source_none_when_exit_price_unavailable():

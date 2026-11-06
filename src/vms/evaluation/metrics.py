@@ -211,16 +211,38 @@ def score_targets(records: list[dict[str, Any]]) -> dict[str, Any]:
         "errors": point_errors(px_ac, px_fc),
         "note": "Market-price forecast errors — separate from intrinsic",
     }
-    # Persistence baseline comparison for exit pricing
+    # Persistence baseline comparison for exit pricing — skip when forecast IS the baseline
     px_persist = [
         ((r.get("baselines") or {}).get("current_multiple_persistence") or {}).get("exit_price_point")
         for r in records
     ]
-    px["vs_current_multiple_persistence"] = {
-        "forecast_errors": point_errors(px_ac, px_fc),
-        "baseline_errors": point_errors(px_ac, px_persist),
-        "baseline": "current_multiple_persistence",
-    }
+
+    def _market_price_is_baseline(r: dict[str, Any]) -> bool:
+        mp = (r.get("forecasts") or {}).get("market_price") or {}
+        if mp.get("forecast_is_baseline") is True:
+            return True
+        return "FORECAST_IS_BASELINE" in (r.get("flags") or [])
+
+    n_mp_baseline = sum(1 for r in records if _market_price_is_baseline(r))
+    if records and n_mp_baseline == len(records):
+        px["vs_current_multiple_persistence"] = {
+            "skipped": True,
+            "reason": "FORECAST_IS_BASELINE",
+            "label": "NO_INFORMATION_GAIN",
+            "baseline": "current_multiple_persistence",
+            "n_records": len(records),
+            "note": (
+                "Market-price forecast is explicitly the persistence baseline on every record; "
+                "incremental forecast-vs-baseline comparison is undefined and omitted."
+            ),
+        }
+    else:
+        px["vs_current_multiple_persistence"] = {
+            "forecast_errors": point_errors(px_ac, px_fc),
+            "baseline_errors": point_errors(px_ac, px_persist),
+            "baseline": "current_multiple_persistence",
+            "n_forecast_is_baseline": n_mp_baseline,
+        }
     # Returns
     r_fc = [(r.get("forecasts") or {}).get("total_shareholder_return", {}).get("point") for r in records]
     r_ac = [(r.get("outcomes") or {}).get("total_shareholder_return", {}).get("realized") for r in records]
@@ -253,7 +275,11 @@ def score_targets(records: list[dict[str, Any]]) -> dict[str, Any]:
         "operating_cash_flow_vs_historical_median": {
             "forecast_errors": point_errors(ac_fcff, fc_fcff),
             "baseline_errors": point_errors(ac_fcff, hist_fcff),
-            "baseline": "historical_driver_median",
+            "baseline": "historical_realized_fcff_median",
+            "note": (
+                "Baseline is median of as-of-visible realized FCFF proxies; "
+                "forecast is median-driver projected FCFF_y1."
+            ),
         },
         "market_price_vs_current_multiple_persistence": px["vs_current_multiple_persistence"],
     }

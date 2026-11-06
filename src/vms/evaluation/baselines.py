@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import math
+import statistics
 from typing import Any
 
 from vms.assumptions import cite
+from vms.drivers.history import AnnualHistory
 from vms.equity_bridge.bridge import bridge_ev_to_equity
 from vms.pipeline import run_projection
 from vms.schemas.config import LoadedConfig
@@ -44,6 +46,27 @@ def _series_fcff(proj) -> FCFFSeries | None:
             return None
         vals.append(tv.value)
     return FCFFSeries(years=list(proj.years), values=vals)
+
+
+def _historical_realized_fcff_samples(history: AnnualHistory | None) -> list[float]:
+    """As-of-visible FY FCFF proxies: CFO − capex − acquisitions_net (same as outcomes).
+
+    Uses only AnnualHistory already extracted from the PIT snapshot at origin — no
+    future FY may appear here. Empty when no CFO observations exist.
+    """
+    if history is None:
+        return []
+    out: list[float] = []
+    for y in history.years:
+        cfo = history.value(y, "cash_flow_from_operations")
+        if cfo is None or not math.isfinite(cfo):
+            continue
+        capex = history.value(y, "capex")
+        acq = history.value(y, "acquisitions_net")
+        capex_v = 0.0 if capex is None else float(capex)
+        acq_v = 0.0 if acq is None else float(acq)
+        out.append(float(cfo) - capex_v - acq_v)
+    return out
 
 
 def _bridge_vps(ev: float, proj, loaded: LoadedConfig, year: int) -> float | None:
@@ -109,16 +132,31 @@ def build_baselines(*, load, instrument_id, as_of, loaded: LoadedConfig, spot: f
                             "fcff_path": list(fcff.values), "wacc": wacc_in.wacc, "g": dcf.g})
     out["baselines"]["central_dcf"] = central
 
-    # 2) Historical driver mean/median — FCFF year-1 from projection already uses median drivers;
-    #    also report hist median year-1 growth from driver estimates
-    hist = {"label": "historical_driver_median", "revenue_growth_median": None, "ebit_margin_median": None}
+    # 2) Historical driver medians + independent realized-FCFF median baseline.
+    #    fcff_y1 MUST NOT equal projected median-driver FCFF_y1 (that is the forecast OCF).
+    hist = {
+        "label": "historical_realized_fcff_median",
+        "revenue_growth_median": None,
+        "ebit_margin_median": None,
+        "fcff_y1": None,
+        "fcff_y1_n": 0,
+        "fcff_y1_definition": (
+            "Median of as-of-visible FY realized FCFF proxies "
+            "(CFO − capex − acquisitions_net), matching outcomes.operating_cash_flow.fcff_proxy. "
+            "Independent of the median-driver projection used for forecasts.operating_cash_flow."
+        ),
+    }
     if run.drivers is not None:
         for name in ("revenue_growth", "ebit_margin"):
             est = run.drivers.estimates.get(name)
             if est is not None:
                 hist[f"{name}_median"] = est.value
-    # point CF forecast = first-year FCFF under median drivers
-    hist["fcff_y1"] = None if fcff is None or not fcff.values else fcff.values[0]
+    hist_fcff_samples = _historical_realized_fcff_samples(run.history)
+    if hist_fcff_samples:
+        hist["fcff_y1"] = float(statistics.median(hist_fcff_samples))
+        hist["fcff_y1_n"] = len(hist_fcff_samples)
+    else:
+        flags.append("HISTORICAL_REALIZED_FCFF_EMPTY")
     out["baselines"]["historical_median"] = hist
 
     # 3) No-regime: Gordon on last observed FCFF proxy with pooled g = terminal_growth (no regime path)
@@ -208,31 +246,40 @@ def build_baselines(*, load, instrument_id, as_of, loaded: LoadedConfig, spot: f
     # Forecasts to persist (before outcomes)
     fcff_y1 = None if fcff is None or not fcff.values else fcff.values[0]
     vps = central.get("vps")
-    # market-price forecast: prefer current-multiple persistence (exit pricing baseline);
-    # fall back to VPS as a fair-price proxy. NOT a claim that price must converge to IV.
+    # Mature lean has no independent price model: point equals persistence when available.
+    # Mark FORECAST_IS_BASELINE so metrics skip fake incremental comparisons.
     price_forecast = persist.get("exit_price_point")
+    price_is_baseline = price_forecast is not None
     if price_forecast is None:
         price_forecast = vps
-    # return point forecast at horizon H under DIVIDEND-NO-REINVEST using book DPS proxy = 0 for point baseline
-    # cum DPS from projection dividends / shares over H years
+        price_is_baseline = False
+    if price_is_baseline:
+        flags.append("FORECAST_IS_BASELINE")
+    # return point forecast at horizon H under DIVIDEND-NO-REINVEST
+    # Terminal = exit-price persistence (NOT as-of central DCF VPS — negative VPS biased TSR).
     cum_dps = 0.0
     for y in proj.years[:horizon_years]:
         div = _item(proj, "dividends", y)
         sh = _item(proj, "diluted_shares", y)
         if div is not None and sh is not None and sh > 0:
             cum_dps += div / sh
+    if cum_dps == 0.0:
+        flags.append("CUM_DPS_ZERO")
+    exit_px = persist.get("exit_price_point")
     ret_point = None
-    if vps is not None and spot > 0:
-        ret_point = (vps + cum_dps - spot) / spot
-    # At horizon H, equity value from remaining PV would be better; for Phase 9 point forecast use VPS at as_of
-    # as terminal per-share value forecast (documented limitation)
+    if exit_px is not None and spot > 0:
+        ret_point = (float(exit_px) + cum_dps - spot) / spot
     out["forecasts"] = {
         "operating_cash_flow": {
             "metric": "fcff_year1",
             "point": fcff_y1,
             "quantiles": None,  # filled when distributional path available
             "unit": "CNY",
-            "note": "FCFF year-1 from deterministic central projection",
+            "note": (
+                "FCFF year-1 from deterministic median-driver projection. "
+                "Not identical to baselines.historical_median.fcff_y1 "
+                "(that baseline is the median of as-of-visible realized FCFF proxies)."
+            ),
         },
         "intrinsic_value": {
             "metric": "vps_dcf_central",
@@ -241,11 +288,21 @@ def build_baselines(*, load, instrument_id, as_of, loaded: LoadedConfig, spot: f
             "note": "Intrinsic under stated WACC/g assumptions — not scored solely against market price",
         },
         "market_price": {
-            "metric": "current_multiple_persistence_or_vps_proxy",
+            "metric": (
+                "current_multiple_persistence"
+                if price_is_baseline
+                else "vps_price_level_proxy_fallback"
+            ),
             "point": price_forecast,
+            "forecast_is_baseline": price_is_baseline,
+            "baseline_source": (
+                "current_multiple_persistence" if price_is_baseline else None
+            ),
             "note": (
-                "Primary: current-multiple persistence exit-price baseline; "
-                "fallback: intrinsic VPS as price-level proxy. Distinct from intrinsic evaluation."
+                "Mature lean: point equals current-multiple persistence exit-price baseline "
+                "when available (FORECAST_IS_BASELINE). Fallback: intrinsic VPS as price-level "
+                "proxy only. Not an independent alpha forecast; incremental vs persistence "
+                "must not be claimed as information gain."
             ),
         },
         "total_shareholder_return": {
@@ -254,9 +311,15 @@ def build_baselines(*, load, instrument_id, as_of, loaded: LoadedConfig, spot: f
             "point": ret_point,
             "cum_dps": cum_dps,
             "entry_price": spot,
-            "terminal_vps_proxy": vps,
+            "terminal_exit_price_proxy": exit_px,
+            "terminal_source": "current_multiple_persistence",
+            "terminal_vps_proxy": None,  # deprecated: as-of DCF VPS must not drive TSR point
             "dividend_treatment": "DIVIDEND-NO-REINVEST-v1",
-            "note": "Point forecast from central VPS + path DPS; distributional forecasts optional",
+            "note": (
+                "Point forecast = (exit_price_persistence + path DPS − spot) / spot. "
+                "Does not use as-of central DCF VPS as terminal (avoids negative-VPS TSR bias). "
+                "CUM_DPS_ZERO flagged when projected cumulative DPS is exactly 0."
+            ),
         },
     }
     out["flags"] = flags

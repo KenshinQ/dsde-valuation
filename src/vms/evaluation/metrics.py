@@ -231,9 +231,31 @@ def score_targets(records: list[dict[str, Any]]) -> dict[str, Any]:
             "label": "NO_INFORMATION_GAIN",
             "baseline": "current_multiple_persistence",
             "n_records": len(records),
+            "n_forecast_is_baseline": n_mp_baseline,
             "note": (
                 "Market-price forecast is explicitly the persistence baseline on every record; "
                 "incremental forecast-vs-baseline comparison is undefined and omitted."
+            ),
+        }
+    elif n_mp_baseline > 0:
+        # Mixed cohort: exclude FORECAST_IS_BASELINE rows so they cannot dilute /
+        # inflate the vs-persistence delta (SF1 / PR#31 hygiene).
+        non_bl = [i for i, r in enumerate(records) if not _market_price_is_baseline(r)]
+        px_ac_nb = [px_ac[i] for i in non_bl]
+        px_fc_nb = [px_fc[i] for i in non_bl]
+        px_persist_nb = [px_persist[i] for i in non_bl]
+        px["vs_current_multiple_persistence"] = {
+            "forecast_errors": point_errors(px_ac_nb, px_fc_nb),
+            "baseline_errors": point_errors(px_ac_nb, px_persist_nb),
+            "baseline": "current_multiple_persistence",
+            "n_records": len(records),
+            "n_forecast_is_baseline": n_mp_baseline,
+            "n_compared": len(non_bl),
+            "partial_skip": True,
+            "reason": "FORECAST_IS_BASELINE_PARTIAL",
+            "note": (
+                f"Excluded {n_mp_baseline}/{len(records)} FORECAST_IS_BASELINE row(s) from "
+                "vs-persistence error series; compared only non-baseline forecasts."
             ),
         }
     else:

@@ -258,17 +258,26 @@ def build_baselines(*, load, instrument_id, as_of, loaded: LoadedConfig, spot: f
     # return point forecast at horizon H under DIVIDEND-NO-REINVEST
     # Terminal = exit-price persistence (NOT as-of central DCF VPS — negative VPS biased TSR).
     cum_dps = 0.0
+    dividends_observed = False
     for y in proj.years[:horizon_years]:
         div = _item(proj, "dividends", y)
         sh = _item(proj, "diluted_shares", y)
-        if div is not None and sh is not None and sh > 0:
-            cum_dps += div / sh
-    if cum_dps == 0.0:
-        flags.append("CUM_DPS_ZERO")
+        if div is not None:
+            dividends_observed = True
+            if sh is not None and sh > 0:
+                cum_dps += div / sh
+    if dividends_observed:
+        if cum_dps == 0.0:
+            flags.append("CUM_DPS_ZERO")
+    else:
+        flags.append("PATH_DIVIDENDS_MISSING")
     exit_px = persist.get("exit_price_point")
     ret_point = None
     if exit_px is not None and spot > 0:
         ret_point = (float(exit_px) + cum_dps - spot) / spot
+    terminal_source = (
+        "current_multiple_persistence" if exit_px is not None else None
+    )
     out["forecasts"] = {
         "operating_cash_flow": {
             "metric": "fcff_year1",
@@ -312,13 +321,15 @@ def build_baselines(*, load, instrument_id, as_of, loaded: LoadedConfig, spot: f
             "cum_dps": cum_dps,
             "entry_price": spot,
             "terminal_exit_price_proxy": exit_px,
-            "terminal_source": "current_multiple_persistence",
+            "terminal_source": terminal_source,
             "terminal_vps_proxy": None,  # deprecated: as-of DCF VPS must not drive TSR point
             "dividend_treatment": "DIVIDEND-NO-REINVEST-v1",
             "note": (
                 "Point forecast = (exit_price_persistence + path DPS − spot) / spot. "
                 "Does not use as-of central DCF VPS as terminal (avoids negative-VPS TSR bias). "
-                "CUM_DPS_ZERO flagged when projected cumulative DPS is exactly 0."
+                "terminal_source is current_multiple_persistence only when exit_price is available. "
+                "CUM_DPS_ZERO when path dividends observed and cumulative DPS is 0; "
+                "PATH_DIVIDENDS_MISSING when no path dividend observation."
             ),
         },
     }

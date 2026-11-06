@@ -1,9 +1,10 @@
-"""P0/P1 baseline honesty + TSR terminal: no fake incremental edge, no VPS-as-TSR."""
+"""P0/P1 baseline honesty + TSR terminal: no fake incremental edge, no VPS-as-TSR.
+
+Also locks PR#31 SF1–SF4 hygiene: mixed-cohort vs-persistence exclusion,
+honest terminal_source, CUM_DPS_ZERO vs PATH_DIVIDENDS_MISSING.
+"""
 
 from __future__ import annotations
-
-from datetime import date, datetime, time
-from zoneinfo import ZoneInfo
 
 import pytest
 
@@ -13,11 +14,10 @@ from vms.evaluation.labels import assign_labels
 from vms.evaluation.metrics import score_targets
 from vms.schemas.contracts import ClaimStatus
 
-TZ = ZoneInfo("Asia/Shanghai")
 L = loaded_config()
 
 
-def _spot_from_load(load, as_of: datetime) -> float:
+def _spot_from_load(load, as_of) -> float:
     mkt = [m for m in load.market if m.timestamp <= as_of]
     assert mkt
     return float(mkt[-1].raw_close)
@@ -107,8 +107,78 @@ def test_p0_forecast_is_baseline_skips_persistence_increment():
     assert vs2.get("skipped") is True
 
 
+def test_sf1_mixed_cohort_excludes_baseline_rows_from_persistence_delta():
+    """SF1: mixed cohort must not mix FORECAST_IS_BASELINE rows into vs-persistence errors."""
+    # Non-baseline row: independent price forecast that is NOT the persistence baseline.
+    non_bl = {
+        "forecasts": {
+            "market_price": {
+                "point": 12.0,
+                "forecast_is_baseline": False,
+            },
+            "operating_cash_flow": {"point": 1.0},
+            "intrinsic_value": {"point": None},
+            "total_shareholder_return": {"point": 0.1},
+        },
+        "baselines": {
+            "current_multiple_persistence": {"exit_price_point": 10.0},
+            "historical_median": {"fcff_y1": 1.0},
+        },
+        "flags": [],
+        "outcomes": {
+            "market_price": {"raw_close": 11.0},
+            "operating_cash_flow": {"fcff_proxy": 1.0},
+            "total_shareholder_return": {"realized": 0.05},
+            "intrinsic_value": {"later_origin_vps": None},
+        },
+        "profile_id": "GENERIC",
+    }
+    # Baseline row: forecast == persistence; would silently zero the incremental delta if kept.
+    bl = {
+        "forecasts": {
+            "market_price": {
+                "point": 10.0,
+                "forecast_is_baseline": True,
+                "baseline_source": "current_multiple_persistence",
+            },
+            "operating_cash_flow": {"point": 1.0},
+            "intrinsic_value": {"point": None},
+            "total_shareholder_return": {"point": 0.0},
+        },
+        "baselines": {
+            "current_multiple_persistence": {"exit_price_point": 10.0},
+            "historical_median": {"fcff_y1": 1.0},
+        },
+        "flags": ["FORECAST_IS_BASELINE"],
+        "outcomes": {
+            "market_price": {"raw_close": 20.0},  # large |err| if wrongly included
+            "operating_cash_flow": {"fcff_proxy": 1.0},
+            "total_shareholder_return": {"realized": 0.0},
+            "intrinsic_value": {"later_origin_vps": None},
+        },
+        "profile_id": "GENERIC",
+    }
+    scored = score_targets([non_bl, bl])
+    vs = scored["market_price"]["vs_current_multiple_persistence"]
+    assert vs.get("skipped") is not True
+    assert vs.get("partial_skip") is True
+    assert vs.get("reason") == "FORECAST_IS_BASELINE_PARTIAL"
+    assert vs["n_forecast_is_baseline"] == 1
+    assert vs["n_compared"] == 1
+    assert vs["n_records"] == 2
+    # Only non-baseline row: forecast err = 12-11 = +1; baseline err = 10-11 = -1
+    assert vs["forecast_errors"]["n"] == 1
+    assert vs["forecast_errors"]["mae"] == pytest.approx(1.0)
+    assert vs["forecast_errors"]["mean_error"] == pytest.approx(1.0)
+    assert vs["baseline_errors"]["n"] == 1
+    assert vs["baseline_errors"]["mae"] == pytest.approx(1.0)
+    assert vs["baseline_errors"]["mean_error"] == pytest.approx(-1.0)
+    # Absolute market_price.errors still covers full cohort (not the SF1 concern)
+    assert scored["market_price"]["errors"]["n"] == 2
+
+
 def test_p1_tsr_uses_exit_price_not_vps_and_flags_cum_dps_zero():
-    """AC3: TSR terminal = persistence exit price; CUM_DPS_ZERO when path DPS is 0."""
+    """AC3: TSR terminal = persistence exit price; CUM_DPS_ZERO only when DPS observed==0."""
     load, as_of = company(years=(2019, 2020, 2021, 2022), growth=0.05, price=15.0)
     spot = _spot_from_load(load, as_of)
     iid = load.market[0].instrument_id
@@ -128,15 +198,14 @@ def test_p1_tsr_uses_exit_price_not_vps_and_flags_cum_dps_zero():
     if vps is not None and float(vps) != float(exit_px):
         old_vps_ret = (float(vps) + float(tsr["cum_dps"]) - spot) / spot
         assert tsr["point"] != pytest.approx(old_vps_ret)
-    if tsr["cum_dps"] == 0.0:
+    if tsr["cum_dps"] == 0.0 and "PATH_DIVIDENDS_MISSING" not in bundle["flags"]:
         assert "CUM_DPS_ZERO" in bundle["flags"]
-    else:
-        # Synthetic company often has projected dividends; force-check flag helper path via metric
-        assert "CUM_DPS_ZERO" not in bundle["flags"] or tsr["cum_dps"] == 0.0
+    if "PATH_DIVIDENDS_MISSING" in bundle["flags"]:
+        assert "CUM_DPS_ZERO" not in bundle["flags"]
 
 
-def test_p1_cum_dps_zero_flag_when_no_path_dividends(monkeypatch):
-    """AC3b: explicitly flag CUM_DPS_ZERO when projected DPS accumulates to 0."""
+def test_p1_cum_dps_zero_flag_when_explicit_zero_dividends(monkeypatch):
+    """SF3: CUM_DPS_ZERO when path dividends observed and accumulate to 0."""
     from vms.evaluation import baselines as bl
 
     load, as_of = company(years=(2019, 2020, 2021, 2022), growth=0.05, price=15.0)
@@ -145,21 +214,61 @@ def test_p1_cum_dps_zero_flag_when_no_path_dividends(monkeypatch):
 
     real_item = bl._item
 
-    def _item_no_div(proj, name, year, default=None):
+    def _item_zero_div(proj, name, year, default=None):
         if name == "dividends":
             return 0.0
         return real_item(proj, name, year, default)
 
-    monkeypatch.setattr(bl, "_item", _item_no_div)
+    monkeypatch.setattr(bl, "_item", _item_zero_div)
     bundle = bl.build_baselines(
         load=load, instrument_id=iid, as_of=as_of, loaded=L, spot=spot, horizon_years=1,
     )
     assert bundle["forecasts"]["total_shareholder_return"]["cum_dps"] == 0.0
     assert "CUM_DPS_ZERO" in bundle["flags"]
+    assert "PATH_DIVIDENDS_MISSING" not in bundle["flags"]
+
+
+def test_sf3_path_dividends_missing_when_div_none(monkeypatch):
+    """SF3: missing dividend observations → PATH_DIVIDENDS_MISSING, not CUM_DPS_ZERO."""
+    from vms.evaluation import baselines as bl
+
+    load, as_of = company(years=(2019, 2020, 2021, 2022), growth=0.05, price=15.0)
+    spot = _spot_from_load(load, as_of)
+    iid = load.market[0].instrument_id
+
+    real_item = bl._item
+
+    def _item_missing_div(proj, name, year, default=None):
+        if name == "dividends":
+            return None
+        return real_item(proj, name, year, default)
+
+    monkeypatch.setattr(bl, "_item", _item_missing_div)
+    bundle = bl.build_baselines(
+        load=load, instrument_id=iid, as_of=as_of, loaded=L, spot=spot, horizon_years=1,
+    )
+    assert bundle["forecasts"]["total_shareholder_return"]["cum_dps"] == 0.0
+    assert "PATH_DIVIDENDS_MISSING" in bundle["flags"]
+    assert "CUM_DPS_ZERO" not in bundle["flags"]
+
+
+def test_sf2_terminal_source_none_when_exit_price_unavailable():
+    """SF2: terminal_source set only when exit_px is available (spot<=0 → no persist exit)."""
+    load, as_of = company(years=(2019, 2020, 2021, 2022), growth=0.05, price=15.0)
+    iid = load.market[0].instrument_id
+    # spot<=0 skips both EBITDA multiple and raw-price persistence → exit_px stays None
+    bundle = build_baselines(
+        load=load, instrument_id=iid, as_of=as_of, loaded=L, spot=0.0, horizon_years=1,
+    )
+    assert bundle["baselines"]["current_multiple_persistence"]["exit_price_point"] is None
+    tsr = bundle["forecasts"]["total_shareholder_return"]
+    assert tsr["terminal_exit_price_proxy"] is None
+    assert tsr["terminal_source"] is None
+    assert tsr["point"] is None
 
 
 def test_fail_closed_labels_unchanged():
-    """AC4: PASS / INVESTMENT_VALUE_NOT_ESTABLISHED fail-closed path untouched."""
+    """AC4 canary: PASS / INVESTMENT_VALUE_NOT_ESTABLISHED fail-closed path untouched."""
     lab = assign_labels(
         engineering_ok=True,
         data_quality_ok=True,

@@ -1,0 +1,21 @@
+Command: /workspace/.venv-vtp/bin/pytest -v --tb=short --junit-xml /workspace/artifacts/vtp-0.1-evidence/VTP_New_Tests_junit.xml /workspace/tests/vtp_0_1/suite_a/test_a02_offline_synthetic_run.py /workspace/tests/vtp_0_1/suite_a/test_a01_clean_install.py\nExit code: 1\n\n=== STDOUT ===\n============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.1.1, pluggy-1.7.0
+rootdir: /workspace
+configfile: pyproject.toml
+plugins: hypothesis-6.170.5
+collected 17 items
+
+tests/vtp_0_1/suite_a/test_a02_offline_synthetic_run.py ....F...         [ 47%]
+tests/vtp_0_1/suite_a/test_a01_clean_install.py .........                [100%]
+
+=================================== FAILURES ===================================
+________ TestA02OfflineSyntheticRun.test_offline_no_network_dependency _________
+tests/vtp_0_1/suite_a/test_a02_offline_synthetic_run.py:117: in test_offline_no_network_dependency
+    assert result.returncode == 0
+E   assert 1 == 0
+E    +  where 1 = CompletedProcess(args=['/workspace/.venv-vtp/bin/python', '-c', "import sys; sys.path.insert(0, '/workspace/src'); fro...annot import name \'generate_synthetic_company\' from \'vms.data.synthetic\' (/workspace/src/vms/data/synthetic.py)\n').returncode
+- generated xml file: /workspace/artifacts/vtp-0.1-evidence/VTP_New_Tests_junit.xml -
+=========================== short test summary info ============================
+FAILED tests/vtp_0_1/suite_a/test_a02_offline_synthetic_run.py::TestA02OfflineSyntheticRun::test_offline_no_network_dependency
+======================== 1 failed, 16 passed in 15.15s =========================
+\n\n=== STDERR ===\n

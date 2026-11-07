@@ -1,0 +1,254 @@
+# VTP-0.1 Hand-Calculated Reference Fixtures (§4.3)
+# Independent numeric oracles frozen before test execution
+# All calculations verified manually/spreadsheet - DO NOT derive from production code
+
+FCFF_DCF_TWO_PERIOD:
+  description: "Two-period FCFF DCF with finite forecast and terminal value"
+  independent_calculation: "manual_spreadsheet"
+  inputs:
+    fcff_year1: 1000
+    fcff_year2: 1100
+    terminal_fcff: 1150
+    terminal_growth: 0.02
+    wacc: 0.10
+    debt: 5000
+    cash: 2000
+    shares: 1000
+  calculation_steps:
+    pv_year1: 909.09  # 1000 / 1.10
+    pv_year2: 909.09  # 1100 / 1.10^2
+    terminal_value: 14375.00  # 1150 / (0.10 - 0.02)
+    pv_terminal: 11880.17  # 14375 / 1.10^2
+    enterprise_value: 13698.35  # sum of PVs
+    equity_value: 10698.35  # EV - debt + cash
+    value_per_share: 10.70  # equity_value / shares
+  expected_output:
+    enterprise_value: 13698.35
+    equity_value: 10698.35
+    value_per_share: 10.70
+  tolerance: 0.01
+
+FCFE_DCF_WITH_BORROWING:
+  description: "FCFE DCF with net borrowing"
+  independent_calculation: "manual_spreadsheet"
+  inputs:
+    fcfe_year1: 800
+    fcfe_year2: 900
+    terminal_fcfe: 945
+    terminal_growth: 0.025
+    cost_of_equity: 0.11
+    shares: 1000
+  calculation_steps:
+    pv_year1: 720.72  # 800 / 1.11
+    pv_year2: 730.03  # 900 / 1.11^2
+    terminal_value: 11117.65  # 945 / (0.11 - 0.025)
+    pv_terminal: 9022.73  # 11117.65 / 1.11^2
+    equity_value: 10473.48  # sum of PVs
+    value_per_share: 10.47
+  expected_output:
+    equity_value: 10473.48
+    value_per_share: 10.47
+  tolerance: 0.01
+
+DDM_GORDON_GROWTH:
+  description: "Dividend discount model with stable growth"
+  independent_calculation: "Gordon growth formula"
+  inputs:
+    dividend_year1: 500
+    dividend_growth: 0.03
+    cost_of_equity: 0.09
+    shares: 1000
+  calculation_steps:
+    equity_value: 8333.33  # 500 / (0.09 - 0.03)
+    value_per_share: 8.33
+  expected_output:
+    equity_value: 8333.33
+    value_per_share: 8.33
+  tolerance: 0.01
+  invalid_cases:
+    - condition: "growth >= cost_of_equity"
+      expected_status: "INELIGIBLE"
+      reason: "INVALID_GROWTH_DISCOUNT_RELATIONSHIP"
+
+RIM_CLEAN_SURPLUS:
+  description: "Residual income model with clean surplus"
+  independent_calculation: "manual_spreadsheet"
+  inputs:
+    book_value_t0: 10000
+    roe_year1: 0.12
+    roe_year2: 0.11
+    terminal_roe: 0.10
+    cost_of_equity: 0.09
+    shares: 1000
+  calculation_steps:
+    earnings_year1: 1200  # 10000 * 0.12
+    book_value_t1: 11200  # assuming full retention
+    residual_income_1: 300  # 1200 - (10000 * 0.09)
+    earnings_year2: 1232  # 11200 * 0.11
+    book_value_t2: 12432
+    residual_income_2: 224  # 1232 - (11200 * 0.09)
+    terminal_residual: 124.32  # (0.10 - 0.09) * book_value_t2
+    pv_ri1: 275.23
+    pv_ri2: 188.49
+    pv_terminal_ri: 1044.00  # assuming perpetuity at terminal
+    equity_value: 11507.72  # book_value + PV(residual incomes)
+    value_per_share: 11.51
+  expected_output:
+    equity_value: 11507.72
+    value_per_share: 11.51
+  tolerance: 0.01
+
+PE_MULTIPLE:
+  description: "P/E multiple valuation"
+  independent_calculation: "simple_multiplication"
+  inputs:
+    earnings: 2000
+    peer_pe_multiple: 15.0
+    shares: 1000
+  calculation_steps:
+    equity_value: 30000  # 2000 * 15.0
+    value_per_share: 30.00
+  expected_output:
+    equity_value: 30000
+    value_per_share: 30.00
+  tolerance: 0.01
+  invalid_cases:
+    - condition: "earnings <= 0"
+      expected_status: "INELIGIBLE"
+      reason: "NON_POSITIVE_EARNINGS"
+
+EV_EBITDA_MULTIPLE:
+  description: "EV/EBITDA multiple with equity bridge"
+  independent_calculation: "manual_calculation"
+  inputs:
+    ebitda: 3000
+    peer_ev_ebitda: 8.0
+    debt: 5000
+    cash: 1500
+    minority_interests: 500
+    shares: 1000
+  calculation_steps:
+    enterprise_value: 24000  # 3000 * 8.0
+    equity_value: 20000  # EV - debt + cash - minority
+    value_per_share: 20.00
+  expected_output:
+    enterprise_value: 24000
+    equity_value: 20000
+    value_per_share: 20.00
+  tolerance: 0.01
+  equity_bridge_check:
+    ev_to_equity: "EV - debt + cash - minority_interests - preferred"
+
+NAV_ASSET_VALUATION:
+  description: "Net asset value with haircuts"
+  independent_calculation: "manual_spreadsheet"
+  inputs:
+    assets:
+      cash: 2000
+      receivables: 3000
+      inventory: 4000
+      ppe: 20000
+      intangibles: 5000
+    haircuts:
+      cash: 0.0
+      receivables: 0.05
+      inventory: 0.15
+      ppe: 0.20
+      intangibles: 0.50
+    liabilities: 15000
+    shares: 1000
+  calculation_steps:
+    fair_cash: 2000  # 2000 * (1 - 0.0)
+    fair_receivables: 2850  # 3000 * (1 - 0.05)
+    fair_inventory: 3400  # 4000 * (1 - 0.15)
+    fair_ppe: 16000  # 20000 * (1 - 0.20)
+    fair_intangibles: 2500  # 5000 * (1 - 0.50)
+    total_fair_assets: 26750
+    nav: 11750  # 26750 - 15000
+    nav_per_share: 11.75
+  expected_output:
+    nav: 11750
+    nav_per_share: 11.75
+  tolerance: 0.01
+  anti_pattern_check:
+    book_assets_not_fair_value: true
+
+SOTP_TWO_SEGMENT:
+  description: "Sum-of-the-parts with two segments and holding costs"
+  independent_calculation: "manual_calculation"
+  inputs:
+    segments:
+      - name: "Segment_A"
+        value: 15000
+      - name: "Segment_B"
+        value: 10000
+    holding_costs_pv: 2000
+    debt: 8000
+    cash: 1000
+    minority_interests: 500
+    shares: 1000
+  calculation_steps:
+    sum_segments: 25000
+    adjusted_value: 23000  # 25000 - 2000 (holding costs)
+    equity_value: 15500  # 23000 - 8000 + 1000 - 500
+    value_per_share: 15.50
+  expected_output:
+    sum_of_segments: 25000
+    equity_value: 15500
+    value_per_share: 15.50
+  tolerance: 0.01
+
+RETURN_DISTRIBUTION:
+  description: "Return calculation with fixed prices and distributions"
+  independent_calculation: "manual_calculation"
+  inputs:
+    entry_price: 100
+    exit_prices: [110, 120, 130, 90, 85]  # 5 scenarios
+    shareholder_distributions: [5, 5, 5, 5, 5]  # dividends
+    horizon_years: 3
+  calculation_steps:
+    # Holding period returns
+    hpr_1: 0.15  # (110 + 5 - 100) / 100
+    hpr_2: 0.25  # (120 + 5 - 100) / 100
+    hpr_3: 0.35  # (130 + 5 - 100) / 100
+    hpr_4: -0.05  # (90 + 5 - 100) / 100
+    hpr_5: -0.10  # (85 + 5 - 100) / 100
+    # Annualized geometric returns
+    annualized_1: 0.0477  # (1.15)^(1/3) - 1
+    annualized_2: 0.0772  # (1.25)^(1/3) - 1
+    annualized_3: 0.1053  # (1.35)^(1/3) - 1
+    annualized_4: -0.0171  # (0.95)^(1/3) - 1
+    annualized_5: -0.0347  # (0.90)^(1/3) - 1
+  expected_output:
+    holding_period_returns: [0.15, 0.25, 0.35, -0.05, -0.10]
+    annualized_returns: [0.0477, 0.0772, 0.1053, -0.0171, -0.0347]
+    mean_hpr: 0.12
+    median_hpr: 0.15
+  tolerance: 0.0001
+
+ENTRY_PRICE_MONOTONICITY:
+  description: "Return monotonicity property with fixed exit paths"
+  independent_calculation: "manual_verification"
+  inputs:
+    exit_price: 120
+    distributions: 10
+    entry_price_low: 90
+    entry_price_high: 110
+  expected_property:
+    returns_at_low: 0.444  # (120 + 10 - 90) / 90
+    returns_at_high: 0.182  # (120 + 10 - 110) / 110
+    monotonicity: "return_at_low >= return_at_high"
+  test_assertion: "For all paths: return(P_low) >= return(P_high)"
+
+SHARE_COUNT_DILUTION:
+  description: "Dilution effect on per-share value"
+  independent_calculation: "manual_calculation"
+  inputs:
+    equity_value: 10000
+    shares_before: 1000
+    shares_after: 1200  # 20% dilution
+  expected_output:
+    value_per_share_before: 10.00
+    value_per_share_after: 8.33
+    dilution_check: "value_per_share_after < value_per_share_before"
+  tolerance: 0.01

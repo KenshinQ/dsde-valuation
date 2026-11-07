@@ -1,0 +1,503 @@
+# VMS-0.2 VTP-0.1 验证测试执行报告\n\n**执行时间:** 2026-11-07T04:42:41.947846\n\n**基线提交:** dd84fc16f54c397d3ba88e953a384dfecd550466\n\n**Python版本:** Python 3.12.3\n\n## 1. 执行概要\n\n本报告记录了针对VMS-0.2系统的VTP-0.1全面验证测试执行过程和结果。\n\n## 2. 测试套件执行结果\n\n### Suite_A_Contract_Build\n\n- **退出代码:** 0\n- **执行时间:** 2026-11-07T04:35:22.599910\n- **日志文件:** `/workspace/artifacts/vtp-0.1-evidence/Suite_A_Contract_Build.log`\n- **测试摘要:** ============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.1.1, pluggy-1.7.0
+rootdir: /workspace
+configfile: pyproject.toml
+plugins: hypothesis-6.170.5
+collected 76 items
+
+tests/integration/test_cli.py ......................                     [ 28%]
+tests/integration/test_cli_phase0.py .....                               [ 35%]
+tests/unit/test_no_legacy_imports.py ....                                [ 40%]
+tests/unit/test_schemas.py ............................................. [100%]
+
+- generated xml file: /workspace/artifacts/vtp-0.1-evidence/Suite_A_Contract_Build_junit.xml -
+============================= 76 passed in 50.67s ==============================\n\n### Suite_B_PIT_Provenance\n\n- **退出代码:** 0\n- **执行时间:** 2026-11-07T04:35:24.515349\n- **日志文件:** `/workspace/artifacts/vtp-0.1-evidence/Suite_B_PIT_Provenance.log`\n- **测试摘要:** ============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.1.1, pluggy-1.7.0
+rootdir: /workspace
+configfile: pyproject.toml
+plugins: hypothesis-6.170.5
+collected 49 items
+
+tests/unit/test_snapshot.py ..................                           [ 36%]
+tests/unit/test_fields_asof.py ......                                    [ 48%]
+tests/leakage/test_leakage.py ............                               [ 73%]
+tests/leakage/test_peer_leakage.py .....                                 [ 83%]
+tests/unit/test_pit_assumed_policy.py ........                           [100%]
+
+- generated xml file: /workspace/artifacts/vtp-0.1-evidence/Suite_B_PIT_Provenance_junit.xml -
+============================== 49 passed in 0.75s ==============================\n\n### Suite_C_Financial_Statements\n\n- **退出代码:** 0\n- **执行时间:** 2026-11-07T04:35:36.180226\n- **日志文件:** `/workspace/artifacts/vtp-0.1-evidence/Suite_C_Financial_Statements.log`\n- **测试摘要:** ============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.1.1, pluggy-1.7.0
+rootdir: /workspace
+configfile: pyproject.toml
+plugins: hypothesis-6.170.5
+collected 53 items
+
+tests/unit/test_projection.py ....................                       [ 37%]
+tests/unit/test_path_statements.py .........                             [ 54%]
+tests/unit/test_policies_invariants.py .......................           [ 98%]
+tests/property/test_projection_properties.py .                           [100%]
+
+- generated xml file: /workspace/artifacts/vtp-0.1-evidence/Suite_C_Financial_Statements_junit.xml -
+============================= 53 passed in 10.49s ==============================\n\n### Suite_D_Valuation_Methods\n\n- **退出代码:** 0\n- **执行时间:** 2026-11-07T04:35:38.959846\n- **日志文件:** `/workspace/artifacts/vtp-0.1-evidence/Suite_D_Valuation_Methods.log`\n- **测试摘要:** ============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.1.1, pluggy-1.7.0
+rootdir: /workspace
+configfile: pyproject.toml
+plugins: hypothesis-6.170.5
+collected 43 items
+
+tests/unit/test_phase4_acceptance.py ..........                          [ 23%]
+tests/unit/test_phase5_acceptance.py ...........                         [ 48%]
+tests/unit/test_phase6_acceptance.py ........                            [ 67%]
+tests/unit/methods/test_rim_from_snapshot.py .....                       [ 79%]
+tests/unit/methods/test_rim_r2_common_equity.py .........                [100%]
+
+- generated xml file: /workspace/artifacts/vtp-0.1-evidence/Suite_D_Valuation_Methods_junit.xml -
+============================== 43 passed in 1.61s ==============================\n\n### Suite_E_Routing\n\n- **退出代码:** 0\n- **执行时间:** 2026-11-07T04:35:40.635182\n- **日志文件:** `/workspace/artifacts/vtp-0.1-evidence/Suite_E_Routing.log`\n- **测试摘要:** ============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.1.1, pluggy-1.7.0
+rootdir: /workspace
+configfile: pyproject.toml
+plugins: hypothesis-6.170.5
+collected 28 items
+
+tests/unit/test_profiles.py ..........                                   [ 35%]
+tests/unit/test_profiles_phase2.py ............                          [ 78%]
+tests/unit/test_methods_registry_phase2.py ......                        [100%]
+
+- generated xml file: /workspace/artifacts/vtp-0.1-evidence/Suite_E_Routing_junit.xml -
+============================== 28 passed in 0.53s ==============================\n\n### Suite_F_Ensemble\n\n- **退出代码:** 0\n- **执行时间:** 2026-11-07T04:35:42.219107\n- **日志文件:** `/workspace/artifacts/vtp-0.1-evidence/Suite_F_Ensemble.log`\n- **测试摘要:** ============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.1.1, pluggy-1.7.0
+rootdir: /workspace
+configfile: pyproject.toml
+plugins: hypothesis-6.170.5
+collected 15 items
+
+tests/unit/test_phase8_acceptance.py ............                        [ 80%]
+tests/property/test_ensemble_properties.py ...                           [100%]
+
+- generated xml file: /workspace/artifacts/vtp-0.1-evidence/Suite_F_Ensemble_junit.xml -
+============================== 15 passed in 0.34s ==============================\n\n### Suite_G_Market_Pricing\n\n- **退出代码:** 0\n- **执行时间:** 2026-11-07T04:35:46.214917\n- **日志文件:** `/workspace/artifacts/vtp-0.1-evidence/Suite_G_Market_Pricing.log`\n- **测试摘要:** ============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.1.1, pluggy-1.7.0
+rootdir: /workspace
+configfile: pyproject.toml
+plugins: hypothesis-6.170.5
+collected 13 items
+
+tests/unit/test_phase9_acceptance.py ..........                          [ 76%]
+tests/property/test_exit_price_properties.py ...                         [100%]
+
+- generated xml file: /workspace/artifacts/vtp-0.1-evidence/Suite_G_Market_Pricing_junit.xml -
+============================== 13 passed in 2.77s ==============================\n\n### Suite_H_Returns\n\n- **退出代码:** 0\n- **执行时间:** 2026-11-07T04:36:05.292056\n- **日志文件:** `/workspace/artifacts/vtp-0.1-evidence/Suite_H_Returns.log`\n- **测试摘要:** ============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.1.1, pluggy-1.7.0
+rootdir: /workspace
+configfile: pyproject.toml
+plugins: hypothesis-6.170.5
+collected 18 items
+
+tests/unit/test_returns.py .........                                     [ 50%]
+tests/unit/test_phase7_acceptance.py .......                             [ 88%]
+tests/property/test_return_properties.py .                               [ 94%]
+tests/property/test_return_track_b_properties.py .                       [100%]
+
+- generated xml file: /workspace/artifacts/vtp-0.1-evidence/Suite_H_Returns_junit.xml -
+============================= 18 passed in 17.89s ==============================\n\n### Suite_I_Properties\n\n- **退出代码:** 0\n- **执行时间:** 2026-11-07T04:36:08.164125\n- **日志文件:** `/workspace/artifacts/vtp-0.1-evidence/Suite_I_Properties.log`\n- **测试摘要:** ============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.1.1, pluggy-1.7.0
+rootdir: /workspace
+configfile: pyproject.toml
+plugins: hypothesis-6.170.5
+collected 5 items
+
+tests/property/test_properties.py ...                                    [ 60%]
+tests/property/test_regime_properties.py .                               [ 80%]
+tests/property/test_projection_properties.py .                           [100%]
+
+- generated xml file: /workspace/artifacts/vtp-0.1-evidence/Suite_I_Properties_junit.xml -
+============================== 5 passed in 1.70s ===============================\n\n### Suite_J_Historical\n\n- **退出代码:** 0\n- **执行时间:** 2026-11-07T04:36:18.790009\n- **日志文件:** `/workspace/artifacts/vtp-0.1-evidence/Suite_J_Historical.log`\n- **测试摘要:** ============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.1.1, pluggy-1.7.0
+rootdir: /workspace
+configfile: pyproject.toml
+plugins: hypothesis-6.170.5
+collected 19 items
+
+tests/unit/test_evaluation.py ........                                   [ 42%]
+tests/unit/test_walk_forward.py ......                                   [ 73%]
+tests/integration/test_cli_evaluate.py .                                 [ 78%]
+tests/leakage/test_eval_weight_freeze.py ....                            [100%]
+
+- generated xml file: /workspace/artifacts/vtp-0.1-evidence/Suite_J_Historical_junit.xml -
+============================== 19 passed in 9.44s ==============================\n\n### Suite_K_Bundle_Replay\n\n- **退出代码:** 0\n- **执行时间:** 2026-11-07T04:36:22.562295\n- **日志文件:** `/workspace/artifacts/vtp-0.1-evidence/Suite_K_Bundle_Replay.log`\n- **测试摘要:** ============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.1.1, pluggy-1.7.0
+rootdir: /workspace
+configfile: pyproject.toml
+plugins: hypothesis-6.170.5
+collected 21 items
+
+tests/integration/test_cli_phase0.py .....                               [ 23%]
+tests/unit/test_bundle_validation.py ......                              [ 52%]
+tests/unit/test_seeding_metadata.py ..........                           [100%]
+
+- generated xml file: /workspace/artifacts/vtp-0.1-evidence/Suite_K_Bundle_Replay_junit.xml -
+============================== 21 passed in 2.57s ==============================\n\n### Leakage_Tests\n\n- **退出代码:** 0\n- **执行时间:** 2026-11-07T04:36:52.358116\n- **日志文件:** `/workspace/artifacts/vtp-0.1-evidence/Leakage_Tests.log`\n- **测试摘要:** ============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.1.1, pluggy-1.7.0
+rootdir: /workspace
+configfile: pyproject.toml
+plugins: hypothesis-6.170.5
+collected 28 items
+
+tests/leakage/test_leakage.py ............                               [ 42%]
+tests/leakage/test_peer_leakage.py .....                                 [ 60%]
+tests/leakage/test_regime_leakage.py ......                              [ 82%]
+tests/leakage/test_multiples_peer_leakage.py .                           [ 85%]
+tests/leakage/test_eval_weight_freeze.py ....                            [100%]
+
+- generated xml file: /workspace/artifacts/vtp-0.1-evidence/Leakage_Tests_junit.xml -
+============================= 28 passed in 28.60s ==============================\n\n### VTP_New_Tests\n\n- **退出代码:** 1\n- **执行时间:** 2026-11-07T04:37:08.721267\n- **日志文件:** `/workspace/artifacts/vtp-0.1-evidence/VTP_New_Tests.log`\n- **测试摘要:** ').returncode
+- generated xml file: /workspace/artifacts/vtp-0.1-evidence/VTP_New_Tests_junit.xml -
+=========================== short test summary info ============================
+FAILED tests/vtp_0_1/suite_a/test_a02_offline_synthetic_run.py::TestA02OfflineSyntheticRun::test_offline_no_network_dependency
+======================== 1 failed, 16 passed in 15.15s =========================\n\n### Comprehensive\n\n- **退出代码:** 1\n- **执行时间:** 2026-11-07T04:42:41.947361\n- **日志文件:** `/workspace/artifacts/vtp-0.1-evidence/Comprehensive_All_Tests.log`\n- **测试摘要:** ').returncode
+- generated xml file: /workspace/artifacts/vtp-0.1-evidence/Comprehensive_All_Tests_junit.xml -
+=========================== short test summary info ============================
+FAILED tests/vtp_0_1/suite_a/test_a02_offline_synthetic_run.py::TestA02OfflineSyntheticRun::test_offline_no_network_dependency
+============ 1 failed, 952 passed, 16 skipped in 331.92s (0:05:31) =============\n\n## 3. 环境哈希值\n\n```json\n{
+  "baseline_commit": "dd84fc16f54c397d3ba88e953a384dfecd550466",
+  "requirements_lock": "73d5db357e1bb45a0bc1c87da431a3cf14b8edce44a365a2128191c80db6ad0e",
+  "python_version": "Python 3.12.3",
+  "src/vms/__init__.py": "51f916632977e00cfca7d97919362155a9c38ecac3da6695f4b7d3765de6ffef",
+  "src/vms/assumptions.py": "713f2cd884fab7de090486a58a71bf033a6e2159e0fdf55b578d2efc8dd5b42c",
+  "src/vms/pipeline.py": "512fdfd2bd3dbe89e8bb1cdcedc27c447608f92085341c59cb59f14f6186a07c",
+  "src/vms/result.py": "ca12679348c49becaa01663419e0579e0c8b4641ebd260027f511421b31bb7dc",
+  "src/vms/seeding.py": "0d518f65afc30576c9b80ded027819382d081eea8212fcec204eb6137ba0c46a",
+  "src/vms/engine.py": "547cd8a65d6f06c34c816cc12b021823e0dcd0ed63508f569b27bd6d01877836",
+  "src/vms/returns/horizon_value.py": "fcec8b166575b09b0600cf2d327405bde2bfef9707e63203bf6d8f8cd31d4573",
+  "src/vms/returns/__init__.py": "8228fdf31dd0fa9de56d57f37f63ec62c040041db5ae8da90e549a0ba3083cd7",
+  "src/vms/returns/track_b.py": "4ea17d97d09969a4bc7629759ed8b9cebe60f6518e7abf64c6d492852225bc6a",
+  "src/vms/returns/stats.py": "227ce1980bbdd8cf3fc5547e1919197bca60764db54cba31c1d9f4739f056ed4",
+  "src/vms/returns/formula.py": "c37df74de58d6c75cadd0b96d1d39dbb9ba97371347c97af13008dcc9e62962d",
+  "src/vms/returns/distributions.py": "df708dcf65e26a0306a362c1f0c7853a948b04ee671df9ee80e29ce35c1423d2",
+  "src/vms/returns/recompute.py": "c211a48445f46aa0e75e31f09c7b628ac17f8d778d5e4c40fbdf11935c25fc66",
+  "src/vms/reporting/phase6_bundle.py": "9cb8513c83b0c7ced05f9b252d7319d499e0dd71f97a51c4597e118e41b546f9",
+  "src/vms/reporting/bundle_validation.py": "d1c05d06e17556bfdae0643d3e85c0a2ec76e603fa2bb52fdeb6bc4bf7d074f4",
+  "src/vms/reporting/__init__.py": "359258f05da475129041a2c2e380f9069b54aa2ddd6980f649b437254b47772e",
+  "src/vms/reporting/metadata.py": "47c55ea41ad9c90cdbce40ed59b92320aacde95c0faff6d6d35f1034a940d56f",
+  "src/vms/reporting/phase4_bundle.py": "f53f30edc0fb2be2c4923cec672398b74c8b3e05f51489a6ae38d9ba357309ce",
+  "src/vms/reporting/fi_method_distribution_adapter.py": "f956e77dc2e77e8b464fe720c50a93e24452736f5323ae771498e62a6d64f733",
+  "src/vms/reporting/value_rim_bundle.py": "401f0184e29edb5220a449e24977420f91c6b35aab66a1d754a76bbdac65add9",
+  "src/vms/reporting/phase7_bundle.py": "27ac8f2f8f940abd8e1f233c14d1e15f7f5a4db7bb984c57fef8ff24cace5075",
+  "src/vms/reporting/phase8_bundle.py": "7d5ce4aa1dbaaf00c72f9ab987ed78f33e583ea58775e355cd64eaa11f0329b4",
+  "src/vms/reporting/prior_only_fi_bundle.py": "fc69803fbd11fb5ca03085c2763048cbed1ac413f2719652d23a1fc6193fd033",
+  "src/vms/reporting/calibrate_rim_bundle.py": "df829cb0a64e3e8343d178b1cf953790ced160e61efc71c9230ce8234e372a23",
+  "src/vms/reporting/phase10_bundle.py": "a26a37c21a84ba0408f33d1e8716188856547f96b7f1755564b269d7f043e328",
+  "src/vms/reporting/phase5_bundle.py": "97a8101f2c4394532bb8c4ff5f0cf8b0aff49d2e1b8416debceb07e90dccc370",
+  "src/vms/reporting/phase9_bundle.py": "ed7ade4c6121542c5bf57ba6e7be8ed2bbc9803390b20d2f686763e422613bb9",
+  "src/vms/reporting/phase11_bundle.py": "1789b02cc0f692fd61fc4cc7c1e67365abdc56542d35938e38102e73dbacead9",
+  "src/vms/reporting/phase3_bundle.py": "145f24d088a1e4403bc6f8ad7f5d717912e6b33f19e52383bca7332e66efd7b5",
+  "src/vms/reporting/phase12_bundle.py": "6f226529bec38c0da809bb398df3fd655687f324977f6d8428b3cf7789a81857",
+  "src/vms/reporting/calibrate_mature_bundle.py": "513299fddaab4941e5309cec68ceabbab149e646e75aa6cb8f3fd62bfbfc8e10",
+  "src/vms/reporting/phase0_bundle.py": "d9d292dee2d660eee6264ab0b74608d17e6777f73e8823f3a13787819d1cc109",
+  "src/vms/data/__init__.py": "65a5e2d4d378626d5cf501bec71a753d6fe30bcfef84df4ef0a2b298f825eaa6",
+  "src/vms/data/synthetic.py": "b6380021d611ab0d68995c47c7bc6de6635a62ccc39c998e3d38a4f2d0f8b927",
+  "src/vms/data/io.py": "d80eb718abf5b4eb4f01e79b8682da8a85bebabfb106c1e57f53e17e871c6837",
+  "src/vms/sampling/__init__.py": "af1a6e25fa57eb938e22b344492dd2f16e76865bad18009b18ccc0c04da23c3d",
+  "src/vms/sampling/schemas.py": "d22c6a7b59d8c7cf9e2f2a2f52fc7174c05e2e6556aaea9485267a1e69bb5bc5",
+  "src/vms/sampling/simulate.py": "57bd06f4febfec6b762efea890cc65450ad6dbcd11ee7af563ceeca9d43cb40d",
+  "src/vms/sampling/dependence.py": "e8bf1ae9a2470adffff97645fa5bf161e905b1ef3cbcaa747bb30b30d69cca55",
+  "src/vms/evaluation/rim_run.py": "e7aaa3a1a2ae62fb0b2ff2972e06dc8647ea5748b357550f0b8959d5b8aa8360",
+  "src/vms/evaluation/rim_outcomes.py": "47d22b880b884b4804cce7c7377eab5e1f0f1ea4bb8f35578af8572cd4d58f68",
+  "src/vms/evaluation/outcomes.py": "ce07cd8bbffdd2d904ec675b40d7c1ce79f1f674d1eba3ddfb79e6c40b7d5280",
+  "src/vms/evaluation/__init__.py": "0caeaf9c87a8b4bd3223f8b52ee04f3d754a794061e0726ae87089a743fa46c2",
+  "src/vms/evaluation/bank_panel.py": "f02ba9bfc0c5fd792f4edd1284e7278d4147ef57a4a3a4cdd3241f6ea17dffd7",
+  "src/vms/evaluation/metrics.py": "8b2e2f5ab53bd6bea781007837b7f998722d237c03a81e73b85227a0e0cbe65d",
+  "src/vms/evaluation/universe.py": "2986b1dcb79ae4ee8b1811cc690293d76b13579b13630b17b5d451450efe01ad",
+  "src/vms/evaluation/pass_claim.py": "da3ba15512f01d11876410df49e9094b97cda677264bab94e287adac560e5650",
+  "src/vms/evaluation/rim_metrics.py": "bbbcb0100bb396bf4766787d6a3c639aff408621605e6a8fb9db949eccaf4f09",
+  "src/vms/evaluation/labels.py": "8f39005940d37892b0baef91bd9bb4bdd23d3469ec9b280ee2c0fe92bbf068bb",
+  "src/vms/evaluation/run.py": "4f9802860fd35379e5e832199a12be8549363adc7a56d0dcf4003e87377a4b73",
+  "src/vms/evaluation/baselines.py": "49aff581fbb79935529cd0e22aa591c0ff2c09a032a255b1b32a0e73c5c3ef0c",
+  "src/vms/evaluation/protocol.py": "6bdee4ac461ec4be75b6a017738516d1bf3c163362a2a805be0a3a0a1c1a5909",
+  "src/vms/evaluation/rim_forecast.py": "06413a402791c576f3fb15f96909120579b44511ba468a7b77e4fc5b54bd9b36",
+  "src/vms/evaluation/fi_real_panel.py": "f3187215c104cfec8b1dc53a5f1cf6147f3a0e5cb902e08c78566e0439e873e9",
+  "src/vms/evaluation/errors.py": "79d195f91276e88c27956176f999b000f821b2c50512175319d3604bc4b0463e",
+  "src/vms/schemas/__init__.py": "0cc5b8992f0816f91b76b9df99662431be7f95119bd196b3b16af5f87e0df12a",
+  "src/vms/schemas/observations.py": "0e5adb4ad399b6d1f591d22c8f928df567a4cd9476aa2fb2fcdd8053e9aa2218",
+  "src/vms/schemas/config.py": "bf68778e7638a7af760f7efef83ad13b7a4d698f78d221bd0181274250257f73",
+  "src/vms/schemas/fields.py": "1c025d86d98abdd829b25a67d66a3c4f21333cf43ebafcf7fa4be1b5abb0a6eb",
+  "src/vms/schemas/contracts.py": "e7f5859d6e10d4f4600802a5c27c54592fcf56963ffa763623c579cbf49cde1d",
+  "src/vms/schemas/errors.py": "dd5f282cc131c6962217355fe796d62a7089e2bf688c82150957584c8b83b5b6",
+  "src/vms/statements/tax.py": "9922bba2d67f58cc135936bc73025ec999e64dde0a83ad55404a377567a3a7c5",
+  "src/vms/statements/__init__.py": "f6fbf6a634072028ba1b318c498bf3339107dfb7963e357632d1b081d571adb3",
+  "src/vms/statements/projection.py": "b218f5ac6c950413fdd1e5af39e662a83db284e4f6314f321301ec2284f9de80",
+  "src/vms/statements/cashflows.py": "67e501b038631230b65777709a6b943ea9abdd66a52664221e3971b4a870e9a9",
+  "src/vms/statements/paths.py": "9e8c7b83efbe6357bc59de616535cceb782d7a672218dc19ea7916736a449b3e",
+  "src/vms/statements/invariants.py": "b21cfb9f5efbe4882c6c80d339728a014b5cd08de46f8751b3984620ceada18b",
+  "src/vms/statements/ledger.py": "1426ccc4bba203a78e25f9525237c11e314bbc75ded9bf0c8b58b37ba1fd3452",
+  "src/vms/market_pricing/__init__.py": "4962294b881f601cb72ef3a0d859f4edc0c754c2554a932ff4807807cdc0d71b",
+  "src/vms/market_pricing/estimator.py": "59ad4b63b0ee88534edd36f4671588acd95024b3b4734f72bc172f73c41e182a",
+  "src/vms/market_pricing/path_metrics.py": "bc76164a5298f77c690622b52314d0f438a4259b3456ec0c3f8900f04f50bab3",
+  "src/vms/market_pricing/terminal_multiples.py": "23465e0f175cee60798585868fbba88b3716595e12ed1a9e90f02ac77477a6d5",
+  "src/vms/market_pricing/transitions.py": "0ed98c90cd398e2ede8e9c34acc285afc14f0dfa86a8189de6a93b19d838343a",
+  "src/vms/market_pricing/config.py": "7f6171b7bb1aab09955c1b49ee4adec6e288a2fdab753dd47c71dc56be3c6782",
+  "src/vms/market_pricing/schemas.py": "27b3268417330a33bb97ce9455c58773d76e05cc2c84323633911be6ceb9de32",
+  "src/vms/market_pricing/sensitivity.py": "249310f976c03e40ee23c6c7ad0093fb1f7b232b43f552458a1db548e4676cdc",
+  "src/vms/market_pricing/convergence.py": "a1f1076bfdbf860e9f9e845ef99ef4c40856112a5a712cd4ef1a363720ebe516",
+  "src/vms/market_pricing/exit_prices.py": "6e05bacb0b0cfcf700dadd0c7a6e7a9baf70a4b106aaa30d889addf873e3365b",
+  "src/vms/ensemble/__init__.py": "b69cf372ee96a88d4420e26fb42e4169a5b58fec4be3d61a72f19858cbcc89d5",
+  "src/vms/ensemble/disagreement.py": "db6931d26e7b1eb6107f9c228d7bcf72218da5d0da1d309afc8f980253099366",
+  "src/vms/ensemble/weights.py": "4663988a607b569ad25179f586e774bcb4e6c451dc8105318841350534830ed0",
+  "src/vms/ensemble/checklist.py": "ac0086fa8f9130e652fcf33ded17ce99fe66e3c20f37a461f0e1d6493f4340f7",
+  "src/vms/ensemble/protocols.py": "01cfe66cb3f4e59fee613ce7cf7a9d8542985f829553fb200bcfca7e12172b52",
+  "src/vms/ensemble/mixture.py": "d62965db8fcd1f9d78fc63403393b2b4947f5d4f39b6e9dd46814cca261ba723",
+  "src/vms/ensemble/build.py": "c6a86a866a7cc33ddf0c750415dd6c0e8c32ef914de756d5dfb3b5f3cdbd336c",
+  "src/vms/capital_allocation/__init__.py": "dbb4208c2a49f2b723d2e58172b80e294a2abfabb215fcebba2e7c7ccde99c2e",
+  "src/vms/capital_allocation/policies.py": "10fec6dd6ec29a263b2380d7f9ec7ce46ffaba20b58735d5d58d11cdeb2d8f37",
+  "src/vms/router/__init__.py": "d1d95d2867141a9de7a8a5444d35fec9463bdbdfaa5e9eba78a1ec24cf9d557e",
+  "src/vms/router/compare.py": "612295a77988d58ea10219efbc87a8490ee55bbfb5dea0c5548183ec24536d71",
+  "src/vms/router/compatibility.py": "164f04826ce10cf456f4048c7bc8cf019d0b08cdd41b7b6bca8c7e0163ff2d7c",
+  "src/vms/router/suitability.py": "67a342feb87ab0f944f7f27fc6eaca54d5510fa5a03406e026b565bfa6723a09",
+  "src/vms/router/route.py": "6217970361b624294e114bcd5c0c78d75b6785675736fa3ac4519caa3c20d7e3",
+  "src/vms/adapters/__init__.py": "d5ad53e0979442e677c8a6fa91cf0449af01f49fd1a73450231e66202e64fe72",
+  "src/vms/quality/__init__.py": "21d0fca929d94bc13ab5bd28905a6e103387ead9f23ff0c9c00960c92265a9b3",
+  "src/vms/quality/issues.py": "9e40d27fa047185db1192a9544e5560e1357f638b2e33c5fce95ff7ca234eebd",
+  "src/vms/quality/checks.py": "37caddfcf5a99b4ea3a8c25aa39940745f800b975f1ed8a6fefc1f8f0900747e",
+  "src/vms/quality/report.py": "86a8602aed2ff65c380c8d3ef0f48884f336366199b88c5e78d63e16931f25d2",
+  "src/vms/valuation/__init__.py": "03673691bac6ec982ef8f4ea38ba47810fafdf8ef68a27a4c8966d1cd8efa7bd",
+  "src/vms/valuation/value.py": "2fc5ccdb68ba866e07e1e9267da37feecdc19de0ad0dec65054ed85435a4eefe",
+  "src/vms/valuation/wacc.py": "ba3eb324d27e888150d49e0936ec0d684adc7e8eab89be5e96f897e6c60d387f",
+  "src/vms/valuation/dcf.py": "20020b7c879a6d1ec559a081f15411b93316119864945ceae0cac44d874fb217",
+  "src/vms/valuation/multiples.py": "1a7e479d35af4dc8e4936a29d26bc87991d261723f80c8d996a3255fd582835a",
+  "src/vms/providers/__init__.py": "abb25fe22539478becfee672f4af47eb6a4ca0dc329ede76064a6403a059f758",
+  "src/vms/diagnostics/__init__.py": "4864d256cba03e1b1519d0489afb3445f84f6e6548ddb4c44cbec80b6969413c",
+  "src/vms/diagnostics/metrics.py": "ba1d2d859f9921547f9f44e6ddc8267e67a968fc8373f68f0e0f7b1e9b3944b1",
+  "src/vms/diagnostics/sensitivity.py": "6c93b474490c0a8107e66fd5953f26a8711d39621a52b8fb99b9e32919f70901",
+  "src/vms/diagnostics/perturb.py": "328f030459d45e50b1f1c245872264a854336a45d16c0c1694f5b001048efc6f",
+  "src/vms/drivers/profiles.py": "93f9abb41bf028a93f524ea62f344f361fe0ff5c2a8fac54f3860017a05c1efc",
+  "src/vms/drivers/__init__.py": "fae1aa202259c2dbd87cd29f5b90f1a458af1115f22973a9b8fefbd1155b7afe",
+  "src/vms/drivers/estimate.py": "4d0e9c2c09a5ef6579939b7a8d85db82b4a23416c2dc4e9746fa0258a6b1a112",
+  "src/vms/drivers/walk_forward.py": "4343bee216e8b5965e4468b1ce89d0995dfc966d6d043c95db48a4333998433a",
+  "src/vms/drivers/transforms.py": "a846db65ccf90fab8d3ab2d349f07aef625666c6486fd7baba7614ee37562ae4",
+  "src/vms/drivers/definitions.py": "b9e961641e823cada5962576d1f05b71c0c29f584852566024de14fceb531cdc",
+  "src/vms/drivers/history.py": "fbf1dc02c4f63423fd42653d0ca50b3073d48923382375c23f7450c71c64cfa1",
+  "src/vms/drivers/distributions.py": "e8d557dfc26560ff228a993e73d61f29c34a657468389a89f5dcdcc390004dd8",
+  "src/vms/pit/policy.py": "cdd12475c70691d1c666908aefca6fbae3c331c9e9dd5a9f80b8757addd249ea",
+  "src/vms/pit/__init__.py": "90a9660a41c3b4fdb0b622623319c6f3a10c2d06ef623ed5cc2237a0182d432e",
+  "src/vms/pit/asof.py": "de0d1708b89a72739e7c573d08200c3210acdc5bf871497319a1b48f46b1fa57",
+  "src/vms/pit/snapshot.py": "4d15a203af621ab5572a8d2b6fd73c8f7aeb5893182bffb5ba2dbf69afb3c534",
+  "src/vms/regimes/hmm.py": "8cd5be77535d3ba0cff136070e9f53ea504ec836b33467df96942bb60f07bbb4",
+  "src/vms/regimes/__init__.py": "2202446c14869283335079c9ce46b89035b67d07ebb9df53e0320d967709bf40",
+  "src/vms/regimes/features.py": "162d8ed3055194b3125d244f2a056744a4d1dbb4feb03e9603de02d9d69860cd",
+  "src/vms/regimes/transitions.py": "6db4fe1149327e45e718a2b3d49797e2976d70c8efaae0165fc43a4847265982",
+  "src/vms/regimes/rule_based.py": "23db1a8ab70ffd5567f30cf83a1ceda2bf9e83df97e1b9f58ab3ada722cb4ca5",
+  "src/vms/regimes/schemas.py": "6cdb46d61f680df81df48b92ee0e6354ca9933db434e5ec39bbec8cff8dfffc3",
+  "src/vms/regimes/market.py": "3eace05e237fb301f4563945ec90d14d83f6304d35c1bb0174eb28a26a7cac6f",
+  "src/vms/cli/__init__.py": "bd0b3e48c5c3a621d2d5102fc0fcd3f450e71186edc9f132f0bd379fc1105047",
+  "src/vms/cli/__main__.py": "41ee2bb498031a1d0d0ac4fdbb234af49ebd9524295e3a63a632df09852c7ba4",
+  "src/vms/cli/main.py": "fa8015c72b1e98effb6bf89a852ef4cc116d8dabe1bc85135045f50adf2e3134",
+  "src/vms/profiles/__init__.py": "271f5ceb6a70d55c6f9c6abba2e6573801b2e66a612e1ac56c20a7a14db02bd7",
+  "src/vms/profiles/features.py": "3b4ba6c2f7ecf0994611c433740d16ed22f0a00fee04e32b696d98271b83eeb1",
+  "src/vms/profiles/fixtures.py": "11a8d8deb64754846e0f7721d1cc1e6dafc53d7687cd371b314ba15a6a7544f4",
+  "src/vms/profiles/classifier.py": "33001a061b63fee5d6d8ef01b97ba92ca176c5fd33d09d4a71e4453cc0b0f922",
+  "src/vms/profiles/report.py": "50ee2135fea6adbfbe2a4d00983bfb5b3260450caa6983e94469fec9736a0083",
+  "src/vms/profiles/rules.py": "f5647103a6550e42c522a7e0984ec9ca100ddd25f05033b51810293309e805e2",
+  "src/vms/profiles/overrides.py": "66f9391ffcd43e07f23a3e65dd910c07d3e5c23de1afb710297dacebea6f62d2",
+  "src/vms/equity_bridge/__init__.py": "08fac5fbbed7741268a7dc636bdb744e0f7dcb47245da784559096914854758e",
+  "src/vms/equity_bridge/bridge.py": "62b68a9ab9da8b1fda1b66a574934909155831344f074f725449d4b7b54b87aa",
+  "src/vms/methods/__init__.py": "1078db63d416263b4ad942689a7b1b4efd42d14992f4df59a9d4806652e185f9",
+  "src/vms/methods/registry.py": "fccb5873272e8099388b0373323079bb60739b0723672dfb8d9d6eb59558edd4",
+  "src/vms/methods/eligibility.py": "8fa769cffa167135f3b22a26dc9565b16d032fe2efe1adb5d2d870aff9cffc28",
+  "src/vms/methods/protocol.py": "3b5537bb9d5abb035ab351278cfb5df46a59a3158f7c3b991b7fd0c9c29eb703",
+  "src/vms/adapters/dsde/__init__.py": "5e7b7278c8aa75fd0e099c956152250927a6f7646293c0934ece1faf0ed42494",
+  "src/vms/adapters/dsde/export.py": "8f7fa2146fde28f5f6af07ac3d9a3e765448d5d6a5e8030da7ccb93a6574e1e9",
+  "src/vms/adapters/dsde/contract.py": "bfbd0ab01090ce5892499601c3865edfd7f55be1c422089fec0771e967a8aa55",
+  "src/vms/adapters/dsde/notify.py": "941ed6d26d90106c20a80a1a76922e233a9d7a9e061b54912671662ea458bebd",
+  "src/vms/providers/eastmoney/industry.py": "b27728af9df8721b21bb2ddfdce46187a49ebd89b2526a0448455f60faa73ffa",
+  "src/vms/providers/eastmoney/enrich.py": "2c654a15f799a1f1a014636a879372dcc7cd31028a0a9e366bc522cfb987dbfe",
+  "src/vms/providers/eastmoney/__init__.py": "58314bc0824054750e2acf7ef2e82eb9509a12adcfd71b1e13648f6c67941fbc",
+  "src/vms/providers/eastmoney/client.py": "7b842341b8236681b7b35ffb5767a59cc0066045cc64ffe26977786c28b168e1",
+  "src/vms/providers/eastmoney/store.py": "274fed7c8007cabf4174d50099296cc7d0053f415e4d22349cbf5d5f0f3cae9b",
+  "src/vms/providers/eastmoney/bank_f10.py": "c3f00c29561a997d7201a3ef5d97478233a2d41590c03d3a507d9b85d3711ab2",
+  "src/vms/providers/eastmoney/equity.py": "0f1d714c28a02f74fc4cc681441b4e5eb7bb9eec71984c22015a58f01094fb63",
+  "src/vms/providers/eastmoney/sharebonus.py": "0ef52be59d5954b757248de9d1682107ff05ca98f73c2a1d36729195163a9d7b",
+  "src/vms/providers/eastmoney/balance_lines.py": "5dc004a512a06064202bc7a1fd7a3fd1dbb8f502a97a46b16abec28819f98802",
+  "src/vms/providers/hithink/pit.py": "5464fec4f8e7b1b65b53c69761a25c2683ca3eab59d89ff3b2a4b0c763261742",
+  "src/vms/providers/hithink/__init__.py": "59c9963aaf8c7e3e170bf0ec62148467c97405196d305a6732e2b5fd600d0ed3",
+  "src/vms/providers/hithink/prices.py": "ac1a34f8d2288d893da6f05ff5ff7a9b685a55555f74d98e07d3a924f107ca28",
+  "src/vms/providers/hithink/adapter.py": "568a7321d5a81e84347247757d17a1602aa4b4b583fe27acf65b0305fdad1301",
+  "src/vms/providers/hithink/local_store.py": "8af2818ce16ac7529d86654ecc6f228cc0d35952375b29ce1d94c421dd5bcd65",
+  "src/vms/providers/hithink/mapping.py": "d3812fa23b8e8d265d200ed04de497af3c735e67b75ddb706ece6fbc162b306c",
+  "src/vms/providers/hithink/lab.py": "d845442a59b5aa589b551442505379ffd9c30bef376bb123bb422df755fc04f7",
+  "src/vms/providers/hithink/paths.py": "67c6fc3b99aa0a41651bdee7fe589c3ab87d06419ba894620ec595de5d195823",
+  "src/vms/methods/rim/track_b_exit.py": "39da1377be7be03e0988b80d0b1c2ecfeb7973aecb6aa2d454acd07b076fa363",
+  "src/vms/methods/rim/hist_pb.py": "0d22ca72cae08981f6b6e7e112d8fe99ca9b5e2ace22ab07affd90647a13dbee",
+  "src/vms/methods/rim/math.py": "42a987a6bc4f6cdf173f02c5e37ecaea65e0b5b0511fbfcd8f4d8453d6fca9df",
+  "src/vms/methods/rim/bank_peers.py": "31cb9045a4cccbde6e8fe9da9fc280355021c904734cdddc7048d3fbdc0d2c9b",
+  "src/vms/methods/rim/__init__.py": "b58dc979a65950807193e42f422f78c32b8c72b6b695368d304200877a3b3894",
+  "src/vms/methods/rim/plugin.py": "4bb75f456d664aae0e02591d46540410f61ee078fa45c1bda6e1d2a49cbb62b3",
+  "src/vms/methods/rim/from_snapshot.py": "4018346a2c4d8af39d553f19eb451f7fc98d60108d67eb901f900c88849641fb",
+  "src/vms/methods/rim/bank_peer_panel.py": "bd3f41b753eca7d81bbc83d28072728b055c32e10951d4ebe9867bc2976c3aee",
+  "src/vms/methods/rim/distribution.py": "bfd73c5e25c1665d18216ed4686b45ee74f1b9f7d85cba5c8f3f4d3b62b24957",
+  "src/vms/methods/rim/book_paths.py": "369bf10b20313774d0daa8b67d25e42b618de9a4678c9bacac10945614a510e1",
+  "src/vms/methods/rim/subject_hist_depth.py": "55e6cfd4c79d92a88d6370360dbb27f4fc775d50333ac00b2c06affbb0b6ca9e",
+  "src/vms/methods/rim/pb_roe.py": "4df976b1f1e6545f5b245bcae01d23a58f4fd172b8c1e80d16e693cdb1515c56",
+  "src/vms/methods/cash_flow/__init__.py": "12754d812acbbcfed7ff1ae00e4665964a7137ca8683f2a37adf48854697efef",
+  "src/vms/methods/cash_flow/common.py": "93e8871bf6a369fade2a6013de194578d17e35f6e28a7d6773a5aee21590abfa",
+  "src/vms/methods/cash_flow/fcfe_plugin.py": "57a5498faa1ae0d7241ae138f1bc3aec8ba351e9f651cd57c12d4b0391868ebf",
+  "src/vms/methods/cash_flow/run.py": "2b0b4348051429c22906a49e403236c498210034901beb715aa2e525aad808bf",
+  "src/vms/methods/cash_flow/ddm_plugin.py": "cb1d4904f3bca865a2b0c5799ab2fd914ec454c9c3f9601b7252991bc2ef2df7",
+  "src/vms/methods/cash_flow/equity_dcf.py": "35098d59d162c8a45d723c79563e0ee5a31872ffd43a53efc53c9516e7203eb2",
+  "src/vms/methods/cash_flow/fcff_plugin.py": "2046040039864c7f751a868e49199680e8a64afcb26587a272aa44c5771f6cbb",
+  "src/vms/methods/sotp/math.py": "59e75ae1b9ca47f3a29da7c9776d215e1c2a433194843694b0c61231fcee4ec0",
+  "src/vms/methods/sotp/__init__.py": "3d970f3ee59304add770399ebb004d06125547677efea80c2d436fa0b762d001",
+  "src/vms/methods/sotp/plugin.py": "5ab3ca969922ba8b670376968239e7a533c154436953074e940308cd4aeda1bb",
+  "src/vms/methods/multiples/__init__.py": "750837c24e8a96434ad6865fb0b7f442f376f74a2ba9a104b5e66fe9315d0d39",
+  "src/vms/methods/multiples/common.py": "f107a1b02e6a9145ebe7d94a2d8e606d84951e008ee67ac312a35d930f42e463",
+  "src/vms/methods/multiples/cycle.py": "e4dc866914cfe2f1d2d3c44c83407ead244fd57f18375621305a1d1b498dad6e",
+  "src/vms/methods/multiples/definitions.py": "cbfe4f86e7609d2eb9435f9839e853e420724c1f2a0d436bf7c68104ac387a19",
+  "src/vms/methods/multiples/midcycle.py": "de56adefe11c1cbcf8672db4a23dc7ad31da03ff7901c0b588f11db229db8e1a",
+  "src/vms/methods/multiples/denominators.py": "4299fe89b8177ad27f8dd65be85df1376768b60f4ead5c2a85f09921738a95d4",
+  "src/vms/methods/multiples/peers.py": "eed5f78c81dbcc6591e8a5c10f851d10efc08de9c8bfeb7f32d7ffe14a09921f",
+  "src/vms/methods/multiples/run.py": "0130449b0f5d76319bb48e4934d98b0d6486014294e323c125391e3a0b27d6b5",
+  "src/vms/methods/multiples/aggregate.py": "7e463142fbec9d482d04fb8cd284dde8f50b0d082c939c335e801f308bbb13af",
+  "src/vms/methods/multiples/plugin_base.py": "59c4b3be5ad18636abf6464054171a3bdd69c02868670a87ea731637e2a58291",
+  "src/vms/methods/multiples/apply.py": "ed91f777137d8a5fc9a58f8d1ce550f2150f9ecc439e8bd82a5e6b7275057d7b",
+  "src/vms/methods/asset_based/__init__.py": "57acb2ab71670ad69e30d2f36b42d40a0060238e60e837e29089b6632544b96a",
+  "src/vms/methods/asset_based/run.py": "ca2dc0ab8b95d5067214ee7ca1eb6dcde30c1717c9cbf4d46e827abe01684e6c",
+  "src/vms/methods/nav/math.py": "1fa683296ced3a80e94d249cba51ce9c513707f2faf56be3e94bc8d58a2b6fa2",
+  "src/vms/methods/nav/__init__.py": "8151d0286dbd814c85e9c96b899f5fb3f73b281d1d1be1331c7dcc21ec109810",
+  "src/vms/methods/nav/plugin.py": "38a5effe6cd584641033c9a1b31759343dc3827f3a9fd41534d0d7f2a4e32967",
+  "tests/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "tests/conftest.py": "f28d2ac623bbda15c9be132cba6fc74bc913f91b95463b3f7d8a7abca62e1de6",
+  "tests/factories.py": "1ea4eb6269dd96bee1479607325a0fdfad820917150a46165abaca5324f08b23",
+  "tests/company.py": "33618f12a00dff6a9e52fd21a310695af56a6701e79cb8b5dfbbdf30ef2ccc57",
+  "tests/evaluation/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "tests/vtp_0_1/__init__.py": "8064403bda04c5f9d173edbad3db8c31fbe091a4794de74411bc656f5efdbfe6",
+  "tests/vtp_0_1/vtp_execution_harness.py": "aa29ee4f9629285084b8e75c1e9e4a62f8fc8a53cfe7b44c04f763723ca9ba6e",
+  "tests/integration/test_cli_phase7.py": "ab8a2db978593e5cb2c95d6f5f327fafe4c3a0b8e727a347c873aff28e6b2a6d",
+  "tests/integration/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "tests/integration/test_cli_simulate.py": "ac3c8230d1b48cac0a1ccf6957de040eefb6efc292dad6e7d754d7a098aee5a4",
+  "tests/integration/test_cli_value.py": "70b0c85d3e771445f42df1c454e97a41cb3f74cad11fcdac99c8a877adddff25",
+  "tests/integration/test_cli_project_paths.py": "7d1d4e582d648d3399ce56605c0b06299ed5c211bc036ebd5bc317685d89c543",
+  "tests/integration/test_cli_prior_only_fi_r9.py": "1c3b042626507369e4ddb6e5017d128ad37cdba44c036d56ce36b37407a80424",
+  "tests/integration/test_cli_phase0.py": "1e550eab8b76370ddc60bda6f47fff9fed422dbbdf6ce0c2f9e0fe1b313c917f",
+  "tests/integration/test_cli_phase4.py": "74db8f9b602573575952ad2ac41f08b14d829fdb240c67249dff297373afeb21",
+  "tests/integration/test_cli_phase11.py": "d0af76b2a1ab860daa1cc8e052eb7bf909249fe3ea0778c80c03440741c7470d",
+  "tests/integration/test_cli_sensitivity.py": "c26d49e45715b43e364a054e5181fd5832f0b19d4ba1307ba0e96c7aa5d8c794",
+  "tests/integration/test_cli_phase8.py": "8841374bbb8805fea4a51a503d4ee5d68bb2bd3c020a51f7aa09d8414bfe3773",
+  "tests/integration/test_cli_phase3.py": "d474f5091baeaf11f025bab369c1b4cfcf0cb31b9a7199d1e3de45b409e1e2fd",
+  "tests/integration/test_cli_estimate.py": "c7afdb92fa09703c6ecf24367c709c284debcfb2b2cf545b6d9316132842af81",
+  "tests/integration/test_cli_phase9.py": "935d55256f07b8cec6363843a61107569adaf008a50d94ca14e7f1f52f579472",
+  "tests/integration/test_cli.py": "660f6409ca2579dfd719a9721fbf4f813c6f551a72a7d9bafa9e778b1e153f5c",
+  "tests/integration/test_cli_phase5.py": "287ecab48559ea3eb766e890044f8f2b2232d2078c275c67cdb50ccdb95f9465",
+  "tests/integration/test_cli_evaluate.py": "a3736ba7842bdebe01b45cfa6a7f161c965b12848d0d70d3595cd8cef1f1f2fa",
+  "tests/integration/test_cli_returns.py": "8ce2b4eda11ce17fe68b53a559cbbdb177ec87c14a505b5f469ee91192c830aa",
+  "tests/integration/test_hithink_live_smoke.py": "b969e1bf6efc4ff7216c5e5804156516e1fc0216c380d60b92594844987e357a",
+  "tests/integration/test_cli_calibrate_mature.py": "0598269e1970b45e9353a19a28ac754fcd3dee7569ac809d5663a405e1f79c9e",
+  "tests/integration/test_cli_value_rim.py": "336b7d29fe296a98371a58d04f0c41acbfd66491357619a597a9d1049df8cb74",
+  "tests/integration/test_cli_calibrate_rim.py": "8763d661a8b2153dcd86facb578eec71ac1bf3cb5dfdd64f6c89bf95e051d2ac",
+  "tests/integration/test_cli_project.py": "968241986919487d7ae5c83dec3d65c2f344d6cc00a5ef2e2c41e3fc202ffe50",
+  "tests/integration/test_cli_calibrate_rim_real.py": "dac815572950f20833198b63adc2ef541e218be13815b1e436489fdb0e47950a",
+  "tests/integration/test_cli_prior_only_fi.py": "b29911181ff2c67b94648c40c2084d169dcd67939c644b55997ca153c4498ada",
+  "tests/integration/test_cli_phase12.py": "dd01920535ac90397e7aabb505860e4fc91aad2a3303b6e04d95b845f0f759bb",
+  "tests/integration/test_cli_phase6.py": "83e902ff60a918ca19da14a65176e5542fb122d73ebde59d6084ea10dad22d44",
+  "tests/integration/test_cli_phase10.py": "1b7d6bbb4f5a433f9cfb94a7e1ff361be458013e8cda4e7dd70607815f63b27a",
+  "tests/integration/test_cli_prior_only_fi_r12.py": "07d7b62a70d25a5371ff8da24bff0e8e7b6fa907ddd5d21f59ec60511cb05367",
+  "tests/integration/test_cli_profile_route.py": "ee5c6b9321a257ab44d6a250c41ae3ee16462a0068144f8bc460f66a83cca638",
+  "tests/property/test_return_track_b_properties.py": "6825e81025a3e5892094df8b05716499e277aa9d7efe233fc88e316ee5029ad9",
+  "tests/property/test_projection_properties.py": "94273e75f505dc0dfeecb9ba5121b2a3c66b286dc5b02ee482fa01bea9cb6fef",
+  "tests/property/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "tests/property/test_exit_price_properties.py": "5c0fd3426d341fa9b2e23516f48ee1845433fb9b49ebab3b3594827b2e2a5be5",
+  "tests/property/test_properties.py": "cd4acdc5be9ab0b6364f632291b04ba7881adfe4237eaab3d1dd639544bce0b4",
+  "tests/property/test_return_properties.py": "5811d6f58a1c178025cfbcd865238396e20ede06db41d1502b248a17c168fb02",
+  "tests/property/test_regime_properties.py": "4179305ab3173dd3adf9c49b209db14977c904795e9df05840c95f714f1baffc",
+  "tests/property/test_ensemble_properties.py": "f6c17ab7cf317fe57df680382059e5fc817ca496cb022bc92e4fe35e031c2788",
+  "tests/property/test_eval_phase11_properties.py": "b64d3f0e6115a99fbc7f5f165ef6ff7747826e7f9a6ee1ed55d91ffbf3b3b5d3",
+  "tests/unit/test_valuation.py": "f873d53a5c2e44e478caac94df9e7ff28861a81381605dbe33bde2f60f8e76b5",
+  "tests/unit/test_pr13_sf1_warning_helper.py": "08aeee0f0680147223beda8a3e45924eeedcf14fba0dfd85fd91db5b89a6c33a",
+  "tests/unit/test_midcycle_emitter_wiring.py": "7a455984b8e3ba0a88cf5203fda49f3225937bbbbbbe2e5d0d60182c1938dd41",
+  "tests/unit/test_diagnostics.py": "fb51f700af2de832ec509dd293b73441d6b4b38ba9c0c21d1c1bb8406170694e",
+  "tests/unit/test_bundle_validation.py": "65fd00da08f6a38f45b4963f89cdae77bfeb0e1c1c74a0c6f03bb0a92f006093",
+  "tests/unit/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "tests/unit/test_profiles_phase2.py": "fd44c44453e14af66ad2ae1b369cc6e0f4a0b07b08c3e5b0a5e1289b0ad96d2c",
+  "tests/unit/test_no_legacy_imports.py": "abe6a15e6392b9686e57ce78bdec9ddc1441a680b87ee43df70bb4d3b34d725d",
+  "tests/unit/test_sampling.py": "93727e07967c19e848c45ccbd2cebea7e08ea708514998b930a9f6592bec687b",
+  "tests/unit/test_r7_fi_real_oos.py": "c48a9b54ce9c85034971fe30955606878294253c39c3abd440f213e1aeff2301",
+  "tests/unit/test_path_statements.py": "39f6a67a1adedff0a8ec6bf349191af144a74b1ddd59cd22432c64d85fd15c77",
+  "tests/unit/test_schemas.py": "ef60231d5ac681aa72a4e2c53e1b4cf2d06c97fa29ceee569c9c3cb3f289aa9e",
+  "tests/unit/test_peers_phase1.py": "180910482fde78708bab29af06e0d248688a9644a0132629b576615cdeceb4bb",
+  "tests/unit/test_pass_claim_plumbing.py": "e6b0d89f3c49d974418c8b7766ccc088b3d12aead75e895019f341b49bc04d6f",
+  "tests/unit/test_contracts_v02.py": "80041e73b8df3c29824592bd71567ad534c41947ddacb254ee31a9ac00c8228a",
+  "tests/unit/test_phase3_acceptance.py": "adefb8d5d5b36be8acd465b747e4adacbcdb153d06e889e51b215176c62a2476",
+  "tests/unit/test_seeding_metadata.py": "93892ba38c3a47ea504c93490895602568ea1fa853b15b95aeb86b463c0e7e97",
+  "tests/unit/test_distributions.py": "d999031b72704162d7c0ab75eef5165782d42ea90cd4b53ca1c25422f98b78ef",
+  "tests/unit/test_r9_live_md_adapter.py": "2f37617b16a3ff0900fdf7b7abc5636780bcc34cdbf102b0229775ec4a72785d",
+  "tests/unit/test_r12_calibrate_rim_md.py": "7b3d8d96772389057189d440212bec805777b709a3e52204f65cb3335b209884",
+  "tests/unit/test_r7_fi_real_wiring.py": "82bc89653268055b36449645adda940fdca6a993c0da8a6d579a16dc52730801",
+  "tests/unit/test_phase12_acceptance.py": "cfcc1399a6ce2cf234f6056b099a340c70e999ad5cf2c56653c8baa4d7138ad2",
+  "tests/unit/test_phase4_followups.py": "b43208365ee5ffc1f7c066bc8143542755cfc04f9112d650f228b55e9d6d0f71",
+  "tests/unit/test_phase5_followups.py": "c9dd03dd135622c99a31e40e9170363f6f99260e146a01d11c5cf28e3476f26e",
+  "tests/unit/test_phase6_acceptance.py": "dae188aee432e69c366c7ff71825fba1eaa6fd7d644d5fb6e3b7df1ef27292d8",
+  "tests/unit/test_quality.py": "4bf9a5684a6e423e321cc8a3d656f552ae628bfcf518c4b46233cfbaeed6a824",
+  "tests/unit/test_tax_cashflow_types.py": "f0f8c92d0466b18992a863a4b7b8118187178b5577ec502e17882e8bb8c7626f",
+  "tests/unit/test_package_skeleton.py": "8d13542c262c3fd737f38a426686837202210a994fdc3f8f9a7542a54a44d7a7",
+  "tests/unit/test_r10_live_samples.py": "dc460c41143d1856d5e0f1006a403a4d4657833140d084a563c9c6fbedc0b834",
+  "tests/unit/test_drivers.py": "99592f8b71ea3c81acfd4559342a2e8cca1204d59f3d817f5346df4de72cb1f6",
+  "tests/unit/test_phase7_acceptance.py": "ff416af6fa4d3f3f8cb802965588173654bf44518a57efab84bc0f3690d9ef53",
+  "tests/unit/test_docs_sync.py": "73f3c2d660d5a5c2d2d3bbb34d2d04fe2c1fc5ee416a198941285d1da9290aac",
+  "tests/unit/test_phase4_acceptance.py": "b266ebb9f0165f27ce39afd4b45821a5e02471a3b299094909601db25b5a2468",
+  "tests/unit/test_mature_lean_wiring.py": "04a21b6b5644cebd2a3c7771419ca26df7435e6956f7242f28258c008c9447d7",
+  "tests/unit/test_io.py": "54fb63f3120090df71d44246f627d38aba61895e14740185f406035f2f7919da",
+  "tests/unit/test_phase2_followups.py": "781af0a43f0560030cfefb478b2141443f97a6f03c1538612ff8c2f59901bcd6",
+  "tests/unit/test_persistence_and_gates.py": "a3e594a83ce48fda86072249ef8ad9fcfdbbf252c86a88797251f0f206d19253",
+  "tests/unit/test_snapshot.py": "da86a61626b6fdbe4d05ac7009724d25307d71aa97786dffed1f8e11e4fd3d45",
+  "tests/unit/test_config.py": "1aa4da604a6b14e50e0c0b64d9671ed996f0e29187ce36f381c1909d821d1fb2",
+  "tests/unit/test_fields_asof.py": "cef5a0261de40ecd3c75cd184ca5c70f5eeb453fe4b0d82dd79885a9cbab960b",
+  "tests/unit/test_phase9_acceptance.py": "cf23e8816ce7fa7ff3058812c2707dd62eac9892df6200666745bfc2006fcdf9",
+  "tests/unit/test_phase8_acceptance.py": "9f21ade08b19f170a66ceaa6256e859c2fab429601ec993287fe8bd97d1027fa",
+  "tests/unit/test_prefix_cap_subsample.py": "4ce457d3b63bf9f64e558a5f6455e732e15eb032a590ed0dfc1f6ca7c272a07e",
+  "tests/unit/test_r1_bank_rim_acceptance.py": "0f56c526ad652c0fe8d4483d878fc7f5f7e85c44114137485bea6e5695ec4edd",
+  "tests/unit/test_schema_migration.py": "48551edd79641df36d93067e475bf0481842b08a95cf0ffabd4d7911307631fb",
+  "tests/unit/test_regimes.py": "44db6e48e1eb83702574f126cdc32829aaa43bafc3746382600e742a4e9c397c",
+  "tests/unit/test_pit_assumed_policy.py": "5c45455b927510d4d6d690b1d874bc8c132bba2364c493ace27dd471c04f7391",
+  "tests/unit/test_r6_rim_calibration.py": "45f8713d0fabcd9ddb5f7d12d977e6c87b3144d94921c6f0a939c293657030c5",
+  "tests/unit/test_returns.py": "79f8def529ce5a003c728fd501f441aa4ea79613683bf24997ea99cd73ee45b3",
+  "tests/unit/test_profiles.py": "35b3e9a4ce8746dc458c498358fa71c40b7eaa4ec4d4a37ea1fe18b3eee8d0d3",
+  "tests/unit/test_market_pricing_schemas.py": "8a65a56bab485f77ce47867c61618fe64e433c844e9e6ece61160fedf7a92970",
+  "tests/unit/test_r8_prior_only_fi.py": "d7bc62a3fa0cf21af40831e3d6faffaa31997bd5bf8c1c69aa238e60fc699066",
+  "tests/unit/test_midcycle_scenario_dist.py": "a06d8adce2b5d08caa741620c4cff03833aa4b708b3a3f6f0fe8734c094d3baf",
+  "tests/unit/test_engine_run.py": "0150643f4f6b8efc5392ba5ae3e66145476fc2152e69bdd1fac4eda1ec94ecc8",
+  "tests/unit/test_dsde_adapter.py": "6ab94415c21267e2ace47ea7f7e5a6f7abe5ae1e2e2c9afee621cbc7c18ef624",
+  "tests/unit/test_methods_registry_phase2.py": "421fa39bca8139eb74cd23bc34bc801450132e744fe25499561dfcf77c1c3acb",
+  "tests/unit/test_schemas_phase1.py": "6b6e3f8403780df17b0c739bb967a83daa4ad40bfe8bd4f25c1dfd16c14ea03e",
+  "tests/unit/test_phase5_acceptance.py": "77dc1372b29bfbe25c90bc66cbdd2d0293c2f05a55baccad12c21d09c282f378",
+  "tests/unit/test_policies_invariants.py": "1376676014012920fef06a2a0ede5dcbc08be4dab67dc83c3df1dacb7b5f58eb",
+  "tests/unit/test_walk_forward.py": "e8acfa7ec2075c0889318cebd417bafc86e4518d64c83c18497078ff1c3cf7e5",
+  "tests/unit/test_midcycle_skel.py": "3f27fa3876c1fb659f64665118ee8986ad2a39fe1433acc43665d2bd92128df7",
+  "tests/unit/test_projection.py": "bdb4916e06e1194a1dcc4a06e6fd8b0d29303fb7a0daaf840a60e1f643d148ed",
+  "tests/unit/test_phase11_acceptance.py": "1100d9930ce77d21e08806cb90213bc8263b60b5244552b7a8e2635602f24de7",
+  "tests/unit/test_phase10_acceptance.py": "7ae7f4cfb22ea70571e66791a399f1792e22fdd19723db361c8fcf234702fc5c",
+  "tests/unit/test_evaluation.py": "6457b3995b05e88a85e48d178115ba7b7c8885ede4c81a74f0d922b65856f744",
+  "tests/unit/test_baseline_honesty_tsr.py": "a3d841ab4989e459d0d3c6d7247229e022107a3ede8b8e342f7a8ac6d73c4f57",
+  "tests/leakage/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "tests/leakage/test_eval_weight_freeze.py": "6f8c01e01cec2f5d7fdb20826d03c245196d7a0e13e1df75983827a365aebcc5",
+  "tests/leakage/test_peer_leakage.py": "e6125bf24fee074d8b75b19f488375caaada512950c5d11b483b3ecdb701f919",
+  "tests/leakage/test_multiples_peer_leakage.py": "a9526e0d79cf586e7f744dd65c5b06a75c74ec71375453edb216b32a90ae16b8",
+  "tests/leakage/test_regime_leakage.py": "140180438aed9fcde721c0eaef2b9728c554de619c93ee7bdf4383194735040c",
+  "tests/leakage/test_leakage.py": "8a3e03cb460b6d631361dd6fbc4e46416cffba3723e62c4b1b545782299ba109",
+  "tests/vtp_0_1/fixtures/__init__.py": "adb5fe07bdc0813a53b7433ae6688c077c8443b6e01dcbadf3826049f2f43de5",
+  "tests/vtp_0_1/suite_a/__init__.py": "b8cf30ecf2740ba0498baacac390172e3fd29bae385133083da1c388fb2a94a8",
+  "tests/vtp_0_1/suite_a/test_a02_offline_synthetic_run.py": "a4307775313cd337091355122d34ce6c899a28d17be21793e02edb118cded098",
+  "tests/vtp_0_1/suite_a/test_a01_clean_install.py": "68883d929704bafa61963b0876e6868524839831bb35eb8b9f937575eaf069bc",
+  "tests/unit/providers/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "tests/unit/providers/test_bank_f10.py": "1150dbead1e3d25d5cfeab1c12ac148a746379e429b6aa1f2d35528ac2db30ae",
+  "tests/unit/providers/test_hithink_pit.py": "fcc5ac2d93d26fe00970164b26fd53667b9d93fa2a165a1ad459434c532ae3b0",
+  "tests/unit/providers/test_em_enrichment.py": "db4939284ec18b447a16afc55f6eeefd5bdb5f6de24a6e118f08cc12ca3a3fbd",
+  "tests/unit/providers/test_hithink_mapping.py": "fa3058e59d348c3d96193f4b3e38a6b0363ea91efdd5fdbc5929bb5cf59cb055",
+  "tests/unit/methods/test_rim_r3_bank_peers.py": "9c79a53fb3a6827c63a424a40605910f143c23d34eb58c8ad28f6f1caebd8c28",
+  "tests/unit/methods/test_rim_r2_distribution.py": "4425bf5e508fa9f57074a21e46d55e4dbf7450a962cf4cab63871260357655d9",
+  "tests/unit/methods/test_rim_r2cd_track_b.py": "7b5cbef6c64d18f9abd0dced9cde75a89c47bde2ad3271dec1de31ff38369d2d",
+  "tests/unit/methods/__init__.py": "a313b59f1537d8cc66eed63115360883226f43235168121dd85ed9f5e544dc98",
+  "tests/unit/methods/test_rim_r2_common_equity.py": "12b64e5c3597ece6561b541b29ffd0258eb2fdd2ca92379e8dbc4285e42cf72e",
+  "tests/unit/methods/test_rim_r5_subject_hist_depth.py": "5167ea8da27fab877eda73d7ab9d8264e13aec480dfdb5bded09b53c9cd67383",
+  "tests/unit/methods/test_rim_r2cd_pb_roe.py": "57bd4c5724bef7ca3c4d36c24133dd1711a1c71f7b853342cfa21147ff0fc661",
+  "tests/unit/methods/test_rim_from_snapshot.py": "4829938dfe56a2e68e2e0f4d3486153018157d79906969b08fba23c3b693c931",
+  "tests/unit/methods/test_rim_r4_fi_peer_panel.py": "404fc0f1916a0edfcf92b5ee4e5b6fa2601f5477c0482fd7f157ca93c7811c43",
+  "tests/unit/methods/test_rim_r3_auto_fi_wiring.py": "806c8c3e904cc4b9453cdb7b08e76dc9b3950826e14e0e6d3c2edf7a51120293"
+}\n```\n\n## 4. 证据文件清单\n\n- `/workspace/artifacts/vtp-0.1-evidence/vtp_acceptance_matrix.csv`\n- `/workspace/artifacts/vtp-0.1-evidence/vtp_acceptance_matrix.md`\n\n## 5. VTP验收判定\n\nTODO: 根据测试结果填写判定\n

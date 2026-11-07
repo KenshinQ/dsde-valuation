@@ -1,0 +1,13 @@
+Command: /workspace/.venv-vtp/bin/pytest -v --tb=short --junit-xml /workspace/artifacts/vtp-0.1-evidence/Suite_G_Market_Pricing_junit.xml tests/unit/test_phase9_acceptance.py tests/property/test_exit_price_properties.py\nExit code: 0\n\n=== STDOUT ===\n============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.1.1, pluggy-1.7.0
+rootdir: /workspace
+configfile: pyproject.toml
+plugins: hypothesis-6.170.5
+collected 13 items
+
+tests/unit/test_phase9_acceptance.py ..........                          [ 76%]
+tests/property/test_exit_price_properties.py ...                         [100%]
+
+- generated xml file: /workspace/artifacts/vtp-0.1-evidence/Suite_G_Market_Pricing_junit.xml -
+============================== 13 passed in 2.77s ==============================
+\n\n=== STDERR ===\n

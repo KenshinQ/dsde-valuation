@@ -1,0 +1,24 @@
+VTP-0.1 Comprehensive Test Execution
+======================================================================
+\nCollecting environment hashes...
+\n=== Executing Suite_A_Contract_Build ===
+\n=== Executing Suite_B_PIT_Provenance ===
+\n=== Executing Suite_C_Financial_Statements ===
+\n=== Executing Suite_D_Valuation_Methods ===
+\n=== Executing Suite_E_Routing ===
+\n=== Executing Suite_F_Ensemble ===
+\n=== Executing Suite_G_Market_Pricing ===
+\n=== Executing Suite_H_Returns ===
+\n=== Executing Suite_I_Properties ===
+\n=== Executing Suite_J_Historical ===
+\n=== Executing Suite_K_Bundle_Replay ===
+\n=== Executing Leakage_Tests ===
+\n=== Executing VTP_New_Tests ===
+\n=== Running comprehensive test suite ===
+\n=== Executing Comprehensive_All_Tests ===
+\n报告已生成: /workspace/artifacts/vtp-0.1-evidence/VTP-0.1_执行报告.md
+\n======================================================================
+VTP-0.1 执行完成
+报告: /workspace/artifacts/vtp-0.1-evidence/VTP-0.1_执行报告.md
+证据目录: /workspace/artifacts/vtp-0.1-evidence
+======================================================================

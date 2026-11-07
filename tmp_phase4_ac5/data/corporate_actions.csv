@@ -1,0 +1,4 @@
+action_id,instrument_id,action_type,announced_at,ex_date,share_ratio,cash_per_share,currency,source_id,revision_id
+SYN-2023-BONUS,SYN000001.SZ,bonus_share,2024-06-20T18:00:00+08:00,2024-07-10,1.3,,CNY,SYNTHETIC,r0
+SYN-2023-DIV,SYN000001.SZ,cash_dividend,2024-06-20T18:00:00+08:00,2024-07-10,,0.5,CNY,SYNTHETIC,r0
+SYN-2023-DIV,SYN000001.SZ,cash_dividend,2024-07-01T18:00:00+08:00,2024-07-10,,0.45,CNY,SYNTHETIC,r1

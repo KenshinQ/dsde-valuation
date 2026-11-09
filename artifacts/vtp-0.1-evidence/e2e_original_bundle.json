@@ -1,0 +1,63 @@
+{
+  "bundle_version": "vtp-0.1-e2e-test",
+  "input": {
+    "company_id": "SYN-E2E-TEST",
+    "economic_profile": "MATURE_OPERATING",
+    "as_of_date": "2024-12-31",
+    "spot_price": 100.0,
+    "shares_outstanding": 1000,
+    "financial_observations": {
+      "revenue": 10000,
+      "ebit": 2000,
+      "fcf": 1500,
+      "book_equity": 8000,
+      "debt": 3000
+    },
+    "request": {
+      "valuation_target": "FUNDAMENTAL_VALUE_CURRENT",
+      "methods": [
+        "FCFF_DCF",
+        "PE_MULTIPLE"
+      ],
+      "monte_carlo_paths": 100,
+      "random_seed": 42
+    }
+  },
+  "outputs": {
+    "phase0": {
+      "phase": "phase0_profile",
+      "company_id": "SYN-E2E-TEST",
+      "classified_profile": "MATURE_OPERATING",
+      "confidence": 0.95
+    },
+    "phase4": {
+      "phase": "phase4_routing",
+      "company_id": "SYN-E2E-TEST",
+      "eligible_methods": [
+        "FCFF_DCF"
+      ],
+      "ineligible_methods": [
+        "PE_MULTIPLE"
+      ],
+      "ineligible_reasons": {
+        "PE_MULTIPLE": "NO_VALID_PEERS"
+      }
+    },
+    "phase12": {
+      "phase": "phase12_result",
+      "company_id": "SYN-E2E-TEST",
+      "valuation_results": {
+        "FCFF_DCF": {
+          "intrinsic_value": 14500,
+          "exit_price_p50": 13800,
+          "return_annualized": 0.055
+        }
+      },
+      "provenance": {
+        "baseline_commit": "dd84fc1",
+        "execution_timestamp": "2026-11-09T05:05:14.045895Z",
+        "random_seed": 42
+      }
+    }
+  }
+}

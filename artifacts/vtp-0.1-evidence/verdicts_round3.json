@@ -1,0 +1,70 @@
+{
+  "round": 3,
+  "engineering": "ENGINEERING_BLOCKED",
+  "data_quality": "DATA_QUALITY_UNVERIFIED",
+  "historical_validation": "HISTORICAL_VALIDATION_BLOCKED",
+  "calibration": "CALIBRATION_INSUFFICIENT",
+  "investment_value": "INVESTMENT_VALUE_NOT_ESTABLISHED",
+  "blocking_reasons": [
+    {
+      "id": "A-02",
+      "status": "FAIL",
+      "reason": "Offline synthetic run must pass"
+    },
+    {
+      "id": "J-01",
+      "status": "BLOCKED",
+      "reason": "Frozen historical protocol"
+    },
+    {
+      "id": "J-02",
+      "status": "BLOCKED",
+      "reason": "Chronological walk-forward"
+    },
+    {
+      "id": "J-03",
+      "status": "BLOCKED",
+      "reason": "Separate forecast targets"
+    },
+    {
+      "id": "J-04",
+      "status": "BLOCKED",
+      "reason": "Baseline comparisons"
+    },
+    {
+      "id": "J-05",
+      "status": "BLOCKED",
+      "reason": "Proper scoring and calibration"
+    }
+  ],
+  "overall_release_decision": "RELEASE_BLOCKED",
+  "round3_completed_gaps": [
+    {
+      "gap": "#3",
+      "description": "Ten company routing matrix",
+      "status": "PASS"
+    },
+    {
+      "gap": "#5",
+      "description": "Suite G numerical counterfactuals",
+      "status": "PASS"
+    },
+    {
+      "gap": "#6",
+      "description": "Suite I mutations",
+      "status": "PASS"
+    },
+    {
+      "gap": "#9",
+      "description": "E2E replay",
+      "status": "PARTIAL"
+    }
+  ],
+  "round3_notes": [
+    "A-02仍有1个失败测试 → A-02 FAIL",
+    "G-01至G-05全部通过 → G blockers cleared",
+    "I-M01至I-M06 mutation score 100% → I blockers cleared",
+    "J-01至J-05缺真实数据 → J still BLOCKED",
+    "E2E replay机制验证通过，但离线阻断未完全验证"
+  ]
+}

@@ -1,0 +1,9 @@
+metric,count,percentage
+matches,74,15.4%
+mismatches,62,12.9%
+unknown_expected,344,71.7%
+eligible_count,220,45.8%
+ineligible_count,120,25.0%
+warn_count,36,7.5%
+conditional_count,56,11.7%
+blocked_count,48,10.0%

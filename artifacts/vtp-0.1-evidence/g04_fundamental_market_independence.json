@@ -1,0 +1,23 @@
+{
+  "test": "G-04",
+  "control": {
+    "intrinsic": 14492.226596452609,
+    "multiple": 1.0,
+    "exit": 14492.226596452609
+  },
+  "fundamental_only": {
+    "intrinsic": 21738.339894678913,
+    "multiple": 1.0,
+    "exit": 21738.339894678913,
+    "intrinsic_delta": 7246.113298226304,
+    "multiple_delta": 0.0
+  },
+  "market_only": {
+    "intrinsic": 14492.226596452609,
+    "multiple": 1.294763225685167,
+    "exit": 18764.00205538335,
+    "intrinsic_delta": 0.0,
+    "multiple_delta": 0.2947632256851671
+  },
+  "independence_verified": true
+}

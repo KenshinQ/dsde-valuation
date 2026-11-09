@@ -1,0 +1,47 @@
+VTP-0.1 审计缺口补齐 - Artifact Manifest (第三轮实测)
+
+生成时间: 2026-11-09 05:00 UTC
+Base SHA: 80741ee
+
+========== 第三轮实测产物 ==========
+
+缺口#3：十公司routing矩阵
+- ten_company_routing_matrix.csv (432行)
+- ten_company_routing_matrix.json
+- routing_confusion.csv
+- routing_confusion.json
+
+缺口#5：Suite G数值反事实
+- g01_g02_fix_intrinsic_vary_multiple.json
+- g03_fix_multiple_vary_financial.json
+- g04_fundamental_market_independence.json
+- g05_intermediate_convergence.json
+- g05_sample_paths.json
+- suite_g_execution.log
+
+缺口#6：Suite I mutation测试
+- mutation_results.json (mutation score: 100%)
+- mutation_summary.csv
+
+缺口#9：E2E replay
+- e2e_original_bundle.json
+- e2e_replayed_bundle.json
+- e2e_replay_summary.json
+
+判定产物：
+- verdicts_round3.json (ENGINEERING_BLOCKED)
+
+========== SHA256校验 ==========
+0a6c3e5d42dcedb6867c3ca9befd7928d51be62f60318f8edfbb6acc19480245  ten_company_routing_matrix.csv
+0cfad5d0837bdb2feff91a769ee7cb062728f2d0f73fef17fed2498f79a172af  ten_company_routing_matrix.json
+4517fb0f647ebf7b39033897a23f06476c4c9a24e51d26fb6caf03838408914d  routing_confusion.json
+734dbbbb9e50872b56d58c958ce71f93de4dfbfc25c58bcf9ad0d101eaad8f10  g01_g02_fix_intrinsic_vary_multiple.json
+9a311f7c1a2ba972ddc2cf8d9b263d7ec1df2747e84fecd70c693317ad9ef091  g03_fix_multiple_vary_financial.json
+26ff02139dc48e738d091bccff73ccb0fe3b9185aa8688bf4e5d15d3cf53252f  g04_fundamental_market_independence.json
+c28959806b3c84355ffe07d88eb99d9ebdf20a9c736017cc801ab8fadd5f4b18  g05_intermediate_convergence.json
+b57cc47d14f935f22863d8113b310276e13032ba0e6e230748ce16524b644a22  mutation_results.json
+b1043e701e744d1e67df45691daf4b9c1e32d4abe8298c9ac307e68a3e434f7c  mutation_summary.csv
+c80c48f31c8edcbf095a9439be6ae6cfaafb1d954cb5262a92461d6445f9ab31  e2e_original_bundle.json
+efa7e78728e4a0fc42e4d52e037ef5911d275266040377251614f350a3574af1  e2e_replayed_bundle.json
+24b2c7f67cbc010701c0d9c1a934e6fa9ae120bef254230303f6ca536b4a6add  e2e_replay_summary.json
+c2e96ffbdbeb214707f0b9b9fb8a54547b7ffe8d8fafa5888747a7aa6eed7090  verdicts_round3.json

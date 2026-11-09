@@ -1,6 +1,0 @@
-sources:
-- source_id: SYNTHETIC
-  reporting_convention: CN_CUMULATIVE_YTD
-  versioning: FULL_HISTORY
-  fiscal_year_end: 12-31
-  description: "SYNTHETIC example source \u2014 not real data"

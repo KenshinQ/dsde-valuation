@@ -1,0 +1,53 @@
+VTP-0.1 审计缺口补齐 - Artifact Manifest (第二轮)
+
+生成时间: 2026-11-09 04:54 UTC
+HEAD SHA: 0f1c3b0c47c0c6916ad914cd57bef2a32a1f7a6b
+Base SHA: dd84fc16f54c397d3ba88e953a384dfecd550466
+
+========== 第二轮新增证据文件 (eebf76e..0f1c3b0, 4 commits) ==========
+
+1. tests/vtp_0_1/fixtures/vtp_criteria_mapping.json
+   - 100项审计映射（从corrected_mapping_d2a6.json复制）
+   - 59原spec编号+11不变量+6 mutation+10公司+8参考+6环境
+   
+2. tests/vtp_0_1/verdict_logic.py
+   - fail-closed判定引擎
+   - 16个release blocker定义（A-02, G-01~G-05, I-M01~I-M06, J-01~J-05）
+   - FailClosedVerdictEngine类
+   
+3. tests/vtp_0_1/suite_i/test_i_mutation_framework.py
+   - Suite I mutation测试框架
+   - 6类代表性mutation定义
+   - MutationResult类
+   
+4. artifacts/vtp-0.1-evidence/VTP-0.1_审计缺口补齐报告_第二轮.md
+   - 第二轮补齐成果报告
+   - 两轮累计状态总结
+
+========== 两轮累计证据文件 (b4404db..0f1c3b0, 12 commits) ==========
+
+# 第一轮（b4404db..a5ab569，8 commits）
+
+1. .gitignore                          [b4404db]
+2. tests/vtp_0_1/suite_a/test_a02_offline_synthetic_run.py [c342c01]
+3. tests/vtp_0_1/fixtures/hand_calculated_references.yaml [2f212f7, a3ccf33]
+4. tests/vtp_0_1/suite_j/test_j00_historical_validation_status.py [ba53f78]
+5. tests/vtp_0_1/suite_e/test_e01_ten_company_routing.py [5ebdbc3]
+6. tests/vtp_0_1/suite_g/test_g_counterfactual_separation.py [d56f4c0]
+7. artifacts/vtp-0.1-evidence/VTP-0.1_审计缺口补齐报告.md [5a06d1b]
+
+# 第二轮（eebf76e..0f1c3b0，4 commits）
+
+8. tests/vtp_0_1/fixtures/vtp_criteria_mapping.json [eebf76e]
+9. tests/vtp_0_1/verdict_logic.py [b2f9322]
+10. tests/vtp_0_1/suite_i/test_i_mutation_framework.py [03c42f4]
+11. artifacts/vtp-0.1-evidence/VTP-0.1_审计缺口补齐报告_第二轮.md [0f1c3b0]
+
+========== SHA256校验 ==========
+
+关键文件校验和（HEAD 0f1c3b0）：
+effb72f30d8d44babc8fd5c816f22b53b3182d710f4a2a40c4babcb621140176  tests/vtp_0_1/fixtures/vtp_criteria_mapping.json
+d1b8e4b929d72b82f694f00ad13d9392175277e72079e2c2dc989ae37902a6ce  tests/vtp_0_1/verdict_logic.py
+16a54c1fefc0f1ec11b70ae3b4961eda51b38b01c6d56b0651bb87226cb6d2d9  tests/vtp_0_1/suite_i/test_i_mutation_framework.py
+07b18fcd5bad8a556b9d62288b82def3a5c58b34b1928b48dd16dd3419ba0305  tests/vtp_0_1/fixtures/hand_calculated_references.yaml
+2a8f046f3c30d7e14420f191fb38b9b95dd510f7bd77b059f9d135af3bc00b7b  tests/vtp_0_1/suite_j/test_j00_historical_validation_status.py

@@ -1,10 +1,10 @@
 {
   "vtp_version": "0.1",
-  "evaluation_timestamp": "2026-11-09T17:02:30Z",
+  "evaluation_timestamp": "2026-11-09T17:41:22Z",
   "baseline_commit": "dd84fc16f54c397d3ba88e953a384dfecd550466",
   "evidence_branch": "cursor/vtp-0.1-evidence-11d5",
-  "evidence_head": "2e260ae",
-  "note": "权威fail-closed判定；verdicts_round3.json已作废",
+  "evidence_head": "d385131 (updating)",
+  "note": "权威fail-closed判定；所有simulation/toy证据已移至DEPRECATED",
   
   "overall_release_decision": "RELEASE_BLOCKED",
   "engineering": "ENGINEERING_BLOCKED",
@@ -17,8 +17,9 @@
     "G-04: MarketPricingConfig真实调用未完整",
     "G-05: 数值反事实结果部分vacuous",
     "I-M01: KILLED (真实生产文件mutation)",
+    "I-M02: SURVIVED (detector test不足)",
+    "I-M03至I-M04, I-M06: NOT_EXECUTED（复杂逻辑/未定位）",
     "I-M05: KILLED (真实生产文件mutation)",
-    "I-M02至I-M04, I-M06: NOT_EXECUTED（需定位代码+detector test）",
     "J-01: 真实分布测试覆盖不足",
     "J-02: Sanity check未完整验证分布语义",
     "J-03: Edge case coverage待补",
@@ -59,11 +60,13 @@
     "6": {
       "title": "Suite I Mutation Testing",
       "status": "PARTIAL_EXECUTED",
-      "details": "mutation_results_PRODUCTION.json",
-      "executed": 2,
+      "details": "mutation_results_COMPLETE.json",
+      "executed": 3,
       "killed": 2,
-      "not_executed": 4,
-      "note": "I-M01和I-M05真实生产文件mutation KILLED；其余NOT_EXECUTED"
+      "survived": 1,
+      "not_executed": 3,
+      "mutation_score": "66.7% (2/3)",
+      "note": "I-M01/I-M05 KILLED; I-M02 SURVIVED (detector不足); I-M03/I-M04/I-M06 NOT_EXECUTED"
     },
     "7": {
       "title": "JUnit引用校验",
@@ -131,15 +134,15 @@
       "note": "边界输入已验证"
     },
     "Suite I (Mutation Testing)": {
-      "status": "PARTIAL_EXECUTED",
-      "I-M01": "KILLED (真实src/vms/statements/projection.py line 349)",
-      "I-M02": "NOT_EXECUTED (需定位gate check逻辑)",
-      "I-M03": "NOT_EXECUTED (需定位PIT cutoff逻辑)",
-      "I-M04": "NOT_EXECUTED (未找到distributions.py)",
-      "I-M05": "KILLED (真实src/vms/market_pricing/exit_prices.py line 360-362)",
-      "I-M06": "NOT_EXECUTED (未找到sampling.py)",
-      "mutation_score": "100% (2/2 executed)",
-      "note": "2个真实生产文件mutation KILLED；detector tests通过"
+      "status": "PARTIAL_EXECUTED_WITH_SURVIVOR",
+      "I-M01": "KILLED (src/vms/statements/projection.py:349)",
+      "I-M02": "SURVIVED (src/vms/methods/eligibility.py:51-52, detector不足)",
+      "I-M03": "NOT_EXECUTED (PIT cutoff复杂，风险高)",
+      "I-M04": "NOT_EXECUTED (distribution mixture未定位单点)",
+      "I-M05": "KILLED (src/vms/market_pricing/exit_prices.py:360-362)",
+      "I-M06": "NOT_EXECUTED (MC path error handling未定位)",
+      "mutation_score": "66.7% (2 KILLED / 3 executed)",
+      "note": "诚实记录：I-M02 SURVIVED表明detector test_property_ineligible_method_contributes_no_values不足以检测此mutation"
     },
     "Suite J (Distribution Checks)": {
       "status": "BLOCKED",
@@ -149,12 +152,13 @@
   },
   
   "execution_evidence": {
-    "mutation_results": "mutation_results_PRODUCTION.json (真实生产文件)",
-    "deprecated_toy_mutation": "mutation_results_REAL_TOY_DEPRECATED.json (玩具演示)",
+    "mutation_results": "mutation_results_COMPLETE.json (完整执行，3 executed)",
+    "mutation_executor": "tests/vtp_0_1/scripts/execute_all_production_mutations.py",
     "fresh_junit_a02": "junit_a02_fresh.xml",
     "production_routing_demo": "production_routing_demo.json",
-    "honest_gap_status": "HONEST_GAP_STATUS_FINAL.md",
-    "corrected_verdicts": "verdicts_round3_CORRECTED.json (已替换为此文件)"
+    "cleanup_manifest": "CLEANUP_MANIFEST.md",
+    "deprecated_directory": "DEPRECATED_NOT_FOR_ACCEPTANCE/ (不计入验收)",
+    "honest_gap_status": "HONEST_GAP_STATUS_FINAL.md"
   },
   
   "release_recommendation": "DO_NOT_MERGE",

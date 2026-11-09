@@ -16,8 +16,9 @@
     "G-03: 生产API integration未完整",
     "G-04: MarketPricingConfig真实调用未完整",
     "G-05: 数值反事实结果部分vacuous",
-    "I-M01: Mutation已执行1个DEMO（其余NOT_EXECUTED）",
-    "I-M02至I-M06: Mutation未执行（需隔离环境）",
+    "I-M01: KILLED (真实生产文件mutation)",
+    "I-M05: KILLED (真实生产文件mutation)",
+    "I-M02至I-M04, I-M06: NOT_EXECUTED（需定位代码+detector test）",
     "J-01: 真实分布测试覆盖不足",
     "J-02: Sanity check未完整验证分布语义",
     "J-03: Edge case coverage待补",
@@ -58,8 +59,11 @@
     "6": {
       "title": "Suite I Mutation Testing",
       "status": "PARTIAL_EXECUTED",
-      "details": "mutation_results_REAL.json",
-      "note": "1个真实mutation执行；其余NOT_EXECUTED"
+      "details": "mutation_results_PRODUCTION.json",
+      "executed": 2,
+      "killed": 2,
+      "not_executed": 4,
+      "note": "I-M01和I-M05真实生产文件mutation KILLED；其余NOT_EXECUTED"
     },
     "7": {
       "title": "JUnit引用校验",
@@ -128,14 +132,14 @@
     },
     "Suite I (Mutation Testing)": {
       "status": "PARTIAL_EXECUTED",
-      "I-M01": "KILLED (demo executed)",
-      "I-M02": "NOT_EXECUTED",
-      "I-M03": "NOT_EXECUTED",
-      "I-M04": "NOT_EXECUTED",
-      "I-M05": "NOT_EXECUTED",
-      "I-M06": "NOT_EXECUTED",
-      "mutation_score": "100% (基于1个执行)",
-      "note": "需隔离环境执行完整mutation"
+      "I-M01": "KILLED (真实src/vms/statements/projection.py line 349)",
+      "I-M02": "NOT_EXECUTED (需定位gate check逻辑)",
+      "I-M03": "NOT_EXECUTED (需定位PIT cutoff逻辑)",
+      "I-M04": "NOT_EXECUTED (未找到distributions.py)",
+      "I-M05": "KILLED (真实src/vms/market_pricing/exit_prices.py line 360-362)",
+      "I-M06": "NOT_EXECUTED (未找到sampling.py)",
+      "mutation_score": "100% (2/2 executed)",
+      "note": "2个真实生产文件mutation KILLED；detector tests通过"
     },
     "Suite J (Distribution Checks)": {
       "status": "BLOCKED",
@@ -145,8 +149,10 @@
   },
   
   "execution_evidence": {
-    "mutation_results": "mutation_results_REAL.json",
+    "mutation_results": "mutation_results_PRODUCTION.json (真实生产文件)",
+    "deprecated_toy_mutation": "mutation_results_REAL_TOY_DEPRECATED.json (玩具演示)",
     "fresh_junit_a02": "junit_a02_fresh.xml",
+    "production_routing_demo": "production_routing_demo.json",
     "honest_gap_status": "HONEST_GAP_STATUS_FINAL.md",
     "corrected_verdicts": "verdicts_round3_CORRECTED.json (已替换为此文件)"
   },

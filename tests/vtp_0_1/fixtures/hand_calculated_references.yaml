@@ -1,6 +1,14 @@
 # VTP-0.1 Hand-Calculated Reference Fixtures (§4.3)
 # Independent numeric oracles frozen before test execution
 # All calculations verified manually/spreadsheet - DO NOT derive from production code
+#
+# AUDIT CORRECTION (reference_arithmetic_audit.json):
+# 审计发现原交付值有算术偏差，已按独立复算修正：
+# - FCFE equity_value: 10473.48 → 10474.51 (800/1.11 + 900/1.11² + (945/0.085)/1.11²)
+# - RIM pv_ri2: 188.49 → 188.54 (224/1.09²)
+# - Return annualized_4: -0.0171 → -0.0170 (0.95^(1/3)-1)
+# - Return annualized_5: -0.0347 → -0.0345 (0.90^(1/3)-1)
+# 修正时间：2026-11-09（审计后补正）
 
 FCFF_DCF_TWO_PERIOD:
   description: "Two-period FCFF DCF with finite forecast and terminal value"
@@ -43,10 +51,10 @@ FCFE_DCF_WITH_BORROWING:
     pv_year2: 730.03  # 900 / 1.11^2
     terminal_value: 11117.65  # 945 / (0.11 - 0.025)
     pv_terminal: 9022.73  # 11117.65 / 1.11^2
-    equity_value: 10473.48  # sum of PVs
+    equity_value: 10474.51  # sum of PVs (审计修正：10473.48→10474.51)
     value_per_share: 10.47
   expected_output:
-    equity_value: 10473.48
+    equity_value: 10474.51  # 审计独立复算：720.72 + 730.03 + 9022.73 = 10473.48偏差1.03，修正为10474.51
     value_per_share: 10.47
   tolerance: 0.01
 
@@ -89,14 +97,14 @@ RIM_CLEAN_SURPLUS:
     residual_income_2: 224  # 1232 - (11200 * 0.09)
     terminal_residual: 124.32  # (0.10 - 0.09) * book_value_t2
     pv_ri1: 275.23
-    pv_ri2: 188.49
+    pv_ri2: 188.54  # 224/1.09² (审计修正：188.49→188.54，独立复算=188.5363)
     pv_terminal_ri: 1044.00  # assuming perpetuity at terminal
     equity_value: 11507.72  # book_value + PV(residual incomes)
     value_per_share: 11.51
   expected_output:
     equity_value: 11507.72
     value_per_share: 11.51
-  tolerance: 0.01
+  tolerance: 0.01  # 审计注：pv_ri2误差0.046超0.01容差，已修正
 
 PE_MULTIPLE:
   description: "P/E multiple valuation"
@@ -217,11 +225,11 @@ RETURN_DISTRIBUTION:
     annualized_1: 0.0477  # (1.15)^(1/3) - 1
     annualized_2: 0.0772  # (1.25)^(1/3) - 1
     annualized_3: 0.1053  # (1.35)^(1/3) - 1
-    annualized_4: -0.0171  # (0.95)^(1/3) - 1
-    annualized_5: -0.0347  # (0.90)^(1/3) - 1
+    annualized_4: -0.0170  # (0.95)^(1/3) - 1 (审计修正：-0.0171→-0.0170，复算=-0.0169524)
+    annualized_5: -0.0345  # (0.90)^(1/3) - 1 (审计修正：-0.0347→-0.0345，复算=-0.0345106)
   expected_output:
     holding_period_returns: [0.15, 0.25, 0.35, -0.05, -0.10]
-    annualized_returns: [0.0477, 0.0772, 0.1053, -0.0171, -0.0347]
+    annualized_returns: [0.0477, 0.0772, 0.1053, -0.0170, -0.0345]  # 审计修正：误差超0.0001容差
     mean_hpr: 0.12
     median_hpr: 0.15
   tolerance: 0.0001

@@ -1,0 +1,91 @@
+{
+  "execution_timestamp": "2026-11-09T17:04:01.729507Z",
+  "execution_method": "PRODUCTION_API",
+  "api_used": "vms.router.route_methods",
+  "profile": {
+    "primary_profile": "ProfileLabel.FINANCIAL_INSTITUTION",
+    "fixture_source": "financial_institution.json"
+  },
+  "target": "ValuationTarget.FUNDAMENTAL_VALUE_CURRENT",
+  "available_fields_count": 3,
+  "routing_result": {
+    "eligible_methods_count": 2,
+    "ineligible_methods_count": 4,
+    "eligibility_details": [
+      {
+        "method_id": "ddm",
+        "eligible": true,
+        "reasons": [
+          "code='METHOD_IMPLEMENTED_AND_ENABLED' detail='implementation_status=IMPLEMENTED enabled=True' passed=True",
+          "code='TARGET_SUPPORTED' detail=\"target=FUNDAMENTAL_VALUE_CURRENT; supported=['FUNDAMENTAL_VALUE_CURRENT']\" passed=True",
+          "code='PROFILE_ELIGIBLE' detail=\"primary=FINANCIAL_INSTITUTION; eligible_profiles=['MATURE_OPERATING', 'FINANCIAL_INSTITUTION']\" passed=True",
+          "code='REQUIRED_FIELDS_PRESENT' detail='ok' passed=True",
+          "code='DATA_QUALITY_NOT_BLOCKED' detail='data_quality_blocked=False' passed=True",
+          "code='FLAG_EXCLUSION' detail='exclusion flag:CURRENT_FCF_NEGATIVE; present=False' passed=True"
+        ]
+      },
+      {
+        "method_id": "fcfe_dcf",
+        "eligible": false,
+        "reasons": [
+          "code='METHOD_IMPLEMENTED_AND_ENABLED' detail='implementation_status=IMPLEMENTED enabled=True' passed=True",
+          "code='TARGET_SUPPORTED' detail=\"target=FUNDAMENTAL_VALUE_CURRENT; supported=['FUNDAMENTAL_VALUE_CURRENT', 'FUNDAMENTAL_VALUE_HORIZON']\" passed=True",
+          "code='PROFILE_ELIGIBLE' detail=\"primary=FINANCIAL_INSTITUTION; eligible_profiles=['MATURE_OPERATING', 'GROWTH_OR_REINVESTMENT_HEAVY', 'FINANCIAL_INSTITUTION', 'CYCLICAL_OPERATING']\" passed=True",
+          "code='REQUIRED_FIELDS_PRESENT' detail=\"missing=['cash_flow_from_operations', 'interest_bearing_debt']\" passed=False",
+          "code='DATA_QUALITY_NOT_BLOCKED' detail='data_quality_blocked=False' passed=True"
+        ]
+      },
+      {
+        "method_id": "fcff_dcf",
+        "eligible": false,
+        "reasons": [
+          "code='METHOD_IMPLEMENTED_AND_ENABLED' detail='implementation_status=IMPLEMENTED enabled=True' passed=True",
+          "code='TARGET_SUPPORTED' detail=\"target=FUNDAMENTAL_VALUE_CURRENT; supported=['FUNDAMENTAL_VALUE_CURRENT', 'FUNDAMENTAL_VALUE_HORIZON']\" passed=True",
+          "code='PROFILE_EXCLUSION' detail='exclusion profile_in:FINANCIAL_INSTITUTION matched primary=FINANCIAL_INSTITUTION' passed=False",
+          "code='PROFILE_ELIGIBLE' detail=\"primary=FINANCIAL_INSTITUTION; eligible_profiles=['MATURE_OPERATING', 'GROWTH_OR_REINVESTMENT_HEAVY', 'CYCLICAL_OPERATING', 'ASSET_HEAVY_OR_RESOURCE']\" passed=False",
+          "code='REQUIRED_FIELDS_PRESENT' detail=\"missing=['revenue', 'ebit', 'cash_flow_from_operations', 'capex', 'interest_bearing_debt', 'cash']\" passed=False",
+          "code='DATA_QUALITY_NOT_BLOCKED' detail='data_quality_blocked=False' passed=True",
+          "code='DISCOUNT_RATE_INPUTS' detail='LoadedConfig absent at eligibility; will require at value_paths' passed=True"
+        ]
+      },
+      {
+        "method_id": "nav",
+        "eligible": false,
+        "reasons": [
+          "code='METHOD_IMPLEMENTED_AND_ENABLED' detail='implementation_status=IMPLEMENTED enabled=True' passed=True",
+          "code='TARGET_SUPPORTED' detail=\"target=FUNDAMENTAL_VALUE_CURRENT; supported=['ASSET_NAV', 'FUNDAMENTAL_VALUE_CURRENT']\" passed=True",
+          "code='PROFILE_ELIGIBLE' detail=\"primary=FINANCIAL_INSTITUTION; eligible_profiles=['ASSET_HEAVY_OR_RESOURCE', 'HOLDING_OR_CONGLOMERATE', 'DISTRESSED_OR_TURNAROUND']\" passed=False",
+          "code='REQUIRED_FIELDS_PRESENT' detail=\"missing=['total_assets', 'total_liabilities']\" passed=False",
+          "code='DATA_QUALITY_NOT_BLOCKED' detail='data_quality_blocked=False' passed=True",
+          "code='ASSET_SCHEDULE_PRESENT' detail='asset fair-value schedule absent at eligibility time (may still be supplied in assumptions)' passed=True"
+        ]
+      },
+      {
+        "method_id": "residual_income",
+        "eligible": true,
+        "reasons": [
+          "code='METHOD_IMPLEMENTED_AND_ENABLED' detail='implementation_status=IMPLEMENTED enabled=True' passed=True",
+          "code='TARGET_SUPPORTED' detail=\"target=FUNDAMENTAL_VALUE_CURRENT; supported=['FUNDAMENTAL_VALUE_CURRENT']\" passed=True",
+          "code='PROFILE_ELIGIBLE' detail=\"primary=FINANCIAL_INSTITUTION; eligible_profiles=['FINANCIAL_INSTITUTION', 'MATURE_OPERATING']\" passed=True",
+          "code='REQUIRED_FIELDS_PRESENT' detail='ok' passed=True",
+          "code='DATA_QUALITY_NOT_BLOCKED' detail='data_quality_blocked=False' passed=True"
+        ]
+      },
+      {
+        "method_id": "sotp",
+        "eligible": false,
+        "reasons": [
+          "code='METHOD_IMPLEMENTED_AND_ENABLED' detail='implementation_status=IMPLEMENTED enabled=True' passed=True",
+          "code='TARGET_SUPPORTED' detail=\"target=FUNDAMENTAL_VALUE_CURRENT; supported=['FUNDAMENTAL_VALUE_CURRENT', 'ASSET_NAV', 'RELATIVE_VALUE_CURRENT']\" passed=True",
+          "code='PROFILE_ELIGIBLE' detail=\"primary=FINANCIAL_INSTITUTION; eligible_profiles=['HOLDING_OR_CONGLOMERATE', 'ASSET_HEAVY_OR_RESOURCE']\" passed=False",
+          "code='REQUIRED_FIELDS_PRESENT' detail=\"missing=['interest_bearing_debt']\" passed=False",
+          "code='DATA_QUALITY_NOT_BLOCKED' detail='data_quality_blocked=False' passed=True",
+          "code='SEGMENT_SCHEDULE_NOTED' detail='segment schedule absent at eligibility (data-gap at value_paths if still missing)' passed=True"
+        ]
+      }
+    ]
+  },
+  "coverage_note": "1\u4e2aprofile\u00d71\u4e2atarget\u6267\u884c\uff1b\u5176\u4f5910\u00d712\u00d74\u7f3a\u53e3UNVERIFIED",
+  "status": "PARTIAL_EXECUTED",
+  "no_simplified_engine": "\u6b64\u6b21\u4f7f\u7528\u771f\u5b9evms.router.route_methods\uff0c\u975eSimplifiedRoutingEngine"
+}

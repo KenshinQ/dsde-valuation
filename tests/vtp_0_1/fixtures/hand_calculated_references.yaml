@@ -125,6 +125,26 @@ PE_MULTIPLE:
       expected_status: "INELIGIBLE"
       reason: "NON_POSITIVE_EARNINGS"
 
+PB_MULTIPLE:
+  description: "P/B (Price-to-Book) multiple valuation"
+  independent_calculation: "simple_multiplication"
+  inputs:
+    book_value: 50000
+    peer_pb_multiple: 1.8
+    shares: 1000
+  calculation_steps:
+    equity_value: 90000  # 50000 * 1.8
+    value_per_share: 90.00  # 90000 / 1000
+  expected_output:
+    equity_value: 90000
+    value_per_share: 90.00
+  tolerance: 0.01
+  invalid_cases:
+    - condition: "book_value <= 0"
+      expected_status: "INELIGIBLE"
+      reason: "NON_POSITIVE_BOOK_VALUE"
+  note: "审计补充：原交付缺PB专例（REF-MULTIPLES UNVERIFIED）"
+
 EV_EBITDA_MULTIPLE:
   description: "EV/EBITDA multiple with equity bridge"
   independent_calculation: "manual_calculation"

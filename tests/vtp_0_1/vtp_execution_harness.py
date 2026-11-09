@@ -275,14 +275,40 @@ class VTPExecutionHarness:
         self.results["evidence_files"].append(str(md_file))
     
     def _load_vtp_criteria(self) -> List[Dict[str, Any]]:
-        """Load VTP criteria from specification"""
-        # Simplified criterion list - in full implementation, parse from VTP document
-        return [
-            {"id": "A-01", "description": "Clean install", "test_files": ["test_a01_clean_install.py"], "status": "EXECUTED"},
-            {"id": "A-02", "description": "Offline synthetic run", "test_files": ["test_a02_offline_synthetic_run.py"], "status": "EXECUTED"},
-            {"id": "A-03", "description": "Schema validation", "test_files": ["tests/unit/test_schemas.py"], "status": "EXECUTED"},
-            {"id": "A-04", "description": "API/CLI parity", "test_files": ["tests/integration/test_cli.py"], "status": "EXECUTED"},
-        ]
+        """Load VTP criteria from audit-corrected mapping (100 items)
+        
+        AUDIT CORRECTION: 原硬编码只返回A-01到A-04四行。
+        现从审计提供的corrected_mapping.json加载完整100项映射。
+        """
+        mapping_file = Path(__file__).parent / "fixtures" / "vtp_criteria_mapping.json"
+        
+        if not mapping_file.exists():
+            # Fallback to minimal set if mapping not found
+            print(f"WARNING: {mapping_file} not found, using minimal criteria")
+            return [
+                {"id": "A-01", "description": "Clean install", "test_files": [], "status": "UNVERIFIED"},
+                {"id": "A-02", "description": "Offline synthetic run", "test_files": [], "status": "FAIL"},
+            ]
+        
+        with open(mapping_file, 'r', encoding='utf-8') as f:
+            full_mapping = json.load(f)
+        
+        # Convert audit mapping format to harness format
+        criteria = []
+        for item in full_mapping:
+            criterion = {
+                "id": item["id"],
+                "description": item.get("acceptance_standard", "")[:100],  # First 100 chars
+                "spec_lines": item.get("spec_lines", ""),
+                "status": item.get("status", "UNVERIFIED"),
+                "evidence": item.get("evidence", []),
+                "test_nodes": [t["node"] for t in item.get("test_results_in_delivered_junit", [])],
+                "observed_execution": item.get("observed_execution", ""),
+                "missing_or_limitations": item.get("missing_or_limitations", "")
+            }
+            criteria.append(criterion)
+        
+        return criteria
     
     def generate_final_report(self):
         """Generate comprehensive VTP final report in Chinese"""

@@ -1,0 +1,2355 @@
+[
+  {
+    "id": "A-01",
+    "spec_lines": "original_spec.md:99",
+    "acceptance_standard": "**A-01 Clean install**\n- Install from the documented dependency lock/configuration in a clean environment.\n- Run all unit tests without hidden local files or credentials.\n- **Pass:** documented commands succeed; dependencies are declared; no import from legacy projects.",
+    "status": "UNVERIFIED",
+    "observed_execution": "新增9条环境检查通过；原回归936通过16跳过。新增测试检查依赖文件/导入/CLI，而不是执行清洁安装。",
+    "test_results_in_delivered_junit": [
+      {
+        "node": "tests.vtp_0_1.suite_a.test_a01_clean_install.TestA01CleanInstall::test_requirements_lock_exists",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.vtp_0_1.suite_a.test_a01_clean_install.TestA01CleanInstall::test_package_can_be_imported",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.vtp_0_1.suite_a.test_a01_clean_install.TestA01CleanInstall::test_no_legacy_import_violations",
+        "status": "PASS"
+      }
+    ],
+    "evidence": [
+      "tests/vtp_0_1/suite_a/test_a01_clean_install.py:15-24::test_requirements_lock_exists",
+      "tests/vtp_0_1/suite_a/test_a01_clean_install.py:36-46::test_package_can_be_imported",
+      "tests/vtp_0_1/suite_a/test_a01_clean_install.py:62-74::test_no_legacy_import_violations",
+      "artifacts/vtp-0.1-evidence/baseline_test_run.log:131"
+    ],
+    "missing_or_limitations": "没有干净 checkout/status、venv创建、pip安装退出码、pip freeze/pip check、无凭据环境记录；全套仍有1失败。"
+  },
+  {
+    "id": "A-02",
+    "spec_lines": "original_spec.md:104",
+    "acceptance_standard": "**A-02 Offline synthetic run**\n- Run the smallest complete synthetic-company workflow with network access unavailable.\n- **Pass:** a versioned result bundle is produced with profile, routing decision, method results, market exit-price distribution, return distribution, diagnostics and provenance.",
+    "status": "FAIL",
+    "observed_execution": "新增A02有7通过1失败；phase0/4/12命令有成功退出，但完整离线网络阻断条件未证实。",
+    "test_results_in_delivered_junit": [
+      {
+        "node": "tests.vtp_0_1.suite_a.test_a02_offline_synthetic_run.TestA02OfflineSyntheticRun::test_offline_no_network_dependency",
+        "status": "FAIL"
+      },
+      {
+        "node": "tests.vtp_0_1.suite_a.test_a02_offline_synthetic_run.TestA02OfflineSyntheticRun::test_phase0_runs_offline",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.vtp_0_1.suite_a.test_a02_offline_synthetic_run.TestA02OfflineSyntheticRun::test_phase4_runs_offline",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.vtp_0_1.suite_a.test_a02_offline_synthetic_run.TestA02OfflineSyntheticRun::test_phase12_five_patterns_offline",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_phase12_acceptance::test_ac2_mature_e2e_artifact_set",
+        "status": "PASS"
+      }
+    ],
+    "evidence": [
+      "tests/vtp_0_1/suite_a/test_a02_offline_synthetic_run.py:103-118::test_offline_no_network_dependency",
+      "tests/vtp_0_1/suite_a/test_a02_offline_synthetic_run.py:17-46::test_phase0_runs_offline",
+      "tests/vtp_0_1/suite_a/test_a02_offline_synthetic_run.py:69-82::test_phase4_runs_offline",
+      "tests/vtp_0_1/suite_a/test_a02_offline_synthetic_run.py:84-101::test_phase12_five_patterns_offline",
+      "tests/unit/test_phase12_acceptance.py:47-66::test_ac2_mature_e2e_artifact_set",
+      "artifacts/vtp-0.1-evidence/VTP_New_Tests.log:1-20",
+      "artifacts/vtp-0.1-evidence/Comprehensive_All_Tests.log:130-141"
+    ],
+    "missing_or_limitations": "失败未获正式豁免；仅设置低优先级http_proxy/https_proxy，继承全部环境；没有socket/防火墙阻断和阻断自检；TemporaryDirectory输出未保存。"
+  },
+  {
+    "id": "A-03",
+    "spec_lines": "original_spec.md:108",
+    "acceptance_standard": "**A-03 Schema and request validation**\n- Test invalid dates/timezones, invalid targets, non-positive price, impossible horizon, invalid path count, unsupported schema version, NaN/inf values, inconsistent units and malformed configurations.\n- **Pass:** structured validation errors; no silent coercion into a valid-looking run.",
+    "status": "UNVERIFIED",
+    "observed_execution": "45条schema回归及其他contract/config/migration测试有通过，涵盖timezone、非法目标、价格/horizon/path范围及非有限财务值。",
+    "test_results_in_delivered_junit": [
+      {
+        "node": "tests.unit.test_schemas::test_request_ranges[monte_carlo_paths-0-greater than 0]",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_schemas::test_request_ranges[monte_carlo_paths--10-greater than 0]",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_schemas::test_request_ranges[monte_carlo_paths-True-not a boolean]",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_schemas::test_request_ranges[spot_price-0-greater than 0]",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_schemas::test_request_ranges[spot_price-nan-spot_price]",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_schemas::test_request_ranges[random_seed--1-greater than or equal to 0]",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_schemas::test_request_ranges[horizons_years-val6-at least 1]",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_schemas::test_request_ranges[horizons_years-val7-positive]",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_schemas::test_request_ranges[horizons_years-val8-positive]",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_schemas::test_request_ranges[horizons_years-val9-duplicates]",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_schemas::test_request_ranges[configuration_version--at least 1]",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_schemas::test_request_ranges[instrument_id-  -at least 1]",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_schemas::test_financial_non_finite_value[nan]",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_schemas::test_financial_non_finite_value[inf]",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_schemas::test_financial_non_finite_value[-inf]",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_contracts_v02::test_valuation_request_rejects_bad_target",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.integration.test_cli_phase0::test_phase0_invalid_target_exit_2",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.integration.test_cli_phase0::test_phase0_naive_as_of_exit_2",
+        "status": "PASS"
+      }
+    ],
+    "evidence": [
+      "tests/unit/test_schemas.py:147-149::test_request_ranges",
+      "tests/unit/test_schemas.py:70-71::test_financial_non_finite_value",
+      "tests/unit/test_contracts_v02.py:136-140::test_valuation_request_rejects_bad_target",
+      "tests/integration/test_cli_phase0.py:70-72::test_phase0_invalid_target_exit_2",
+      "tests/integration/test_cli_phase0.py:75-77::test_phase0_naive_as_of_exit_2"
+    ],
+    "missing_or_limitations": "未建立本条全部非法输入逐例对应；未见不支持schema版本的请求拒绝测试或NaN/inf请求价格/混合口径全链门禁证明。"
+  },
+  {
+    "id": "A-04",
+    "spec_lines": "original_spec.md:112",
+    "acceptance_standard": "**A-04 Public API and CLI parity**\n- Execute equivalent requests through public Python API and CLI.\n- **Pass:** semantically equivalent outputs and status codes, allowing only documented serialization differences.",
+    "status": "UNVERIFIED",
+    "observed_execution": "CLI与公共engine各自有smoke通过。",
+    "test_results_in_delivered_junit": [
+      {
+        "node": "tests.unit.test_engine_run::test_engine_run_full_pipeline",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.integration.test_cli::test_demo_via_console_script",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.integration.test_cli_returns::test_cli_returns",
+        "status": "PASS"
+      }
+    ],
+    "evidence": [
+      "tests/unit/test_engine_run.py:14-45::test_engine_run_full_pipeline",
+      "tests/integration/test_cli.py:52-65::test_demo_via_console_script",
+      "tests/integration/test_cli_returns.py:11-28::test_cli_returns"
+    ],
+    "missing_or_limitations": "没有相同request/data/config/seed经API与CLI后逐语义输出及状态码对照，独立成功不等于parity。"
+  },
+  {
+    "id": "B-01",
+    "spec_lines": "original_spec.md:118",
+    "acceptance_standard": "**B-01 Publication-time cutoff**\n- Create an observation published one second before `as_of`, one exactly at `as_of`, and one one second after.\n- **Pass:** the first two may be included according to the documented timestamp convention; the last is excluded.",
+    "status": "UNVERIFIED",
+    "observed_execution": "时序泄漏属性、同日晚间发布排除和恰好收盘的市场价测试通过。",
+    "test_results_in_delivered_junit": [
+      {
+        "node": "tests.leakage.test_leakage::test_every_snapshot_input_known_at_as_of",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.leakage.test_leakage::test_date_only_as_of_excludes_evening_publication_same_day",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.leakage.test_leakage::test_prices_after_as_of_excluded_close_at_as_of_included",
+        "status": "PASS"
+      }
+    ],
+    "evidence": [
+      "tests/leakage/test_leakage.py:55-62::test_every_snapshot_input_known_at_as_of",
+      "tests/leakage/test_leakage.py:74-79::test_date_only_as_of_excludes_evening_publication_same_day",
+      "tests/leakage/test_leakage.py:108-112::test_prices_after_as_of_excluded_close_at_as_of_included"
+    ],
+    "missing_or_limitations": "未见同一基本面观察在as_of−1秒、等于、+1秒的三联边界实验；市场价恰好等于不能替代披露时间边界。"
+  },
+  {
+    "id": "B-02",
+    "spec_lines": "original_spec.md:122",
+    "acceptance_standard": "**B-02 Restatement isolation**\n- Give one historical period an original filing and a later restatement. Run as of before and after the restatement.\n- **Pass:** earlier run sees only the original version; later run can see the restatement; the old run is reproducible.",
+    "status": "PASS",
+    "observed_execution": "原始100→修订97的早/晚快照值、revision/history断言，以及注入未来修订不改变旧快照的变形测试均通过。",
+    "test_results_in_delivered_junit": [
+      {
+        "node": "tests.unit.test_snapshot::test_restatement_latest_known_version_used_history_kept",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.leakage.test_leakage::test_injected_future_restatement_of_old_period_does_not_change_old_snapshot",
+        "status": "PASS"
+      }
+    ],
+    "evidence": [
+      "tests/unit/test_snapshot.py:80-89::test_restatement_latest_known_version_used_history_kept",
+      "tests/leakage/test_leakage.py:97-104::test_injected_future_restatement_of_old_period_does_not_change_old_snapshot"
+    ],
+    "missing_or_limitations": "限合成/回归证据，不证明供应商真实历史完备。"
+  },
+  {
+    "id": "B-03",
+    "spec_lines": "original_spec.md:126",
+    "acceptance_standard": "**B-03 Peer-universe PIT**\n- Include a peer that entered the index/industry group later, a delisted peer, and a peer whose future financials would make it look unusually attractive.\n- **Pass:** the historical peer sample only uses information and membership available at that historical timestamp, or the run is explicitly barred from unbiased-calibration claims if the history cannot be reconstructed.",
+    "status": "UNVERIFIED",
+    "observed_execution": "未来成员发布日期/开始日、未来指标、survivor重构不删除历史成员的测试通过。",
+    "test_results_in_delivered_junit": [
+      {
+        "node": "tests.leakage.test_peer_leakage::test_future_peer_membership_publication_excluded",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.leakage.test_peer_leakage::test_future_membership_start_excluded_even_if_published_early",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.leakage.test_peer_leakage::test_survivors_only_reconstitution_does_not_drop_historical_peer",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.leakage.test_peer_leakage::test_future_peer_metric_price_excluded",
+        "status": "PASS"
+      }
+    ],
+    "evidence": [
+      "tests/leakage/test_peer_leakage.py:49-56::test_future_peer_membership_publication_excluded",
+      "tests/leakage/test_peer_leakage.py:59-66::test_future_membership_start_excluded_even_if_published_early",
+      "tests/leakage/test_peer_leakage.py:69-84::test_survivors_only_reconstitution_does_not_drop_historical_peer",
+      "tests/leakage/test_peer_leakage.py:87-99::test_future_peer_metric_price_excluded"
+    ],
+    "missing_or_limitations": "test_peer_leakage helper支持delisted但具体测试未设置delisted_at；正式J历史成员不可重建时禁止无偏结论未在真实运行中验明。"
+  },
+  {
+    "id": "B-04",
+    "spec_lines": "original_spec.md:130",
+    "acceptance_standard": "**B-04 Missing provenance**\n- Remove `published_at`, revision lineage or source identifier from a critical observation.\n- **Pass:** quality status becomes incomplete/low confidence or the affected method/run is blocked; the engine must not silently assume the information was available.",
+    "status": "UNVERIFIED",
+    "observed_execution": "缺必填字段的schema测试、undeclared/LATEST_ONLY来源触发PIT_INCOMPLETE测试通过。",
+    "test_results_in_delivered_junit": [
+      {
+        "node": "tests.unit.test_schemas::test_financial_extra_and_missing_fields",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_quality::test_pit_incomplete_when_source_undeclared_or_latest_only",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_peers_phase1::test_financial_optional_provenance_fields",
+        "status": "PASS"
+      }
+    ],
+    "evidence": [
+      "tests/unit/test_schemas.py:96-99::test_financial_extra_and_missing_fields",
+      "tests/unit/test_quality.py:101-106::test_pit_incomplete_when_source_undeclared_or_latest_only",
+      "tests/unit/test_peers_phase1.py:57-63::test_financial_optional_provenance_fields"
+    ],
+    "missing_or_limitations": "缺published_at/revision_lineage/source_id的三个关键观察删字段试验尚未全部映射到门禁；revision provenance为可选不能凭字段存在测试宣称通过。"
+  },
+  {
+    "id": "B-05",
+    "spec_lines": "original_spec.md:134",
+    "acceptance_standard": "**B-05 Units and accounting basis**\n- Mix CNY and ten-thousand-CNY values, consolidated and parent-only statements, or annual and quarterly values.\n- **Pass:** normalization is explicit and traceable; invalid combinations fail the gate rather than producing plausible-looking output.",
+    "status": "UNVERIFIED",
+    "observed_execution": "单位换算保留reported unit、YTD→独立季、未知累积规则和币种阻断测试通过。",
+    "test_results_in_delivered_junit": [
+      {
+        "node": "tests.unit.test_snapshot::test_unit_scale_normalised_to_cny_yuan",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_snapshot::test_cn_cumulative_ytd_converted_to_standalone",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_quality::test_critical_blocks[extra0-SIGN_CONVENTION_VIOLATION]",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_quality::test_critical_blocks[extra1-SIGN_CONVENTION_VIOLATION]",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_quality::test_critical_blocks[extra2-SIGN_CONVENTION_VIOLATION]",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_quality::test_critical_blocks[extra3-CURRENCY_NOT_CNY]",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_quality::test_critical_blocks[extra4-STATEMENT_TYPE_MISMATCH]",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_quality::test_critical_blocks[extra5-CONFLICTING_VERSIONS]",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_quality::test_cumulative_unknown_flagged",
+        "status": "PASS"
+      }
+    ],
+    "evidence": [
+      "tests/unit/test_snapshot.py:92-95::test_unit_scale_normalised_to_cny_yuan",
+      "tests/unit/test_snapshot.py:22-32::test_cn_cumulative_ytd_converted_to_standalone",
+      "tests/unit/test_quality.py:48-54::test_critical_blocks",
+      "tests/unit/test_quality.py:96-98::test_cumulative_unknown_flagged"
+    ],
+    "missing_or_limitations": "缺consolidated/parent-only混合以及annual/quarterly非法组合的端到端受影响方法拒绝；fields_asof主要测字段注册/日期，不是会计口径。"
+  },
+  {
+    "id": "B-06",
+    "spec_lines": "original_spec.md:138",
+    "acceptance_standard": "**B-06 Accounting inconsistencies**\n- Introduce balance-sheet mismatch, cash-flow sign error, inconsistent shares, and duplicate corporate-action adjustment.\n- **Pass:** issue-specific diagnostics are emitted; critical issues block downstream affected methods.",
+    "status": "UNVERIFIED",
+    "observed_execution": "quality tests对符号错误阻断、股本无法解释、资产负债不平及供应商复权异常有诊断断言。",
+    "test_results_in_delivered_junit": [
+      {
+        "node": "tests.unit.test_quality::test_critical_blocks[extra0-SIGN_CONVENTION_VIOLATION]",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_quality::test_critical_blocks[extra1-SIGN_CONVENTION_VIOLATION]",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_quality::test_critical_blocks[extra2-SIGN_CONVENTION_VIOLATION]",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_quality::test_critical_blocks[extra3-CURRENCY_NOT_CNY]",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_quality::test_critical_blocks[extra4-STATEMENT_TYPE_MISMATCH]",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_quality::test_critical_blocks[extra5-CONFLICTING_VERSIONS]",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_quality::test_warnings[fin_extra0-BALANCE_SHEET_IDENTITY_FAIL]",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_quality::test_warnings[fin_extra1-BALANCE_SHEET_IDENTITY_UNCHECKED]",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_quality::test_warnings[fin_extra2-CAPEX_REVENUE_IMPLAUSIBLE]",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_quality::test_warnings[fin_extra3-SUSPECTED_UNIT_MISMATCH]",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_quality::test_warnings[fin_extra4-SUSPECTED_UNIT_MISMATCH]",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_quality::test_warnings[fin_extra5-MISSING_QUARTER]",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_quality::test_warnings[fin_extra6-IRREGULAR_PERIOD]",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_quality::test_warnings[fin_extra7-DUPLICATE_RECORD]",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_quality::test_warnings[fin_extra8-NON_CANONICAL_FIELD]",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_quality::test_share_count_change_explained_vs_unexplained",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_quality::test_vendor_adjustment_factor_consistency",
+        "status": "PASS"
+      }
+    ],
+    "evidence": [
+      "tests/unit/test_quality.py:48-54::test_critical_blocks",
+      "tests/unit/test_quality.py:89-93::test_warnings",
+      "tests/unit/test_quality.py:114-123::test_share_count_change_explained_vs_unexplained",
+      "tests/unit/test_quality.py:131-138::test_vendor_adjustment_factor_consistency"
+    ],
+    "missing_or_limitations": "没有重复公司行动调整的明确注入/阻断结果；多数balance/share测试只检查warning存在，缺临界严重性与下游affected-method阻断链。"
+  },
+  {
+    "id": "C-01",
+    "spec_lines": "original_spec.md:144",
+    "acceptance_standard": "**C-01 Accounting identities**\n- Verify projected balance sheets balance within the configured numerical tolerance and cash flow reconciles to cash changes where modeled.\n- **Pass:** identities hold on all valid paths; failed paths are retained with reason codes rather than silently discarded.",
+    "status": "UNVERIFIED",
+    "observed_execution": "53条映射回归含所有有效路径invariants、tamper→reason、随机projection性质通过。",
+    "test_results_in_delivered_junit": [
+      {
+        "node": "tests.unit.test_path_statements::test_all_valid_paths_pass_invariants",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_policies_invariants::test_tampered_projection_rejected_with_reason[cash@2026-50.0-CASH_RECONCILIATION_FAIL]",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_policies_invariants::test_tampered_projection_rejected_with_reason[interest_bearing_debt@2026-50.0-DEBT_ROLLFORWARD_FAIL]",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_policies_invariants::test_tampered_projection_rejected_with_reason[total_equity@2026-50.0-EQUITY_ROLLFORWARD_FAIL]",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_policies_invariants::test_tampered_projection_rejected_with_reason[distributions_to_shareholders@2026-50.0-DISTRIBUTION_DOUBLE_COUNT]",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_policies_invariants::test_tampered_projection_rejected_with_reason[dividends@2026-50.0-DISTRIBUTION_DOUBLE_COUNT]",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_policies_invariants::test_tampered_projection_rejected_with_reason[total_assets@2026-50.0-BALANCE_SHEET_FAIL]",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_policies_invariants::test_tampered_projection_rejected_with_reason[operating_nwc@2026-50.0-NWC_LINK_FAIL]",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_policies_invariants::test_tampered_projection_rejected_with_reason[net_income@2026-50.0-INCOME_LINK_FAIL]",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_policies_invariants::test_tampered_projection_rejected_with_reason[fcff@2026-50.0-FCFF_COMPOSITION_FAIL]",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_policies_invariants::test_tampered_projection_rejected_with_reason[fcfe@2026-50.0-FCFE_COMPOSITION_FAIL]",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_policies_invariants::test_tampered_projection_rejected_with_reason[shares_repurchased@2026-5.0-REPURCHASE_INCONSISTENT]",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_policies_invariants::test_tampered_projection_rejected_with_reason[shares_outstanding@2026-5.0-SHARES_ROLLFORWARD_FAIL]",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_policies_invariants::test_tampered_projection_rejected_with_reason[tax_expense@2026--1000000.0-NEGATIVE_TAX]",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_policies_invariants::test_tampered_projection_rejected_with_reason[cash@2026-nan-NON_FINITE]",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.property.test_projection_properties::test_projection_valid_and_invariants_hold",
+        "status": "PASS"
+      }
+    ],
+    "evidence": [
+      "tests/unit/test_path_statements.py:27-37::test_all_valid_paths_pass_invariants",
+      "tests/unit/test_policies_invariants.py:109-112::test_tampered_projection_rejected_with_reason",
+      "tests/property/test_projection_properties.py:18-26::test_projection_valid_and_invariants_hold"
+    ],
+    "missing_or_limitations": "有效投影自带violations=[]有oracle耦合；未见已知失败比例的财务路径同时保留记录/reasons并核对现金恒等式的独立小fixture。"
+  },
+  {
+    "id": "C-02",
+    "spec_lines": "original_spec.md:148",
+    "acceptance_standard": "**C-02 FCFF/FCFE reconciliation**\n- On a simplified consistent financing fixture, independently compute FCFF and FCFE and reconcile their discounted values under consistent assumptions within numerical tolerance.\n- **Pass:** discrepancies are explained by explicit differences in leverage, tax, financing or timing; unexplained differences fail.",
+    "status": "UNVERIFIED",
+    "observed_execution": "typed FCFF/FCFE不相等、各自贴现及cashflow composition诊断通过。",
+    "test_results_in_delivered_junit": [
+      {
+        "node": "tests.unit.test_projection::test_fcff_fcfe_typed_and_bridge",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_phase4_acceptance::test_ac1_fcff_hand_fixture",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_phase4_acceptance::test_ac1_fcfe_hand_fixture",
+        "status": "PASS"
+      }
+    ],
+    "evidence": [
+      "tests/unit/test_projection.py:154-158::test_fcff_fcfe_typed_and_bridge",
+      "tests/unit/test_phase4_acceptance.py:46-59::test_ac1_fcff_hand_fixture",
+      "tests/unit/test_phase4_acceptance.py:62-76::test_ac1_fcfe_hand_fixture"
+    ],
+    "missing_or_limitations": "没有同一融资/杠杆/税/时点手算FCFF与FCFE，折现权益相等/差异解释实验；仅assert != 不构成对账。"
+  },
+  {
+    "id": "C-03",
+    "spec_lines": "original_spec.md:152",
+    "acceptance_standard": "**C-03 EV-to-equity bridge**\n- Test debt, cash, minority interest, preferred claims and lease liabilities separately.\n- **Pass:** each component is counted once, in the correct direction and on the correct basis.",
+    "status": "UNVERIFIED",
+    "observed_execution": "合并桥接fixture得到790；PE无桥/EV桥一次的数值检查通过。",
+    "test_results_in_delivered_junit": [
+      {
+        "node": "tests.unit.test_valuation::test_bridge_hand_fixture_and_negative_equity_preserved",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_phase5_acceptance::test_ac6_equity_methods_no_ev_bridge_ev_methods_bridge_once",
+        "status": "PASS"
+      }
+    ],
+    "evidence": [
+      "tests/unit/test_valuation.py:84-95::test_bridge_hand_fixture_and_negative_equity_preserved",
+      "tests/unit/test_phase5_acceptance.py:176-208::test_ac6_equity_methods_no_ev_bridge_ev_methods_bridge_once"
+    ],
+    "missing_or_limitations": "尚缺逐一单独扰动debt/cash/minority/preferred/lease的隔离试验；preferred仅other_senior合并数值，basis/重复计数矩阵不全。"
+  },
+  {
+    "id": "C-04",
+    "spec_lines": "original_spec.md:156",
+    "acceptance_standard": "**C-04 Share-count dilution**\n- Hold equity value constant and increase diluted shares.\n- **Pass:** value per share cannot increase.",
+    "status": "PASS",
+    "observed_execution": "固定EV/现金债务为0，100股与200股调用公共桥接函数，断言后者VPS较低，JUnit通过。",
+    "test_results_in_delivered_junit": [
+      {
+        "node": "tests.property.test_exit_price_properties::test_property_more_shares_cannot_increase_vps_holding_equity",
+        "status": "PASS"
+      }
+    ],
+    "evidence": [
+      "tests/property/test_exit_price_properties.py:66-80::test_property_more_shares_cannot_increase_vps_holding_equity"
+    ],
+    "missing_or_limitations": "固定股权值场景已覆盖；不是股本数据质量声明。"
+  },
+  {
+    "id": "C-05",
+    "spec_lines": "original_spec.md:160",
+    "acceptance_standard": "**C-05 Capital allocation**\n- Test dividends, buybacks, issuance, debt issuance/repayment and dilution.\n- **Pass:** shareholder distributions and share-count changes are not double-counted in the total-return calculation.",
+    "status": "UNVERIFIED",
+    "observed_execution": "分红/回购/融资/稀释投影与distribution tamper诊断通过；Track B记录仅DPS加回约定。",
+    "test_results_in_delivered_junit": [
+      {
+        "node": "tests.unit.test_path_statements::test_debt_cash_dividends_buybacks_issuance_reconcile",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_projection::test_dilution_and_buybacks_change_share_count",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_phase10_acceptance::test_ac1_hand_worked_split_and_buyback_no_double_count",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_phase2_followups::test_announced_unpaid_dividend_deducted_at_base",
+        "status": "PASS"
+      }
+    ],
+    "evidence": [
+      "tests/unit/test_path_statements.py:40-54::test_debt_cash_dividends_buybacks_issuance_reconcile",
+      "tests/unit/test_projection.py:132-142::test_dilution_and_buybacks_change_share_count",
+      "tests/unit/test_phase10_acceptance.py:72-98::test_ac1_hand_worked_split_and_buyback_no_double_count",
+      "tests/unit/test_phase2_followups.py:80-91::test_announced_unpaid_dividend_deducted_at_base"
+    ],
+    "missing_or_limitations": "未将回购、增发、借还债、送转与现金分配逐一跑到总回报并独立核算；标签和账本字段存在不足以排除total-return重复计数。"
+  },
+  {
+    "id": "C-06",
+    "spec_lines": "original_spec.md:164",
+    "acceptance_standard": "**C-06 Invalid path handling**\n- Create paths with negative equity, infeasible debt, negative/zero denominators and broken accounting.\n- **Pass:** paths are either rejected with structured reason codes or retained as explicit distress outcomes according to the configured method; they are never silently clamped or dropped.",
+    "status": "UNVERIFIED",
+    "observed_execution": "负权益桥保留、零股本拒绝、坏discount/denominator拒绝和projection rejected回归通过。",
+    "test_results_in_delivered_junit": [
+      {
+        "node": "tests.unit.test_valuation::test_bridge_hand_fixture_and_negative_equity_preserved",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_projection::test_rejected_projection_is_not_usable",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_path_statements::test_failed_paths_never_enter_aggregates",
+        "status": "PASS"
+      }
+    ],
+    "evidence": [
+      "tests/unit/test_valuation.py:84-95::test_bridge_hand_fixture_and_negative_equity_preserved",
+      "tests/unit/test_projection.py:181-187::test_rejected_projection_is_not_usable",
+      "tests/unit/test_path_statements.py:74-89::test_failed_paths_never_enter_aggregates",
+      "tests/unit/test_phase5_followups.py:25-57"
+    ],
+    "missing_or_limitations": "缺负权益/不可行债务/零负分母/坏账联动到保留失败路径的统一实验；部分失败聚合测试未注入所称fake failed path。"
+  },
+  {
+    "id": "D-01",
+    "spec_lines": "original_spec.md:177",
+    "acceptance_standard": "**D-01 FCFF DCF**\n- Verify discounting, terminal value, WACC, terminal growth, cash-flow timing and EV-to-equity bridge.\n- **Pass:** hand fixture matches within a documented tolerance; invalid `WACC <= g + configured safety margin` paths cannot be labeled valid; terminal-value dominance is diagnosed.",
+    "status": "UNVERIFIED",
+    "observed_execution": "既有手算两期FCFF、WACC-g无修补拒绝、TV份额/敏感性和invalid-rate性质通过。",
+    "test_results_in_delivered_junit": [
+      {
+        "node": "tests.unit.test_phase4_acceptance::test_ac1_fcff_hand_fixture",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_phase4_acceptance::test_ac3_invalid_discount_terminal_growth_rejected",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_phase4_acceptance::test_ac5_tv_fraction_and_sensitivities_reported",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_phase4_acceptance::test_property_invalid_wacc_le_g_never_valid",
+        "status": "PASS"
+      }
+    ],
+    "evidence": [
+      "tests/unit/test_phase4_acceptance.py:46-59::test_ac1_fcff_hand_fixture",
+      "tests/unit/test_phase4_acceptance.py:118-131::test_ac3_invalid_discount_terminal_growth_rejected",
+      "tests/unit/test_phase4_acceptance.py:184-234::test_ac5_tv_fraction_and_sensitivities_reported",
+      "tests/unit/test_phase4_acceptance.py:139-154::test_property_invalid_wacc_le_g_never_valid"
+    ],
+    "missing_or_limitations": "本轮冻结YAML未被执行；每方法五种测试要求未逐一齐备，详method_coverage.md。"
+  },
+  {
+    "id": "D-02",
+    "spec_lines": "original_spec.md:181",
+    "acceptance_standard": "**D-02 FCFE DCF**\n- Verify cost-of-equity discounting, net borrowing and financing consistency.\n- **Pass:** equity cash flows are not discounted with WACC; inconsistent financing paths are rejected/warned.",
+    "status": "UNVERIFIED",
+    "observed_execution": "既有FCFE两期公式与禁止WACC贴现通过。",
+    "test_results_in_delivered_junit": [
+      {
+        "node": "tests.unit.test_phase4_acceptance::test_ac1_fcfe_hand_fixture",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_phase4_acceptance::test_ac2_fcff_uses_wacc_fcfe_ddm_use_ke",
+        "status": "PASS"
+      }
+    ],
+    "evidence": [
+      "tests/unit/test_phase4_acceptance.py:62-76::test_ac1_fcfe_hand_fixture",
+      "tests/unit/test_phase4_acceptance.py:95-114::test_ac2_fcff_uses_wacc_fcfe_ddm_use_ke",
+      "tests/vtp_0_1/fixtures/hand_calculated_references.yaml:31-51"
+    ],
+    "missing_or_limitations": "缺净借款一致/不一致融资路径实验；新增“WITH_BORROWING”夹具无borrow字段且手算值错、未消费；五类覆盖不齐。"
+  },
+  {
+    "id": "D-03",
+    "spec_lines": "original_spec.md:185",
+    "acceptance_standard": "**D-03 DDM**\n- Verify dividend growth and cost-of-equity gates.\n- **Pass:** no stable-dividend model is run when payout policy is not modelable; invalid growth/discount relationships fail explicitly.",
+    "status": "UNVERIFIED",
+    "observed_execution": "既有DDM手算、growth-discount失败、无/不稳定分红拒绝通过。",
+    "test_results_in_delivered_junit": [
+      {
+        "node": "tests.unit.test_phase4_acceptance::test_ac1_ddm_hand_fixture",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_phase4_acceptance::test_ac6_ineligible_ddm_structured_reason_not_fabricated",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_phase4_acceptance::test_ac3_invalid_discount_terminal_growth_rejected",
+        "status": "PASS"
+      }
+    ],
+    "evidence": [
+      "tests/unit/test_phase4_acceptance.py:79-91::test_ac1_ddm_hand_fixture",
+      "tests/unit/test_phase4_acceptance.py:238-250::test_ac6_ineligible_ddm_structured_reason_not_fabricated",
+      "tests/unit/test_phase4_acceptance.py:118-131::test_ac3_invalid_discount_terminal_growth_rejected"
+    ],
+    "missing_or_limitations": "尚缺本轮冻结真值消费、DDM方法级变形与同种子复现的明确执行映射。"
+  },
+  {
+    "id": "D-04",
+    "spec_lines": "original_spec.md:189",
+    "acceptance_standard": "**D-04 RIM**\n- Verify residual income, book-value roll-forward and clean-surplus handling.\n- **Pass:** unreliable book equity or unassessable clean-surplus assumptions trigger explicit ineligibility/warnings.",
+    "status": "UNVERIFIED",
+    "observed_execution": "既有RIM独立120例、clean-surplus不可评估/负book/残差过大拒绝通过。",
+    "test_results_in_delivered_junit": [
+      {
+        "node": "tests.unit.test_phase6_acceptance::test_ac1_rim_hand_fixture_numeric",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_phase6_acceptance::test_ac1_rim_clean_surplus_or_ineligible",
+        "status": "PASS"
+      }
+    ],
+    "evidence": [
+      "tests/unit/test_phase6_acceptance.py:90-105::test_ac1_rim_hand_fixture_numeric",
+      "tests/unit/test_phase6_acceptance.py:37-87::test_ac1_rim_clean_surplus_or_ineligible"
+    ],
+    "missing_or_limitations": "新增RIM参考第二期现值不符，终值推导不充分；方法五类/冻结审核不全，不用旧通过覆盖新oracle错误。"
+  },
+  {
+    "id": "D-05",
+    "spec_lines": "original_spec.md:193",
+    "acceptance_standard": "**D-05 Multiples**\n- Test PE, PB, EV/EBIT, EV/EBITDA and EV/Sales.\n- **Pass:** zero, negative, near-zero or economically distorted denominators are rejected/qualified under configured gates; EV multiples use the correct EV-to-equity bridge; EBITDA is not treated as cash flow.",
+    "status": "UNVERIFIED",
+    "observed_execution": "五种倍数定义及部分负/近零分母检查、PE与EV/EBIT手算、EV桥一次、EV/Sales相对价标签通过。",
+    "test_results_in_delivered_junit": [
+      {
+        "node": "tests.unit.test_phase5_acceptance::test_ac1_each_metric_definition_denominator_and_bridge_explicit",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_phase5_acceptance::test_ac2_negative_near_zero_denominator_exclusions",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_phase5_acceptance::test_hand_fixture_pe_equity_and_ev_ebit_bridge",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_phase5_acceptance::test_ev_sales_labeled_relative_pricing_not_intrinsic",
+        "status": "PASS"
+      }
+    ],
+    "evidence": [
+      "tests/unit/test_phase5_acceptance.py:86-98::test_ac1_each_metric_definition_denominator_and_bridge_explicit",
+      "tests/unit/test_phase5_acceptance.py:102-114::test_ac2_negative_near_zero_denominator_exclusions",
+      "tests/unit/test_phase5_acceptance.py:294-310::test_hand_fixture_pe_equity_and_ev_ebit_bridge",
+      "tests/unit/test_phase5_acceptance.py:211-223::test_ev_sales_labeled_relative_pricing_not_intrinsic"
+    ],
+    "missing_or_limitations": "并非五种倍数各有独立数值+边界+不合格+变形+重现；缺EBITDA不当现金流的故障检出实验。"
+  },
+  {
+    "id": "D-06",
+    "spec_lines": "original_spec.md:197",
+    "acceptance_standard": "**D-06 Cyclical normalization**\n- Give the company peak, trough and mid-cycle earnings.\n- **Pass:** trailing peak earnings are not silently treated as normalized earnings; the chosen normalization window and state are recorded.",
+    "status": "UNVERIFIED",
+    "observed_execution": "全量回归包含midcycle估计/峰谷与门禁，Suite D分组本身没有midcycle文件；trailing无规范化会LOW_CONFIDENCE。",
+    "test_results_in_delivered_junit": [
+      {
+        "node": "tests.unit.test_phase5_acceptance::test_cyclical_trailing_without_midcycle_flagged",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_midcycle_skel::test_synthetic_complete_finite_denom_and_diagnostics",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_midcycle_skel::test_hook_cyclical_high_conf_series_uses_midcycle",
+        "status": "PASS"
+      }
+    ],
+    "evidence": [
+      "tests/unit/test_phase5_acceptance.py:226-238::test_cyclical_trailing_without_midcycle_flagged",
+      "tests/unit/test_midcycle_skel.py:223-241::test_synthetic_complete_finite_denom_and_diagnostics",
+      "tests/unit/test_midcycle_skel.py:465-477::test_hook_cyclical_high_conf_series_uses_midcycle"
+    ],
+    "missing_or_limitations": "缺SYN-CYCLICAL冻结的峰/谷/中周期整体路由与所选窗口/state逐项对照；不能只用Suite D43通过推出本条。"
+  },
+  {
+    "id": "D-07",
+    "spec_lines": "original_spec.md:201",
+    "acceptance_standard": "**D-07 NAV**\n- Independently specify asset-level fair values, haircuts and liabilities.\n- **Pass:** NAV is calculated from asset-level assumptions; book assets are not blindly copied as fair value.",
+    "status": "UNVERIFIED",
+    "observed_execution": "既有NAV明确fair/haircut/claims得到81，book直接作fair拒绝通过。",
+    "test_results_in_delivered_junit": [
+      {
+        "node": "tests.unit.test_phase6_acceptance::test_ac2_nav_requires_explicit_fair_not_raw_book",
+        "status": "PASS"
+      }
+    ],
+    "evidence": [
+      "tests/unit/test_phase6_acceptance.py:109-149::test_ac2_nav_requires_explicit_fair_not_raw_book"
+    ],
+    "missing_or_limitations": "新NAV YAML未被消费；NAV单独边界/变形/复现与股份口径完整五类未证明。"
+  },
+  {
+    "id": "D-08",
+    "spec_lines": "original_spec.md:205",
+    "acceptance_standard": "**D-08 SOTP**\n- Provide segment valuations plus central costs, holding-company discount/premium, debt, minority interests and shares.\n- **Pass:** all material segments and claims reconcile once; missing segment information creates a visible coverage gap.",
+    "status": "UNVERIFIED",
+    "observed_execution": "既有SOTP两部门/中央费/债/少数/折价得到134.1及缺segment可见gap通过。",
+    "test_results_in_delivered_junit": [
+      {
+        "node": "tests.unit.test_phase6_acceptance::test_ac3_sotp_reconciles_segments_and_group_items",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_phase6_acceptance::test_ac5_missing_asset_or_segment_cannot_look_complete",
+        "status": "PASS"
+      }
+    ],
+    "evidence": [
+      "tests/unit/test_phase6_acceptance.py:153-184::test_ac3_sotp_reconciles_segments_and_group_items",
+      "tests/unit/test_phase6_acceptance.py:293-321::test_ac5_missing_asset_or_segment_cannot_look_complete"
+    ],
+    "missing_or_limitations": "新SOTP YAML未消费；稀释股数、折溢价边界/变形/复现五类覆盖仍缺。"
+  },
+  {
+    "id": "D-09",
+    "spec_lines": "original_spec.md:209",
+    "acceptance_standard": "**D-09 Method plugin contract**\n- Register a valid plugin and a deliberately malformed plugin.\n- **Pass:** valid plugins run through the common interface; malformed plugins fail conformance tests and cannot enter an ensemble.",
+    "status": "UNVERIFIED",
+    "observed_execution": "注册表声明、未实现enabled拒绝、现有插件缺路径拒绝均通过。",
+    "test_results_in_delivered_junit": [
+      {
+        "node": "tests.unit.test_methods_registry_phase2::test_every_registered_method_declares_targets_units_fields_failure_codes",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_methods_registry_phase2::test_enabled_not_implemented_still_rejected",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_profiles::test_plugin_registration_and_validation",
+        "status": "PASS"
+      }
+    ],
+    "evidence": [
+      "tests/unit/test_methods_registry_phase2.py:28-45::test_every_registered_method_declares_targets_units_fields_failure_codes",
+      "tests/unit/test_methods_registry_phase2.py:48-58::test_enabled_not_implemented_still_rejected",
+      "tests/unit/test_profiles.py:66-92::test_plugin_registration_and_validation"
+    ],
+    "missing_or_limitations": "没有有效与畸形valuation method plugin的注册→common interface→ensemble conformance试验；test_plugin_registration测的是SectorProfile，不是本条方法插件。"
+  },
+  {
+    "id": "E-01",
+    "spec_lines": "original_spec.md:215",
+    "acceptance_standard": "**E-01 Routing truth table**\n- Run all synthetic fixtures against an approved expected routing matrix.\n- **Pass:** every method decision matches expected `ELIGIBLE`, `INELIGIBLE`, `WARN/QUALIFIED` or `UNSUPPORTED` behavior and carries reason codes.",
+    "status": "UNVERIFIED",
+    "observed_execution": "既有五种profile分类/部分method门禁测试通过；新YAML列十公司期望但无消费者。",
+    "test_results_in_delivered_junit": [
+      {
+        "node": "tests.unit.test_profiles_phase2::test_synthetic_fixtures_route_to_expected_profile[mature_operating.json-MATURE_OPERATING]",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_profiles_phase2::test_synthetic_fixtures_route_to_expected_profile[growth_negative_fcf.json-GROWTH_OR_REINVESTMENT_HEAVY]",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_profiles_phase2::test_synthetic_fixtures_route_to_expected_profile[financial_institution.json-FINANCIAL_INSTITUTION]",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_profiles_phase2::test_synthetic_fixtures_route_to_expected_profile[cyclical.json-CYCLICAL_OPERATING]",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_profiles_phase2::test_synthetic_fixtures_route_to_expected_profile[holding.json-HOLDING_OR_CONGLOMERATE]",
+        "status": "PASS"
+      }
+    ],
+    "evidence": [
+      "tests/unit/test_profiles_phase2.py:28-45::test_synthetic_fixtures_route_to_expected_profile",
+      "tests/vtp_0_1/fixtures/synthetic_companies.yaml:1-160"
+    ],
+    "missing_or_limitations": "缺事前approved完整method×fixture×target真值矩阵、十公司执行结果及routing confusion表。"
+  },
+  {
+    "id": "E-02",
+    "spec_lines": "original_spec.md:219",
+    "acceptance_standard": "**E-02 Hard gates dominate soft scores**\n- Give an ineligible method an artificially high suitability score.\n- **Pass:** it remains ineligible and contributes no value paths or ensemble weight.",
+    "status": "UNVERIFIED",
+    "observed_execution": "缺字段硬门禁拒绝且soft不计算、不合格有权重时mixture拒绝的测试通过。",
+    "test_results_in_delivered_junit": [
+      {
+        "node": "tests.unit.test_methods_registry_phase2::test_no_method_runs_before_hard_eligibility_gates",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_phase7_acceptance::test_soft_suitability_requires_all_dimensions_no_opaque_score",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_phase8_acceptance::test_ineligible_method_never_enters_mixture",
+        "status": "PASS"
+      }
+    ],
+    "evidence": [
+      "tests/unit/test_methods_registry_phase2.py:61-99::test_no_method_runs_before_hard_eligibility_gates",
+      "tests/unit/test_phase7_acceptance.py:219-239::test_soft_suitability_requires_all_dimensions_no_opaque_score",
+      "tests/unit/test_phase8_acceptance.py:247-259::test_ineligible_method_never_enters_mixture"
+    ],
+    "missing_or_limitations": "没有向不合格方法注入异常高soft score的对抗试验及端到端value-path/weight=0检查。"
+  },
+  {
+    "id": "E-03",
+    "spec_lines": "original_spec.md:223",
+    "acceptance_standard": "**E-03 Target specificity**\n- Request `FUNDAMENTAL_VALUE_CURRENT`, `MARKET_EXIT_PRICE`, `ASSET_NAV` and `TOTAL_RETURN` for the same company.\n- **Pass:** only methods supporting the requested target run; an intrinsic-value method cannot be used as a market-exit-price method without a separate pricing mechanism.",
+    "status": "UNVERIFIED",
+    "observed_execution": "注册表targets声明，bank相对/基本目标、holding ASSET_NAV及兼容性局部测试通过。",
+    "test_results_in_delivered_junit": [
+      {
+        "node": "tests.unit.test_methods_registry_phase2::test_every_registered_method_declares_targets_units_fields_failure_codes",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_phase6_acceptance::test_ac4_financial_routes_to_rim_industrial_fcff_disabled",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_methods_registry_phase2::test_holding_without_schedules_is_data_gap_not_default_dcf",
+        "status": "PASS"
+      }
+    ],
+    "evidence": [
+      "tests/unit/test_methods_registry_phase2.py:28-45::test_every_registered_method_declares_targets_units_fields_failure_codes",
+      "tests/unit/test_phase6_acceptance.py:188-236::test_ac4_financial_routes_to_rim_industrial_fcff_disabled",
+      "tests/unit/test_methods_registry_phase2.py:151-175::test_holding_without_schedules_is_data_gap_not_default_dcf"
+    ],
+    "missing_or_limitations": "没有同一公司四目标FUNDAMENTAL_VALUE_CURRENT/MARKET_EXIT_PRICE/ASSET_NAV/TOTAL_RETURN横向执行；声明支持不等于路由正确。"
+  },
+  {
+    "id": "E-04",
+    "spec_lines": "original_spec.md:227",
+    "acceptance_standard": "**E-04 Profile uncertainty**\n- Give a hybrid company ambiguous profile evidence.\n- **Pass:** classifier emits confidence/multi-label diagnostics; router does not force a single profile solely to enable a preferred method.",
+    "status": "UNVERIFIED",
+    "observed_execution": "冲突bank/holding信号分类低置信/混合与缺feature诊断通过。",
+    "test_results_in_delivered_junit": [
+      {
+        "node": "tests.unit.test_profiles_phase2::test_conflicting_signals_visible_low_confidence",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_profiles_phase2::test_missing_fields_listed",
+        "status": "PASS"
+      }
+    ],
+    "evidence": [
+      "tests/unit/test_profiles_phase2.py:123-148::test_conflicting_signals_visible_low_confidence",
+      "tests/unit/test_profiles_phase2.py:151-155::test_missing_fields_listed"
+    ],
+    "missing_or_limitations": "分类器未连router检验只允本地合格方法；SYN-HYBRID未执行。"
+  },
+  {
+    "id": "E-05",
+    "spec_lines": "original_spec.md:231",
+    "acceptance_standard": "**E-05 Missing peer coverage**\n- Provide an otherwise valid company but no acceptable point-in-time peer set.\n- **Pass:** relative methods are rejected; independent eligible methods may still run; report identifies the coverage gap.",
+    "status": "UNVERIFIED",
+    "observed_execution": "同行scarcity局部测试、全字段剥除coverage gap通过。",
+    "test_results_in_delivered_junit": [
+      {
+        "node": "tests.unit.methods.test_rim_r2cd_pb_roe::test_peer_scarcity_when_no_peers",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_phase7_acceptance::test_ac5_no_eligible_returns_insufficient_coverage_not_default_dcf",
+        "status": "PASS"
+      }
+    ],
+    "evidence": [
+      "tests/unit/methods/test_rim_r2cd_pb_roe.py:110-122::test_peer_scarcity_when_no_peers",
+      "tests/unit/test_phase7_acceptance.py:199-216::test_ac5_no_eligible_returns_insufficient_coverage_not_default_dcf"
+    ],
+    "missing_or_limitations": "缺“其他资料保持有效，仅移除有效PIT同行”时相对法拒绝/独立估值继续/coverage gap同步记录的整体实验。"
+  },
+  {
+    "id": "E-06",
+    "spec_lines": "original_spec.md:235",
+    "acceptance_standard": "**E-06 Determinism**\n- Same input data, config, code version and seed.\n- **Pass:** routing decisions and reason codes are identical.",
+    "status": "PASS",
+    "observed_execution": "相同完整路由上下文配置两次model_dump全等（含reasons），JUnit通过。",
+    "test_results_in_delivered_junit": [
+      {
+        "node": "tests.unit.test_phase7_acceptance::test_ac2_routing_deterministic",
+        "status": "PASS"
+      }
+    ],
+    "evidence": [
+      "tests/unit/test_phase7_acceptance.py:81-94::test_ac2_routing_deterministic"
+    ],
+    "missing_or_limitations": "只代表固定环境、该路由fixture。"
+  },
+  {
+    "id": "F-01",
+    "spec_lines": "original_spec.md:241",
+    "acceptance_standard": "**F-01 Comparable-object gate**\n- Attempt to combine EV, equity value, per-share value, NAV and future market price distributions without proper normalization.\n- **Pass:** incompatible objects cannot be combined.",
+    "status": "UNVERIFIED",
+    "observed_execution": "EV/EQUITY、horizon及intrinsic/market不兼容拒绝通过。",
+    "test_results_in_delivered_junit": [
+      {
+        "node": "tests.unit.test_phase8_acceptance::test_ac1_incompatible_cannot_form_ensemble",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_phase7_acceptance::test_ac3_incompatible_cannot_combine",
+        "status": "PASS"
+      }
+    ],
+    "evidence": [
+      "tests/unit/test_phase8_acceptance.py:72-94::test_ac1_incompatible_cannot_form_ensemble",
+      "tests/unit/test_phase7_acceptance.py:98-162::test_ac3_incompatible_cannot_combine"
+    ],
+    "missing_or_limitations": "缺per-share/NAV/未来价与单位/币种全组合矩阵；未归一化对象范围不完整。"
+  },
+  {
+    "id": "F-02",
+    "spec_lines": "original_spec.md:245",
+    "acceptance_standard": "**F-02 No mechanical averaging**\n- Construct methods with materially different estimates and no calibration history.\n- **Pass:** method-specific distributions and disagreement are reported; ensemble is absent or explicitly `ENSEMBLE_UNCALIBRATED` according to the SPEC.",
+    "status": "PASS",
+    "observed_execution": "分歧方法保留各分布，production无校准拒绝combined_value，research显式ENSEMBLE_UNCALIBRATED且有disagreement。",
+    "test_results_in_delivered_junit": [
+      {
+        "node": "tests.unit.test_phase8_acceptance::test_ac1_uncalibrated_cannot_form_production_ensemble",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_phase8_acceptance::test_ac3_equal_weight_not_calibrated",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_phase8_acceptance::test_ac6_l1o_and_disagreement_synthetic",
+        "status": "PASS"
+      }
+    ],
+    "evidence": [
+      "tests/unit/test_phase8_acceptance.py:56-69::test_ac1_uncalibrated_cannot_form_production_ensemble",
+      "tests/unit/test_phase8_acceptance.py:118-136::test_ac3_equal_weight_not_calibrated",
+      "tests/unit/test_phase8_acceptance.py:198-209::test_ac6_l1o_and_disagreement_synthetic"
+    ],
+    "missing_or_limitations": "不证明校准有效。"
+  },
+  {
+    "id": "F-03",
+    "spec_lines": "original_spec.md:249",
+    "acceptance_standard": "**F-03 Ensemble mixture arithmetic**\n- For compatible toy distributions and fixed weights, compare empirical mixture quantiles/probabilities against an independent reference mixture.\n- **Pass:** weights are finite, non-negative and sum to one; mixture sampling follows the declared mixture procedure.",
+    "status": "UNVERIFIED",
+    "observed_execution": "权重有限非负和归一化性质通过；若干mix生成通过。",
+    "test_results_in_delivered_junit": [
+      {
+        "node": "tests.property.test_ensemble_properties::test_normalized_weights_nonneg_sum_to_one",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.property.test_ensemble_properties::test_equal_prior_sums_to_one",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_distributions::test_mixture_quantiles_match_t_for_single_component",
+        "status": "PASS"
+      }
+    ],
+    "evidence": [
+      "tests/property/test_ensemble_properties.py:32-42::test_normalized_weights_nonneg_sum_to_one",
+      "tests/property/test_ensemble_properties.py:47-51::test_equal_prior_sums_to_one",
+      "tests/unit/test_distributions.py:95-97::test_mixture_quantiles_match_t_for_single_component"
+    ],
+    "missing_or_limitations": "缺独立离散toy混合CDF/quantiles/probabilities参照；单成分driver mixture测试不是多方法分布混合正确性的证据。"
+  },
+  {
+    "id": "F-04",
+    "spec_lines": "original_spec.md:253",
+    "acceptance_standard": "**F-04 Ensemble eligibility**\n- Give an ineligible method or a method with an incompatible target a non-zero proposed weight.\n- **Pass:** it is rejected before mixture generation.",
+    "status": "UNVERIFIED",
+    "observed_execution": "不合格方法获非零weight时在生成mixture前抛错通过。",
+    "test_results_in_delivered_junit": [
+      {
+        "node": "tests.unit.test_phase8_acceptance::test_ineligible_method_never_enters_mixture",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.property.test_ensemble_properties::test_ineligible_never_in_mixture_property",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_phase8_acceptance::test_ac1_incompatible_cannot_form_ensemble",
+        "status": "PASS"
+      }
+    ],
+    "evidence": [
+      "tests/unit/test_phase8_acceptance.py:247-259::test_ineligible_method_never_enters_mixture",
+      "tests/property/test_ensemble_properties.py:54-86::test_ineligible_never_in_mixture_property",
+      "tests/unit/test_phase8_acceptance.py:72-94::test_ac1_incompatible_cannot_form_ensemble"
+    ],
+    "missing_or_limitations": "不兼容target被提非零weight的组合场景未明确运行；EV basis不兼容不替代target错配。"
+  },
+  {
+    "id": "F-05",
+    "spec_lines": "original_spec.md:257",
+    "acceptance_standard": "**F-05 Calibration release gate**\n- Provide insufficient sample size, leaked weights, or in-sample-only fit.\n- **Pass:** status cannot be `ENSEMBLE_CALIBRATED`; emits `CALIBRATION_INSUFFICIENT` or equivalent documented status.",
+    "status": "UNVERIFIED",
+    "observed_execution": "无OOS/样本0以及prior不能calibrated、冻结后改权重抛错测试通过。",
+    "test_results_in_delivered_junit": [
+      {
+        "node": "tests.unit.test_phase8_acceptance::test_checklist_without_oos_not_production_eligible",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_phase8_acceptance::test_ac3_equal_weight_not_calibrated",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.leakage.test_eval_weight_freeze::test_mutating_weights_after_freeze_detected",
+        "status": "PASS"
+      }
+    ],
+    "evidence": [
+      "tests/unit/test_phase8_acceptance.py:213-244::test_checklist_without_oos_not_production_eligible",
+      "tests/unit/test_phase8_acceptance.py:118-136::test_ac3_equal_weight_not_calibrated",
+      "tests/leakage/test_eval_weight_freeze.py:44-52::test_mutating_weights_after_freeze_detected"
+    ],
+    "missing_or_limitations": "缺leaked weights、in-sample-only伪校准证据输入到正式release gate的对抗组合；权重后改检测不等于预先泄漏检测。"
+  },
+  {
+    "id": "F-06",
+    "spec_lines": "original_spec.md:261",
+    "acceptance_standard": "**F-06 Uncertainty provenance**\n- Perturb process, parameter, regime, method and data uncertainty separately.\n- **Pass:** diagnostics identify which uncertainty dimension changed; no single opaque score replaces the breakdown.",
+    "status": "UNVERIFIED",
+    "observed_execution": "process/parameter记录、uncertainty字段分离测试通过。",
+    "test_results_in_delivered_junit": [
+      {
+        "node": "tests.unit.test_sampling::test_parameter_and_process_uncertainty_separated",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_distributions::test_uncertainty_types_kept_separate",
+        "status": "PASS"
+      }
+    ],
+    "evidence": [
+      "tests/unit/test_sampling.py:116-123::test_parameter_and_process_uncertainty_separated",
+      "tests/unit/test_distributions.py:151-154::test_uncertainty_types_kept_separate"
+    ],
+    "missing_or_limitations": "没有process/parameter/regime/method/data五维分别扰动、各归因不串扰的实验。"
+  },
+  {
+    "id": "F-07",
+    "spec_lines": "original_spec.md:265",
+    "acceptance_standard": "**F-07 Monte Carlo stability**\n- Increase paths over a predeclared sequence, e.g. 2k, 10k, 50k, on stable fixtures.\n- **Pass:** Monte Carlo standard errors and quantile stability are reported; thresholds are set per statistic and documented. More paths must not be described as fixing model bias.",
+    "status": "UNVERIFIED",
+    "observed_execution": "sampling一次200路径的mcse>=0和分位排序断言通过。",
+    "test_results_in_delivered_junit": [
+      {
+        "node": "tests.unit.test_sampling::test_mc_diagnostics_and_provenance",
+        "status": "PASS"
+      }
+    ],
+    "evidence": [
+      "tests/unit/test_sampling.py:104-113::test_mc_diagnostics_and_provenance"
+    ],
+    "missing_or_limitations": "未见事前路径数序列、多个path数的MCSE/quantile收敛表、逐统计量阈值；增加路径不治bias声明也无证据。"
+  },
+  {
+    "id": "G-01",
+    "spec_lines": "original_spec.md:273",
+    "acceptance_standard": "**G-01 No implicit convergence**\n- Set fundamental value paths to a fixed distribution and vary market-pricing regime/multiple assumptions.\n- **Pass:** exit-price distribution changes with market-pricing inputs and is not forcibly identical to intrinsic value.",
+    "status": "UNVERIFIED",
+    "observed_execution": "sentinel intrinsic映射被默认exit忽略的测试通过。",
+    "test_results_in_delivered_junit": [
+      {
+        "node": "tests.unit.test_phase9_acceptance::test_ac3_no_silent_intrinsic_to_exit_copy",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.property.test_exit_price_properties::test_property_fundamental_value_cannot_silently_become_exit",
+        "status": "PASS"
+      }
+    ],
+    "evidence": [
+      "tests/unit/test_phase9_acceptance.py:110-138::test_ac3_no_silent_intrinsic_to_exit_copy",
+      "tests/property/test_exit_price_properties.py:30-49::test_property_fundamental_value_cannot_silently_become_exit"
+    ],
+    "missing_or_limitations": "缺固定完整fundamental分布、只切换pricing regime/multiple并断言exit变化的受控实验（并要求有效路径非空）。"
+  },
+  {
+    "id": "G-02",
+    "spec_lines": "original_spec.md:277",
+    "acceptance_standard": "**G-02 Intrinsic value held fixed**\n- Hold the intrinsic-value distribution constant, change terminal multiple distribution from compressed to expanded.\n- **Pass:** future exit-price distribution responds to the multiple change, while the fundamental-value output remains unchanged unless an explicit dependency is configured.",
+    "status": "UNVERIFIED",
+    "observed_execution": "既有13项G组无compressed→expanded单因素对照；其他市场posterior重算测试同时换seed。",
+    "test_results_in_delivered_junit": [
+      {
+        "node": "tests.unit.test_phase10_acceptance::test_ac3_market_posterior_change_recomputs",
+        "status": "PASS"
+      }
+    ],
+    "evidence": [
+      "tests/unit/test_phase10_acceptance.py:141-167::test_ac3_market_posterior_change_recomputs"
+    ],
+    "missing_or_limitations": "需固定intrinsic/data/config seed，单改终端倍数分布，比较exit变化且fundamental逐字段/哈希不变。"
+  },
+  {
+    "id": "G-03",
+    "spec_lines": "original_spec.md:281",
+    "acceptance_standard": "**G-03 Market multiple held fixed**\n- Hold terminal market multiples fixed, change fundamental financial paths.\n- **Pass:** exit prices change through projected financial metrics; diagnostics attribute the source.",
+    "status": "UNVERIFIED",
+    "observed_execution": "exit paths有denominator/multiple/bridge/share lineage测试通过。",
+    "test_results_in_delivered_junit": [
+      {
+        "node": "tests.unit.test_phase9_acceptance::test_ac4_lineage_preserved",
+        "status": "PASS"
+      }
+    ],
+    "evidence": [
+      "tests/unit/test_phase9_acceptance.py:171-195::test_ac4_lineage_preserved"
+    ],
+    "missing_or_limitations": "未固定multiple和seed只改财务路径并核对exit数值及diagnostic归因。"
+  },
+  {
+    "id": "G-04",
+    "spec_lines": "original_spec.md:285",
+    "acceptance_standard": "**G-04 Fundamental/market regime independence**\n- Change fundamental regime without directly changing market-pricing inputs; then change market-pricing regime without directly changing fundamental inputs.\n- **Pass:** each affects its own path as specified; any coupling is explicit and parameterized rather than hidden.",
+    "status": "UNVERIFIED",
+    "observed_execution": "状态词汇不交叉、无依赖标记和opt-in tilt标记通过。",
+    "test_results_in_delivered_junit": [
+      {
+        "node": "tests.unit.test_phase9_acceptance::test_ac1_market_estimator_ignores_fundamentals",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_phase9_acceptance::test_ac1_configured_dependence_is_opt_in",
+        "status": "PASS"
+      }
+    ],
+    "evidence": [
+      "tests/unit/test_phase9_acceptance.py:49-62::test_ac1_market_estimator_ignores_fundamentals",
+      "tests/unit/test_phase9_acceptance.py:65-85::test_ac1_configured_dependence_is_opt_in"
+    ],
+    "missing_or_limitations": "标签NONE/CONFIGURED不是两方向独立干预；缺fundamental-only与market-only反事实及显式耦合数值验证。"
+  },
+  {
+    "id": "G-05",
+    "spec_lines": "original_spec.md:289",
+    "acceptance_standard": "**G-05 Explicit convergence scenario**\n- Enable an explicit convergence scenario.\n- **Pass:** the scenario is labeled, parameterized, uncertain and evaluated separately; it is not the default path.",
+    "status": "UNVERIFIED",
+    "observed_execution": "显式convergence命名/flag及rate=1、blend=1全触发通过。",
+    "test_results_in_delivered_junit": [
+      {
+        "node": "tests.unit.test_phase9_acceptance::test_ac3_explicit_convergence_is_labeled",
+        "status": "PASS"
+      }
+    ],
+    "evidence": [
+      "tests/unit/test_phase9_acceptance.py:141-167::test_ac3_explicit_convergence_is_labeled"
+    ],
+    "missing_or_limitations": "缺0<stochastic_rate<1不确定性/参数边界及单独评价结果；全触发不能证明uncertain情景的随机约定。"
+  },
+  {
+    "id": "G-06",
+    "spec_lines": "original_spec.md:293",
+    "acceptance_standard": "**G-06 No future-price-as-intrinsic-ground-truth**\n- Run evaluation/report generation.\n- **Pass:** reports do not label observed future price as direct ground truth for intrinsic value.",
+    "status": "PASS",
+    "observed_execution": "合成evaluation明确price_mae_forbidden与MARKET_PRICE_ASSOCIATION_NOT_INTRINSIC_GROUND_TRUTH标签，独立输出目标。",
+    "test_results_in_delivered_junit": [
+      {
+        "node": "tests.unit.test_phase11_acceptance::test_ac4_future_price_not_intrinsic_truth",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_evaluation::test_targets_scored_separately_and_iv_not_price",
+        "status": "PASS"
+      }
+    ],
+    "evidence": [
+      "tests/unit/test_phase11_acceptance.py:106-118::test_ac4_future_price_not_intrinsic_truth",
+      "tests/unit/test_evaluation.py:52-60::test_targets_scored_separately_and_iv_not_price"
+    ],
+    "missing_or_limitations": "这是评价语义回归通过，不是历史预测准确性通过。"
+  },
+  {
+    "id": "H-01",
+    "spec_lines": "original_spec.md:299",
+    "acceptance_standard": "**H-01 Entry-price monotonicity**\n- Hold every future-price path and shareholder distribution path fixed. Calculate returns for two entry prices `P_low < P_high`.\n- **Pass:** pathwise return at `P_low` is never lower than at `P_high` under the same return convention.",
+    "status": "PASS",
+    "observed_execution": "固定future paths/distributions的Track B相对入场价Hypothesis与总均值单调、简单手算两价格结果通过。",
+    "test_results_in_delivered_junit": [
+      {
+        "node": "tests.property.test_return_track_b_properties::test_property_higher_entry_cannot_improve_pathwise_track_b",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_phase10_acceptance::test_ac2_higher_entry_cannot_improve_pathwise",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_returns::test_holding_period_and_ann_geo_hand",
+        "status": "PASS"
+      }
+    ],
+    "evidence": [
+      "tests/property/test_return_track_b_properties.py:40-50::test_property_higher_entry_cannot_improve_pathwise_track_b",
+      "tests/unit/test_phase10_acceptance.py:118-137::test_ac2_higher_entry_cannot_improve_pathwise",
+      "tests/unit/test_returns.py:30-41::test_holding_period_and_ann_geo_hand"
+    ],
+    "missing_or_limitations": "路径单调检查器来自生产库；简单独立数值例补充支撑，仍建议mutation证明检查器非空不漏错。"
+  },
+  {
+    "id": "H-02",
+    "spec_lines": "original_spec.md:303",
+    "acceptance_standard": "**H-02 Price does not rewrite fundamentals**\n- Change only entry price.\n- **Pass:** fundamental value and fundamental regime distributions remain unchanged; return distributions change. If the system intentionally reconditions on price-related information, that conditioning must be explicit and tested as a separate model.",
+    "status": "UNVERIFIED",
+    "observed_execution": "相同路径各entry initial_state一致与价格不变regime泄漏测试通过。",
+    "test_results_in_delivered_junit": [
+      {
+        "node": "tests.unit.test_returns::test_price_does_not_change_fundamental_odds",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.leakage.test_regime_leakage::test_prices_cannot_change_regimes_or_distributions",
+        "status": "PASS"
+      }
+    ],
+    "evidence": [
+      "tests/unit/test_returns.py:100-115::test_price_does_not_change_fundamental_odds",
+      "tests/leakage/test_regime_leakage.py:68-75::test_prices_cannot_change_regimes_or_distributions"
+    ],
+    "missing_or_limitations": "缺两个entry-price请求前后完整fundamental value/distribution/hash相等而return改变；只检查state标签不足。"
+  },
+  {
+    "id": "H-03",
+    "spec_lines": "original_spec.md:307",
+    "acceptance_standard": "**H-03 Shareholder distributions**\n- Test dividends, distributions and corporate actions.\n- **Pass:** total return uses the documented convention and does not double-count adjusted prices and cash distributions.",
+    "status": "UNVERIFIED",
+    "observed_execution": "分红手算/return component、显式DPS覆盖及无买回cash add-on约定、cash dividend不复权检查通过。",
+    "test_results_in_delivered_junit": [
+      {
+        "node": "tests.unit.test_phase10_acceptance::test_ac1_hand_worked_dividend_fixture",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_phase10_acceptance::test_ac1_hand_worked_split_and_buyback_no_double_count",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_snapshot::test_cash_dividend_does_not_adjust_prices",
+        "status": "PASS"
+      }
+    ],
+    "evidence": [
+      "tests/unit/test_phase10_acceptance.py:62-69::test_ac1_hand_worked_dividend_fixture",
+      "tests/unit/test_phase10_acceptance.py:72-98::test_ac1_hand_worked_split_and_buyback_no_double_count",
+      "tests/unit/test_snapshot.py:138-141::test_cash_dividend_does_not_adjust_prices"
+    ],
+    "missing_or_limitations": "缺调整价格+现金dividend、拆股/回购/增发逐一造成已知收益且核对不重复的精确对照。"
+  },
+  {
+    "id": "H-04",
+    "spec_lines": "original_spec.md:311",
+    "acceptance_standard": "**H-04 Horizon and annualization**\n- Verify arithmetic holding-period return, total return and annualized geometric return conventions on hand fixtures.\n- **Pass:** formula and horizon convention are explicit; no silent mixing of simple and log returns.",
+    "status": "PASS",
+    "observed_execution": "0.3 HPR、3年(1.3)^(1/3)-1和total-loss年化不可定义例通过，约定明确。",
+    "test_results_in_delivered_junit": [
+      {
+        "node": "tests.unit.test_returns::test_holding_period_and_ann_geo_hand",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_phase10_acceptance::test_ac1_hand_worked_dividend_fixture",
+        "status": "PASS"
+      }
+    ],
+    "evidence": [
+      "tests/unit/test_returns.py:30-41::test_holding_period_and_ann_geo_hand",
+      "tests/unit/test_phase10_acceptance.py:62-69::test_ac1_hand_worked_dividend_fixture"
+    ],
+    "missing_or_limitations": "本轮新增return YAML另有错误且未接入；此PASS仅针对既有公式例。"
+  },
+  {
+    "id": "H-05",
+    "spec_lines": "original_spec.md:315",
+    "acceptance_standard": "**H-05 Tail-risk metrics**\n- Verify loss probability, return hurdles, quantiles and expected shortfall on a small distribution whose exact answer can be computed.\n- **Pass:** results match the independent calculation and state the tail convention.",
+    "status": "UNVERIFIED",
+    "observed_execution": "高斯3000样本p_loss与numpy均值比较，quantile排序/ES<=q及同一production cvar函数自比通过。",
+    "test_results_in_delivered_junit": [
+      {
+        "node": "tests.unit.test_phase10_acceptance::test_ac4_quantile_loss_es_consistency",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_returns::test_cvar_and_quantile_consistency",
+        "status": "PASS"
+      }
+    ],
+    "evidence": [
+      "tests/unit/test_phase10_acceptance.py:171-192::test_ac4_quantile_loss_es_consistency",
+      "tests/unit/test_returns.py:63-70::test_cvar_and_quantile_consistency"
+    ],
+    "missing_or_limitations": "无小离散分布的独立exact loss/hurdle/quantiles/ES真值和tail convention逐项比对；cvar_es自比是oracle耦合。"
+  },
+  {
+    "id": "H-06",
+    "spec_lines": "original_spec.md:319",
+    "acceptance_standard": "**H-06 Invalid/failed paths**\n- Create a known fraction of invalid simulations.\n- **Pass:** valid-path fraction and failure causes are reported; invalid paths are not silently removed in a way that biases the distribution.",
+    "status": "UNVERIFIED",
+    "observed_execution": "sampling强制100%无效可阻断/override，财务路径聚合数量/哈希局部测试通过。",
+    "test_results_in_delivered_junit": [
+      {
+        "node": "tests.unit.test_phase4_followups::test_invalid_path_fraction_blocks_production",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_path_statements::test_failed_paths_never_enter_aggregates",
+        "status": "PASS"
+      }
+    ],
+    "evidence": [
+      "tests/unit/test_phase4_followups.py:26-42::test_invalid_path_fraction_blocks_production",
+      "tests/unit/test_path_statements.py:74-89::test_failed_paths_never_enter_aggregates"
+    ],
+    "missing_or_limitations": "没有已知混合失败比例从exit→returns的保留记录/valid fraction/failure原因和分布偏差试验；100% sampler failure不是本条return层。"
+  },
+  {
+    "id": "J-01",
+    "spec_lines": "original_spec.md:345",
+    "acceptance_standard": "**J-01 Frozen protocol**\nBefore running the test window, predeclare:\n- universe and point-in-time membership rules;\n- historical decision timestamps and forecast horizons;\n- required data coverage;\n- train/calibration/test windows;\n- methods and baseline models;\n- metrics and subgroup slices;\n- missing-data policy;\n- minimum sample requirements;\n- thresholds for any calibration/ensemble release.",
+    "status": "BLOCKED",
+    "observed_execution": "19条J命令执行评估单元/合成CLI测试，未提交真实历史protocol。",
+    "test_results_in_delivered_junit": [
+      {
+        "node": "tests.unit.test_evaluation::test_forecasts_persisted_before_outcomes",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_phase11_acceptance::test_weights_frozen_before_test",
+        "status": "PASS"
+      }
+    ],
+    "evidence": [
+      "tests/unit/test_evaluation.py:38-49::test_forecasts_persisted_before_outcomes",
+      "tests/unit/test_phase11_acceptance.py:196-207::test_weights_frozen_before_test",
+      "artifacts/vtp-0.1-evidence/Suite_J_Historical.log:1-14",
+      "artifacts/vtp-0.1-evidence/VTP-0.1_完整验收报告.md:378-387"
+    ],
+    "missing_or_limitations": "缺事前universe PIT membership/origins/horizon/coverage/train-cal/test/baselines/metrics/slices/missing/min_n/release阈值文件、冻结时间锚与数据版本。"
+  },
+  {
+    "id": "J-02",
+    "spec_lines": "original_spec.md:357",
+    "acceptance_standard": "**J-02 No random row split**\n- Evaluate chronologically using walk-forward or expanding/rolling windows.\n- **Pass:** no random row split for time-series evaluation; all transformations and calibrators are fitted only on permitted past data.",
+    "status": "BLOCKED",
+    "observed_execution": "chronological拒绝random与past-only origins回归通过。",
+    "test_results_in_delivered_junit": [
+      {
+        "node": "tests.unit.test_evaluation::test_refuse_random_splits",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_walk_forward::test_origins_past_only",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_walk_forward::test_later_revision_changes_only_realized_not_forecasts",
+        "status": "PASS"
+      }
+    ],
+    "evidence": [
+      "tests/unit/test_evaluation.py:24-29::test_refuse_random_splits",
+      "tests/unit/test_walk_forward.py:29-36::test_origins_past_only",
+      "tests/unit/test_walk_forward.py:89-100::test_later_revision_changes_only_realized_not_forecasts",
+      "artifacts/vtp-0.1-evidence/Suite_J_Historical.log:1-14",
+      "artifacts/vtp-0.1-evidence/VTP-0.1_完整验收报告.md:378-387"
+    ],
+    "missing_or_limitations": "实际历史walk-forward未执行；不能从API拒绝shuffle推断所有transform/calibrator使用过去数据。"
+  },
+  {
+    "id": "J-03",
+    "spec_lines": "original_spec.md:361",
+    "acceptance_standard": "**J-03 Separate forecast targets**\nEvaluate independently:\n- revenue/EBIT/ROE/FCF forecast distributions;\n- peer multiple behavior;\n- future market-price distribution;\n- total-return and event probabilities;\n- ensemble calibration for its declared target.",
+    "status": "BLOCKED",
+    "observed_execution": "合成report有OCF/intrinsic/price/TSR四目标键。",
+    "test_results_in_delivered_junit": [
+      {
+        "node": "tests.unit.test_phase11_acceptance::test_ac3_separate_evaluation_targets",
+        "status": "PASS"
+      }
+    ],
+    "evidence": [
+      "tests/unit/test_phase11_acceptance.py:78-102::test_ac3_separate_evaluation_targets",
+      "artifacts/vtp-0.1-evidence/Suite_J_Historical.log:1-14",
+      "artifacts/vtp-0.1-evidence/VTP-0.1_完整验收报告.md:378-387"
+    ],
+    "missing_or_limitations": "缺真实revenue/EBIT/ROE/FCF分布、peer multiples、price、TSR/event、ensemble各自OOS评分。"
+  },
+  {
+    "id": "J-04",
+    "spec_lines": "original_spec.md:369",
+    "acceptance_standard": "**J-04 Baselines**\nCompare to the relevant VMS baselines:\n- historical driver mean/median;\n- deterministic central-case DCF for eligible profiles;\n- simple multiple baseline;\n- no-regime baseline;\n- current-multiple persistence for exit pricing;\n- profile-appropriate benchmark.",
+    "status": "BLOCKED",
+    "observed_execution": "合成评估检测若干baseline名称存在。",
+    "test_results_in_delivered_junit": [
+      {
+        "node": "tests.unit.test_phase11_acceptance::test_ac5_baselines_and_subgroups",
+        "status": "PASS"
+      }
+    ],
+    "evidence": [
+      "tests/unit/test_phase11_acceptance.py:122-142::test_ac5_baselines_and_subgroups",
+      "artifacts/vtp-0.1-evidence/Suite_J_Historical.log:1-14",
+      "artifacts/vtp-0.1-evidence/VTP-0.1_完整验收报告.md:378-387"
+    ],
+    "missing_or_limitations": "缺六类适用baseline的真实逐origin forecasts/outcomes/errors、profile benchmark与增量对照。"
+  },
+  {
+    "id": "J-05",
+    "spec_lines": "original_spec.md:378",
+    "acceptance_standard": "**J-05 Proper scoring and calibration**\nUse MAE/RMSE or scaled error for continuous forecasts, pinball loss/interval coverage for quantiles, CRPS/log score where correctly implemented, and Brier score/reliability plots for event probabilities. Report uncertainty and subgroup performance by profile, sector, fundamental state and market-pricing state.",
+    "status": "BLOCKED",
+    "observed_execution": "合成scoring helper对CRPS非空/空pinball安全等测试通过。",
+    "test_results_in_delivered_junit": [
+      {
+        "node": "tests.unit.test_phase11_acceptance::test_ac5_baselines_and_subgroups",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.integration.test_cli_evaluate::test_cli_evaluate_synthetic",
+        "status": "PASS"
+      }
+    ],
+    "evidence": [
+      "tests/unit/test_phase11_acceptance.py:122-142::test_ac5_baselines_and_subgroups",
+      "tests/integration/test_cli_evaluate.py:13-34::test_cli_evaluate_synthetic",
+      "artifacts/vtp-0.1-evidence/Suite_J_Historical.log:1-14",
+      "artifacts/vtp-0.1-evidence/VTP-0.1_完整验收报告.md:378-387"
+    ],
+    "missing_or_limitations": "缺冻结真实样本的proper scores/reliability、置信区间及profile/sector/fundamental/market slices数值表；字段存在不是实证报告。"
+  },
+  {
+    "id": "J-06",
+    "spec_lines": "original_spec.md:381",
+    "acceptance_standard": "**J-06 Claim discipline**\n- **Pass:** reports clearly distinguish `ENGINEERING_PASS`, `DATA_QUALITY_PASS`, `CALIBRATION_PASS`, `ENSEMBLE_CALIBRATED` and any investment-value conclusion.\n- If sample size or PIT reconstruction is insufficient, report `CALIBRATION_INSUFFICIENT`; do not claim alpha or profitable investing from synthetic results or in-sample fit.\n\nHistorical evaluation has no universal numeric accuracy threshold that can responsibly be invented before the target, horizon, universe and baseline are fixed. Acceptance requires a predeclared protocol, valid execution, transparent results, no material leakage, and honest interpretation. Any performance threshold must be pre-registered before the final holdout is opened.",
+    "status": "FAIL",
+    "observed_execution": "报告保留CALIBRATION_INSUFFICIENT/INVESTMENT_VALUE_NOT_ESTABLISHED是正确的。",
+    "test_results_in_delivered_junit": [
+      {
+        "node": "tests.unit.test_phase11_acceptance::test_ac6_calibration_insufficient_not_inferred_success",
+        "status": "PASS"
+      }
+    ],
+    "evidence": [
+      "tests/unit/test_phase11_acceptance.py:146-170::test_ac6_calibration_insufficient_not_inferred_success",
+      "artifacts/vtp-0.1-evidence/VTP-0.1_完整验收报告.md:255-274",
+      "artifacts/vtp-0.1-evidence/VTP-0.1_完整验收报告.md:420-460"
+    ],
+    "missing_or_limitations": "但同时将历史测试J列PASS、工程/数据全验收且给发布批准，构成主张纪律失败；应拆分“评估代码回归通过”与“历史实证BLOCKED”。"
+  },
+  {
+    "id": "K-01",
+    "spec_lines": "original_spec.md:389",
+    "acceptance_standard": "**K-01 Required artifact completeness**\nEach run bundle includes:\n- request and target;\n- code/config/schema versions;\n- random seed and path count;\n- data snapshot IDs, provenance and PIT status;\n- profile probabilities/flags;\n- method registry versions and per-method eligibility/reason codes;\n- method-specific distributions;\n- compatibility and disagreement diagnostics;\n- ensemble status/weights if applicable;\n- market-pricing assumptions and exit-price distribution;\n- return distribution and tail metrics;\n- Monte Carlo stability and invalid-path diagnostics;\n- logs, warnings and final status.",
+    "status": "UNVERIFIED",
+    "observed_execution": "phase12成熟端到端必需文件存在性与若干bundle schema/标签校验通过。",
+    "test_results_in_delivered_junit": [
+      {
+        "node": "tests.unit.test_phase12_acceptance::test_ac2_mature_e2e_artifact_set",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_bundle_validation::test_validate_phase12_subset_pass",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.vtp_0_1.suite_a.test_a02_offline_synthetic_run.TestA02OfflineSyntheticRun::test_bundle_contains_provenance",
+        "status": "PASS"
+      }
+    ],
+    "evidence": [
+      "tests/unit/test_phase12_acceptance.py:47-66::test_ac2_mature_e2e_artifact_set",
+      "tests/unit/test_bundle_validation.py:37-50::test_validate_phase12_subset_pass",
+      "tests/vtp_0_1/suite_a/test_a02_offline_synthetic_run.py:120-141::test_bundle_contains_provenance"
+    ],
+    "missing_or_limitations": "交付未保留完整run bundle；无逐字段request/code/config/schema/seed/path/data/PIT/profile/registry/methods/compat/ensemble/pricing/returns/MC/invalid/log/final状态对照；validator例可用同样空壳字典造全文件。"
+  },
+  {
+    "id": "K-02",
+    "spec_lines": "original_spec.md:407",
+    "acceptance_standard": "**K-02 Replay**\n- Re-run from a saved request, data snapshot and config.\n- **Pass:** output reproduces within documented numeric tolerances; any non-deterministic component is identified and isolated.",
+    "status": "UNVERIFIED",
+    "observed_execution": "phase0相同seed两次确定性文件哈希相等，seeding稳定。",
+    "test_results_in_delivered_junit": [
+      {
+        "node": "tests.integration.test_cli_phase0::test_phase0_same_seed_reproduces",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.integration.test_cli_phase0::test_phase0_via_console_script",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_seeding_metadata::test_make_rng_deterministic",
+        "status": "PASS"
+      }
+    ],
+    "evidence": [
+      "tests/integration/test_cli_phase0.py:59-67::test_phase0_same_seed_reproduces",
+      "tests/integration/test_cli_phase0.py:30-56::test_phase0_via_console_script",
+      "tests/unit/test_seeding_metadata.py:12-15::test_make_rng_deterministic"
+    ],
+    "missing_or_limitations": "phase0 eligibility全NOT_RUN；没有从已保存request+data+config重放完整valuation→exit→returns bundle的命令/产物/容差差分。"
+  },
+  {
+    "id": "K-03",
+    "spec_lines": "original_spec.md:411",
+    "acceptance_standard": "**K-03 Failure transparency**\n- Force failures at data, profile, routing, valuation, pricing and returns layers.\n- **Pass:** failure layer, reason code, affected outputs and recovery status are visible. A partial result cannot be mislabeled as a complete run.",
+    "status": "UNVERIFIED",
+    "observed_execution": "数据/无输入投影/缺method schedules有错误或gap测试通过。",
+    "test_results_in_delivered_junit": [
+      {
+        "node": "tests.unit.test_quality::test_critical_blocks[extra0-SIGN_CONVENTION_VIOLATION]",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_quality::test_critical_blocks[extra1-SIGN_CONVENTION_VIOLATION]",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_quality::test_critical_blocks[extra2-SIGN_CONVENTION_VIOLATION]",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_quality::test_critical_blocks[extra3-CURRENCY_NOT_CNY]",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_quality::test_critical_blocks[extra4-STATEMENT_TYPE_MISMATCH]",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_quality::test_critical_blocks[extra5-CONFLICTING_VERSIONS]",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_projection::test_insufficient_data_not_invented",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_phase6_acceptance::test_ac5_missing_asset_or_segment_cannot_look_complete",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_phase5_followups::test_central_path_failure_blocks_production",
+        "status": "PASS"
+      }
+    ],
+    "evidence": [
+      "tests/unit/test_quality.py:48-54::test_critical_blocks",
+      "tests/unit/test_projection.py:168-172::test_insufficient_data_not_invented",
+      "tests/unit/test_phase6_acceptance.py:293-321::test_ac5_missing_asset_or_segment_cannot_look_complete",
+      "tests/unit/test_phase5_followups.py:17-57::test_central_path_failure_blocks_production"
+    ],
+    "missing_or_limitations": "未对data/profile/routing/valuation/pricing/returns六层逐一强制失败并断言layer/reason/affected outputs/recovery/final partial status；部分伪造异常测试仅证明传播。"
+  },
+  {
+    "id": "ENV-CLEAN",
+    "spec_lines": "original_spec.md:55",
+    "acceptance_standard": "fresh venv/clean checkout",
+    "status": "UNVERIFIED",
+    "observed_execution": "存在venv文件，但清洁安装只有报告叙述和依赖静态检查。",
+    "test_results_in_delivered_junit": [],
+    "evidence": [
+      "tests/vtp_0_1/suite_a/test_a01_clean_install.py:15-59"
+    ],
+    "missing_or_limitations": "缺clean checkout/venv/pip实际log/exit/PYTHONPATH和凭据隔离；venv本身被提交。"
+  },
+  {
+    "id": "ENV-HISTORY",
+    "spec_lines": "original_spec.md:58",
+    "acceptance_standard": "独立历史环境、版本冻结、数据溯源",
+    "status": "BLOCKED",
+    "observed_execution": "报告承认VM无本地历史数据，16个数据测试skip。",
+    "test_results_in_delivered_junit": [],
+    "evidence": [
+      "artifacts/vtp-0.1-evidence/VTP-0.1_完整验收报告.md:378-387"
+    ],
+    "missing_or_limitations": "缺独立冻结历史evaluation环境、snapshot/version/provenance；新DuckDB文件存在不代表历史样本可用。"
+  },
+  {
+    "id": "ENV-OFFLINE",
+    "spec_lines": "original_spec.md:56",
+    "acceptance_standard": "离线且无网络凭据",
+    "status": "UNVERIFIED",
+    "observed_execution": "部分CLI设置http_proxy与https_proxy至本地拒绝端口。",
+    "test_results_in_delivered_junit": [],
+    "evidence": [
+      "tests/vtp_0_1/suite_a/test_a02_offline_synthetic_run.py:19-97"
+    ],
+    "missing_or_limitations": "不是所有socket/直连/NO_PROXY的网络不可用证明；继承os.environ，凭据不存在也无证明。"
+  },
+  {
+    "id": "ENV-PY",
+    "spec_lines": "original_spec.md:54",
+    "acceptance_standard": "支持Python3.11+环境",
+    "status": "PASS",
+    "observed_execution": "JUnit声明Python 3.12.3，符合3.11+。",
+    "test_results_in_delivered_junit": [],
+    "evidence": [
+      "artifacts/vtp-0.1-evidence/Comprehensive_All_Tests.log:1-6"
+    ],
+    "missing_or_limitations": "仅该解释器环境，不声称测试本轮3.11/3.13。"
+  },
+  {
+    "id": "ENV-SEED",
+    "spec_lines": "original_spec.md:57",
+    "acceptance_standard": "固定随机种子",
+    "status": "PASS",
+    "observed_execution": "测试命令与simulation/exit性质中固定seed可见、复现断言通过。",
+    "test_results_in_delivered_junit": [
+      {
+        "node": "tests.unit.test_sampling::test_fixed_seed_reproduces_paths",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.property.test_exit_price_properties::test_property_seed_reproducible_exit_summaries",
+        "status": "PASS"
+      }
+    ],
+    "evidence": [
+      "tests/unit/test_sampling.py:29-35::test_fixed_seed_reproduces_paths",
+      "tests/property/test_exit_price_properties.py:54-63::test_property_seed_reproducible_exit_summaries"
+    ],
+    "missing_or_limitations": ""
+  },
+  {
+    "id": "FREEZE-ORACLES",
+    "spec_lines": "original_spec.md:79",
+    "acceptance_standard": "独立真值/路由矩阵执行前审核冻结",
+    "status": "UNVERIFIED",
+    "observed_execution": "YAML注释自称执行前冻结；两个新增commit均在已记录pytest运行后。",
+    "test_results_in_delivered_junit": [],
+    "evidence": [
+      "tests/vtp_0_1/fixtures/hand_calculated_references.yaml:1-3",
+      "tests/vtp_0_1/fixtures/synthetic_companies.yaml:1-3",
+      "commits.json",
+      "artifacts/vtp-0.1-evidence/vtp_execution_results.json"
+    ],
+    "missing_or_limitations": "没有执行前review approval/manifest hash/time anchor、完整routing truth；无法证明先冻后测，也不据此指控实际调参。"
+  },
+  {
+    "id": "I-M01",
+    "spec_lines": "original_spec.md:339",
+    "acceptance_standard": "反转债务符号",
+    "status": "UNVERIFIED",
+    "observed_execution": "没有该代表性实现突变的patch/hash、运行命令、预期失败测试、退出码、kill/survive记录。",
+    "test_results_in_delivered_junit": [],
+    "evidence": [
+      "tests/vtp_0_1/vtp_execution_harness.py:122-237",
+      "artifacts/vtp-0.1-evidence/Suite_I_Properties.log:1-13",
+      "artifacts/vtp-0.1-evidence/VTP-0.1_完整验收报告.md:561-566"
+    ],
+    "missing_or_limitations": "未执行的代表性突变不能记为killed；输入/权重tamper与实装fault mutation不同。mutation score=N/A，不是100%或0%。"
+  },
+  {
+    "id": "I-M02",
+    "spec_lines": "original_spec.md:339",
+    "acceptance_standard": "绕过硬门禁",
+    "status": "UNVERIFIED",
+    "observed_execution": "没有该代表性实现突变的patch/hash、运行命令、预期失败测试、退出码、kill/survive记录。",
+    "test_results_in_delivered_junit": [],
+    "evidence": [
+      "tests/vtp_0_1/vtp_execution_harness.py:122-237",
+      "artifacts/vtp-0.1-evidence/Suite_I_Properties.log:1-13",
+      "artifacts/vtp-0.1-evidence/VTP-0.1_完整验收报告.md:561-566"
+    ],
+    "missing_or_limitations": "未执行的代表性突变不能记为killed；输入/权重tamper与实装fault mutation不同。mutation score=N/A，不是100%或0%。"
+  },
+  {
+    "id": "I-M03",
+    "spec_lines": "original_spec.md:339",
+    "acceptance_standard": "纳入post-as_of观察",
+    "status": "UNVERIFIED",
+    "observed_execution": "没有该代表性实现突变的patch/hash、运行命令、预期失败测试、退出码、kill/survive记录。",
+    "test_results_in_delivered_junit": [],
+    "evidence": [
+      "tests/vtp_0_1/vtp_execution_harness.py:122-237",
+      "artifacts/vtp-0.1-evidence/Suite_I_Properties.log:1-13",
+      "artifacts/vtp-0.1-evidence/VTP-0.1_完整验收报告.md:561-566"
+    ],
+    "missing_or_limitations": "未执行的代表性突变不能记为killed；输入/权重tamper与实装fault mutation不同。mutation score=N/A，不是100%或0%。"
+  },
+  {
+    "id": "I-M04",
+    "spec_lines": "original_spec.md:339",
+    "acceptance_standard": "distribution mixture改为均值平均",
+    "status": "UNVERIFIED",
+    "observed_execution": "没有该代表性实现突变的patch/hash、运行命令、预期失败测试、退出码、kill/survive记录。",
+    "test_results_in_delivered_junit": [],
+    "evidence": [
+      "tests/vtp_0_1/vtp_execution_harness.py:122-237",
+      "artifacts/vtp-0.1-evidence/Suite_I_Properties.log:1-13",
+      "artifacts/vtp-0.1-evidence/VTP-0.1_完整验收报告.md:561-566"
+    ],
+    "missing_or_limitations": "未执行的代表性突变不能记为killed；输入/权重tamper与实装fault mutation不同。mutation score=N/A，不是100%或0%。"
+  },
+  {
+    "id": "I-M05",
+    "spec_lines": "original_spec.md:339",
+    "acceptance_standard": "exit强制intrinsic",
+    "status": "UNVERIFIED",
+    "observed_execution": "没有该代表性实现突变的patch/hash、运行命令、预期失败测试、退出码、kill/survive记录。",
+    "test_results_in_delivered_junit": [],
+    "evidence": [
+      "tests/vtp_0_1/vtp_execution_harness.py:122-237",
+      "artifacts/vtp-0.1-evidence/Suite_I_Properties.log:1-13",
+      "artifacts/vtp-0.1-evidence/VTP-0.1_完整验收报告.md:561-566"
+    ],
+    "missing_or_limitations": "未执行的代表性突变不能记为killed；输入/权重tamper与实装fault mutation不同。mutation score=N/A，不是100%或0%。"
+  },
+  {
+    "id": "I-M06",
+    "spec_lines": "original_spec.md:339",
+    "acceptance_standard": "静默丢弃失败MC路径",
+    "status": "UNVERIFIED",
+    "observed_execution": "没有该代表性实现突变的patch/hash、运行命令、预期失败测试、退出码、kill/survive记录。",
+    "test_results_in_delivered_junit": [],
+    "evidence": [
+      "tests/vtp_0_1/vtp_execution_harness.py:122-237",
+      "artifacts/vtp-0.1-evidence/Suite_I_Properties.log:1-13",
+      "artifacts/vtp-0.1-evidence/VTP-0.1_完整验收报告.md:561-566"
+    ],
+    "missing_or_limitations": "未执行的代表性突变不能记为killed；输入/权重tamper与实装fault mutation不同。mutation score=N/A，不是100%或0%。"
+  },
+  {
+    "id": "I-P01",
+    "spec_lines": "original_spec.md:327",
+    "acceptance_standard": "后验/体制概率有限、非负且和1",
+    "status": "PASS",
+    "observed_execution": "Hypothesis regime posterior归一化回归通过。",
+    "test_results_in_delivered_junit": [
+      {
+        "node": "tests.property.test_regime_properties::test_filtered_posteriors_are_probabilities",
+        "status": "PASS"
+      }
+    ],
+    "evidence": [
+      "tests/property/test_regime_properties.py:32-47::test_filtered_posteriors_are_probabilities"
+    ],
+    "missing_or_limitations": ""
+  },
+  {
+    "id": "I-P02",
+    "spec_lines": "original_spec.md:328",
+    "acceptance_standard": "集成权重有限、非负且和1",
+    "status": "PASS",
+    "observed_execution": "随机有限权重归一化并断言finite/nonnegative/sum，JUnit通过。",
+    "test_results_in_delivered_junit": [
+      {
+        "node": "tests.property.test_ensemble_properties::test_normalized_weights_nonneg_sum_to_one",
+        "status": "PASS"
+      }
+    ],
+    "evidence": [
+      "tests/property/test_ensemble_properties.py:32-42::test_normalized_weights_nonneg_sum_to_one"
+    ],
+    "missing_or_limitations": ""
+  },
+  {
+    "id": "I-P03",
+    "spec_lines": "original_spec.md:329",
+    "acceptance_standard": "不合格方法不得进入ensemble",
+    "status": "PASS",
+    "observed_execution": "坏方法排除；非零权重包含坏方法抛错，JUnit通过。",
+    "test_results_in_delivered_junit": [
+      {
+        "node": "tests.property.test_ensemble_properties::test_ineligible_never_in_mixture_property",
+        "status": "PASS"
+      }
+    ],
+    "evidence": [
+      "tests/property/test_ensemble_properties.py:54-86::test_ineligible_never_in_mixture_property"
+    ],
+    "missing_or_limitations": ""
+  },
+  {
+    "id": "I-P04",
+    "spec_lines": "original_spec.md:330",
+    "acceptance_standard": "更高债务类claims不增加普通权益",
+    "status": "UNVERIFIED",
+    "observed_execution": "已有合并桥接常数算例。",
+    "test_results_in_delivered_junit": [
+      {
+        "node": "tests.unit.test_valuation::test_bridge_hand_fixture_and_negative_equity_preserved",
+        "status": "PASS"
+      }
+    ],
+    "evidence": [
+      "tests/unit/test_valuation.py:84-95::test_bridge_hand_fixture_and_negative_equity_preserved"
+    ],
+    "missing_or_limitations": "未见固定其他项、增加各debt-like claims的property/metamorphic试验。"
+  },
+  {
+    "id": "I-P05",
+    "spec_lines": "original_spec.md:331",
+    "acceptance_standard": "固定equity更多稀释股不提高VPS",
+    "status": "PASS",
+    "observed_execution": "100→200 shares直接公共桥接验证。",
+    "test_results_in_delivered_junit": [
+      {
+        "node": "tests.property.test_exit_price_properties::test_property_more_shares_cannot_increase_vps_holding_equity",
+        "status": "PASS"
+      }
+    ],
+    "evidence": [
+      "tests/property/test_exit_price_properties.py:66-80::test_property_more_shares_cannot_increase_vps_holding_equity"
+    ],
+    "missing_or_limitations": "非Hypothesis但practical确定性metamorphic已编码。"
+  },
+  {
+    "id": "I-P06",
+    "spec_lines": "original_spec.md:332",
+    "acceptance_standard": "固定exit/distributions提高entry不改善pathwise return",
+    "status": "PASS",
+    "observed_execution": "价格随机列表Hypothesis测试与手算价格比较通过。",
+    "test_results_in_delivered_junit": [
+      {
+        "node": "tests.property.test_return_track_b_properties::test_property_higher_entry_cannot_improve_pathwise_track_b",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_returns::test_holding_period_and_ann_geo_hand",
+        "status": "PASS"
+      }
+    ],
+    "evidence": [
+      "tests/property/test_return_track_b_properties.py:40-50::test_property_higher_entry_cannot_improve_pathwise_track_b",
+      "tests/unit/test_returns.py:30-41::test_holding_period_and_ann_geo_hand"
+    ],
+    "missing_or_limitations": "同H-01局限。"
+  },
+  {
+    "id": "I-P07",
+    "spec_lines": "original_spec.md:333",
+    "acceptance_standard": "无效discount/growth路径不得有效",
+    "status": "PASS",
+    "observed_execution": "随机无效区WACC-g检验valid=false及EV=None，通过。",
+    "test_results_in_delivered_junit": [
+      {
+        "node": "tests.unit.test_phase4_acceptance::test_property_invalid_wacc_le_g_never_valid",
+        "status": "PASS"
+      }
+    ],
+    "evidence": [
+      "tests/unit/test_phase4_acceptance.py:139-154::test_property_invalid_wacc_le_g_never_valid"
+    ],
+    "missing_or_limitations": ""
+  },
+  {
+    "id": "I-P08",
+    "spec_lines": "original_spec.md:334",
+    "acceptance_standard": "EV→equity bridge恰一次",
+    "status": "PASS",
+    "observed_execution": "PE无桥/EV桥一次固定数值及错配拒绝通过；重复桥接会改变该例1330的预期。",
+    "test_results_in_delivered_junit": [
+      {
+        "node": "tests.unit.test_phase5_acceptance::test_ac6_equity_methods_no_ev_bridge_ev_methods_bridge_once",
+        "status": "PASS"
+      }
+    ],
+    "evidence": [
+      "tests/unit/test_phase5_acceptance.py:176-208::test_ac6_equity_methods_no_ev_bridge_ev_methods_bridge_once"
+    ],
+    "missing_or_limitations": "覆盖这些固定算例；更广claims和mutation义务另计。"
+  },
+  {
+    "id": "I-P09",
+    "spec_lines": "original_spec.md:335",
+    "acceptance_standard": "同seed/config/data/code可复现",
+    "status": "PASS",
+    "observed_execution": "exit summaries/path价格两次一致及simulation model_dump一致通过。",
+    "test_results_in_delivered_junit": [
+      {
+        "node": "tests.property.test_exit_price_properties::test_property_seed_reproducible_exit_summaries",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_sampling::test_fixed_seed_reproduces_paths",
+        "status": "PASS"
+      }
+    ],
+    "evidence": [
+      "tests/property/test_exit_price_properties.py:54-63::test_property_seed_reproducible_exit_summaries",
+      "tests/unit/test_sampling.py:29-35::test_fixed_seed_reproduces_paths"
+    ],
+    "missing_or_limitations": "不是saved snapshot完整replay；K-02仍未证实。"
+  },
+  {
+    "id": "I-P10",
+    "spec_lines": "original_spec.md:336",
+    "acceptance_standard": "未来信息不影响过去as_of",
+    "status": "PASS",
+    "observed_execution": "已知only vs含未来snapshot、regime等变形测试通过。",
+    "test_results_in_delivered_junit": [
+      {
+        "node": "tests.leakage.test_leakage::test_snapshot_invariant_to_information_after_as_of",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.leakage.test_leakage::test_injected_future_restatement_of_old_period_does_not_change_old_snapshot",
+        "status": "PASS"
+      }
+    ],
+    "evidence": [
+      "tests/leakage/test_leakage.py:47-50::test_snapshot_invariant_to_information_after_as_of",
+      "tests/leakage/test_leakage.py:97-104::test_injected_future_restatement_of_old_period_does_not_change_old_snapshot"
+    ],
+    "missing_or_limitations": "限所测输入/时间粒度；B-01三联边界仍缺。"
+  },
+  {
+    "id": "I-P11",
+    "spec_lines": "original_spec.md:337",
+    "acceptance_standard": "fundamental不能无规则成为exit",
+    "status": "PASS",
+    "observed_execution": "默认scenario忽略sentinel intrinsic的路径测试通过。",
+    "test_results_in_delivered_junit": [
+      {
+        "node": "tests.property.test_exit_price_properties::test_property_fundamental_value_cannot_silently_become_exit",
+        "status": "PASS"
+      }
+    ],
+    "evidence": [
+      "tests/property/test_exit_price_properties.py:30-49::test_property_fundamental_value_cannot_silently_become_exit"
+    ],
+    "missing_or_limitations": "这一个不变量通过不等于G六项全通过；循环continue缺非空断言。"
+  },
+  {
+    "id": "REF-DDM",
+    "spec_lines": "original_spec.md:83",
+    "acceptance_standard": "§4.3独立数字参考 REF-DDM",
+    "status": "UNVERIFIED",
+    "observed_execution": "Gordon 500/(.09-.03)=8333.333333与YAML近似相合。",
+    "test_results_in_delivered_junit": [],
+    "evidence": [
+      "tests/vtp_0_1/fixtures/hand_calculated_references.yaml:53",
+      "reference_arithmetic_audit.json"
+    ],
+    "missing_or_limitations": "YAML未消费，无单位/日期/逐股权利约定审核文件。"
+  },
+  {
+    "id": "REF-FCFE",
+    "spec_lines": "original_spec.md:83",
+    "acceptance_standard": "§4.3独立数字参考 REF-FCFE",
+    "status": "FAIL",
+    "observed_execution": "独立重算800/1.11+900/1.11²+[945/(.11-.025)]/1.11²=10474.512668；YAML=10473.48，差1.032668>0.01。",
+    "test_results_in_delivered_junit": [],
+    "evidence": [
+      "tests/vtp_0_1/fixtures/hand_calculated_references.yaml:31",
+      "reference_arithmetic_audit.json"
+    ],
+    "missing_or_limitations": "文件自称WITH_BORROWING却无净借款/融资路径输入；未对生产执行。"
+  },
+  {
+    "id": "REF-FCFF",
+    "spec_lines": "original_spec.md:83",
+    "acceptance_standard": "§4.3独立数字参考 REF-FCFF",
+    "status": "UNVERIFIED",
+    "observed_execution": "两期FCFF YAML数值手工复核大体符合1分容差；但该文件未被任何测试消费。",
+    "test_results_in_delivered_junit": [],
+    "evidence": [
+      "tests/vtp_0_1/fixtures/hand_calculated_references.yaml:7",
+      "reference_arithmetic_audit.json"
+    ],
+    "missing_or_limitations": "未建立独立spreadsheet/script原件和冻结审阅；生产对照未执行。"
+  },
+  {
+    "id": "REF-MULTIPLES",
+    "spec_lines": "original_spec.md:83",
+    "acceptance_standard": "§4.3独立数字参考 REF-MULTIPLES",
+    "status": "UNVERIFIED",
+    "observed_execution": "PE/EV-EBITDA静态算例算术基本相合。",
+    "test_results_in_delivered_junit": [],
+    "evidence": [
+      "tests/vtp_0_1/fixtures/hand_calculated_references.yaml:101",
+      "reference_arithmetic_audit.json"
+    ],
+    "missing_or_limitations": "未消费；强制PB独立fixture缺失，EV/EBIT、EV/Sales也非全方法五类。"
+  },
+  {
+    "id": "REF-NAV",
+    "spec_lines": "original_spec.md:83",
+    "acceptance_standard": "§4.3独立数字参考 REF-NAV",
+    "status": "UNVERIFIED",
+    "observed_execution": "资产haircuts合计26750−15000=11750，与YAML相符。",
+    "test_results_in_delivered_junit": [],
+    "evidence": [
+      "tests/vtp_0_1/fixtures/hand_calculated_references.yaml:142",
+      "reference_arithmetic_audit.json"
+    ],
+    "missing_or_limitations": "未消费；units/conventions/输入溯源审核未提供。"
+  },
+  {
+    "id": "REF-RETURNS",
+    "spec_lines": "original_spec.md:83",
+    "acceptance_standard": "§4.3独立数字参考 REF-RETURNS",
+    "status": "FAIL",
+    "observed_execution": "(0.95)^(1/3)-1=-0.0169524275，对比-0.0171差0.00014757；0.9例=-0.0345106154，对比-0.0347差0.00018938；均超0.0001。",
+    "test_results_in_delivered_junit": [],
+    "evidence": [
+      "tests/vtp_0_1/fixtures/hand_calculated_references.yaml:201",
+      "reference_arithmetic_audit.json"
+    ],
+    "missing_or_limitations": "未消费，不能算实际公式测试失败；是交付参考真值自身不一致。"
+  },
+  {
+    "id": "REF-RIM",
+    "spec_lines": "original_spec.md:83",
+    "acceptance_standard": "§4.3独立数字参考 REF-RIM",
+    "status": "FAIL",
+    "observed_execution": "224/1.09²=188.536318，而YAML=188.49，差0.046318>0.01；终值1044未给出可唯一复算的增长/延续约定。",
+    "test_results_in_delivered_junit": [],
+    "evidence": [
+      "tests/vtp_0_1/fixtures/hand_calculated_references.yaml:73",
+      "reference_arithmetic_audit.json"
+    ],
+    "missing_or_limitations": "不能使用该oracle给生产判错/判对；应独立审阅而非事后改断言。"
+  },
+  {
+    "id": "REF-SOTP",
+    "spec_lines": "original_spec.md:83",
+    "acceptance_standard": "§4.3独立数字参考 REF-SOTP",
+    "status": "UNVERIFIED",
+    "observed_execution": "25000−2000−8000+1000−500=15500，与YAML相符。",
+    "test_results_in_delivered_junit": [],
+    "evidence": [
+      "tests/vtp_0_1/fixtures/hand_calculated_references.yaml:176",
+      "reference_arithmetic_audit.json"
+    ],
+    "missing_or_limitations": "未消费，缺holding discount/premium边界及统一claims审核。"
+  },
+  {
+    "id": "SYN-ASSET",
+    "spec_lines": "original_spec.md:72",
+    "acceptance_standard": "原spec §4.2强制公司 SYN-ASSET",
+    "status": "UNVERIFIED",
+    "observed_execution": "YAML包含设计说明和部分expected_routes；存在所列类似既有测试，但没有该ID数据的执行结果。",
+    "test_results_in_delivered_junit": [
+      {
+        "node": "tests.unit.test_phase6_acceptance::test_ac2_nav_requires_explicit_fair_not_raw_book",
+        "status": "PASS"
+      }
+    ],
+    "evidence": [
+      "tests/unit/test_phase6_acceptance.py:109-149::test_ac2_nav_requires_explicit_fair_not_raw_book",
+      "tests/vtp_0_1/fixtures/synthetic_companies.yaml:73"
+    ],
+    "missing_or_limitations": "没有读取该YAML的测试/harness、输入适配、逐method/target观察表和reason codes；非完整可执行PIT/财务历史夹具。"
+  },
+  {
+    "id": "SYN-BAD-DATA",
+    "spec_lines": "original_spec.md:76",
+    "acceptance_standard": "原spec §4.2强制公司 SYN-BAD-DATA",
+    "status": "UNVERIFIED",
+    "observed_execution": "YAML包含设计说明和部分expected_routes；存在所列类似既有测试，但没有该ID数据的执行结果。",
+    "test_results_in_delivered_junit": [
+      {
+        "node": "tests.unit.test_quality::test_critical_blocks[extra0-SIGN_CONVENTION_VIOLATION]",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_quality::test_critical_blocks[extra1-SIGN_CONVENTION_VIOLATION]",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_quality::test_critical_blocks[extra2-SIGN_CONVENTION_VIOLATION]",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_quality::test_critical_blocks[extra3-CURRENCY_NOT_CNY]",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_quality::test_critical_blocks[extra4-STATEMENT_TYPE_MISMATCH]",
+        "status": "PASS"
+      },
+      {
+        "node": "tests.unit.test_quality::test_critical_blocks[extra5-CONFLICTING_VERSIONS]",
+        "status": "PASS"
+      }
+    ],
+    "evidence": [
+      "tests/unit/test_quality.py:48-54::test_critical_blocks",
+      "tests/vtp_0_1/fixtures/synthetic_companies.yaml:136"
+    ],
+    "missing_or_limitations": "没有读取该YAML的测试/harness、输入适配、逐method/target观察表和reason codes；非完整可执行PIT/财务历史夹具。"
+  },
+  {
+    "id": "SYN-BANK",
+    "spec_lines": "original_spec.md:70",
+    "acceptance_standard": "原spec §4.2强制公司 SYN-BANK",
+    "status": "UNVERIFIED",
+    "observed_execution": "YAML包含设计说明和部分expected_routes；存在所列类似既有测试，但没有该ID数据的执行结果。",
+    "test_results_in_delivered_junit": [
+      {
+        "node": "tests.unit.test_phase6_acceptance::test_ac4_financial_routes_to_rim_industrial_fcff_disabled",
+        "status": "PASS"
+      }
+    ],
+    "evidence": [
+      "tests/unit/test_phase6_acceptance.py:188-236::test_ac4_financial_routes_to_rim_industrial_fcff_disabled",
+      "tests/vtp_0_1/fixtures/synthetic_companies.yaml:43"
+    ],
+    "missing_or_limitations": "没有读取该YAML的测试/harness、输入适配、逐method/target观察表和reason codes；非完整可执行PIT/财务历史夹具。"
+  },
+  {
+    "id": "SYN-CYCLICAL",
+    "spec_lines": "original_spec.md:71",
+    "acceptance_standard": "原spec §4.2强制公司 SYN-CYCLICAL",
+    "status": "UNVERIFIED",
+    "observed_execution": "YAML包含设计说明和部分expected_routes；存在所列类似既有测试，但没有该ID数据的执行结果。",
+    "test_results_in_delivered_junit": [
+      {
+        "node": "tests.unit.test_midcycle_skel::test_hook_cyclical_high_conf_series_uses_midcycle",
+        "status": "PASS"
+      }
+    ],
+    "evidence": [
+      "tests/unit/test_midcycle_skel.py:465-477::test_hook_cyclical_high_conf_series_uses_midcycle",
+      "tests/vtp_0_1/fixtures/synthetic_companies.yaml:58"
+    ],
+    "missing_or_limitations": "没有读取该YAML的测试/harness、输入适配、逐method/target观察表和reason codes；非完整可执行PIT/财务历史夹具。"
+  },
+  {
+    "id": "SYN-DISTRESSED",
+    "spec_lines": "original_spec.md:74",
+    "acceptance_standard": "原spec §4.2强制公司 SYN-DISTRESSED",
+    "status": "UNVERIFIED",
+    "observed_execution": "YAML包含设计说明和部分expected_routes；存在所列类似既有测试，但没有该ID数据的执行结果。",
+    "test_results_in_delivered_junit": [
+      {
+        "node": "tests.unit.test_valuation::test_bridge_hand_fixture_and_negative_equity_preserved",
+        "status": "PASS"
+      }
+    ],
+    "evidence": [
+      "tests/unit/test_valuation.py:84-95::test_bridge_hand_fixture_and_negative_equity_preserved",
+      "tests/vtp_0_1/fixtures/synthetic_companies.yaml:108"
+    ],
+    "missing_or_limitations": "没有读取该YAML的测试/harness、输入适配、逐method/target观察表和reason codes；非完整可执行PIT/财务历史夹具。"
+  },
+  {
+    "id": "SYN-GROWTH",
+    "spec_lines": "original_spec.md:69",
+    "acceptance_standard": "原spec §4.2强制公司 SYN-GROWTH",
+    "status": "UNVERIFIED",
+    "observed_execution": "YAML包含设计说明和部分expected_routes；存在所列类似既有测试，但没有该ID数据的执行结果。",
+    "test_results_in_delivered_junit": [
+      {
+        "node": "tests.unit.test_profiles_phase2::test_growth_flags_negative_fcf",
+        "status": "PASS"
+      }
+    ],
+    "evidence": [
+      "tests/unit/test_profiles_phase2.py:56-60::test_growth_flags_negative_fcf",
+      "tests/vtp_0_1/fixtures/synthetic_companies.yaml:27"
+    ],
+    "missing_or_limitations": "没有读取该YAML的测试/harness、输入适配、逐method/target观察表和reason codes；非完整可执行PIT/财务历史夹具。"
+  },
+  {
+    "id": "SYN-HOLDCO",
+    "spec_lines": "original_spec.md:73",
+    "acceptance_standard": "原spec §4.2强制公司 SYN-HOLDCO",
+    "status": "UNVERIFIED",
+    "observed_execution": "YAML包含设计说明和部分expected_routes；存在所列类似既有测试，但没有该ID数据的执行结果。",
+    "test_results_in_delivered_junit": [
+      {
+        "node": "tests.unit.test_phase6_acceptance::test_ac4_holding_routes_to_sotp_nav_or_visible_gap",
+        "status": "PASS"
+      }
+    ],
+    "evidence": [
+      "tests/unit/test_phase6_acceptance.py:239-289::test_ac4_holding_routes_to_sotp_nav_or_visible_gap",
+      "tests/vtp_0_1/fixtures/synthetic_companies.yaml:90"
+    ],
+    "missing_or_limitations": "没有读取该YAML的测试/harness、输入适配、逐method/target观察表和reason codes；非完整可执行PIT/财务历史夹具。"
+  },
+  {
+    "id": "SYN-HYBRID",
+    "spec_lines": "original_spec.md:75",
+    "acceptance_standard": "原spec §4.2强制公司 SYN-HYBRID",
+    "status": "UNVERIFIED",
+    "observed_execution": "YAML包含设计说明和部分expected_routes；存在所列类似既有测试，但没有该ID数据的执行结果。",
+    "test_results_in_delivered_junit": [
+      {
+        "node": "tests.unit.test_profiles_phase2::test_conflicting_signals_visible_low_confidence",
+        "status": "PASS"
+      }
+    ],
+    "evidence": [
+      "tests/unit/test_profiles_phase2.py:123-148::test_conflicting_signals_visible_low_confidence",
+      "tests/vtp_0_1/fixtures/synthetic_companies.yaml:123"
+    ],
+    "missing_or_limitations": "没有读取该YAML的测试/harness、输入适配、逐method/target观察表和reason codes；非完整可执行PIT/财务历史夹具。"
+  },
+  {
+    "id": "SYN-MATURE",
+    "spec_lines": "original_spec.md:68",
+    "acceptance_standard": "原spec §4.2强制公司 SYN-MATURE",
+    "status": "UNVERIFIED",
+    "observed_execution": "YAML包含设计说明和部分expected_routes；存在所列类似既有测试，但没有该ID数据的执行结果。",
+    "test_results_in_delivered_junit": [
+      {
+        "node": "tests.unit.test_phase12_acceptance::test_ac2_mature_e2e_artifact_set",
+        "status": "PASS"
+      }
+    ],
+    "evidence": [
+      "tests/unit/test_phase12_acceptance.py:47-66::test_ac2_mature_e2e_artifact_set",
+      "tests/vtp_0_1/fixtures/synthetic_companies.yaml:5"
+    ],
+    "missing_or_limitations": "没有读取该YAML的测试/harness、输入适配、逐method/target观察表和reason codes；非完整可执行PIT/财务历史夹具。"
+  },
+  {
+    "id": "SYN-NO-PEERS",
+    "spec_lines": "original_spec.md:77",
+    "acceptance_standard": "原spec §4.2强制公司 SYN-NO-PEERS",
+    "status": "UNVERIFIED",
+    "observed_execution": "YAML包含设计说明和部分expected_routes；存在所列类似既有测试，但没有该ID数据的执行结果。",
+    "test_results_in_delivered_junit": [
+      {
+        "node": "tests.unit.methods.test_rim_r2cd_pb_roe::test_peer_scarcity_when_no_peers",
+        "status": "PASS"
+      }
+    ],
+    "evidence": [
+      "tests/unit/methods/test_rim_r2cd_pb_roe.py:110-122::test_peer_scarcity_when_no_peers",
+      "tests/vtp_0_1/fixtures/synthetic_companies.yaml:145"
+    ],
+    "missing_or_limitations": "没有读取该YAML的测试/harness、输入适配、逐method/target观察表和reason codes；非完整可执行PIT/财务历史夹具。"
+  }
+]

@@ -1,0 +1,62 @@
+[
+  {
+    "path_id": 0,
+    "exit_price": 17926.551378492008,
+    "total_return": 178.26551378492007,
+    "annualized_return": 4.638525948391583
+  },
+  {
+    "path_id": 1,
+    "exit_price": 19909.055273851332,
+    "total_return": 198.09055273851334,
+    "annualized_return": 4.839157873529367
+  },
+  {
+    "path_id": 2,
+    "exit_price": 18022.212964697792,
+    "total_return": 179.22212964697792,
+    "annualized_return": 4.648537796333135
+  },
+  {
+    "path_id": 3,
+    "exit_price": 18874.654335684074,
+    "total_return": 187.74654335684073,
+    "annualized_return": 4.736227082655274
+  },
+  {
+    "path_id": 4,
+    "exit_price": 21640.817176141867,
+    "total_return": 215.40817176141866,
+    "annualized_return": 5.003776990053406
+  },
+  {
+    "path_id": 5,
+    "exit_price": 19187.455196312712,
+    "total_return": 190.87455196312712,
+    "annualized_return": 4.767741567368022
+  },
+  {
+    "path_id": 6,
+    "exit_price": 19683.131940283703,
+    "total_return": 195.83131940283704,
+    "annualized_return": 4.816986660621023
+  },
+  {
+    "path_id": 7,
+    "exit_price": 22484.0399768849,
+    "total_return": 223.84039976884898,
+    "annualized_return": 5.080763550452251
+  },
+  {
+    "path_id": 8,
+    "exit_price": 20468.698894982223,
+    "total_return": 203.68698894982222,
+    "annualized_return": 4.8933659893043435
+  },
+  {
+    "path_id": 9,
+    "exit_price": 19805.0071774221,
+    "total_return": 197.050071774221,
+    "annualized_return": 4.8289679586233225
+  }
+]

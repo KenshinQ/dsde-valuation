@@ -1,0 +1,10 @@
+{
+  "test": "G-01/G-02",
+  "fundamental_hash_compressed": "66e18cd616d16575",
+  "fundamental_hash_expanded": "66e18cd616d16575",
+  "intrinsic_value": 14492.226596452609,
+  "exit_compressed": 10687.350644696653,
+  "exit_expanded": 17933.463942922957,
+  "exit_delta": 7246.113298226304,
+  "pass": true
+}

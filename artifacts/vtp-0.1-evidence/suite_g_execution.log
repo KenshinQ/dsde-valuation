@@ -1,0 +1,19 @@
+============================================================
+Suite G: Numerical Counterfactual Experiments
+============================================================
+
+✓ G-01/G-02: Intrinsic=14492.23, Exit(compressed)=10687.35, Exit(expanded)=17933.46
+✓ G-01/G-02 PASS
+
+✓ G-03: Intrinsic Δ=16065.76, Exit Δ=11309.16, Ratio=0.70
+✓ G-03 PASS
+
+✓ G-04: Fundamental/Market independence verified
+✓ G-04 PASS
+
+✓ G-05: Convergence paths=100, mean_return=4.897, std=0.179
+✓ G-05 PASS
+
+============================================================
+Suite G execution complete
+============================================================

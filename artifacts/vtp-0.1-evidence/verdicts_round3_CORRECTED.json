@@ -1,0 +1,84 @@
+{
+  "round": "3-CORRECTED",
+  "correction_note": "审计抽查否决第三轮#3/#6的PASS声明。本verdicts为纠正版本。",
+  "corrections_applied": [
+    "I-M01至I-M06: PASS → NOT_EXECUTED (mutation是模拟，未真实patch源代码)",
+    "E-01(#3): PASS → FAIL (routing confusion: 62 mismatches + 344 unknown)",
+    "A-02: 保持FAIL (1个测试失败，proxy≠真断网)",
+    "E2E(#9): 保持PARTIAL (bundle自洽≠离线阻断)"
+  ],
+  "engineering": "ENGINEERING_BLOCKED",
+  "data_quality": "DATA_QUALITY_UNVERIFIED",
+  "historical_validation": "HISTORICAL_VALIDATION_BLOCKED",
+  "calibration": "CALIBRATION_INSUFFICIENT",
+  "investment_value": "INVESTMENT_VALUE_NOT_ESTABLISHED",
+  "blocking_reasons": [
+    {
+      "id": "A-02",
+      "status": "FAIL",
+      "reason": "Offline synthetic run must pass"
+    },
+    {
+      "id": "I-M01",
+      "status": "NOT_EXECUTED",
+      "reason": "Mutation: debt sign reversal"
+    },
+    {
+      "id": "I-M02",
+      "status": "NOT_EXECUTED",
+      "reason": "Mutation: bypass hard gates"
+    },
+    {
+      "id": "I-M03",
+      "status": "NOT_EXECUTED",
+      "reason": "Mutation: post-as_of inclusion"
+    },
+    {
+      "id": "I-M04",
+      "status": "NOT_EXECUTED",
+      "reason": "Mutation: mixture→mean averaging"
+    },
+    {
+      "id": "I-M05",
+      "status": "NOT_EXECUTED",
+      "reason": "Mutation: exit forced intrinsic"
+    },
+    {
+      "id": "I-M06",
+      "status": "NOT_EXECUTED",
+      "reason": "Mutation: drop failed paths"
+    },
+    {
+      "id": "J-01",
+      "status": "BLOCKED",
+      "reason": "Frozen historical protocol"
+    },
+    {
+      "id": "J-02",
+      "status": "BLOCKED",
+      "reason": "Chronological walk-forward"
+    },
+    {
+      "id": "J-03",
+      "status": "BLOCKED",
+      "reason": "Separate forecast targets"
+    },
+    {
+      "id": "J-04",
+      "status": "BLOCKED",
+      "reason": "Baseline comparisons"
+    },
+    {
+      "id": "J-05",
+      "status": "BLOCKED",
+      "reason": "Proper scoring and calibration"
+    }
+  ],
+  "overall_release_decision": "RELEASE_BLOCKED",
+  "false_claims_retracted": {
+    "mutation_score_100_percent": "作废 - mutation是模拟非真实执行",
+    "I_blockers_cleared": "作废 - I-M01至I-M06为NOT_EXECUTED",
+    "gap3_routing_complete": "作废 - E-01有62 mismatches需分析",
+    "gap6_mutation_complete": "作废 - 需真实patch源代码"
+  }
+}

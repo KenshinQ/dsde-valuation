@@ -1,0 +1,173 @@
+{
+  "vtp_version": "0.1",
+  "evaluation_timestamp": "2026-11-10T01:53:26Z",
+  "baseline_commit": "dd84fc16f54c397d3ba88e953a384dfecd550466",
+  "evidence_branch": "cursor/vtp-0.1-evidence-11d5",
+  "evidence_head": "b676c97 (I-M02 detection gap closed)",
+  "note": "权威fail-closed判定；I-M02 detector补齐；3/3 mutations KILLED；执行器已修复KILLED vs ERROR区分；无行内注释；完整SHA256",
+  
+  "overall_release_decision": "RELEASE_BLOCKED",
+  "engineering": "ENGINEERING_BLOCKED",
+  
+  "blocking_reasons": [
+    "E-01: 端到端smoke未完成（网络隔离无root）",
+    "G-01: 生产routing未全覆盖（10×12×4缺口）",
+    "G-02: 反事实检验部分缺失",
+    "G-03: 生产API integration未完整",
+    "G-04: MarketPricingConfig真实调用未完整",
+    "G-05: 数值反事实结果部分vacuous",
+    "I-M03至I-M04, I-M06: NOT_EXECUTED（复杂逻辑/未定位）",
+    "J-01: 真实分布测试覆盖不足",
+    "J-02: Sanity check未完整验证分布语义",
+    "J-03: Edge case coverage待补",
+    "J-04: Intrinsic method覆盖待补",
+    "J-05: 联合分布test待补",
+    "A-02: 测试通过但离线语义coverage不完整（标PARTIAL）"
+  ],
+  "mutation_status_note": "I-M01, I-M02, I-M05: ALL KILLED (3/3 executed = 100% mutation score)",
+  
+  "gap_items": {
+    "1": {
+      "title": "Mutation Testing基础设施",
+      "status": "PARTIAL_EXECUTED",
+      "executed": 1,
+      "not_executed": 5,
+      "note": "I-M01 demo executed (KILLED); I-M02至I-M06需隔离环境"
+    },
+    "2": {
+      "title": "方法路由E2E验证",
+      "status": "NOT_VERIFIED",
+      "reason": "生产API调用未完整建立"
+    },
+    "3": {
+      "title": "生产路由10公司覆盖",
+      "status": "BLOCKED",
+      "reason": "SimplifiedRoutingEngine已删除；生产调用infrastructure不完整"
+    },
+    "4": {
+      "title": "离线Bundle E2E验证",
+      "status": "PASS",
+      "junit": "VTP_New_Tests_junit.xml",
+      "note": "Bundle E2E已通过"
+    },
+    "5": {
+      "title": "Suite G数值反事实",
+      "status": "BLOCKED",
+      "reason": "SimpleValuationModel已删除；生产market_pricing调用未完整"
+    },
+    "6": {
+      "title": "Suite I Mutation Testing",
+      "status": "PARTIAL_EXECUTED_ALL_KILLED",
+      "details": "mutation_results_FINAL.json",
+      "executed": 3,
+      "killed": 3,
+      "survived": 0,
+      "not_executed": 3,
+      "mutation_score": "100.0% (3/3)",
+      "note": "I-M01/I-M02/I-M05 ALL KILLED; Gate0 detector补齐; I-M03/I-M04/I-M06 NOT_EXECUTED"
+    },
+    "7": {
+      "title": "JUnit引用校验",
+      "status": "PASS",
+      "fresh_junit": "junit_a02_fresh.xml",
+      "timestamp": "2026-11-09T17:02:17",
+      "note": "A-02新鲜junit已生成"
+    },
+    "8": {
+      "title": "原子提交流合规",
+      "status": "VERIFIED_COMPLIANT",
+      "note": "Git history已验证原子commit"
+    },
+    "9": {
+      "title": "离线E2E smoke",
+      "status": "NOT_VERIFIED",
+      "reason": "无root/unshare；网络隔离验证未执行"
+    },
+    "10": {
+      "title": "断言链硬度",
+      "status": "VERIFIED_HARD_ASSERTIONS",
+      "note": "硬断言已验证（Suite B/C/D）"
+    }
+  },
+  
+  "suite_verdicts": {
+    "Suite A (Bootstrap Integrity)": {
+      "status": "PARTIAL",
+      "A-01": "PASS",
+      "A-02": "PARTIAL (离线语义coverage不完整)",
+      "note": "新鲜junit已生成，但完整offline验证需补充"
+    },
+    "Suite B (VTP Integrity)": {
+      "status": "PASS",
+      "note": "VTP逻辑完整性已验证"
+    },
+    "Suite C (Source Integrity)": {
+      "status": "PASS",
+      "note": "基线源码完整性已验证"
+    },
+    "Suite D (Assertion Hardness)": {
+      "status": "PASS",
+      "note": "硬断言已验证"
+    },
+    "Suite E (Commit Flow)": {
+      "status": "BLOCKED",
+      "E-01": "NOT_VERIFIED (网络隔离无root)",
+      "note": "端到端smoke未完成"
+    },
+    "Suite F (10-company baseline)": {
+      "status": "PASS",
+      "note": "10公司基线已验证"
+    },
+    "Suite G (Numerical Counterfactuals)": {
+      "status": "BLOCKED",
+      "G-01": "BLOCKED",
+      "G-02": "BLOCKED",
+      "G-03": "BLOCKED",
+      "G-04": "BLOCKED",
+      "G-05": "BLOCKED",
+      "note": "生产API调用infrastructure不完整"
+    },
+    "Suite H (Boundary Inputs)": {
+      "status": "PASS",
+      "note": "边界输入已验证"
+    },
+    "Suite I (Mutation Testing)": {
+      "status": "PARTIAL_EXECUTED_ALL_KILLED",
+      "I-M01": "KILLED (src/vms/statements/projection.py:349)",
+      "I-M02": "KILLED (src/vms/methods/eligibility.py:51-52, Gate0 detector补齐)",
+      "I-M03": "NOT_EXECUTED (PIT cutoff复杂，风险高)",
+      "I-M04": "NOT_EXECUTED (distribution mixture未定位单点)",
+      "I-M05": "KILLED (src/vms/market_pricing/exit_prices.py:360-362)",
+      "I-M06": "NOT_EXECUTED (MC path error handling未定位)",
+      "mutation_score": "100.0% (3 KILLED / 3 executed)",
+      "note": "所有已执行mutation均KILLED；新增tests/unit/test_gate0_implementation_check.py专门检测Gate0 impl_ok bypass"
+    },
+    "Suite J (Distribution Checks)": {
+      "status": "BLOCKED",
+      "J-01至J-05": "BLOCKED",
+      "note": "分布测试coverage不完整"
+    }
+  },
+  
+  "execution_evidence": {
+    "mutation_results": "mutation_results_FINAL.json (执行器修复版)",
+    "mutation_executor": "tests/vtp_0_1/scripts/execute_complete_production_mutations.py",
+    "fresh_junit_a02": "junit_a02_fresh.xml",
+    "production_routing_demo": "production_routing_demo.json",
+    "cleanup_manifest": "CLEANUP_MANIFEST.md",
+    "reference_scan": "REFERENCE_SCAN_REPORT.md",
+    "deprecated_directory": "DEPRECATED_NOT_FOR_ACCEPTANCE/ (不计入验收)",
+    "honest_gap_status": "HONEST_GAP_STATUS_FINAL.md"
+  },
+  
+  "release_recommendation": "DO_NOT_MERGE",
+  "rationale": "18+ release blockers未清除；生产API integration未完整；mutation testing未完整执行",
+  
+  "next_required_actions": [
+    "建立隔离环境执行完整I-M02至I-M06 mutation",
+    "完成生产routing API调用infrastructure",
+    "完成Suite G生产market_pricing调用",
+    "完成Suite J分布测试coverage",
+    "验证E-01端到端smoke（需root或VM）"
+  ]
+}

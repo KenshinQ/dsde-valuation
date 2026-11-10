@@ -1,10 +1,10 @@
 {
   "vtp_version": "0.1",
-  "evaluation_timestamp": "2026-11-09T17:41:22Z",
+  "evaluation_timestamp": "2026-11-10T01:43:08Z",
   "baseline_commit": "dd84fc16f54c397d3ba88e953a384dfecd550466",
   "evidence_branch": "cursor/vtp-0.1-evidence-11d5",
-  "evidence_head": "d385131 (updating)",
-  "note": "权威fail-closed判定；所有simulation/toy证据已移至DEPRECATED",
+  "evidence_head": "9124722 (updating to final)",
+  "note": "权威fail-closed判定；执行器已修复KILLED vs ERROR区分；无行内注释；完整SHA256",
   
   "overall_release_decision": "RELEASE_BLOCKED",
   "engineering": "ENGINEERING_BLOCKED",
@@ -152,11 +152,12 @@
   },
   
   "execution_evidence": {
-    "mutation_results": "mutation_results_COMPLETE.json (完整执行，3 executed)",
-    "mutation_executor": "tests/vtp_0_1/scripts/execute_all_production_mutations.py",
+    "mutation_results": "mutation_results_FINAL.json (执行器修复版)",
+    "mutation_executor": "tests/vtp_0_1/scripts/execute_complete_production_mutations.py",
     "fresh_junit_a02": "junit_a02_fresh.xml",
     "production_routing_demo": "production_routing_demo.json",
     "cleanup_manifest": "CLEANUP_MANIFEST.md",
+    "reference_scan": "REFERENCE_SCAN_REPORT.md",
     "deprecated_directory": "DEPRECATED_NOT_FOR_ACCEPTANCE/ (不计入验收)",
     "honest_gap_status": "HONEST_GAP_STATUS_FINAL.md"
   },

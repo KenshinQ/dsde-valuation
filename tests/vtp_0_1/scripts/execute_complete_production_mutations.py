@@ -261,13 +261,19 @@ class RigorousMutationExecutor:
         return result
     
     def execute_i_m02(self) -> Dict[str, Any]:
-        """I-M02: 绕过硬门禁 (with improved detector)"""
+        """I-M02: 绕过硬门禁 (with Gate0-specific detector)
+        
+        Note: Uses only Gate0-specific detector that directly tests impl_ok bypass.
+        Previous detector (test_property_ineligible_method_contributes_no_values) was
+        not specific to Gate0 and could not detect this mutation because tested methods
+        fail other gates regardless of Gate0 bypass.
+        """
         mutation_id = "I-M02"
         target_file = PROJECT_ROOT / "src" / "vms" / "methods" / "eligibility.py"
-        # Use both old and new detector
+        # Use Gate0-specific detectors only
         detector_tests = [
-            "tests/unit/test_phase4_acceptance.py::test_property_ineligible_method_contributes_no_values",
-            "tests/vtp_0_1/suite_i/test_i_m02_gate_bypass_detector.py::test_gate0_blocks_unimplemented"
+            "tests/unit/test_gate0_implementation_check.py::test_gate0_blocks_not_implemented_methods",
+            "tests/unit/test_gate0_implementation_check.py::test_gate0_blocks_disabled_methods"
         ]
         
         result = {

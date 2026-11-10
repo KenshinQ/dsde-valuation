@@ -1,5 +1,5 @@
 {
-  "execution_timestamp": "2026-11-10T01:43:08.397051+00:00",
+  "execution_timestamp": "2026-11-10T01:53:26.568115+00:00",
   "execution_method": "RIGOROUS_PRODUCTION_MUTATION",
   "audit_fixes": [
     "KILLED vs ERROR distinction (assertion vs import/syntax/timeout)",
@@ -15,16 +15,16 @@
       "target_file": "src/vms/statements/projection.py",
       "absolute_path": "/agent/repos/dsde-valuation/src/vms/statements/projection.py",
       "mutation_type": "SIGN_FLIP",
-      "execution_timestamp": "2026-11-10T01:43:08.397051+00:00",
+      "execution_timestamp": "2026-11-10T01:53:26.568115+00:00",
       "unified_diff": "--- a/src/vms/statements/projection.py+++ b/src/vms/statements/projection.py@@ -346,7 +346,7 @@                 flags.add(\"REVOLVER_DRAW\")\n             nb = L.put(\"net_borrowing\", y, di + rv - dr, \"debt_issuance + revolver_draw - debt_repayment\",\n                        [f\"debt_issuance@{y}\", f\"revolver_draw@{y}\", f\"debt_repayment@{y}\"])\n-            L.put(\"interest_bearing_debt\", y, L.v(\"interest_bearing_debt\", p) + nb, \"debt[y-1] + net_borrowing\",\n+            L.put(\"interest_bearing_debt\", y, L.v(\"interest_bearing_debt\", p) - nb, \"debt[y-1] + net_borrowing\",\n                   [f\"interest_bearing_debt@{p}\", f\"net_borrowing@{y}\"])\n             L.put(\"revolver_balance\", y, max(rev_open - dr, 0.0) + rv,\n                   \"max(revolver[y-1] - debt_repayment, 0) + revolver_draw (repayments retire the revolver first)\",\n",
       "line_number": 349,
       "baseline_exit_code": 0,
-      "baseline_stdout": "============================= test session starts ==============================\nplatform linux -- Python 3.12.3, pytest-9.2.0, pluggy-1.7.0\nrootdir: /agent/repos/dsde-valuation\nconfigfile: pyproject.toml\nplugins: hypothesis-6.170.15\ncollected 1 item\n\ntests/property/test_projection_properties.py .                           [100%]\n\n============================== 1 passed in 0.43s ===============================\n",
+      "baseline_stdout": "============================= test session starts ==============================\nplatform linux -- Python 3.12.3, pytest-9.2.0, pluggy-1.7.0\nrootdir: /agent/repos/dsde-valuation\nconfigfile: pyproject.toml\nplugins: hypothesis-6.170.15\ncollected 1 item\n\ntests/property/test_projection_properties.py .                           [100%]\n\n============================== 1 passed in 0.42s ===============================\n",
       "baseline_stderr": "",
       "baseline_command": "/home/ubuntu/.local/bin/pytest tests/property/test_projection_properties.py::test_projection_valid_and_invariants_hold -v --tb=short -x",
       "mutated_sha256_full": "9b8acf9dfa9372ef65edfb8516471a4eb6c84957b215f772f62b90bc4ef7842d",
       "mutated_exit_code": 1,
-      "mutated_stdout": "============================= test session starts ==============================\nplatform linux -- Python 3.12.3, pytest-9.2.0, pluggy-1.7.0\nrootdir: /agent/repos/dsde-valuation\nconfigfile: pyproject.toml\nplugins: hypothesis-6.170.15\ncollected 1 item\n\ntests/property/test_projection_properties.py F\n\n=================================== FAILURES ===================================\n__________________ test_projection_valid_and_invariants_hold ___________________\ntests/property/test_projection_properties.py:14: in test_projection_valid_and_invariants_hold\n    @given(growth=st.floats(-0.3, 0.5), ebit=st.floats(-300, 300), capex=st.floats(0, 400), ar=st.floats(0, 900),\n                   ^^^\ntests/property/test_projection_properties.py:22: in test_projection_valid_and_invariants_hold\n    assert p.status == \"VALID\", [v.code for v in p.violations]\nE   AssertionError: ['DEBT_ROLLFORWARD_FAIL', 'NEGATIVE_DEBT', 'BALANCE_SHEET_FAIL', 'REVOLVER_EXCEEDS_DEBT', 'DEBT_ROLLFORWARD_FAIL', 'NEGATIVE_DEBT', ...]\nE   assert 'REJECTED' == 'VALID'\nE     \nE     - VALID\nE     + REJECTED\nE   Failing test case: test_projection_valid_and_invariants_hold(\nE       # The test always failed when commented parts were varied together.\nE       growth=0.0,  # or any other generated value\nE       ebit=0.0,  # or any other generated value\nE       capex=0.0,  # or any other generated value\nE       ar=0.0,\nE       cash=0.0,\nE       policy='conservative_baseline',  # or any other generated value\nE   )\nE   Explanation:\nE       These lines were always and only run by failing test cases:\nE           /agent/repos/dsde-valuation/src/vms/statements/invariants.py:55\nE           /agent/repos/dsde-valuation/src/vms/statements/invariants.py:85\nE           /agent/repos/dsde-valuation/src/vms/statements/projection.py:346\n=========================== short test summary info ============================\nFAILED tests/property/test_projection_properties.py::test_projection_valid_and_invariants_hold\n!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!\n============================== 1 failed in 11.30s ==============================\n",
+      "mutated_stdout": "============================= test session starts ==============================\nplatform linux -- Python 3.12.3, pytest-9.2.0, pluggy-1.7.0\nrootdir: /agent/repos/dsde-valuation\nconfigfile: pyproject.toml\nplugins: hypothesis-6.170.15\ncollected 1 item\n\ntests/property/test_projection_properties.py F\n\n=================================== FAILURES ===================================\n__________________ test_projection_valid_and_invariants_hold ___________________\ntests/property/test_projection_properties.py:14: in test_projection_valid_and_invariants_hold\n    @given(growth=st.floats(-0.3, 0.5), ebit=st.floats(-300, 300), capex=st.floats(0, 400), ar=st.floats(0, 900),\n                   ^^^\ntests/property/test_projection_properties.py:22: in test_projection_valid_and_invariants_hold\n    assert p.status == \"VALID\", [v.code for v in p.violations]\nE   AssertionError: ['DEBT_ROLLFORWARD_FAIL', 'NEGATIVE_DEBT', 'BALANCE_SHEET_FAIL', 'REVOLVER_EXCEEDS_DEBT', 'DEBT_ROLLFORWARD_FAIL', 'NEGATIVE_DEBT', ...]\nE   assert 'REJECTED' == 'VALID'\nE     \nE     - VALID\nE     + REJECTED\nE   Failing test case: test_projection_valid_and_invariants_hold(\nE       # The test always failed when commented parts were varied together.\nE       growth=0.0,  # or any other generated value\nE       ebit=0.0,  # or any other generated value\nE       capex=0.0,  # or any other generated value\nE       ar=0.0,\nE       cash=0.0,\nE       policy='conservative_baseline',  # or any other generated value\nE   )\nE   Explanation:\nE       These lines were always and only run by failing test cases:\nE           /agent/repos/dsde-valuation/src/vms/statements/invariants.py:55\nE           /agent/repos/dsde-valuation/src/vms/statements/invariants.py:85\nE           /agent/repos/dsde-valuation/src/vms/statements/projection.py:346\n=========================== short test summary info ============================\nFAILED tests/property/test_projection_properties.py::test_projection_valid_and_invariants_hold\n!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!\n============================== 1 failed in 10.62s ==============================\n",
       "mutated_stderr": "",
       "mutated_command": "/home/ubuntu/.local/bin/pytest tests/property/test_projection_properties.py::test_projection_valid_and_invariants_hold -v --tb=short -x",
       "detector_test": "tests/property/test_projection_properties.py::test_projection_valid_and_invariants_hold",
@@ -43,27 +43,29 @@
       "target_file": "src/vms/methods/eligibility.py",
       "absolute_path": "/agent/repos/dsde-valuation/src/vms/methods/eligibility.py",
       "mutation_type": "GATE_BYPASS",
-      "execution_timestamp": "2026-11-10T01:43:08.397051+00:00",
+      "execution_timestamp": "2026-11-10T01:53:26.568115+00:00",
       "unified_diff": "--- a/src/vms/methods/eligibility.py+++ b/src/vms/methods/eligibility.py@@ -48,7 +48,7 @@     reasons: list[GateReason] = []\n \n     # Gate 0: implementation\n-    impl_ok = entry.implementation_status is MethodImplementationStatus.IMPLEMENTED and entry.enabled\n+    impl_ok = True\n     reasons.append(GateReason(\n         code=\"METHOD_IMPLEMENTED_AND_ENABLED\",\n         detail=(f\"implementation_status={entry.implementation_status.value} enabled={entry.enabled}\"),\n",
       "line_number_range": "51",
       "detector_results": [
         {
-          "detector": "tests/unit/test_phase4_acceptance.py::test_property_ineligible_method_contributes_no_values",
-          "status": "SURVIVED",
+          "detector": "tests/unit/test_gate0_implementation_check.py::test_gate0_blocks_not_implemented_methods",
+          "status": "KILLED",
           "baseline_exit_code": 0,
-          "mutated_exit_code": 0
+          "mutated_exit_code": 1,
+          "classification_reason": "Expected detector assertion failed"
         },
         {
-          "detector": "tests/vtp_0_1/suite_i/test_i_m02_gate_bypass_detector.py::test_gate0_blocks_unimplemented",
-          "status": "BASELINE_FAILED",
-          "baseline_exit_code": 1
+          "detector": "tests/unit/test_gate0_implementation_check.py::test_gate0_blocks_disabled_methods",
+          "status": "KILLED",
+          "baseline_exit_code": 0,
+          "mutated_exit_code": 1,
+          "classification_reason": "Expected detector assertion failed"
         }
       ],
-      "status": "SURVIVED",
-      "detector_effectiveness": "FAIL",
-      "note": "At least one detector insufficient",
+      "status": "KILLED",
+      "detector_effectiveness": "PASS",
       "baseline_exit_code": 0,
-      "mutated_exit_code": 0,
+      "mutated_exit_code": 1,
       "restoration_verified": true,
       "original_sha256_full": "8fa769cffa167135f3b22a26dc9565b16d032fe2efe1adb5d2d870aff9cffc28",
       "restored_sha256_full": "8fa769cffa167135f3b22a26dc9565b16d032fe2efe1adb5d2d870aff9cffc28"
@@ -74,15 +76,15 @@
       "target_file": "src/vms/market_pricing/exit_prices.py",
       "absolute_path": "/agent/repos/dsde-valuation/src/vms/market_pricing/exit_prices.py",
       "mutation_type": "GUARD_BYPASS",
-      "execution_timestamp": "2026-11-10T01:43:08.397051+00:00",
+      "execution_timestamp": "2026-11-10T01:53:26.568115+00:00",
       "unified_diff": "--- a/src/vms/market_pricing/exit_prices.py+++ b/src/vms/market_pricing/exit_prices.py@@ -357,9 +357,7 @@                     reason_codes.append(\"CONVERGENCE_SKIPPED_STOCHASTIC\")\n             else:\n                 # Hard guard: reject any attempt to pass intrinsic as silent default\n-                if intrinsic_by_path_horizon is not None:\n-                    path_flags.append(\"INTRINSIC_MAP_IGNORED_IN_DEFAULT_SCENARIO\")\n-                    reason_codes.append(\"NO_SILENT_INTRINSIC_COPY\")\n+                pass\n \n             if vps is None or not math.isfinite(vps):\n                 out_paths.append(\n",
       "line_number_range": "360-362",
       "baseline_exit_code": 0,
-      "baseline_stdout": "============================= test session starts ==============================\nplatform linux -- Python 3.12.3, pytest-9.2.0, pluggy-1.7.0\nrootdir: /agent/repos/dsde-valuation\nconfigfile: pyproject.toml\nplugins: hypothesis-6.170.15\ncollected 1 item\n\ntests/unit/test_phase9_acceptance.py .                                   [100%]\n\n============================== 1 passed in 1.37s ===============================\n",
+      "baseline_stdout": "============================= test session starts ==============================\nplatform linux -- Python 3.12.3, pytest-9.2.0, pluggy-1.7.0\nrootdir: /agent/repos/dsde-valuation\nconfigfile: pyproject.toml\nplugins: hypothesis-6.170.15\ncollected 1 item\n\ntests/unit/test_phase9_acceptance.py .                                   [100%]\n\n============================== 1 passed in 1.34s ===============================\n",
       "baseline_stderr": "",
       "mutated_sha256_full": "f9f3c829238ba60d102b2049dabf5a5e9fa72225a7c856162c481e93786064f8",
       "mutated_exit_code": 1,
-      "mutated_stdout": "============================= test session starts ==============================\nplatform linux -- Python 3.12.3, pytest-9.2.0, pluggy-1.7.0\nrootdir: /agent/repos/dsde-valuation\nconfigfile: pyproject.toml\nplugins: hypothesis-6.170.15\ncollected 1 item\n\ntests/unit/test_phase9_acceptance.py F\n\n=================================== FAILURES ===================================\n__________________ test_ac3_no_silent_intrinsic_to_exit_copy ___________________\ntests/unit/test_phase9_acceptance.py:138: in test_ac3_no_silent_intrinsic_to_exit_copy\n    assert \"NO_SILENT_INTRINSIC_COPY\" in p.reason_codes or \"INTRINSIC_MAP_IGNORED_IN_DEFAULT_SCENARIO\" in p.flags\nE   AssertionError: assert ('NO_SILENT_INTRINSIC_COPY' in ['TERMINAL_MULTIPLE_APPLIED'] or 'INTRINSIC_MAP_IGNORED_IN_DEFAULT_SCENARIO' in [])\nE    +  where ['TERMINAL_MULTIPLE_APPLIED'] = ExitPricePath(path_id='mc:0', horizon_years=1, calendar_year=2025, valid=True, invalid_reason=None, scenario_kind='TER...EBTLIKE-v1', 'MINORITY-BOOK-BRIDGE-v1']}, 'scenario_kind': 'TERMINAL_MULTIPLE_DEFAULT', 'intrinsic_value_used': False}).reason_codes\nE    +  and   [] = ExitPricePath(path_id='mc:0', horizon_years=1, calendar_year=2025, valid=True, invalid_reason=None, scenario_kind='TER...EBTLIKE-v1', 'MINORITY-BOOK-BRIDGE-v1']}, 'scenario_kind': 'TERMINAL_MULTIPLE_DEFAULT', 'intrinsic_value_used': False}).flags\n=========================== short test summary info ============================\nFAILED tests/unit/test_phase9_acceptance.py::test_ac3_no_silent_intrinsic_to_exit_copy\n!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!\n============================== 1 failed in 1.38s ===============================\n",
+      "mutated_stdout": "============================= test session starts ==============================\nplatform linux -- Python 3.12.3, pytest-9.2.0, pluggy-1.7.0\nrootdir: /agent/repos/dsde-valuation\nconfigfile: pyproject.toml\nplugins: hypothesis-6.170.15\ncollected 1 item\n\ntests/unit/test_phase9_acceptance.py F\n\n=================================== FAILURES ===================================\n__________________ test_ac3_no_silent_intrinsic_to_exit_copy ___________________\ntests/unit/test_phase9_acceptance.py:138: in test_ac3_no_silent_intrinsic_to_exit_copy\n    assert \"NO_SILENT_INTRINSIC_COPY\" in p.reason_codes or \"INTRINSIC_MAP_IGNORED_IN_DEFAULT_SCENARIO\" in p.flags\nE   AssertionError: assert ('NO_SILENT_INTRINSIC_COPY' in ['TERMINAL_MULTIPLE_APPLIED'] or 'INTRINSIC_MAP_IGNORED_IN_DEFAULT_SCENARIO' in [])\nE    +  where ['TERMINAL_MULTIPLE_APPLIED'] = ExitPricePath(path_id='mc:0', horizon_years=1, calendar_year=2025, valid=True, invalid_reason=None, scenario_kind='TER...EBTLIKE-v1', 'MINORITY-BOOK-BRIDGE-v1']}, 'scenario_kind': 'TERMINAL_MULTIPLE_DEFAULT', 'intrinsic_value_used': False}).reason_codes\nE    +  and   [] = ExitPricePath(path_id='mc:0', horizon_years=1, calendar_year=2025, valid=True, invalid_reason=None, scenario_kind='TER...EBTLIKE-v1', 'MINORITY-BOOK-BRIDGE-v1']}, 'scenario_kind': 'TERMINAL_MULTIPLE_DEFAULT', 'intrinsic_value_used': False}).flags\n=========================== short test summary info ============================\nFAILED tests/unit/test_phase9_acceptance.py::test_ac3_no_silent_intrinsic_to_exit_copy\n!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!\n============================== 1 failed in 1.39s ===============================\n",
       "mutated_stderr": "",
       "detector_test": "tests/unit/test_phase9_acceptance.py::test_ac3_no_silent_intrinsic_to_exit_copy",
       "status": "KILLED",
@@ -100,7 +102,7 @@
       "target_file": "src/vms/pit/snapshot.py",
       "status": "NOT_EXECUTED",
       "reason": "PIT cutoff complex; risk breaking leakage tests",
-      "execution_timestamp": "2026-11-10T01:43:08.397051+00:00"
+      "execution_timestamp": "2026-11-10T01:53:26.568115+00:00"
     },
     {
       "mutation_id": "I-M04",
@@ -108,7 +110,7 @@
       "target_file": "src/vms/drivers/distributions.py",
       "status": "NOT_EXECUTED",
       "reason": "Distribution mixture logic not located to single point",
-      "execution_timestamp": "2026-11-10T01:43:08.397051+00:00"
+      "execution_timestamp": "2026-11-10T01:53:26.568115+00:00"
     },
     {
       "mutation_id": "I-M06",
@@ -116,17 +118,17 @@
       "target_file": "src/vms/statements/paths.py",
       "status": "NOT_EXECUTED",
       "reason": "MC path error handling not located",
-      "execution_timestamp": "2026-11-10T01:43:08.397051+00:00"
+      "execution_timestamp": "2026-11-10T01:53:26.568115+00:00"
     }
   ],
   "summary": {
     "total_planned": 6,
     "total_mutations": 6,
     "executed": 3,
-    "killed": 2,
-    "survived": 1,
+    "killed": 3,
+    "survived": 0,
     "errors": 0,
     "not_executed": 3,
-    "mutation_score": 0.6666666666666666
+    "mutation_score": 1.0
   }
 }

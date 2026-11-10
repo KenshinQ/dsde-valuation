@@ -1,10 +1,10 @@
 {
   "vtp_version": "0.1",
-  "evaluation_timestamp": "2026-11-10T01:43:08Z",
+  "evaluation_timestamp": "2026-11-10T01:53:26Z",
   "baseline_commit": "dd84fc16f54c397d3ba88e953a384dfecd550466",
   "evidence_branch": "cursor/vtp-0.1-evidence-11d5",
-  "evidence_head": "9124722 (updating to final)",
-  "note": "权威fail-closed判定；执行器已修复KILLED vs ERROR区分；无行内注释；完整SHA256",
+  "evidence_head": "b676c97 (I-M02 detection gap closed)",
+  "note": "权威fail-closed判定；I-M02 detector补齐；3/3 mutations KILLED；执行器已修复KILLED vs ERROR区分；无行内注释；完整SHA256",
   
   "overall_release_decision": "RELEASE_BLOCKED",
   "engineering": "ENGINEERING_BLOCKED",
@@ -16,10 +16,7 @@
     "G-03: 生产API integration未完整",
     "G-04: MarketPricingConfig真实调用未完整",
     "G-05: 数值反事实结果部分vacuous",
-    "I-M01: KILLED (真实生产文件mutation)",
-    "I-M02: SURVIVED (detector test不足)",
     "I-M03至I-M04, I-M06: NOT_EXECUTED（复杂逻辑/未定位）",
-    "I-M05: KILLED (真实生产文件mutation)",
     "J-01: 真实分布测试覆盖不足",
     "J-02: Sanity check未完整验证分布语义",
     "J-03: Edge case coverage待补",
@@ -27,6 +24,7 @@
     "J-05: 联合分布test待补",
     "A-02: 测试通过但离线语义coverage不完整（标PARTIAL）"
   ],
+  "mutation_status_note": "I-M01, I-M02, I-M05: ALL KILLED (3/3 executed = 100% mutation score)",
   
   "gap_items": {
     "1": {
@@ -59,14 +57,14 @@
     },
     "6": {
       "title": "Suite I Mutation Testing",
-      "status": "PARTIAL_EXECUTED",
-      "details": "mutation_results_COMPLETE.json",
+      "status": "PARTIAL_EXECUTED_ALL_KILLED",
+      "details": "mutation_results_FINAL.json",
       "executed": 3,
-      "killed": 2,
-      "survived": 1,
+      "killed": 3,
+      "survived": 0,
       "not_executed": 3,
-      "mutation_score": "66.7% (2/3)",
-      "note": "I-M01/I-M05 KILLED; I-M02 SURVIVED (detector不足); I-M03/I-M04/I-M06 NOT_EXECUTED"
+      "mutation_score": "100.0% (3/3)",
+      "note": "I-M01/I-M02/I-M05 ALL KILLED; Gate0 detector补齐; I-M03/I-M04/I-M06 NOT_EXECUTED"
     },
     "7": {
       "title": "JUnit引用校验",
@@ -134,15 +132,15 @@
       "note": "边界输入已验证"
     },
     "Suite I (Mutation Testing)": {
-      "status": "PARTIAL_EXECUTED_WITH_SURVIVOR",
+      "status": "PARTIAL_EXECUTED_ALL_KILLED",
       "I-M01": "KILLED (src/vms/statements/projection.py:349)",
-      "I-M02": "SURVIVED (src/vms/methods/eligibility.py:51-52, detector不足)",
+      "I-M02": "KILLED (src/vms/methods/eligibility.py:51-52, Gate0 detector补齐)",
       "I-M03": "NOT_EXECUTED (PIT cutoff复杂，风险高)",
       "I-M04": "NOT_EXECUTED (distribution mixture未定位单点)",
       "I-M05": "KILLED (src/vms/market_pricing/exit_prices.py:360-362)",
       "I-M06": "NOT_EXECUTED (MC path error handling未定位)",
-      "mutation_score": "66.7% (2 KILLED / 3 executed)",
-      "note": "诚实记录：I-M02 SURVIVED表明detector test_property_ineligible_method_contributes_no_values不足以检测此mutation"
+      "mutation_score": "100.0% (3 KILLED / 3 executed)",
+      "note": "所有已执行mutation均KILLED；新增tests/unit/test_gate0_implementation_check.py专门检测Gate0 impl_ok bypass"
     },
     "Suite J (Distribution Checks)": {
       "status": "BLOCKED",

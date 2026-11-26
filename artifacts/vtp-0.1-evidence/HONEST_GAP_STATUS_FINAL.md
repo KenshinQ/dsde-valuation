@@ -1,3 +1,5 @@
+> **2026-11-27 Asia/Shanghai**: This document is a historical snapshot and is **not** the current fail-closed verdict. Current authority: `verdicts_final_failclosed.json` and `mutation_results_FINAL.json` (I-M01/I-M02/I-M05 KILLED, 3/3 executed, I-M03/I-M04/I-M06 NOT_EXECUTED; ENGINEERING_BLOCKED / DO_NOT_MERGE / INVESTMENT_VALUE_NOT_ESTABLISHED).
+
 # VTP-0.1 诚实缺口状态（最终诚实版）
 
 **生成时间**: 2026-11-09 16:53 UTC  

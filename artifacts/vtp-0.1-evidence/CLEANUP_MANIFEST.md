@@ -1,5 +1,10 @@
 # VTP-0.1 Evidence Cleanup Manifest
 
+> **2026-11-27 Asia/Shanghai superseding notice**  
+> This file began as a 2026-11-09 cleanup record. Its Suite I summary below (I-M02 SURVIVED, score 66.7% 2/3, authoritative `mutation_results_COMPLETE.json`) is **historical and superseded**.  
+> Current authority: `mutation_results_FINAL.json` (executed=3, killed=3, survived=0, not_executed=3; I-M01/I-M02/I-M05 KILLED; I-M03/I-M04/I-M06 NOT_EXECUTED; not 6/6) and `verdicts_final_failclosed.json` (`ENGINEERING_BLOCKED` / `RELEASE_BLOCKED` / `DO_NOT_MERGE` / `INVESTMENT_VALUE_NOT_ESTABLISHED`).  
+> I-M02 KILLED is from `tests/unit/test_gate0_implementation_check.py` calling production `evaluate_hard_gates()`. Full I-M02 pytest stdout is still missing and was not reconstructed.
+
 **Date**: 2026-11-09  
 **Action**: Remove simulation/toy artifacts; consolidate to single authoritative evidence
 
@@ -50,11 +55,11 @@
 
 | Evidence Type | File | Status |
 |---------------|------|--------|
-| **Mutation Testing** | `mutation_results_COMPLETE.json` | ✅ AUTHORITATIVE |
+| **Mutation Testing** | `mutation_results_FINAL.json` | ✅ AUTHORITATIVE (2026-11-27; COMPLETE.json is superseded) |
 | **A-02 JUnit** | `junit_a02_fresh.xml` | ✅ VALID (2026-11-09) |
 | **Production Routing** | `production_routing_demo.json` | ✅ VALID (partial, 1 path) |
 | **Fail-Closed Verdicts** | `verdicts_final_failclosed.json` | ✅ AUTHORITATIVE |
-| **Gap Status** | `HONEST_GAP_STATUS_FINAL.md` | ✅ VALID |
+| **Gap Status** | `HONEST_GAP_STATUS_FINAL.md` | Historical 2026-11-09 correction only; current gaps are in `verdicts_final_failclosed.json` |
 
 ---
 
@@ -90,4 +95,4 @@ ls -lh artifacts/vtp-0.1-evidence/mutation_results_COMPLETE.json
 
 Files in `DEPRECATED_NOT_FOR_ACCEPTANCE/` **MUST NOT** be cited for acceptance criteria. They are preserved for historical reference only.
 
-Only `mutation_results_COMPLETE.json` and its executor `execute_all_production_mutations.py` count toward Suite I acceptance.
+Only `mutation_results_FINAL.json` and its executor `tests/vtp_0_1/scripts/execute_complete_production_mutations.py` count toward Suite I acceptance. `mutation_results_COMPLETE.json` is superseded.

@@ -3,12 +3,10 @@
   "evaluation_timestamp": "2026-11-10T01:53:26Z",
   "baseline_commit": "dd84fc16f54c397d3ba88e953a384dfecd550466",
   "evidence_branch": "cursor/vtp-0.1-evidence-11d5",
-  "evidence_head": "b676c97 (I-M02 detection gap closed)",
-  "note": "权威fail-closed判定；I-M02 detector补齐；3/3 mutations KILLED；执行器已修复KILLED vs ERROR区分；无行内注释；完整SHA256",
-  
+  "evidence_head": "3d9c7376e2c9dcda8dc8e96bed41df819ce65887",
+  "note": "权威 fail-closed 判定。独立核读以 JSON 为准：executed=3, killed=3, survived=0, not_executed=3；I-M01/I-M02/I-M05 为 KILLED，I-M03/I-M04/I-M06 仍为 NOT_EXECUTED。不是 6/6。I-M02 检测为 tests/unit/test_gate0_implementation_check.py，直接调用生产 evaluate_hard_gates()；生产 src/vms/methods/eligibility.py SHA256 未改：8fa769cffa167135f3b22a26dc9565b16d032fe2efe1adb5d2d870aff9cffc28。I-M02 detector_results 仍缺完整 stdout/断言上下文（见 mutation_results_FINAL.json 的 evidence_gap；未编造）。",
   "overall_release_decision": "RELEASE_BLOCKED",
   "engineering": "ENGINEERING_BLOCKED",
-  
   "blocking_reasons": [
     "E-01: 端到端smoke未完成（网络隔离无root）",
     "G-01: 生产routing未全覆盖（10×12×4缺口）",
@@ -24,15 +22,16 @@
     "J-05: 联合分布test待补",
     "A-02: 测试通过但离线语义coverage不完整（标PARTIAL）"
   ],
-  "mutation_status_note": "I-M01, I-M02, I-M05: ALL KILLED (3/3 executed = 100% mutation score)",
-  
+  "mutation_status_note": "I-M01, I-M02, I-M05: ALL KILLED (3/3 executed). I-M03, I-M04, I-M06: NOT_EXECUTED. Not 6/6.",
   "gap_items": {
     "1": {
       "title": "Mutation Testing基础设施",
       "status": "PARTIAL_EXECUTED",
-      "executed": 1,
-      "not_executed": 5,
-      "note": "I-M01 demo executed (KILLED); I-M02至I-M06需隔离环境"
+      "executed": 3,
+      "killed": 3,
+      "survived": 0,
+      "not_executed": 3,
+      "note": "I-M01/I-M02/I-M05 KILLED（3/3 executed）；I-M03/I-M04/I-M06 仍 NOT_EXECUTED。不是 6/6。权威结果见 gap_items.6 与 mutation_results_FINAL.json。此前本条仍写 executed=1 / I-M02至I-M06需隔离环境，已过时。"
     },
     "2": {
       "title": "方法路由E2E验证",
@@ -64,7 +63,7 @@
       "survived": 0,
       "not_executed": 3,
       "mutation_score": "100.0% (3/3)",
-      "note": "I-M01/I-M02/I-M05 ALL KILLED; Gate0 detector补齐; I-M03/I-M04/I-M06 NOT_EXECUTED"
+      "note": "I-M01/I-M02/I-M05 ALL KILLED; I-M03/I-M04/I-M06 NOT_EXECUTED. Score is 3/3 executed, not 6/6. I-M02 detector_results lack full stdout/assertion context (evidence_gap, not reconstructed)."
     },
     "7": {
       "title": "JUnit引用校验",
@@ -89,7 +88,6 @@
       "note": "硬断言已验证（Suite B/C/D）"
     }
   },
-  
   "suite_verdicts": {
     "Suite A (Bootstrap Integrity)": {
       "status": "PARTIAL",
@@ -140,7 +138,7 @@
       "I-M05": "KILLED (src/vms/market_pricing/exit_prices.py:360-362)",
       "I-M06": "NOT_EXECUTED (MC path error handling未定位)",
       "mutation_score": "100.0% (3 KILLED / 3 executed)",
-      "note": "所有已执行mutation均KILLED；新增tests/unit/test_gate0_implementation_check.py专门检测Gate0 impl_ok bypass"
+      "note": "所有已执行 mutation 均 KILLED（3/3 executed，不是 6/6）。检测：tests/unit/test_gate0_implementation_check.py 直接调用生产 evaluate_hard_gates()。I-M02 完整 stdout/断言上下文仍缺失，未编造。"
     },
     "Suite J (Distribution Checks)": {
       "status": "BLOCKED",
@@ -148,7 +146,6 @@
       "note": "分布测试coverage不完整"
     }
   },
-  
   "execution_evidence": {
     "mutation_results": "mutation_results_FINAL.json (执行器修复版)",
     "mutation_executor": "tests/vtp_0_1/scripts/execute_complete_production_mutations.py",
@@ -159,15 +156,17 @@
     "deprecated_directory": "DEPRECATED_NOT_FOR_ACCEPTANCE/ (不计入验收)",
     "honest_gap_status": "HONEST_GAP_STATUS_FINAL.md"
   },
-  
   "release_recommendation": "DO_NOT_MERGE",
-  "rationale": "18+ release blockers未清除；生产API integration未完整；mutation testing未完整执行",
-  
+  "rationale": "RELEASE_BLOCKED / ENGINEERING_BLOCKED / DO_NOT_MERGE / INVESTMENT_VALUE_NOT_ESTABLISHED。E-01、G-01至G-05、J-01至J-05、A-02（PARTIAL）、以及 I-M03/I-M04/I-M06 NOT_EXECUTED 仍阻塞。已执行 mutation 为 3/3 KILLED，不能写成 6/6，也不能据此宣称工程验收通过或投资价值成立。",
   "next_required_actions": [
-    "建立隔离环境执行完整I-M02至I-M06 mutation",
-    "完成生产routing API调用infrastructure",
-    "完成Suite G生产market_pricing调用",
-    "完成Suite J分布测试coverage",
-    "验证E-01端到端smoke（需root或VM）"
-  ]
+    "I-M02 已为 KILLED；不要再把「执行完整 I-M02 至 I-M06」当作同一缺口。余留：I-M03/I-M04/I-M06 仍 NOT_EXECUTED，需先定位生产符号再做隔离变异检验；定位不到则保持 NOT_EXECUTED，禁止编造。",
+    "I-M02 证据余留缺口：detector_results 未保存完整 pytest stdout/stderr/断言上下文；closure report 引用的 /tmp/mutation_gate0_only.log 不在仓库与本机，未从其他 artifact 恢复，禁止补造。",
+    "完成生产 routing API 调用 infrastructure（10×12×4，生产 vms.router.route_methods）",
+    "完成 Suite G 生产 market_pricing 调用",
+    "完成 Suite J 分布测试 coverage",
+    "验证 E-01 端到端 smoke（需可复现的离线隔离；当前无 root/unshare 则保持 NOT_VERIFIED）"
+  ],
+  "verdict_alignment_timestamp": "2026-11-27T00:49:16+08:00",
+  "evidence_head_note": "Independent review was against 3d9c7376e2c9dcda8dc8e96bed41df819ce65887. This field is set to that SHA in the alignment commit and backfilled to the alignment commit SHA afterwards. Do not treat the short prefix b676c97 as the current evidence head; that commit recorded I-M02 as SURVIVED before the Gate0 detector landed.",
+  "investment_value": "INVESTMENT_VALUE_NOT_ESTABLISHED"
 }

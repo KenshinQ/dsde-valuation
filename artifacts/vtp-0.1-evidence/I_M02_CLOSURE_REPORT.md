@@ -1,5 +1,23 @@
 # VTP-0.1 I-M02 Detection Gap Closure Report
 
+## 2026-11-27 Asia/Shanghai alignment addendum
+
+This addendum does not change the I-M02 KILLED conclusion from 2026-11-10. It only corrects stale SHAs and records an evidence gap.
+
+- **Reviewed head (before this alignment commit)**: `3d9c7376e2c9dcda8dc8e96bed41df819ce65887`
+- **Baseline / master**: `dd84fc16f54c397d3ba88e953a384dfecd550466`
+- **Branch / PR**: `cursor/vtp-0.1-evidence-11d5` / [#33](https://github.com/KenshinQ/dsde-valuation/pull/33)
+- **Authoritative mutation JSON**: `artifacts/vtp-0.1-evidence/mutation_results_FINAL.json` (this alignment commit adds only an `evidence_gap` note; statuses and counts are unchanged)
+- **Counts**: executed=3, killed=3, survived=0, not_executed=3. I-M01/I-M02/I-M05 KILLED; I-M03/I-M04/I-M06 NOT_EXECUTED. Not 6/6.
+- **Production file hash unchanged**: `src/vms/methods/eligibility.py` SHA256 `8fa769cffa167135f3b22a26dc9565b16d032fe2efe1adb5d2d870aff9cffc28`
+- **I-M02 stdout**: still missing. `detector_results` never stored full pytest stdout/stderr/assertion context. The log cited below (`/tmp/mutation_gate0_only.log`) is not in the repository or on this machine, and no other artifact contained recoverable I-M02 stdout. It was not reconstructed.
+- **Verdict**: still `ENGINEERING_BLOCKED` / `RELEASE_BLOCKED` / `DO_NOT_MERGE` / `INVESTMENT_VALUE_NOT_ESTABLISHED`
+- **Baseline check (2026-11-27 00:49 CST, Asia/Shanghai)**: `pytest tests/unit/test_gate0_implementation_check.py -v` → 3 passed
+
+The "HEAD SHA" `60c197977b48729968c83ebc8db455b412390e80` below is the detector-landing commit, not the later report commit `3d9c7376…`, and not the post-alignment head. The "Previous SHA" `b676c97b7f2ffef56c5f07a96a9c59e5d17a7a16` is not a commit in this repository; the real predecessor is `b676c9781d83d7c70dad4b03ee0c605e2c992f79`.
+
+---
+
 ## Audit Baseline
 - **HEAD SHA**: `60c197977b48729968c83ebc8db455b412390e80`
 - **Previous SHA**: `b676c97b7f2ffef56c5f07a96a9c59e5d17a7a16`

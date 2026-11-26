@@ -1,0 +1,14 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.5, pytest-9.2.0, pluggy-1.7.0
+rootdir: /workspace/dsde-valuation
+configfile: pyproject.toml
+plugins: hypothesis-6.170.17
+collected 15 items
+
+tests/unit/test_phase9_acceptance.py ..........                          [ 66%]
+tests/property/test_exit_price_properties.py ...                         [ 86%]
+tests/unit/test_evaluation.py .                                          [ 93%]
+tests/unit/test_phase11_acceptance.py .                                  [100%]
+
+- generated xml file: /tmp/suite_g_official/supporting/Suite_G_Supporting_phase9_property_eval_junit.xml -
+============================== 15 passed in 3.32s ==============================

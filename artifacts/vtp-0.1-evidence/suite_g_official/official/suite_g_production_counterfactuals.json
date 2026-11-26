@@ -1,0 +1,217 @@
+{
+  "started_at_asia_shanghai": "2026-11-27T02:30:43+08:00",
+  "finished_at_asia_shanghai": "2026-11-27T02:30:46+08:00",
+  "api": {
+    "exit": "vms.market_pricing.generate_exit_prices",
+    "estimator": "vms.market_pricing.estimate_market_pricing_state",
+    "convergence": "vms.market_pricing.run_convergence_scenario",
+    "paths": "vms.pipeline.run_path_projection",
+    "toy_model_used": false
+  },
+  "parameters": {
+    "growth_A": 0.05,
+    "growth_B": 0.12,
+    "n_paths": 24,
+    "n_years": 3,
+    "horizon": 1,
+    "metric_id": "ev_ebitda",
+    "proj_seed": 42,
+    "exit_seed": 42,
+    "sentinel_iv": 99999.0,
+    "scale_compressed": 0.6,
+    "scale_expanded": 1.5,
+    "conv_rate": 0.4,
+    "conv_blend": 0.5
+  },
+  "G-01": {
+    "status": "PASS",
+    "compressed": {
+      "n_valid_horizon": 24,
+      "n_valid_bundle": 24,
+      "n_input_paths": 24,
+      "n_failed": 0,
+      "mean": 1.1743403514237223,
+      "p50": 1.188458767102539,
+      "p05": 0.6521670025647875,
+      "p95": 1.694841162870234,
+      "min": 0.6228981470674072,
+      "max": 1.731384158903699,
+      "scenario_kind": "TERMINAL_MULTIPLE_DEFAULT",
+      "label": "FUTURE_MARKET_EXIT_PRICES",
+      "default_forbids_intrinsic_copy": true,
+      "dependence_on_fundamentals": "NONE",
+      "metric_id": "ev_ebitda"
+    },
+    "expanded": {
+      "n_valid_horizon": 24,
+      "n_valid_bundle": 24,
+      "n_input_paths": 24,
+      "n_failed": 0,
+      "mean": 2.672271750686516,
+      "p50": 2.720446439094365,
+      "p05": 1.4636176118657391,
+      "p95": 3.779187646565538,
+      "min": 1.4257087245293611,
+      "max": 3.904650512539393,
+      "scenario_kind": "TERMINAL_MULTIPLE_DEFAULT",
+      "label": "FUTURE_MARKET_EXIT_PRICES",
+      "default_forbids_intrinsic_copy": true,
+      "dependence_on_fundamentals": "NONE",
+      "metric_id": "ev_ebitda"
+    },
+    "silent_copy_of_sentinel": [],
+    "any_intrinsic_value_used_on_default": false,
+    "notes": "Fixed financial-path distribution; only market prior/scales changed. Default scenario must not copy intrinsic."
+  },
+  "G-02": {
+    "status": "PASS",
+    "financial_path_hash_before": "e3071243d031706786d77ca2f7608adb06af55503ffb5d676a0f1dacde4ee0e1",
+    "financial_path_hash_after": "e3071243d031706786d77ca2f7608adb06af55503ffb5d676a0f1dacde4ee0e1",
+    "financial_path_hash_A": "e3071243d031706786d77ca2f7608adb06af55503ffb5d676a0f1dacde4ee0e1",
+    "financial_path_unchanged": true,
+    "exit_mean_compressed": 1.1743403514237223,
+    "exit_mean_expanded": 2.672271750686516,
+    "notes": "Intrinsic/fundamental path bundle held fixed (content hash); terminal multiple regime compressed→expanded."
+  },
+  "G-03": {
+    "status": "PASS",
+    "paths_A_growth": 0.05,
+    "paths_B_growth": 0.12,
+    "paths_A": {
+      "n_valid_horizon": 24,
+      "n_valid_bundle": 24,
+      "n_input_paths": 24,
+      "n_failed": 0,
+      "mean": 1.1743403514237223,
+      "p50": 1.188458767102539,
+      "p05": 0.6521670025647875,
+      "p95": 1.694841162870234,
+      "min": 0.6228981470674072,
+      "max": 1.731384158903699,
+      "scenario_kind": "TERMINAL_MULTIPLE_DEFAULT",
+      "label": "FUTURE_MARKET_EXIT_PRICES",
+      "default_forbids_intrinsic_copy": true,
+      "dependence_on_fundamentals": "NONE",
+      "metric_id": "ev_ebitda"
+    },
+    "paths_B": {
+      "n_valid_horizon": 24,
+      "n_valid_bundle": 24,
+      "n_input_paths": 24,
+      "n_failed": 0,
+      "mean": 2.196179100645408,
+      "p50": 2.1478076411472733,
+      "p05": 1.228965822417578,
+      "p95": 3.264147979617013,
+      "min": 1.0448403151793564,
+      "max": 3.332347491475225,
+      "scenario_kind": "TERMINAL_MULTIPLE_DEFAULT",
+      "label": "FUTURE_MARKET_EXIT_PRICES",
+      "default_forbids_intrinsic_copy": true,
+      "dependence_on_fundamentals": "NONE",
+      "metric_id": "ev_ebitda"
+    },
+    "market_posterior_hash": "c87688c409757dfa5f58462319425b681b43f1c90fd6434b09f34e0d8eb87fc5",
+    "market_config_hash": "92d433adeafa1497a920760b2ce31df7ca88ad08bb9a55c1f53cd86b893e3d82",
+    "attribution_sample": {
+      "path_id": "mc:0",
+      "denominator_field": "ebitda",
+      "denominator_value": 174.78203906556644,
+      "terminal_multiple": 5.790558329292514,
+      "metric_id": "ev_ebitda",
+      "lineage_keys": [
+        "applies_ev_bridge",
+        "base_center",
+        "bridge",
+        "calendar_year",
+        "cash",
+        "claim_object",
+        "debt",
+        "denominator_field",
+        "denominator_value",
+        "diluted_shares",
+        "enterprise_value",
+        "equity_value",
+        "exit_price_per_share",
+        "initial_market_state",
+        "intrinsic_value_used",
+        "metric_id",
+        "path_id",
+        "scenario_kind",
+        "state_scale",
+        "terminal_market_state",
+        "terminal_multiple",
+        "transition_model_id"
+      ]
+    },
+    "notes": "Same market posterior/config/seed; financial paths A vs B. Exit change attributed via lineage (denominator + terminal multiple)."
+  },
+  "G-04": {
+    "status": "PASS",
+    "market_only": {
+      "financial_path_hash_unchanged": true,
+      "exit_distribution_changed": true
+    },
+    "fundamental_only": {
+      "path_hash_A": "e3071243d031706786d77ca2f7608adb06af55503ffb5d676a0f1dacde4ee0e1",
+      "path_hash_B": "71acf2472e28f75c028ca7bdbb4096bd37ae86166cea5bf2de401715003356fc",
+      "path_hashes_differ": true,
+      "market_posterior_held_fixed": true,
+      "exit_distribution_changed_through_projected_metrics": true
+    },
+    "default_dependence": "NONE",
+    "configured_dependence_opt_in": "CONFIGURED",
+    "configured_dependence_flags": [
+      "CONFIGURED_FUNDAMENTAL_DEPENDENCE",
+      "ESTIMATION_UNSUPPORTED",
+      "LOW_CONFIDENCE",
+      "MARKET_PRICING_FALLBACK_PRIOR"
+    ],
+    "notes": "Default dependence is NONE. Coupling is available only via explicit apply_configured_dependence."
+  },
+  "G-05": {
+    "status": "PASS",
+    "default_scenario_kind": "TERMINAL_MULTIPLE_DEFAULT",
+    "convergence_scenario_kind": "CONVERGENCE_TO_INTRINSIC",
+    "convergence_flags": [
+      "DEFAULT_FORBIDS_INTRINSIC_COPY",
+      "EXPLICIT_CONVERGENCE_SCENARIO"
+    ],
+    "stochastic_rate": 0.4,
+    "blend_weight": 0.5,
+    "config_convergence_enabled_by_default": false,
+    "n_fired": 10,
+    "n_not_fired": 14,
+    "stats": {
+      "n_valid_horizon": 24,
+      "n_valid_bundle": 24,
+      "n_input_paths": 24,
+      "n_failed": 0,
+      "mean": 20834.05506496515,
+      "p50": 1.4750568428778659,
+      "p05": 0.8616283271916519,
+      "p95": 50000.259764843104,
+      "min": 0.5308903726073736,
+      "max": 50000.380618239506,
+      "scenario_kind": "CONVERGENCE_TO_INTRINSIC",
+      "label": "FUTURE_MARKET_EXIT_PRICES",
+      "default_forbids_intrinsic_copy": true,
+      "dependence_on_fundamentals": "NONE",
+      "metric_id": "ev_ebitda"
+    },
+    "notes": "Convergence is opt-in, labeled, parameterized, uncertain (rate in (0,1)), and not the default path."
+  },
+  "G-06_bundle_labels": {
+    "exit_bundle_label": "FUTURE_MARKET_EXIT_PRICES",
+    "exit_is_not_labeled_intrinsic": true,
+    "notes": "Bundle-level label check only. Official G-06 also requires evaluation/report evidence (price_mae_forbidden / MARKET_PRICE_ASSOCIATION_NOT_INTRINSIC_GROUND_TRUTH)."
+  },
+  "criteria_G01_to_G05": {
+    "G-01": "PASS",
+    "G-02": "PASS",
+    "G-03": "PASS",
+    "G-04": "PASS",
+    "G-05": "PASS"
+  },
+  "suite_g_G01_to_G05": "PASS"
+}

@@ -4,16 +4,11 @@
   "baseline_commit": "dd84fc16f54c397d3ba88e953a384dfecd550466",
   "evidence_branch": "cursor/vtp-0.1-evidence-11d5",
   "evidence_head": "c14e8bd31b515dc80b0b8253309d1c8b2d25a7d7",
-  "note": "权威 fail-closed 判定。Suite I 为 6/6 executed KILLED，不解除 ENGINEERING_BLOCKED。官方 VTP-0.1 E-01 是路由真值表（清单第 9 项），不是清单第 6 项离线 E2E smoke。2026-11-27 Asia/Shanghai 已用生产 vms.router.route_methods 跑完约定 10×12×4=480 格（40 次调用，无玩具路由）。官方 E-01 总判 PARTIAL（不是 PASS）：41 MATCH / 3 MISMATCH（SYN-NO-PEERS 相对法资格层推迟 peer_count=0）/80 NOT_PREDECLARED / 6 EXPECTED_NON_BINARY / 40 midcycle_normalized 不在 registry / 120 格 TOTAL_RETURN 无生产方法。旧 SimplifiedRoutingEngine 矩阵与旧 junit 不得当作本项 PASS。官方 Suite J 仍 BLOCKED；Suite G（清单第 10 项）未开始。不宣称 ENGINEERING_ACCEPTED。",
+  "note": "权威 fail-closed 判定。Suite I 为 6/6 executed KILLED，不解除 ENGINEERING_BLOCKED。官方 VTP-0.1 E-01 是路由真值表（清单第 9 项），不是清单第 6 项离线 E2E smoke；官方 E-01 总判仍为 PARTIAL。官方 Suite J 仍 BLOCKED。官方 Suite G 是 Market-pricing / exit-price separation（不是旧标签「Numerical Counterfactuals」，也不是 10×12×4 路由）。2026-11-27 Asia/Shanghai 已在生产 generate_exit_prices / estimate_market_pricing_state / run_convergence_scenario / run_path_projection 上跑完非空反事实，并在生产 run_evaluation 上核对 G-06 标签；G-01..G-06 均为 PASS，官方 Suite G 总判 PASS。未使用 SimpleValuationModel、旧 2026-11-07 junit 或 suite_g_execution.log 作为关闭证据。Suite G PASS 不解除仓库 ENGINEERING_BLOCKED，也不宣称 ENGINEERING_ACCEPTED 或投资价值成立。",
   "overall_release_decision": "RELEASE_BLOCKED",
   "engineering": "ENGINEERING_BLOCKED",
   "blocking_reasons": [
     "E-01: PARTIAL — 生产 vms.router.route_methods 已跑完 10×12×4；官方真值表未关（3 MISMATCH 为 SYN-NO-PEERS 相对法资格层推迟无同业；80 格 expected 未预声明；6 格 YAML WARN/CONDITIONAL；midcycle_normalized 不在 registry；TOTAL_RETURN 无生产方法）。不是清单第 6 项离线 smoke。",
-    "G-01: 官方 Suite G（Market-pricing / exit-price separation）仍未打通；清单第 10 项本轮未开始。旧文案把 10×12×4 路由缺口写在 G-01 是错标。",
-    "G-02: 反事实检验部分缺失",
-    "G-03: 生产API integration未完整",
-    "G-04: MarketPricingConfig真实调用未完整",
-    "G-05: 数值反事实结果部分vacuous",
     "J-01: PARTIAL — R7 精简 FI RIM 协议已事前冻结并已执行；官方全量冻结协议（完整 PIT 成员规则、全部目标/基线/切片、train/cal/test 三分）未关闭",
     "J-02: PARTIAL — 本轮 R7 为 chronological、禁止随机切分；15/15 origin 为 PIT_ASSUMED（pit_complete=false），不能声称已证明只使用完整 PIT 过去信息",
     "J-03: PARTIAL — 仅分离评分 driver_roe / intrinsic_value / market_price；缺 revenue/EBIT/FCF、peer multiples、TSR/事件概率、ensemble 校准目标",
@@ -48,9 +43,12 @@
       "note": "Bundle E2E已通过"
     },
     "5": {
-      "title": "Suite G数值反事实",
-      "status": "BLOCKED",
-      "reason": "SimpleValuationModel已删除；生产market_pricing调用未完整"
+      "title": "Suite G（官方：Market-pricing / exit-price separation）",
+      "status": "PASS",
+      "reason": "2026-11-27：在生产 generate_exit_prices / estimate_market_pricing_state / run_convergence_scenario / run_path_projection 上完成非空反事实（24/24 valid，n_failed=0）；G-01..G-05 PASS。G-06 由生产 run_evaluation 的 price_mae_forbidden 与 MARKET_PRICE_ASSOCIATION_NOT_INTRINSIC_GROUND_TRUTH 关闭。未使用 SimpleValuationModel、跳过占位测例或 2026-11-07 junit 作为关闭证据。测例 PR #39；证据 SUITE_G_MARKET_PRICING_EXIT_PRICE_SEPARATION.md 与 suite_g_official/。本项 PASS 不解除仓库 ENGINEERING_BLOCKED（官方 Suite J 仍 BLOCKED，官方 E-01 仍 PARTIAL）。",
+      "official_junit": "suite_g_official/official/Suite_G_Official_Counterfactuals_junit.xml",
+      "official_junit_timestamp": "2026-11-27T02:30:00+08:00",
+      "closure_report": "SUITE_G_MARKET_PRICING_EXIT_PRICE_SEPARATION.md"
     },
     "6": {
       "title": "Suite I Mutation Testing",
@@ -61,7 +59,7 @@
       "survived": 0,
       "not_executed": 0,
       "mutation_score": "100.0% (6/6)",
-      "note": "I-M01/I-M02/I-M03/I-M04/I-M05/I-M06 ALL KILLED (6/6 executed). I-M04: t_mix_quantiles flattened to Σ w_m loc_m; killed by test_mixture_quantiles_match_t_for_single_component (AssertionError). I-M02 detector_results still lack full stdout (evidence_gap, not reconstructed). 6/6 does not authorize ENGINEERING_ACCEPTED; Suite G / Suite J / routing matrix remain blocked."
+      "note": "I-M01/I-M02/I-M03/I-M04/I-M05/I-M06 ALL KILLED (6/6 executed). I-M04: t_mix_quantiles flattened to Σ w_m loc_m; killed by test_mixture_quantiles_match_t_for_single_component (AssertionError). I-M02 detector_results still lack full stdout (evidence_gap, not reconstructed). 6/6 does not authorize ENGINEERING_ACCEPTED; official Suite J remains BLOCKED and official E-01 remains PARTIAL. Official Suite G (item 10) was closed separately on 2026-11-27 and is not authorized by 6/6."
     },
     "7": {
       "title": "JUnit引用校验",
@@ -115,15 +113,6 @@
       "status": "PASS",
       "note": "10公司基线已验证"
     },
-    "Suite G (Numerical Counterfactuals)": {
-      "status": "BLOCKED",
-      "G-01": "BLOCKED",
-      "G-02": "BLOCKED",
-      "G-03": "BLOCKED",
-      "G-04": "BLOCKED",
-      "G-05": "BLOCKED",
-      "note": "生产API调用infrastructure不完整"
-    },
     "Suite H (Boundary Inputs)": {
       "status": "PASS",
       "note": "边界输入已验证"
@@ -173,6 +162,16 @@
       "evidence": "SUITE_E_E01_PRODUCTION_ROUTING.md",
       "tests_pr": "https://github.com/KenshinQ/dsde-valuation/pull/38",
       "note": "2026-11-27 本机新跑生产矩阵，不是 2026-11-09 toy 矩阵，也不是离线 E2E smoke。官方 E-01 总判 PARTIAL，不是 PASS。运行级结果不授权 ENGINEERING_ACCEPTED。"
+    },
+    "Suite G (Market-pricing / exit-price separation)": {
+      "status": "PASS",
+      "G-01": "PASS",
+      "G-02": "PASS",
+      "G-03": "PASS",
+      "G-04": "PASS",
+      "G-05": "PASS",
+      "G-06": "PASS",
+      "note": "2026-11-27 official close on production market-pricing / exit-price APIs + production evaluation labels. Not SimpleValuationModel, not 2026-11-07 junit, not E-01 routing. Suite G PASS does not lift ENGINEERING_BLOCKED."
     }
   },
   "execution_evidence": {
@@ -215,20 +214,25 @@
     "e01_routing_report": "SUITE_E_E01_PRODUCTION_ROUTING.md",
     "e01_routing_dir": "e01_production_routing/",
     "e01_routing_summary": "e01_production_routing/e01_summary.json",
-    "e01_routing_tests_pr": "https://github.com/KenshinQ/dsde-valuation/pull/38"
+    "e01_routing_tests_pr": "https://github.com/KenshinQ/dsde-valuation/pull/38",
+    "suite_g_report": "SUITE_G_MARKET_PRICING_EXIT_PRICE_SEPARATION.md",
+    "suite_g_dir": "suite_g_official/",
+    "suite_g_counterfactuals": "suite_g_official/official/suite_g_production_counterfactuals.json",
+    "suite_g_official_junit": "suite_g_official/official/Suite_G_Official_Counterfactuals_junit.xml",
+    "suite_g_tests_pr": "https://github.com/KenshinQ/dsde-valuation/pull/39"
   },
   "release_recommendation": "DO_NOT_MERGE",
-  "rationale": "RELEASE_BLOCKED / ENGINEERING_BLOCKED / DO_NOT_MERGE / INVESTMENT_VALUE_NOT_ESTABLISHED。G-01至G-05、已执行 mutation 为 6/6 KILLED，也不能据此宣称工程验收通过或投资价值成立。A-02 已于 2026-11-27 依据隔离 netns 证据改为 PASS，单项 PASS 不解除上述阻塞。清单第 6 项（离线 E2E smoke）已于 2026-11-27 依据隔离生产路径 + replay 改为 PASS；不是 A-02 改口，也不关闭 VTP E-01 路由真值表（清单第 9 项）。本项 PASS 不解除上述阻塞。I-M04 已于 2026-11-27 依据 t_mix_quantiles 隔离变异改为 KILLED，Suite I 现为 6/6 executed KILLED；6/6 仍不解除 Suite G、Suite J 与生产路由矩阵等阻塞，也不宣称 ENGINEERING_ACCEPTED 或投资价值成立。官方 VTP-0.1 Suite J 是 Historical walk-forward，不是 Distribution Checks（该错标已纠正）。2026-11-27 已执行预声明 R7 真实面板切片（15 origin，全部 PIT_ASSUMED，n_unbiased_pit_complete=0），J-01/J-02/J-03/J-04 为 PARTIAL，J-05 为 BLOCKED；官方 Suite J 总判仍 BLOCKED。不得用合成评价回归、分布单元测试或 Suite I 6/6 KILLED 顶替。Suite G 与生产路由矩阵仍阻塞。不宣称 ENGINEERING_ACCEPTED 或投资价值成立。官方 VTP-0.1 E-01 是路由真值表（清单第 9 项），不是离线 E2E smoke。2026-11-27 已用生产 vms.router.route_methods 跑完 10×12×4，总判 PARTIAL（不是 PASS）：3 格 SYN-NO-PEERS 相对法 MISMATCH，另有未预声明 expected、WARN/CONDITIONAL、第 12 方法不在 registry、TOTAL_RETURN 无生产方法等缺口。旧 G-01「生产routing 10×12×4」文案已纠正到 E-01；Suite G 仍阻塞且本轮未开始。不宣称 ENGINEERING_ACCEPTED 或投资价值成立。",
+  "rationale": "RELEASE_BLOCKED / ENGINEERING_BLOCKED / DO_NOT_MERGE / INVESTMENT_VALUE_NOT_ESTABLISHED。G-01至G-05、已执行 mutation 为 6/6 KILLED，也不能据此宣称工程验收通过或投资价值成立。A-02 已于 2026-11-27 依据隔离 netns 证据改为 PASS，单项 PASS 不解除上述阻塞。清单第 6 项（离线 E2E smoke）已于 2026-11-27 依据隔离生产路径 + replay 改为 PASS；不是 A-02 改口，也不关闭 VTP E-01 路由真值表（清单第 9 项）。本项 PASS 不解除上述阻塞。I-M04 已于 2026-11-27 依据 t_mix_quantiles 隔离变异改为 KILLED，Suite I 现为 6/6 executed KILLED；6/6 仍不解除 Suite G、Suite J 与生产路由矩阵等阻塞，也不宣称 ENGINEERING_ACCEPTED 或投资价值成立。官方 VTP-0.1 Suite J 是 Historical walk-forward，不是 Distribution Checks（该错标已纠正）。2026-11-27 已执行预声明 R7 真实面板切片（15 origin，全部 PIT_ASSUMED，n_unbiased_pit_complete=0），J-01/J-02/J-03/J-04 为 PARTIAL，J-05 为 BLOCKED；官方 Suite J 总判仍 BLOCKED。不得用合成评价回归、分布单元测试或 Suite I 6/6 KILLED 顶替。Suite G 与生产路由矩阵仍阻塞。不宣称 ENGINEERING_ACCEPTED 或投资价值成立。官方 VTP-0.1 E-01 是路由真值表（清单第 9 项），不是离线 E2E smoke。2026-11-27 已用生产 vms.router.route_methods 跑完 10×12×4，总判 PARTIAL（不是 PASS）：3 格 SYN-NO-PEERS 相对法 MISMATCH，另有未预声明 expected、WARN/CONDITIONAL、第 12 方法不在 registry、TOTAL_RETURN 无生产方法等缺口。旧 G-01「生产routing 10×12×4」文案已纠正到 E-01；当时清单第 10 项（官方 Suite G）尚未开始。不宣称 ENGINEERING_ACCEPTED 或投资价值成立。官方 VTP-0.1 Suite G 是 Market-pricing / exit-price separation（含 G-06），不是「Numerical Counterfactuals」，也不是 10×12×4 路由（该错标已纠正到官方 E-01）。2026-11-27 已在生产 market pricing API 与生产 evaluation 报告标签上关闭 G-01..G-06，官方 Suite G 总判 PASS。不得用 SimpleValuationModel、旧 junit、Suite I 6/6、离线 E2E smoke 或 E-01 矩阵顶替。Suite G PASS 不解除官方 Suite J（仍 BLOCKED）与官方 E-01（仍 PARTIAL）导致的仓库 ENGINEERING_BLOCKED / DO_NOT_MERGE，也不宣称 ENGINEERING_ACCEPTED 或投资价值成立。",
   "next_required_actions": [
-    "Suite I 已 6/6 executed KILLED。官方 E-01 路由真值表已取证但仍为 PARTIAL。余留阻塞仍是官方 Suite J（全量仍 BLOCKED）、Suite G（清单第 10 项，未开始），以及 E-01 未关闭部分。6/6 与 E-01 PARTIAL 均不解除仓库 BLOCKED，也不宣称 ENGINEERING_ACCEPTED。",
+    "Suite I 已 6/6 executed KILLED。官方 E-01 路由真值表已取证但仍为 PARTIAL。官方 Suite J 全量仍 BLOCKED。官方 Suite G（清单第 10 项）已于 2026-11-27 用生产 market pricing / evaluation 标签关闭，总判 PASS（测例 PR #39，证据 SUITE_G_MARKET_PRICING_EXIT_PRICE_SEPARATION.md）。6/6、E-01 PARTIAL 与 Suite G PASS 均不解除仓库 BLOCKED，也不宣称 ENGINEERING_ACCEPTED。",
     "清单第 6 项（离线 E2E smoke / gap_items.9 / Suite E）已于 2026-11-27 依据 PR #36 与 e01_offline_e2e/ 改为 PASS。不是 A-02 改口。VTP 准则 E-01 路由真值表仍属清单第 9 项，未关闭。本项 PASS 不解除仓库 BLOCKED。",
     "A-02 已于 2026-11-27 依据 PR #35 隔离测例与 a02_isolated/ 证据改为 PASS；旧 junit_a02_fresh.xml 8/8 不能单独作为完整离线证明。A-02 PASS 不解除仓库 BLOCKED。",
     "I-M02 证据余留缺口：detector_results 未保存完整 pytest stdout/stderr/断言上下文；未从其他 artifact 恢复，禁止补造。",
     "官方 Suite J（Historical walk-forward）仍 BLOCKED：J-01..J-04 为 PARTIAL，J-05 为 BLOCKED。要关闭需完整 PIT 无偏样本（n_unbiased_pit_complete>0）、官方其余目标/基线/proper scores 与非空子群。R7 精简切片证据见 SUITE_J_HISTORICAL_WALK_FORWARD.md；不得用合成 19 绿、分布单元测试或 6/6 KILLED 顶替。关闭准则检测测例在 PR #37。",
     "官方 E-01（清单第 9 项）已用生产 route_methods 跑完 10×12×4，总判 PARTIAL 不是 PASS。要关闭需：完整事前 method×target 真值表；处理 midcycle_normalized / TOTAL_RETURN；以及资格层对 peer_count=0 的相对法门禁（本轮不改生产逻辑）。证据见 SUITE_E_E01_PRODUCTION_ROUTING.md；测例 PR #38。不得用离线 E2E smoke、旧 toy 矩阵或 Suite I 6/6 顶替。",
-    "完成 Suite G 生产 market_pricing 调用"
+    "官方 Suite G（Market-pricing / exit-price separation，含 G-06）已于 2026-11-27 关闭，总判 PASS。测例在 PR #39，未堆进 #33–#38。证据见 SUITE_G_MARKET_PRICING_EXIT_PRICE_SEPARATION.md 与 suite_g_official/。未改生产逻辑。本项 PASS 不解除仓库 BLOCKED：官方 Suite J 仍 BLOCKED，官方 E-01 仍 PARTIAL。不得用旧 toy 日志、2026-11-07 junit、Suite I 6/6 或 E-01 矩阵顶替本关闭。"
   ],
-  "verdict_alignment_timestamp": "2026-11-27T02:24:27+08:00",
+  "verdict_alignment_timestamp": "2026-11-27T02:33:48+08:00",
   "evidence_head_note": "Official E-01 production routing evidence lives in c14e8bd31b515dc80b0b8253309d1c8b2d25a7d7. The previous evidence head was 3f943948921cffae6e2e13794916d5d7f1817a84 (Suite J). A follow-up commit only backfills this field. Official E-01 is PARTIAL, not PASS. Repo is still ENGINEERING_BLOCKED / DO_NOT_MERGE / INVESTMENT_VALUE_NOT_ESTABLISHED.",
   "investment_value": "INVESTMENT_VALUE_NOT_ESTABLISHED",
   "evidence_head_reviewed": "3f943948921cffae6e2e13794916d5d7f1817a84"

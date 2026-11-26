@@ -1,0 +1,11 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.5, pytest-9.2.0, pluggy-1.7.0
+rootdir: /workspace/dsde-valuation-suiteg
+configfile: pyproject.toml
+plugins: hypothesis-6.170.17
+collected 6 items
+
+tests/evaluation/test_suite_g_official_counterfactuals.py ......         [100%]
+
+- generated xml file: /tmp/suite_g_official/official/Suite_G_Official_Counterfactuals_junit.xml -
+============================== 6 passed in 2.97s ===============================

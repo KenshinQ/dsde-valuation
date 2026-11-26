@@ -1,0 +1,11 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.5, pytest-9.2.0, pluggy-1.7.0
+rootdir: /workspace/dsde-valuation-e01
+configfile: pyproject.toml
+plugins: hypothesis-6.170.17
+collected 1 item
+
+tests/integration/test_e01_offline_e2e_smoke.py .                        [100%]
+
+---- generated xml file: /tmp/e01_isolated_evidence/junit_e01_isolated.xml -----
+============================== 1 passed in 34.97s ==============================

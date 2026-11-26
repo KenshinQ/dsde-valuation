@@ -1,0 +1,90 @@
+{
+  "est": {
+    "data_manifest.json": "c35fec87e51b376a9a53298b50b6b59a96c7e5643708f234c22a65af0589ea7a",
+    "data_quality_report.json": "bfe149b7033b1b3855b080b3969cc0b2b2464204e7cfda001426f8c6914ef01a",
+    "driver_diagnostics.json": "d8fbc8306e8b8b096d4a75a8afe98a307c78a50f66667d3e437a49746afd3ceb",
+    "pit_snapshot.json": "348c3080eafcaa82cdc01aee8abda781e696825e6d24b192f614370c99fe0c6d",
+    "state_posterior.json": "8348cf7145edaa94fef1c5f7690e218e12153acd9322ada9491d5337a53b3924"
+  },
+  "eval": {
+    "data/SYN000000.SZ/corporate_actions.csv": "3fb164847ffbfb7756fce3308306bc6b4bbd20cc29f18575f9661ef97d52e962",
+    "data/SYN000000.SZ/financial_observations.csv": "6e3663630e9ac886f471da91a8cff7f4d5bff8b30ac30667230b6823abaacc96",
+    "data/SYN000000.SZ/instrument_classification.csv": "22e1d0d9b71c66be004fb0ac6a61cb0dfb175bc5df0b3fa1d35a7cf649fd6d9a",
+    "data/SYN000000.SZ/market_observations.csv": "c66cb6e2c8331bbba00a5e64e8aa1ffd8bbfea68d0f3001a18bdc380b748e26d",
+    "data/SYN000000.SZ/sources.yaml": "74536cc223a15989c6618c6b6d7b7bff15de5dc7e02b9a87464a87795ec5129c",
+    "data/SYN000001.SZ/corporate_actions.csv": "8c2af73dd8628a25525b03ab1100b0f228a07e91a5ca9d05fba9c7c18a3088fa",
+    "data/SYN000001.SZ/financial_observations.csv": "0644cbce103502c240b5d43c14a35ee76d4d37089bf2b0fa4cb9c7d70cc224f4",
+    "data/SYN000001.SZ/instrument_classification.csv": "3738fe523be7e2d2f5ac8e08063437931fcbc965728c9cd3bc9d8f5bd357d95f",
+    "data/SYN000001.SZ/market_observations.csv": "a9b200cf761b90954ca43cf70f57be6a9ff4327dec830ef57207705e574acd4e",
+    "data/SYN000001.SZ/sources.yaml": "74536cc223a15989c6618c6b6d7b7bff15de5dc7e02b9a87464a87795ec5129c",
+    "evaluation_report.json": "4bdb0a06978a97fb1d3f87a4f1222b4e588db9e068802953729c072596b92665",
+    "forecasts/SYN000000.SZ/2019-04-20_h1.json": "599912abe2c5b5978d8c5b09a390ad4e0380d5a23aa89007c5cb98efcae70a8f",
+    "forecasts/SYN000000.SZ/2020-04-20_h1.json": "08def6a76c0c31da68ae80e5e00c8bf78fa9ab180e49af0cec32d6fb128cb1c5",
+    "forecasts/SYN000000.SZ/2021-04-20_h1.json": "a2ed28df46a4e51ea8133c0b54f8011483d34d0167e32d792065f7ad3a0817db",
+    "forecasts/SYN000000.SZ/2022-04-20_h1.json": "115ed1c7181c42346c3b2c5a2df699104cacd1d55fe0e354af48f3c8728d3781",
+    "forecasts/SYN000001.SZ/2019-04-20_h1.json": "02f985f6f72c22edcab80011df8fca8f4b84bca2271cb6cd3897cca07b6cf665",
+    "forecasts/SYN000001.SZ/2020-04-20_h1.json": "55b07a794f3ac8c1c5674407d3ebc1ed5c1e4f89c72d86a83fdc3a15617022be",
+    "forecasts/SYN000001.SZ/2021-04-20_h1.json": "d3634f1ae94fdb9643d160591e254ac86803856901fb1c9cf844c1e183265e98",
+    "forecasts/SYN000001.SZ/2022-04-20_h1.json": "418a20ce9e48fbcde4c33b87d987969d3438c6e739ad4f7198743a50856fc8e6",
+    "frozen_weights.json": "2569ba6336a33827f0c0419c0daf7e3e12634716e30b989c05128239eca6ab4c",
+    "origin_records.json": "daa28141b257584dbc42a78dee2de5b11b42f0d43a69b6c0aa926d65b9bca6de",
+    "simulation_metadata.json": "a76f7369489fca6fd04cd036dc9f6781a34a607df814500e0137b2e196822e62"
+  },
+  "fp": {
+    "data_manifest.json": "dd23c76711135f814a9fb5e06bbb70ff7277496a8d0d31ef8f5b70e8f311818b",
+    "data_quality_report.json": "ce00d37305a241dfd40de72049be5390f1c4f9346f466b69fc723a6bbb148afd",
+    "driver_diagnostics.json": "76a1bb88df5d93f8906746d825eed0f9cf6068c0d022b9c3760c3888be871dd7",
+    "financial_path_bundle.json": "e92691efb140bf52e214bacfa6510b97ae82c598184be6ed8dabe183e8fbb2f5",
+    "financial_path_ledgers.parquet": "469ea67079295c3c586ed0da3478fd60b3e6693ef01301ca9f09990d6af6b23d",
+    "pit_snapshot.json": "c3edecd1d4f31b369b614af64cadab592787365caea3019ef488dcab57b98300",
+    "simulation_bundle.json": "06e56389ae382f9ca341583bea41d591a3cd92f6656c231a94ea0400dccf6329",
+    "simulation_metadata.json": "1ddc4471fa590038fe6e48c23758a9cfad821bb204ff1725cc1eaa7c383b6f12",
+    "state_posterior.json": "f821a4bc0122fdb9424c78f4dd8fbe4ab393c567247905562fd61d2764c609b5"
+  },
+  "ret": {
+    "data_manifest.json": "e52b72e91ecf24e5f50256550288c6ed64f035eb4a8f7d9cb0285ca41e18b7d1",
+    "data_quality_report.json": "a7ccc995201ee2d1943c44e4b2c2cb6c0a23490c02bc6b0b4bcd9db19fc4fbf2",
+    "driver_diagnostics.json": "18d95d4d20e0a32cfad226420d3fbe83b2895b3b8f4e1140074b3f3ab302462c",
+    "financial_path_bundle.json": "586b7a184c751f57990fb8d94ac738696672cccdd14c1be43b910a31318c2af0",
+    "financial_path_ledgers.parquet": "469ea67079295c3c586ed0da3478fd60b3e6693ef01301ca9f09990d6af6b23d",
+    "path_returns.parquet": "423242978733eb0c4bc8d669fccd4e55be302ccabc41f2b75bb163e9fbf0ff89",
+    "path_valuations.parquet": "f5c0ae3e99b5772f2f6a63c8d640bc33b091624a4c8bebb9744c737e99775983",
+    "pit_snapshot.json": "28ca8d85320b88189dc0447744d42d49a55281fadda2cb7d4101ee49a8d74f01",
+    "return_distribution_summary.json": "37c15d1612d5bc983c2456852cdfb974d75bf22609bcff80e2616835bdd548eb",
+    "simulation_bundle.json": "5135ec27ab791d1e2f3bebccef3bda4b2bd6fb4505c6a6b5651d0646e90cb45c",
+    "simulation_metadata.json": "839fb7d0b415e4769abb6d183243f27e72b5f5c32b664702d6adffff9ddd2700",
+    "state_posterior.json": "74e6ce1d3d05c5c9b517f8b79c2cc74b368949818dfe4bac70bbd404f402e22c",
+    "valuation_summary.json": "c5ded91283307ac771d3a1c366fe7a7d389271f96179aee636d5628c89cdf93d"
+  },
+  "sens": {
+    "sensitivity_report.json": "f21bcc2b769e9349949bf19d969252278f2bf9e5c94a635b113f9034f678c2d8",
+    "simulation_metadata.json": "b8738df38328012a012d8451e790bdb6b80fefc18e927c9a626996fc07dd9c67"
+  },
+  "sim": {
+    "data_manifest.json": "75a97f014e47323ddec872d3fe2aa89ee800ca262de8cc8e87a4d7e6e2d73966",
+    "data_quality_report.json": "1c1d0dedf0f6690e06ddb0efdd006e643d7468f6f0ef17271553f8b64c269de4",
+    "driver_diagnostics.json": "02a9546ef055e1c888d4d7397e2ebc48c6ed13a637181444a19a7d6e18933f31",
+    "pit_snapshot.json": "09e151c68598f2b641bf828abb14039eb35edac1d450f63adae5d83d497aeed8",
+    "simulation_bundle.json": "086cae3e6df3dfbbaa2b51a26a6baf216ead80991b7ad2c194f4d32819d9a6dc",
+    "simulation_metadata.json": "0b11351ba04c7d9e7c8539e6e0c41e9b6a563396427f0dbfd66a4efaf02737e6",
+    "state_posterior.json": "1fd5c2b633efe0f0f20f69e3fb30b00b25c76696fc5f104598fe60fe2f85dfa8"
+  },
+  "snap": {
+    "data_manifest.json": "d9a28ff7d78df5573c368d4cf414492226c750de9effe4747baac42ce36437d5",
+    "data_quality_report.json": "82b67b95f12c71ed92750e169643590c01cf4e1f8b89b75b80e0b5cb031db9ea",
+    "pit_snapshot.json": "b03ea724546e53637ee02f386ad19b3fe8a2d5f52c883ceaa826ae6f3fda0132"
+  },
+  "val": {
+    "data_manifest.json": "aef8828fca3846bef9408d599c420cfbb0e16fbe8ac066ad9d590ca85a26e976",
+    "data_quality_report.json": "35685663bfb9b8b7073d3e32ae081861e71d0c1553bf9cc11565cf76fc589f26",
+    "driver_diagnostics.json": "ae691e3b31678ec9e3ed4cbcf505e8118e0178842c706673fe99aef1c92c2df0",
+    "financial_path_bundle.json": "529d5910fa752ab9c0526fb9e2caec1453c0f8602d8bd3f3915a945f8d0ecfd7",
+    "financial_path_ledgers.parquet": "469ea67079295c3c586ed0da3478fd60b3e6693ef01301ca9f09990d6af6b23d",
+    "path_valuations.parquet": "f5c0ae3e99b5772f2f6a63c8d640bc33b091624a4c8bebb9744c737e99775983",
+    "pit_snapshot.json": "d6c03cb9e34c830e407553162aae257c9cdb36b7542e9138c0cea7321cf49c93",
+    "simulation_bundle.json": "0922717839260b44e3b214d7855469032ae556918e3e99ea6b9170b6212e1352",
+    "simulation_metadata.json": "6c9dafeba876c0c1590e0c477a78747e5accc5839a619c4d32efc88617513fe3",
+    "state_posterior.json": "4078c8d26707269e65deb5543bce5b64fcfbfd5daf4ce553818e61ea1a8b9cbd",
+    "valuation_summary.json": "f4b3e25cf76472bc202c673c5154ca0e5fa1056d171d1dc75483cf9c36edea7f"
+  }
+}

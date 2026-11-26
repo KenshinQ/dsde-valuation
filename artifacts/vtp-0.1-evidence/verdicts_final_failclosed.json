@@ -4,11 +4,10 @@
   "baseline_commit": "dd84fc16f54c397d3ba88e953a384dfecd550466",
   "evidence_branch": "cursor/vtp-0.1-evidence-11d5",
   "evidence_head": "fd614a8df5a8b026c444ce00633bceab0c2c6aa6",
-  "note": "权威 fail-closed 判定。独立核读以 JSON 为准：executed=5, killed=5, survived=0, not_executed=1；I-M01/I-M02/I-M03/I-M05/I-M06 为 KILLED，I-M04 仍为 NOT_EXECUTED。不是 6/6。I-M06 于 2026-11-27 Asia/Shanghai 在本机对 src/vms/sampling/simulate.py:313 做单点临时变异（失败 MC 路径不写入 invalid 列表，造成无声缩样），检测测例 baseline 3 passed（exit 0），mutant 1 failed / 2 passed（exit 1，test_invalid_path_fraction_blocks_production 未触发预期 SamplingGateError），已还原。生产 simulate.py SHA256 还原后仍为 57bd06f4febfec6b762efea890cc65450ad6dbcd11ee7af563ceeca9d43cb40d。I-M02 detector_results 仍缺完整 stdout（未编造）。 A-02 于 2026-11-27 Asia/Shanghai 在本机用 unshare -r --net（非代理）跑通最小完整合成工作流并自检 ENETUNREACH，有依据改为 PASS；详见 A_02_OFFLINE_SEMANTICS_GAP_AND_CLOSURE.md 与 PR #35。A-02 单项 PASS 不解除 ENGINEERING_BLOCKED / DO_NOT_MERGE / INVESTMENT_VALUE_NOT_ESTABLISHED。",
+  "note": "权威 fail-closed 判定。独立核读以 JSON 为准：executed=5, killed=5, survived=0, not_executed=1；I-M01/I-M02/I-M03/I-M05/I-M06 为 KILLED，I-M04 仍为 NOT_EXECUTED。不是 6/6。I-M06 于 2026-11-27 Asia/Shanghai 在本机对 src/vms/sampling/simulate.py:313 做单点临时变异（失败 MC 路径不写入 invalid 列表，造成无声缩样），检测测例 baseline 3 passed（exit 0），mutant 1 failed / 2 passed（exit 1，test_invalid_path_fraction_blocks_production 未触发预期 SamplingGateError），已还原。生产 simulate.py SHA256 还原后仍为 57bd06f4febfec6b762efea890cc65450ad6dbcd11ee7af563ceeca9d43cb40d。I-M02 detector_results 仍缺完整 stdout（未编造）。 A-02 于 2026-11-27 Asia/Shanghai 在本机用 unshare -r --net（非代理）跑通最小完整合成工作流并自检 ENETUNREACH，有依据改为 PASS；详见 A_02_OFFLINE_SEMANTICS_GAP_AND_CLOSURE.md 与 PR #35。A-02 单项 PASS 不解除 ENGINEERING_BLOCKED / DO_NOT_MERGE / INVESTMENT_VALUE_NOT_ESTABLISHED。 清单第 6 项（verdicts Suite E / gap_items.9 离线端到端 smoke / VTP Gap #9） 于 2026-11-27 Asia/Shanghai 在本机用 unshare -r --net 跑通官方 scripts/e2e_offline_demo.sh 生产 CLI 路径，并从已保存 data 重放（K-02；evaluate forecast 仅 evaluation_as_of 时间戳不同）。有依据改为 PASS。这不是 A-02 的改口，也不是 VTP 准则 E-01 路由真值表（清单第 9 项）的关闭。详见 E_01_OFFLINE_E2E_SMOKE.md 与 PR #36。本项 PASS 不解除 ENGINEERING_BLOCKED / DO_NOT_MERGE / INVESTMENT_VALUE_NOT_ESTABLISHED。",
   "overall_release_decision": "RELEASE_BLOCKED",
   "engineering": "ENGINEERING_BLOCKED",
   "blocking_reasons": [
-    "E-01: 端到端smoke未完成（本机已证实 unshare -r --net 可用，见 A-02；该项本身尚未执行，保持 NOT_VERIFIED）",
     "G-01: 生产routing未全覆盖（10×12×4缺口）",
     "G-02: 反事实检验部分缺失",
     "G-03: 生产API integration未完整",
@@ -81,8 +80,11 @@
     },
     "9": {
       "title": "离线E2E smoke",
-      "status": "NOT_VERIFIED",
-      "reason": "离线端到端 smoke（清单第 6 项）本轮未执行。环境更正：本机可以使用 unshare -r --net（A-02 已用），不再构成「无 unshare」阻塞；该项本身尚未跑通真实生产路径 smoke，保持 NOT_VERIFIED，不降级标准。"
+      "status": "PASS",
+      "reason": "2026-11-27：在 unshare -r --net 下跑通 scripts/e2e_offline_demo.sh 生产路径，并从已保存 demo/data 重放。snap/est/sim/fp/val/ret/sens 与 evaluation_report 哈希一致；evaluate forecasts 仅 outcomes.evaluation_as_of 墙钟时间戳不同。这是清单第 6 项 / Gap #9 离线 E2E smoke，不是 A-02，也不是 VTP E-01 路由真值表。",
+      "isolated_junit": "e01_offline_e2e/junit_e01_isolated.xml",
+      "isolated_junit_timestamp": "2026-11-27T01:50:47.463894+08:00",
+      "closure_report": "E_01_OFFLINE_E2E_SMOKE.md"
     },
     "10": {
       "title": "断言链硬度",
@@ -110,9 +112,9 @@
       "note": "硬断言已验证"
     },
     "Suite E (Commit Flow)": {
-      "status": "BLOCKED",
-      "E-01": "NOT_VERIFIED (离线 E2E smoke 未执行；本机已有 unshare -r --net，但不把 A-02 当作第 6 项关闭)",
-      "note": "端到端smoke未完成"
+      "status": "PASS",
+      "E-01": "PASS (backlog item 6 / Gap #9 offline E2E smoke + replay under unshare -r --net; not A-02; not VTP-criteria E-01 routing truth table)",
+      "note": "清单第 6 项离线端到端 smoke 已于 2026-11-27 依据 PR #36 与 e01_offline_e2e/ 改为 PASS。VTP 准则 E-01 路由真值表（清单第 9 项 / 10×12×4）仍未关闭，见 G-01 与 next_required_actions。evaluation_report 中的 run-level ENGINEERING_PASS 不是仓库 ENGINEERING_ACCEPTED。"
     },
     "Suite F (10-company baseline)": {
       "status": "PASS",
@@ -170,20 +172,26 @@
     "a02_isolation_self_check": "a02_isolated/isolation_self_check.json",
     "a02_host_contrast": "a02_isolated/host_contrast.json",
     "a02_isolated_commands": "a02_isolated/COMMANDS.txt",
-    "a02_tests_pr": "https://github.com/KenshinQ/dsde-valuation/pull/35"
+    "a02_tests_pr": "https://github.com/KenshinQ/dsde-valuation/pull/35",
+    "e01_closure_report": "E_01_OFFLINE_E2E_SMOKE.md",
+    "e01_isolated_junit": "e01_offline_e2e/junit_e01_isolated.xml",
+    "e01_isolation_self_check": "e01_offline_e2e/isolation_self_check.json",
+    "e01_replay_comparison": "e01_offline_e2e/replay_comparison.json",
+    "e01_commands": "e01_offline_e2e/COMMANDS.txt",
+    "e01_tests_pr": "https://github.com/KenshinQ/dsde-valuation/pull/36"
   },
   "release_recommendation": "DO_NOT_MERGE",
-  "rationale": "RELEASE_BLOCKED / ENGINEERING_BLOCKED / DO_NOT_MERGE / INVESTMENT_VALUE_NOT_ESTABLISHED。E-01、G-01至G-05、J-01至J-05、以及 I-M04 NOT_EXECUTED 仍阻塞。已执行 mutation 为 5/5 KILLED，不能写成 6/6，也不能据此宣称工程验收通过或投资价值成立。A-02 已于 2026-11-27 依据隔离 netns 证据改为 PASS，单项 PASS 不解除上述阻塞。",
+  "rationale": "RELEASE_BLOCKED / ENGINEERING_BLOCKED / DO_NOT_MERGE / INVESTMENT_VALUE_NOT_ESTABLISHED。G-01至G-05、J-01至J-05、以及 I-M04 NOT_EXECUTED 仍阻塞。已执行 mutation 为 5/5 KILLED，不能写成 6/6，也不能据此宣称工程验收通过或投资价值成立。A-02 已于 2026-11-27 依据隔离 netns 证据改为 PASS，单项 PASS 不解除上述阻塞。清单第 6 项（离线 E2E smoke）已于 2026-11-27 依据隔离生产路径 + replay 改为 PASS；不是 A-02 改口，也不关闭 VTP E-01 路由真值表（清单第 9 项）。本项 PASS 不解除上述阻塞。",
   "next_required_actions": [
+    "清单第 6 项（离线 E2E smoke / gap_items.9 / Suite E）已于 2026-11-27 依据 PR #36 与 e01_offline_e2e/ 改为 PASS。不是 A-02 改口。VTP 准则 E-01 路由真值表仍属清单第 9 项，未关闭。本项 PASS 不解除仓库 BLOCKED。",
     "A-02 已于 2026-11-27 依据 PR #35 隔离测例与 a02_isolated/ 证据改为 PASS；旧 junit_a02_fresh.xml 8/8 不能单独作为完整离线证明。A-02 PASS 不解除仓库 BLOCKED。",
     "I-M01/I-M02/I-M03/I-M05/I-M06 已为 KILLED。余留变异：I-M04（分布混合是否被压成均值）仍 NOT_EXECUTED，需先定位生产符号再做隔离单点检验；定位不到则保持 NOT_EXECUTED，禁止编造。",
     "I-M02 证据余留缺口：detector_results 未保存完整 pytest stdout/stderr/断言上下文；未从其他 artifact 恢复，禁止补造。",
     "完成生产 routing API 调用 infrastructure（10×12×4，生产 vms.router.route_methods）",
     "完成 Suite G 生产 market_pricing 调用",
-    "完成 Suite J 分布测试 coverage",
-    "验证 E-01 端到端 smoke（清单第 6 项）：本机已证实 unshare -r --net 可用（A-02 已用），但仍需在可复现的离线隔离下跑通该项要求的生产路径 smoke；未执行则保持 NOT_VERIFIED，不降级标准。"
+    "完成 Suite J 分布测试 coverage"
   ],
-  "verdict_alignment_timestamp": "2026-11-27T01:42:05+08:00",
+  "verdict_alignment_timestamp": "2026-11-27T01:53:50+08:00",
   "evidence_head_note": "A-02 isolated-offline evidence lives in fd614a8df5a8b026c444ce00633bceab0c2c6aa6. The previous evidence head was 92c4375e6c9b5f6da5e9db3a04381057a1e5156b (I-M06). A follow-up commit only backfills this field. A-02 is PASS; repo is still ENGINEERING_BLOCKED / DO_NOT_MERGE / INVESTMENT_VALUE_NOT_ESTABLISHED.",
   "investment_value": "INVESTMENT_VALUE_NOT_ESTABLISHED",
   "evidence_head_reviewed": "92c4375e6c9b5f6da5e9db3a04381057a1e5156b"

@@ -1,0 +1,39 @@
+{
+  "data_label": "SYNTHETIC — not real market data",
+  "implemented_phase": "PHASE_12",
+  "metadata": {
+    "bit_generator": "PCG64",
+    "code_version": {
+      "git_sha": "8fe537bc434e8c2f154c84c3494fab13e0720299",
+      "package_version": "0.2.0rc1",
+      "src_dirty": false
+    },
+    "config_hash": "4b8ea44adfaa9f5ff5e4602c343efe3cad066bf1a5e499a190d6e540e7413908",
+    "data_hash": "626bf03212ee64dceb1d19cd65a5f9a034a34e8c240c07c48fda046cf6e3c485",
+    "implemented_phase": "PHASE_12",
+    "monte_carlo_paths": 40,
+    "request_hash": "41b3e0b3e969871c496b889fc78f994f93aa87b36c11a0051a2285ec5748c951",
+    "run_id": "vms-80b7dfa9f5fd3e89",
+    "schema_version": "vms-0.2.phase12",
+    "seed": 42
+  },
+  "n_paths_simulated": 40,
+  "n_valid": 40,
+  "quality_status": "PASS",
+  "rng_smoke_check": {
+    "first_5_standard_normal": [
+      -1.856823777946,
+      0.282044263008,
+      1.19184470149,
+      -0.531629566043,
+      -1.079130050235
+    ],
+    "purpose": "proves seed determinism only",
+    "stream": "phase0_smoke"
+  },
+  "run_id": "vms-80b7dfa9f5fd3e89",
+  "sampler_version": "PATH-SAMPLER-1",
+  "schema_version": "vms-0.2.phase12",
+  "status": "PHASE9_SMOKE_EVAL_VIA_VMS_EVALUATE",
+  "warning": "Smoke artifact through Phase 8; run vms evaluate for Phase 9 walk-forward."
+}

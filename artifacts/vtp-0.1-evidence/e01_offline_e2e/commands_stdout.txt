@@ -1,0 +1,1606 @@
+
+$ /workspace/dsde-valuation/.venv/bin/python -m vms.cli.main demo --out /tmp/e01_isolated_evidence/bundle/run1/demo --seed 42 --paths 40 --as-of 2025-06-30
+{
+  "status": "PHASE9_SMOKE_EVAL_VIA_VMS_EVALUATE",
+  "quality_status": "PASS",
+  "profile": "SUPPORTED",
+  "profile_id": "operating_company",
+  "industry": "\u673a\u68b0\u8bbe\u5907",
+  "projection_status": "VALID",
+  "base_year": 2024,
+  "years": [
+    2025,
+    2026,
+    2027,
+    2028,
+    2029
+  ],
+  "policy": "conservative_baseline",
+  "violations": [],
+  "flags": [
+    "BASE_SHARES_AT_AS_OF"
+  ],
+  "fcff": [
+    233997290,
+    222953820,
+    235487352,
+    248725466,
+    262707773
+  ],
+  "phase3": {
+    "profile": "SUPPORTED",
+    "fundamental_regime": {
+      "GROWTH": 0.0269,
+      "STABLE": 0.0618,
+      "DETERIORATING": 0.2527,
+      "RECOVERY": 0.6586
+    },
+    "fundamental_regime_period": "2025-03-31",
+    "market_regime": "UNAVAILABLE",
+    "walk_forward_origins": 1,
+    "selected_specs": {
+      "revenue_growth": "regime_t",
+      "gross_margin": "regime_t",
+      "ebit_margin": "regime_t",
+      "opex_ratio": "regime_t",
+      "effective_tax_rate": "regime_t",
+      "parent_share_of_net_income": "regime_t",
+      "receivables_to_revenue": "regime_t",
+      "inventory_to_cogs": "regime_t",
+      "payables_to_cogs": "regime_t",
+      "capex_to_revenue": "regime_t",
+      "da_to_revenue": "regime_t",
+      "acquisitions_to_revenue": "regime_t",
+      "cost_of_debt": "regime_t",
+      "debt_to_revenue": "regime_t",
+      "payout_ratio": "regime_t",
+      "repurchases_to_net_income": "regime_t",
+      "diluted_share_growth": "regime_t",
+      "cash_to_revenue": "regime_t"
+    },
+    "low_confidence_drivers": [
+      "acquisitions_to_revenue",
+      "capex_to_revenue",
+      "cash_to_revenue",
+      "cost_of_debt",
+      "da_to_revenue",
+      "debt_to_revenue",
+      "diluted_share_growth",
+      "ebit_margin",
+      "effective_tax_rate",
+      "gross_margin",
+      "inventory_to_cogs",
+      "opex_ratio",
+      "parent_share_of_net_income",
+      "payables_to_cogs",
+      "payout_ratio",
+      "receivables_to_revenue",
+      "repurchases_to_net_income",
+      "revenue_growth"
+    ]
+  },
+  "phase4": {
+    "profile": "SUPPORTED",
+    "fundamental_regime": {
+      "GROWTH": 0.0269,
+      "STABLE": 0.0618,
+      "DETERIORATING": 0.2527,
+      "RECOVERY": 0.6586
+    },
+    "fundamental_regime_period": "2025-03-31",
+    "market_regime": "UNAVAILABLE",
+    "walk_forward_origins": 1,
+    "selected_specs": {
+      "revenue_growth": "regime_t",
+      "gross_margin": "regime_t",
+      "ebit_margin": "regime_t",
+      "opex_ratio": "regime_t",
+      "effective_tax_rate": "regime_t",
+      "parent_share_of_net_income": "regime_t",
+      "receivables_to_revenue": "regime_t",
+      "inventory_to_cogs": "regime_t",
+      "payables_to_cogs": "regime_t",
+      "capex_to_revenue": "regime_t",
+      "da_to_revenue": "regime_t",
+      "acquisitions_to_revenue": "regime_t",
+      "cost_of_debt": "regime_t",
+      "debt_to_revenue": "regime_t",
+      "payout_ratio": "regime_t",
+      "repurchases_to_net_income": "regime_t",
+      "diluted_share_growth": "regime_t",
+      "cash_to_revenue": "regime_t"
+    },
+    "low_confidence_drivers": [
+      "acquisitions_to_revenue",
+      "capex_to_revenue",
+      "cash_to_revenue",
+      "cost_of_debt",
+      "da_to_revenue",
+      "debt_to_revenue",
+      "diluted_share_growth",
+      "ebit_margin",
+      "effective_tax_rate",
+      "gross_margin",
+      "inventory_to_cogs",
+      "opex_ratio",
+      "parent_share_of_net_income",
+      "payables_to_cogs",
+      "payout_ratio",
+      "receivables_to_revenue",
+      "repurchases_to_net_income",
+      "revenue_growth"
+    ],
+    "sampler_version": "PATH-SAMPLER-1",
+    "n_paths": 40,
+    "n_years": 5,
+    "n_valid": 40,
+    "n_invalid": 0,
+    "invalid_fraction": 0.0,
+    "dependence_overlap_years": 2,
+    "seed_stable": true,
+    "central_year1_state": "RECOVERY"
+  },
+  "phase5": {
+    "profile": "SUPPORTED",
+    "fundamental_regime": {
+      "GROWTH": 0.0269,
+      "STABLE": 0.0618,
+      "DETERIORATING": 0.2527,
+      "RECOVERY": 0.6586
+    },
+    "fundamental_regime_period": "2025-03-31",
+    "market_regime": "UNAVAILABLE",
+    "walk_forward_origins": 1,
+    "selected_specs": {
+      "revenue_growth": "regime_t",
+      "gross_margin": "regime_t",
+      "ebit_margin": "regime_t",
+      "opex_ratio": "regime_t",
+      "effective_tax_rate": "regime_t",
+      "parent_share_of_net_income": "regime_t",
+      "receivables_to_revenue": "regime_t",
+      "inventory_to_cogs": "regime_t",
+      "payables_to_cogs": "regime_t",
+      "capex_to_revenue": "regime_t",
+      "da_to_revenue": "regime_t",
+      "acquisitions_to_revenue": "regime_t",
+      "cost_of_debt": "regime_t",
+      "debt_to_revenue": "regime_t",
+      "payout_ratio": "regime_t",
+      "repurchases_to_net_income": "regime_t",
+      "diluted_share_growth": "regime_t",
+      "cash_to_revenue": "regime_t"
+    },
+    "low_confidence_drivers": [
+      "acquisitions_to_revenue",
+      "capex_to_revenue",
+      "cash_to_revenue",
+      "cost_of_debt",
+      "da_to_revenue",
+      "debt_to_revenue",
+      "diluted_share_growth",
+      "ebit_margin",
+      "effective_tax_rate",
+      "gross_margin",
+      "inventory_to_cogs",
+      "opex_ratio",
+      "parent_share_of_net_income",
+      "payables_to_cogs",
+      "payout_ratio",
+      "receivables_to_revenue",
+      "repurchases_to_net_income",
+      "revenue_growth"
+    ],
+    "sampler_version": "PATH-SAMPLER-1",
+    "n_paths": 40,
+    "n_years": 5,
+    "n_valid": 40,
+    "n_invalid": 0,
+    "invalid_fraction": 0.0,
+    "dependence_overlap_years": 2,
+    "seed_stable": true,
+    "central_year1_state": "RECOVERY",
+    "financial_n_valid": 40,
+    "financial_n_failed": 0,
+    "financial_flags": [],
+    "year1_fcff_mean": 182287938.3192,
+    "year1_fcff_per_share_p50": 0.152164,
+    "valid_path_id_hash": "dae39245767ed5e8"
+  },
+  "phase6": {
+    "profile": "SUPPORTED",
+    "fundamental_regime": {
+      "GROWTH": 0.0269,
+      "STABLE": 0.0618,
+      "DETERIORATING": 0.2527,
+      "RECOVERY": 0.6586
+    },
+    "fundamental_regime_period": "2025-03-31",
+    "market_regime": "UNAVAILABLE",
+    "walk_forward_origins": 1,
+    "selected_specs": {
+      "revenue_growth": "regime_t",
+      "gross_margin": "regime_t",
+      "ebit_margin": "regime_t",
+      "opex_ratio": "regime_t",
+      "effective_tax_rate": "regime_t",
+      "parent_share_of_net_income": "regime_t",
+      "receivables_to_revenue": "regime_t",
+      "inventory_to_cogs": "regime_t",
+      "payables_to_cogs": "regime_t",
+      "capex_to_revenue": "regime_t",
+      "da_to_revenue": "regime_t",
+      "acquisitions_to_revenue": "regime_t",
+      "cost_of_debt": "regime_t",
+      "debt_to_revenue": "regime_t",
+      "payout_ratio": "regime_t",
+      "repurchases_to_net_income": "regime_t",
+      "diluted_share_growth": "regime_t",
+      "cash_to_revenue": "regime_t"
+    },
+    "low_confidence_drivers": [
+      "acquisitions_to_revenue",
+      "capex_to_revenue",
+      "cash_to_revenue",
+      "cost_of_debt",
+      "da_to_revenue",
+      "debt_to_revenue",
+      "diluted_share_growth",
+      "ebit_margin",
+      "effective_tax_rate",
+      "gross_margin",
+      "inventory_to_cogs",
+      "opex_ratio",
+      "parent_share_of_net_income",
+      "payables_to_cogs",
+      "payout_ratio",
+      "receivables_to_revenue",
+      "repurchases_to_net_income",
+      "revenue_growth"
+    ],
+    "sampler_version": "PATH-SAMPLER-1",
+    "n_paths": 40,
+    "n_years": 5,
+    "n_valid": 40,
+    "n_invalid": 0,
+    "invalid_fraction": 0.0,
+    "dependence_overlap_years": 2,
+    "seed_stable": true,
+    "central_year1_state": "RECOVERY",
+    "financial_n_valid": 40,
+    "financial_n_failed": 0,
+    "financial_flags": [],
+    "year1_fcff_mean": 182287938.3192,
+    "year1_fcff_per_share_p50": 0.152164,
+    "valid_path_id_hash": "dae39245767ed5e8",
+    "wacc": 0.084303,
+    "terminal_growth": 0.03,
+    "central_ev_dcf": 3570938013.7045,
+    "central_vps_dcf": 3.267739,
+    "central_tv_fraction": 0.7807,
+    "n_valid_dcf": 40,
+    "n_failed_valuation": 0,
+    "valuation_flags": [
+      "TV_FRACTION_HIGH_PRESENT"
+    ]
+  },
+  "phase7": {
+    "profile": "SUPPORTED",
+    "fundamental_regime": {
+      "GROWTH": 0.0269,
+      "STABLE": 0.0618,
+      "DETERIORATING": 0.2527,
+      "RECOVERY": 0.6586
+    },
+    "fundamental_regime_period": "2025-03-31",
+    "market_regime": "UNAVAILABLE",
+    "walk_forward_origins": 1,
+    "selected_specs": {
+      "revenue_growth": "regime_t",
+      "gross_margin": "regime_t",
+      "ebit_margin": "regime_t",
+      "opex_ratio": "regime_t",
+      "effective_tax_rate": "regime_t",
+      "parent_share_of_net_income": "regime_t",
+      "receivables_to_revenue": "regime_t",
+      "inventory_to_cogs": "regime_t",
+      "payables_to_cogs": "regime_t",
+      "capex_to_revenue": "regime_t",
+      "da_to_revenue": "regime_t",
+      "acquisitions_to_revenue": "regime_t",
+      "cost_of_debt": "regime_t",
+      "debt_to_revenue": "regime_t",
+      "payout_ratio": "regime_t",
+      "repurchases_to_net_income": "regime_t",
+      "diluted_share_growth": "regime_t",
+      "cash_to_revenue": "regime_t"
+    },
+    "low_confidence_drivers": [
+      "acquisitions_to_revenue",
+      "capex_to_revenue",
+      "cash_to_revenue",
+      "cost_of_debt",
+      "da_to_revenue",
+      "debt_to_revenue",
+      "diluted_share_growth",
+      "ebit_margin",
+      "effective_tax_rate",
+      "gross_margin",
+      "inventory_to_cogs",
+      "opex_ratio",
+      "parent_share_of_net_income",
+      "payables_to_cogs",
+      "payout_ratio",
+      "receivables_to_revenue",
+      "repurchases_to_net_income",
+      "revenue_growth"
+    ],
+    "sampler_version": "PATH-SAMPLER-1",
+    "n_paths": 40,
+    "n_years": 5,
+    "n_valid": 40,
+    "n_invalid": 0,
+    "invalid_fraction": 0.0,
+    "dependence_overlap_years": 2,
+    "seed_stable": true,
+    "central_year1_state": "RECOVERY",
+    "financial_n_valid": 40,
+    "financial_n_failed": 0,
+    "financial_flags": [],
+    "year1_fcff_mean": 182287938.3192,
+    "year1_fcff_per_share_p50": 0.152164,
+    "valid_path_id_hash": "dae39245767ed5e8",
+    "wacc": 0.084303,
+    "terminal_growth": 0.03,
+    "central_ev_dcf": 3570938013.7045,
+    "central_vps_dcf": 3.267739,
+    "central_tv_fraction": 0.7807,
+    "n_valid_dcf": 40,
+    "n_failed_valuation": 0,
+    "valuation_flags": [
+      "TV_FRACTION_HIGH_PRESENT"
+    ],
+    "spot_price": 21.32,
+    "n_entry_prices": 7,
+    "horizons_years": [
+      1,
+      3,
+      5
+    ],
+    "n_valid_return_paths": 40,
+    "spot_h1_mean_return": -0.910459167351741,
+    "spot_h1_p_loss": 1.0,
+    "return_flags": [
+      "RARE_STATE_RESULTS_PRESENT"
+    ],
+    "dividend_treatment": "DIVIDEND-NO-REINVEST-v1"
+  },
+  "phase8": {
+    "sensitivity_content_hash": "49e13762ad384af0",
+    "n_sensitivity_cases": 20,
+    "top_dimensions": [
+      "parameter_uncertainty",
+      "capex_to_revenue+receivables_to_revenue",
+      "capex_to_revenue"
+    ],
+    "tail_risk_included": true,
+    "interval_labeling": "MC_PERCENTILE_NOT_CI"
+  },
+  "run_id": "vms-80b7dfa9f5fd3e89",
+  "schema_version": "vms-0.2.phase12",
+  "out": "/tmp/e01_isolated_evidence/bundle/run1/demo",
+  "spot_price": 21.32,
+  "seed": 42,
+  "paths": 40,
+  "data_hash": "626bf03212ee64dc",
+  "config_hash": "4b8ea44adfaa9f5f",
+  "git_sha": "8fe537bc434e"
+}
+
+[exit 0]
+
+$ /workspace/dsde-valuation/.venv/bin/python -m vms.cli.main validate-data --input /tmp/e01_isolated_evidence/bundle/run1/demo/data --as-of 2025-06-30 --ticker SYN000001.SZ
+{
+  "status": "SCHEMA_VALID",
+  "financial_records": 412,
+  "market_records": 54,
+  "corporate_action_records": 3,
+  "error_count": 0,
+  "as_of": "2025-06-30T15:00:00+08:00",
+  "as_of_interpretation": "date-only as_of interpreted by ASOF-DATE-CLOSE-v1: date-only as_of => 15:00:00 Asia/Shanghai (market close) on that date",
+  "instruments": [
+    {
+      "instrument_id": "SYN000001.SZ",
+      "as_of": "2025-06-30T15:00:00+08:00",
+      "status": "PASS",
+      "mode": "production",
+      "pit_complete": true,
+      "issues": {
+        "CUMULATIVE_DERIVED": 255,
+        "EXPLICIT_MISSING_VALUE": 17,
+        "LATE_PUBLICATION": 24,
+        "RESTATEMENT_KNOWN": 4,
+        "VENDOR_ADJUSTED_CLOSE_EXCLUDED": 1
+      },
+      "excluded_post_as_of": {
+        "financial": 0,
+        "market": 0,
+        "corporate_actions": 0,
+        "peers": 0
+      }
+    }
+  ]
+}
+
+[exit 0]
+
+$ /workspace/dsde-valuation/.venv/bin/python -m vms.cli.main build-snapshot --input /tmp/e01_isolated_evidence/bundle/run1/demo/data --ticker SYN000001.SZ --as-of 2025-06-30 --out /tmp/e01_isolated_evidence/bundle/run1/snap
+{
+  "run_id": "vms-c0bc8c0c52d8af38",
+  "schema_version": "vms-0.2.phase12",
+  "out": "/tmp/e01_isolated_evidence/bundle/run1/snap",
+  "instrument_id": "SYN000001.SZ",
+  "as_of": "2025-06-30T15:00:00+08:00",
+  "status": "PASS",
+  "mode": "production",
+  "pit_complete": true,
+  "issues": {
+    "CUMULATIVE_DERIVED": 255,
+    "EXPLICIT_MISSING_VALUE": 17,
+    "LATE_PUBLICATION": 24,
+    "RESTATEMENT_KNOWN": 4,
+    "VENDOR_ADJUSTED_CLOSE_EXCLUDED": 1
+  },
+  "excluded_post_as_of": {
+    "financial": 0,
+    "market": 0,
+    "corporate_actions": 0,
+    "peers": 0
+  }
+}
+
+[exit 0]
+
+$ /workspace/dsde-valuation/.venv/bin/python -m vms.cli.main estimate --input /tmp/e01_isolated_evidence/bundle/run1/demo/data --ticker SYN000001.SZ --as-of 2025-06-30 --out /tmp/e01_isolated_evidence/bundle/run1/est --seed 42
+{
+  "run_id": "vms-30fcca4b638cd4f2",
+  "schema_version": "vms-0.2.phase12",
+  "out": "/tmp/e01_isolated_evidence/bundle/run1/est",
+  "seed": 42,
+  "instrument_id": "SYN000001.SZ",
+  "as_of": "2025-06-30T15:00:00+08:00",
+  "status": "PASS",
+  "mode": "production",
+  "pit_complete": true,
+  "issues": {
+    "CUMULATIVE_DERIVED": 255,
+    "EXPLICIT_MISSING_VALUE": 17,
+    "LATE_PUBLICATION": 24,
+    "RESTATEMENT_KNOWN": 4,
+    "VENDOR_ADJUSTED_CLOSE_EXCLUDED": 1
+  },
+  "excluded_post_as_of": {
+    "financial": 0,
+    "market": 0,
+    "corporate_actions": 0,
+    "peers": 0
+  },
+  "profile": "SUPPORTED",
+  "fundamental_regime": {
+    "GROWTH": 0.0269,
+    "STABLE": 0.0618,
+    "DETERIORATING": 0.2527,
+    "RECOVERY": 0.6586
+  },
+  "fundamental_regime_period": "2025-03-31",
+  "market_regime": "UNAVAILABLE",
+  "walk_forward_origins": 1,
+  "selected_specs": {
+    "revenue_growth": "regime_t",
+    "gross_margin": "regime_t",
+    "ebit_margin": "regime_t",
+    "opex_ratio": "regime_t",
+    "effective_tax_rate": "regime_t",
+    "parent_share_of_net_income": "regime_t",
+    "receivables_to_revenue": "regime_t",
+    "inventory_to_cogs": "regime_t",
+    "payables_to_cogs": "regime_t",
+    "capex_to_revenue": "regime_t",
+    "da_to_revenue": "regime_t",
+    "acquisitions_to_revenue": "regime_t",
+    "cost_of_debt": "regime_t",
+    "debt_to_revenue": "regime_t",
+    "payout_ratio": "regime_t",
+    "repurchases_to_net_income": "regime_t",
+    "diluted_share_growth": "regime_t",
+    "cash_to_revenue": "regime_t"
+  },
+  "low_confidence_drivers": [
+    "acquisitions_to_revenue",
+    "capex_to_revenue",
+    "cash_to_revenue",
+    "cost_of_debt",
+    "da_to_revenue",
+    "debt_to_revenue",
+    "diluted_share_growth",
+    "ebit_margin",
+    "effective_tax_rate",
+    "gross_margin",
+    "inventory_to_cogs",
+    "opex_ratio",
+    "parent_share_of_net_income",
+    "payables_to_cogs",
+    "payout_ratio",
+    "receivables_to_revenue",
+    "repurchases_to_net_income",
+    "revenue_growth"
+  ]
+}
+
+[exit 0]
+
+$ /workspace/dsde-valuation/.venv/bin/python -m vms.cli.main simulate --input /tmp/e01_isolated_evidence/bundle/run1/demo/data --ticker SYN000001.SZ --as-of 2025-06-30 --out /tmp/e01_isolated_evidence/bundle/run1/sim --paths 40 --years 3 --seed 42
+{
+  "run_id": "vms-3498e8cca054d406",
+  "schema_version": "vms-0.2.phase12",
+  "out": "/tmp/e01_isolated_evidence/bundle/run1/sim",
+  "seed": 42,
+  "instrument_id": "SYN000001.SZ",
+  "as_of": "2025-06-30T15:00:00+08:00",
+  "status": "PASS",
+  "mode": "production",
+  "pit_complete": true,
+  "issues": {
+    "CUMULATIVE_DERIVED": 255,
+    "EXPLICIT_MISSING_VALUE": 17,
+    "LATE_PUBLICATION": 24,
+    "RESTATEMENT_KNOWN": 4,
+    "VENDOR_ADJUSTED_CLOSE_EXCLUDED": 1
+  },
+  "excluded_post_as_of": {
+    "financial": 0,
+    "market": 0,
+    "corporate_actions": 0,
+    "peers": 0
+  },
+  "profile": "SUPPORTED",
+  "fundamental_regime": {
+    "GROWTH": 0.0269,
+    "STABLE": 0.0618,
+    "DETERIORATING": 0.2527,
+    "RECOVERY": 0.6586
+  },
+  "fundamental_regime_period": "2025-03-31",
+  "market_regime": "UNAVAILABLE",
+  "walk_forward_origins": 1,
+  "selected_specs": {
+    "revenue_growth": "regime_t",
+    "gross_margin": "regime_t",
+    "ebit_margin": "regime_t",
+    "opex_ratio": "regime_t",
+    "effective_tax_rate": "regime_t",
+    "parent_share_of_net_income": "regime_t",
+    "receivables_to_revenue": "regime_t",
+    "inventory_to_cogs": "regime_t",
+    "payables_to_cogs": "regime_t",
+    "capex_to_revenue": "regime_t",
+    "da_to_revenue": "regime_t",
+    "acquisitions_to_revenue": "regime_t",
+    "cost_of_debt": "regime_t",
+    "debt_to_revenue": "regime_t",
+    "payout_ratio": "regime_t",
+    "repurchases_to_net_income": "regime_t",
+    "diluted_share_growth": "regime_t",
+    "cash_to_revenue": "regime_t"
+  },
+  "low_confidence_drivers": [
+    "acquisitions_to_revenue",
+    "capex_to_revenue",
+    "cash_to_revenue",
+    "cost_of_debt",
+    "da_to_revenue",
+    "debt_to_revenue",
+    "diluted_share_growth",
+    "ebit_margin",
+    "effective_tax_rate",
+    "gross_margin",
+    "inventory_to_cogs",
+    "opex_ratio",
+    "parent_share_of_net_income",
+    "payables_to_cogs",
+    "payout_ratio",
+    "receivables_to_revenue",
+    "repurchases_to_net_income",
+    "revenue_growth"
+  ],
+  "sampler_version": "PATH-SAMPLER-1",
+  "n_paths": 40,
+  "n_years": 3,
+  "n_valid": 40,
+  "n_invalid": 0,
+  "invalid_fraction": 0.0,
+  "dependence_overlap_years": 2,
+  "seed_stable": true,
+  "central_year1_state": "RECOVERY"
+}
+
+[exit 0]
+
+$ /workspace/dsde-valuation/.venv/bin/python -m vms.cli.main project-paths --input /tmp/e01_isolated_evidence/bundle/run1/demo/data --ticker SYN000001.SZ --as-of 2025-06-30 --out /tmp/e01_isolated_evidence/bundle/run1/fp --paths 30 --years 3 --seed 42
+{
+  "run_id": "vms-d432a8d236d6a929",
+  "schema_version": "vms-0.2.phase12",
+  "out": "/tmp/e01_isolated_evidence/bundle/run1/fp",
+  "seed": 42,
+  "instrument_id": "SYN000001.SZ",
+  "as_of": "2025-06-30T15:00:00+08:00",
+  "status": "PASS",
+  "mode": "production",
+  "pit_complete": true,
+  "issues": {
+    "CUMULATIVE_DERIVED": 255,
+    "EXPLICIT_MISSING_VALUE": 17,
+    "LATE_PUBLICATION": 24,
+    "RESTATEMENT_KNOWN": 4,
+    "VENDOR_ADJUSTED_CLOSE_EXCLUDED": 1
+  },
+  "excluded_post_as_of": {
+    "financial": 0,
+    "market": 0,
+    "corporate_actions": 0,
+    "peers": 0
+  },
+  "profile": "SUPPORTED",
+  "fundamental_regime": {
+    "GROWTH": 0.0269,
+    "STABLE": 0.0618,
+    "DETERIORATING": 0.2527,
+    "RECOVERY": 0.6586
+  },
+  "fundamental_regime_period": "2025-03-31",
+  "market_regime": "UNAVAILABLE",
+  "walk_forward_origins": 1,
+  "selected_specs": {
+    "revenue_growth": "regime_t",
+    "gross_margin": "regime_t",
+    "ebit_margin": "regime_t",
+    "opex_ratio": "regime_t",
+    "effective_tax_rate": "regime_t",
+    "parent_share_of_net_income": "regime_t",
+    "receivables_to_revenue": "regime_t",
+    "inventory_to_cogs": "regime_t",
+    "payables_to_cogs": "regime_t",
+    "capex_to_revenue": "regime_t",
+    "da_to_revenue": "regime_t",
+    "acquisitions_to_revenue": "regime_t",
+    "cost_of_debt": "regime_t",
+    "debt_to_revenue": "regime_t",
+    "payout_ratio": "regime_t",
+    "repurchases_to_net_income": "regime_t",
+    "diluted_share_growth": "regime_t",
+    "cash_to_revenue": "regime_t"
+  },
+  "low_confidence_drivers": [
+    "acquisitions_to_revenue",
+    "capex_to_revenue",
+    "cash_to_revenue",
+    "cost_of_debt",
+    "da_to_revenue",
+    "debt_to_revenue",
+    "diluted_share_growth",
+    "ebit_margin",
+    "effective_tax_rate",
+    "gross_margin",
+    "inventory_to_cogs",
+    "opex_ratio",
+    "parent_share_of_net_income",
+    "payables_to_cogs",
+    "payout_ratio",
+    "receivables_to_revenue",
+    "repurchases_to_net_income",
+    "revenue_growth"
+  ],
+  "sampler_version": "PATH-SAMPLER-1",
+  "n_paths": 30,
+  "n_years": 3,
+  "n_valid": 30,
+  "n_invalid": 0,
+  "invalid_fraction": 0.0,
+  "dependence_overlap_years": 2,
+  "seed_stable": true,
+  "central_year1_state": "RECOVERY",
+  "financial_n_valid": 30,
+  "financial_n_failed": 0,
+  "financial_flags": [],
+  "year1_fcff_mean": 200332160.4749,
+  "year1_fcff_per_share_p50": 0.182742,
+  "valid_path_id_hash": "60d7400996c29fe6"
+}
+
+[exit 0]
+
+$ /workspace/dsde-valuation/.venv/bin/python -m vms.cli.main value --input /tmp/e01_isolated_evidence/bundle/run1/demo/data --ticker SYN000001.SZ --as-of 2025-06-30 --out /tmp/e01_isolated_evidence/bundle/run1/val --paths 30 --years 3 --seed 42
+{
+  "run_id": "vms-e8b94750181c490c",
+  "schema_version": "vms-0.2.phase12",
+  "out": "/tmp/e01_isolated_evidence/bundle/run1/val",
+  "seed": 42,
+  "instrument_id": "SYN000001.SZ",
+  "as_of": "2025-06-30T15:00:00+08:00",
+  "status": "PASS",
+  "mode": "production",
+  "pit_complete": true,
+  "issues": {
+    "CUMULATIVE_DERIVED": 255,
+    "EXPLICIT_MISSING_VALUE": 17,
+    "LATE_PUBLICATION": 24,
+    "RESTATEMENT_KNOWN": 4,
+    "VENDOR_ADJUSTED_CLOSE_EXCLUDED": 1
+  },
+  "excluded_post_as_of": {
+    "financial": 0,
+    "market": 0,
+    "corporate_actions": 0,
+    "peers": 0
+  },
+  "profile": "SUPPORTED",
+  "fundamental_regime": {
+    "GROWTH": 0.0269,
+    "STABLE": 0.0618,
+    "DETERIORATING": 0.2527,
+    "RECOVERY": 0.6586
+  },
+  "fundamental_regime_period": "2025-03-31",
+  "market_regime": "UNAVAILABLE",
+  "walk_forward_origins": 1,
+  "selected_specs": {
+    "revenue_growth": "regime_t",
+    "gross_margin": "regime_t",
+    "ebit_margin": "regime_t",
+    "opex_ratio": "regime_t",
+    "effective_tax_rate": "regime_t",
+    "parent_share_of_net_income": "regime_t",
+    "receivables_to_revenue": "regime_t",
+    "inventory_to_cogs": "regime_t",
+    "payables_to_cogs": "regime_t",
+    "capex_to_revenue": "regime_t",
+    "da_to_revenue": "regime_t",
+    "acquisitions_to_revenue": "regime_t",
+    "cost_of_debt": "regime_t",
+    "debt_to_revenue": "regime_t",
+    "payout_ratio": "regime_t",
+    "repurchases_to_net_income": "regime_t",
+    "diluted_share_growth": "regime_t",
+    "cash_to_revenue": "regime_t"
+  },
+  "low_confidence_drivers": [
+    "acquisitions_to_revenue",
+    "capex_to_revenue",
+    "cash_to_revenue",
+    "cost_of_debt",
+    "da_to_revenue",
+    "debt_to_revenue",
+    "diluted_share_growth",
+    "ebit_margin",
+    "effective_tax_rate",
+    "gross_margin",
+    "inventory_to_cogs",
+    "opex_ratio",
+    "parent_share_of_net_income",
+    "payables_to_cogs",
+    "payout_ratio",
+    "receivables_to_revenue",
+    "repurchases_to_net_income",
+    "revenue_growth"
+  ],
+  "sampler_version": "PATH-SAMPLER-1",
+  "n_paths": 30,
+  "n_years": 3,
+  "n_valid": 30,
+  "n_invalid": 0,
+  "invalid_fraction": 0.0,
+  "dependence_overlap_years": 2,
+  "seed_stable": true,
+  "central_year1_state": "RECOVERY",
+  "financial_n_valid": 30,
+  "financial_n_failed": 0,
+  "financial_flags": [],
+  "year1_fcff_mean": 200332160.4749,
+  "year1_fcff_per_share_p50": 0.182742,
+  "valid_path_id_hash": "60d7400996c29fe6",
+  "wacc": 0.084303,
+  "terminal_growth": 0.03,
+  "central_ev_dcf": 3436868501.9481,
+  "central_vps_dcf": 2.989232,
+  "central_tv_fraction": 0.8589,
+  "n_valid_dcf": 30,
+  "n_failed_valuation": 0,
+  "valuation_flags": [
+    "TV_FRACTION_HIGH_PRESENT"
+  ]
+}
+
+[exit 0]
+
+$ /workspace/dsde-valuation/.venv/bin/python -m vms.cli.main returns --input /tmp/e01_isolated_evidence/bundle/run1/demo/data --ticker SYN000001.SZ --as-of 2025-06-30 --out /tmp/e01_isolated_evidence/bundle/run1/ret --paths 30 --years 3 --horizons 1,3 --seed 42
+{
+  "run_id": "vms-80ba16f550700244",
+  "schema_version": "vms-0.2.phase12",
+  "out": "/tmp/e01_isolated_evidence/bundle/run1/ret",
+  "seed": 42,
+  "instrument_id": "SYN000001.SZ",
+  "as_of": "2025-06-30T15:00:00+08:00",
+  "status": "PASS",
+  "mode": "production",
+  "pit_complete": true,
+  "issues": {
+    "CUMULATIVE_DERIVED": 255,
+    "EXPLICIT_MISSING_VALUE": 17,
+    "LATE_PUBLICATION": 24,
+    "RESTATEMENT_KNOWN": 4,
+    "VENDOR_ADJUSTED_CLOSE_EXCLUDED": 1
+  },
+  "excluded_post_as_of": {
+    "financial": 0,
+    "market": 0,
+    "corporate_actions": 0,
+    "peers": 0
+  },
+  "profile": "SUPPORTED",
+  "fundamental_regime": {
+    "GROWTH": 0.0269,
+    "STABLE": 0.0618,
+    "DETERIORATING": 0.2527,
+    "RECOVERY": 0.6586
+  },
+  "fundamental_regime_period": "2025-03-31",
+  "market_regime": "UNAVAILABLE",
+  "walk_forward_origins": 1,
+  "selected_specs": {
+    "revenue_growth": "regime_t",
+    "gross_margin": "regime_t",
+    "ebit_margin": "regime_t",
+    "opex_ratio": "regime_t",
+    "effective_tax_rate": "regime_t",
+    "parent_share_of_net_income": "regime_t",
+    "receivables_to_revenue": "regime_t",
+    "inventory_to_cogs": "regime_t",
+    "payables_to_cogs": "regime_t",
+    "capex_to_revenue": "regime_t",
+    "da_to_revenue": "regime_t",
+    "acquisitions_to_revenue": "regime_t",
+    "cost_of_debt": "regime_t",
+    "debt_to_revenue": "regime_t",
+    "payout_ratio": "regime_t",
+    "repurchases_to_net_income": "regime_t",
+    "diluted_share_growth": "regime_t",
+    "cash_to_revenue": "regime_t"
+  },
+  "low_confidence_drivers": [
+    "acquisitions_to_revenue",
+    "capex_to_revenue",
+    "cash_to_revenue",
+    "cost_of_debt",
+    "da_to_revenue",
+    "debt_to_revenue",
+    "diluted_share_growth",
+    "ebit_margin",
+    "effective_tax_rate",
+    "gross_margin",
+    "inventory_to_cogs",
+    "opex_ratio",
+    "parent_share_of_net_income",
+    "payables_to_cogs",
+    "payout_ratio",
+    "receivables_to_revenue",
+    "repurchases_to_net_income",
+    "revenue_growth"
+  ],
+  "sampler_version": "PATH-SAMPLER-1",
+  "n_paths": 30,
+  "n_years": 3,
+  "n_valid": 30,
+  "n_invalid": 0,
+  "invalid_fraction": 0.0,
+  "dependence_overlap_years": 2,
+  "seed_stable": true,
+  "central_year1_state": "RECOVERY",
+  "financial_n_valid": 30,
+  "financial_n_failed": 0,
+  "financial_flags": [],
+  "year1_fcff_mean": 200332160.4749,
+  "year1_fcff_per_share_p50": 0.182742,
+  "valid_path_id_hash": "60d7400996c29fe6",
+  "wacc": 0.084303,
+  "terminal_growth": 0.03,
+  "central_ev_dcf": 3436868501.9481,
+  "central_vps_dcf": 2.989232,
+  "central_tv_fraction": 0.8589,
+  "n_valid_dcf": 30,
+  "n_failed_valuation": 0,
+  "valuation_flags": [
+    "TV_FRACTION_HIGH_PRESENT"
+  ],
+  "spot_price": 21.32,
+  "n_entry_prices": 7,
+  "horizons_years": [
+    1,
+    3
+  ],
+  "n_valid_return_paths": 30,
+  "spot_h1_mean_return": -0.8538205316851744,
+  "spot_h1_p_loss": 1.0,
+  "return_flags": [
+    "RARE_STATE_RESULTS_PRESENT"
+  ],
+  "dividend_treatment": "DIVIDEND-NO-REINVEST-v1"
+}
+
+[exit 0]
+
+$ /workspace/dsde-valuation/.venv/bin/python -m vms.cli.main sensitivity --input /tmp/e01_isolated_evidence/bundle/run1/demo/data --ticker SYN000001.SZ --as-of 2025-06-30 --out /tmp/e01_isolated_evidence/bundle/run1/sens --paths 20 --years 3 --seed 42
+{
+  "run_id": "vms-6aac22521311cd6f",
+  "schema_version": "vms-0.2.phase12",
+  "out": "/tmp/e01_isolated_evidence/bundle/run1/sens",
+  "seed": 42,
+  "sensitivity_content_hash": "5aed597414c3295a",
+  "n_sensitivity_cases": 20,
+  "top_dimensions": [
+    "parameter_uncertainty",
+    "capex_to_revenue+receivables_to_revenue",
+    "cost_of_equity"
+  ],
+  "tail_risk_included": true,
+  "interval_labeling": "MC_PERCENTILE_NOT_CI"
+}
+
+[exit 0]
+
+$ /workspace/dsde-valuation/.venv/bin/python -m vms.cli.main evaluate --universe /workspace/dsde-valuation/config/universe.synthetic.yaml --start 2018-01-01 --end 2022-12-31 --out /tmp/e01_isolated_evidence/bundle/run1/eval
+{
+  "run_id": "vms-6fd31742108e6c73",
+  "schema_version": "vms-0.2.phase12",
+  "out": "/tmp/e01_isolated_evidence/bundle/run1/eval",
+  "universe_id": "synthetic_offline_v1",
+  "n_forecasts_persisted": 8,
+  "n_scored": 8,
+  "n_excluded_pit_incomplete": 0,
+  "labels": {
+    "ENGINEERING_PASS": true,
+    "DATA_QUALITY_PASS": true,
+    "CALIBRATION_PASS": null,
+    "CALIBRATION_STATUS": "INSUFFICIENT",
+    "CALIBRATION_CLAIM": "CALIBRATION_INSUFFICIENT",
+    "ENSEMBLE_CALIBRATED": false,
+    "ENSEMBLE_CLAIM": "ENSEMBLE_UNCALIBRATED",
+    "investment_value": "INVESTMENT_VALUE_NOT_ESTABLISHED",
+    "investment_value_reason": "Synthetic or no predeclared leakage-safe OOS alpha evidence (SPEC §17.4; never claim supported on synthetic demo)",
+    "data_label": "SYNTHETIC",
+    "pass_claim_authorized": false,
+    "release_gates": {
+      "ENGINEERING_PASS": true,
+      "DATA_QUALITY_PASS": true,
+      "CALIBRATION_PASS": false,
+      "CALIBRATION_INSUFFICIENT": true,
+      "ENSEMBLE_CALIBRATED": false,
+      "INVESTMENT_VALUE_NOT_ESTABLISHED": true
+    }
+  },
+  "content_hash": "78eac4d26b52c50b",
+  "baselines_present": [
+    "central_dcf",
+    "constant_growth_dcf",
+    "current_multiple_persistence",
+    "dcf_only",
+    "dcf_plus_multiple",
+    "exit_multiple",
+    "historical_median",
+    "no_regime"
+  ]
+}
+
+[exit 0]
+
+$ /workspace/dsde-valuation/.venv/bin/python -m vms.cli.main validate-data --input /tmp/e01_isolated_evidence/bundle/run1/demo/data --as-of 2025-06-30 --ticker SYN000001.SZ
+{
+  "status": "SCHEMA_VALID",
+  "financial_records": 412,
+  "market_records": 54,
+  "corporate_action_records": 3,
+  "error_count": 0,
+  "as_of": "2025-06-30T15:00:00+08:00",
+  "as_of_interpretation": "date-only as_of interpreted by ASOF-DATE-CLOSE-v1: date-only as_of => 15:00:00 Asia/Shanghai (market close) on that date",
+  "instruments": [
+    {
+      "instrument_id": "SYN000001.SZ",
+      "as_of": "2025-06-30T15:00:00+08:00",
+      "status": "PASS",
+      "mode": "production",
+      "pit_complete": true,
+      "issues": {
+        "CUMULATIVE_DERIVED": 255,
+        "EXPLICIT_MISSING_VALUE": 17,
+        "LATE_PUBLICATION": 24,
+        "RESTATEMENT_KNOWN": 4,
+        "VENDOR_ADJUSTED_CLOSE_EXCLUDED": 1
+      },
+      "excluded_post_as_of": {
+        "financial": 0,
+        "market": 0,
+        "corporate_actions": 0,
+        "peers": 0
+      }
+    }
+  ]
+}
+
+[exit 0]
+
+$ /workspace/dsde-valuation/.venv/bin/python -m vms.cli.main build-snapshot --input /tmp/e01_isolated_evidence/bundle/run1/demo/data --ticker SYN000001.SZ --as-of 2025-06-30 --out /tmp/e01_isolated_evidence/bundle/run2/snap
+{
+  "run_id": "vms-c0bc8c0c52d8af38",
+  "schema_version": "vms-0.2.phase12",
+  "out": "/tmp/e01_isolated_evidence/bundle/run2/snap",
+  "instrument_id": "SYN000001.SZ",
+  "as_of": "2025-06-30T15:00:00+08:00",
+  "status": "PASS",
+  "mode": "production",
+  "pit_complete": true,
+  "issues": {
+    "CUMULATIVE_DERIVED": 255,
+    "EXPLICIT_MISSING_VALUE": 17,
+    "LATE_PUBLICATION": 24,
+    "RESTATEMENT_KNOWN": 4,
+    "VENDOR_ADJUSTED_CLOSE_EXCLUDED": 1
+  },
+  "excluded_post_as_of": {
+    "financial": 0,
+    "market": 0,
+    "corporate_actions": 0,
+    "peers": 0
+  }
+}
+
+[exit 0]
+
+$ /workspace/dsde-valuation/.venv/bin/python -m vms.cli.main estimate --input /tmp/e01_isolated_evidence/bundle/run1/demo/data --ticker SYN000001.SZ --as-of 2025-06-30 --out /tmp/e01_isolated_evidence/bundle/run2/est --seed 42
+{
+  "run_id": "vms-30fcca4b638cd4f2",
+  "schema_version": "vms-0.2.phase12",
+  "out": "/tmp/e01_isolated_evidence/bundle/run2/est",
+  "seed": 42,
+  "instrument_id": "SYN000001.SZ",
+  "as_of": "2025-06-30T15:00:00+08:00",
+  "status": "PASS",
+  "mode": "production",
+  "pit_complete": true,
+  "issues": {
+    "CUMULATIVE_DERIVED": 255,
+    "EXPLICIT_MISSING_VALUE": 17,
+    "LATE_PUBLICATION": 24,
+    "RESTATEMENT_KNOWN": 4,
+    "VENDOR_ADJUSTED_CLOSE_EXCLUDED": 1
+  },
+  "excluded_post_as_of": {
+    "financial": 0,
+    "market": 0,
+    "corporate_actions": 0,
+    "peers": 0
+  },
+  "profile": "SUPPORTED",
+  "fundamental_regime": {
+    "GROWTH": 0.0269,
+    "STABLE": 0.0618,
+    "DETERIORATING": 0.2527,
+    "RECOVERY": 0.6586
+  },
+  "fundamental_regime_period": "2025-03-31",
+  "market_regime": "UNAVAILABLE",
+  "walk_forward_origins": 1,
+  "selected_specs": {
+    "revenue_growth": "regime_t",
+    "gross_margin": "regime_t",
+    "ebit_margin": "regime_t",
+    "opex_ratio": "regime_t",
+    "effective_tax_rate": "regime_t",
+    "parent_share_of_net_income": "regime_t",
+    "receivables_to_revenue": "regime_t",
+    "inventory_to_cogs": "regime_t",
+    "payables_to_cogs": "regime_t",
+    "capex_to_revenue": "regime_t",
+    "da_to_revenue": "regime_t",
+    "acquisitions_to_revenue": "regime_t",
+    "cost_of_debt": "regime_t",
+    "debt_to_revenue": "regime_t",
+    "payout_ratio": "regime_t",
+    "repurchases_to_net_income": "regime_t",
+    "diluted_share_growth": "regime_t",
+    "cash_to_revenue": "regime_t"
+  },
+  "low_confidence_drivers": [
+    "acquisitions_to_revenue",
+    "capex_to_revenue",
+    "cash_to_revenue",
+    "cost_of_debt",
+    "da_to_revenue",
+    "debt_to_revenue",
+    "diluted_share_growth",
+    "ebit_margin",
+    "effective_tax_rate",
+    "gross_margin",
+    "inventory_to_cogs",
+    "opex_ratio",
+    "parent_share_of_net_income",
+    "payables_to_cogs",
+    "payout_ratio",
+    "receivables_to_revenue",
+    "repurchases_to_net_income",
+    "revenue_growth"
+  ]
+}
+
+[exit 0]
+
+$ /workspace/dsde-valuation/.venv/bin/python -m vms.cli.main simulate --input /tmp/e01_isolated_evidence/bundle/run1/demo/data --ticker SYN000001.SZ --as-of 2025-06-30 --out /tmp/e01_isolated_evidence/bundle/run2/sim --paths 40 --years 3 --seed 42
+{
+  "run_id": "vms-3498e8cca054d406",
+  "schema_version": "vms-0.2.phase12",
+  "out": "/tmp/e01_isolated_evidence/bundle/run2/sim",
+  "seed": 42,
+  "instrument_id": "SYN000001.SZ",
+  "as_of": "2025-06-30T15:00:00+08:00",
+  "status": "PASS",
+  "mode": "production",
+  "pit_complete": true,
+  "issues": {
+    "CUMULATIVE_DERIVED": 255,
+    "EXPLICIT_MISSING_VALUE": 17,
+    "LATE_PUBLICATION": 24,
+    "RESTATEMENT_KNOWN": 4,
+    "VENDOR_ADJUSTED_CLOSE_EXCLUDED": 1
+  },
+  "excluded_post_as_of": {
+    "financial": 0,
+    "market": 0,
+    "corporate_actions": 0,
+    "peers": 0
+  },
+  "profile": "SUPPORTED",
+  "fundamental_regime": {
+    "GROWTH": 0.0269,
+    "STABLE": 0.0618,
+    "DETERIORATING": 0.2527,
+    "RECOVERY": 0.6586
+  },
+  "fundamental_regime_period": "2025-03-31",
+  "market_regime": "UNAVAILABLE",
+  "walk_forward_origins": 1,
+  "selected_specs": {
+    "revenue_growth": "regime_t",
+    "gross_margin": "regime_t",
+    "ebit_margin": "regime_t",
+    "opex_ratio": "regime_t",
+    "effective_tax_rate": "regime_t",
+    "parent_share_of_net_income": "regime_t",
+    "receivables_to_revenue": "regime_t",
+    "inventory_to_cogs": "regime_t",
+    "payables_to_cogs": "regime_t",
+    "capex_to_revenue": "regime_t",
+    "da_to_revenue": "regime_t",
+    "acquisitions_to_revenue": "regime_t",
+    "cost_of_debt": "regime_t",
+    "debt_to_revenue": "regime_t",
+    "payout_ratio": "regime_t",
+    "repurchases_to_net_income": "regime_t",
+    "diluted_share_growth": "regime_t",
+    "cash_to_revenue": "regime_t"
+  },
+  "low_confidence_drivers": [
+    "acquisitions_to_revenue",
+    "capex_to_revenue",
+    "cash_to_revenue",
+    "cost_of_debt",
+    "da_to_revenue",
+    "debt_to_revenue",
+    "diluted_share_growth",
+    "ebit_margin",
+    "effective_tax_rate",
+    "gross_margin",
+    "inventory_to_cogs",
+    "opex_ratio",
+    "parent_share_of_net_income",
+    "payables_to_cogs",
+    "payout_ratio",
+    "receivables_to_revenue",
+    "repurchases_to_net_income",
+    "revenue_growth"
+  ],
+  "sampler_version": "PATH-SAMPLER-1",
+  "n_paths": 40,
+  "n_years": 3,
+  "n_valid": 40,
+  "n_invalid": 0,
+  "invalid_fraction": 0.0,
+  "dependence_overlap_years": 2,
+  "seed_stable": true,
+  "central_year1_state": "RECOVERY"
+}
+
+[exit 0]
+
+$ /workspace/dsde-valuation/.venv/bin/python -m vms.cli.main project-paths --input /tmp/e01_isolated_evidence/bundle/run1/demo/data --ticker SYN000001.SZ --as-of 2025-06-30 --out /tmp/e01_isolated_evidence/bundle/run2/fp --paths 30 --years 3 --seed 42
+{
+  "run_id": "vms-d432a8d236d6a929",
+  "schema_version": "vms-0.2.phase12",
+  "out": "/tmp/e01_isolated_evidence/bundle/run2/fp",
+  "seed": 42,
+  "instrument_id": "SYN000001.SZ",
+  "as_of": "2025-06-30T15:00:00+08:00",
+  "status": "PASS",
+  "mode": "production",
+  "pit_complete": true,
+  "issues": {
+    "CUMULATIVE_DERIVED": 255,
+    "EXPLICIT_MISSING_VALUE": 17,
+    "LATE_PUBLICATION": 24,
+    "RESTATEMENT_KNOWN": 4,
+    "VENDOR_ADJUSTED_CLOSE_EXCLUDED": 1
+  },
+  "excluded_post_as_of": {
+    "financial": 0,
+    "market": 0,
+    "corporate_actions": 0,
+    "peers": 0
+  },
+  "profile": "SUPPORTED",
+  "fundamental_regime": {
+    "GROWTH": 0.0269,
+    "STABLE": 0.0618,
+    "DETERIORATING": 0.2527,
+    "RECOVERY": 0.6586
+  },
+  "fundamental_regime_period": "2025-03-31",
+  "market_regime": "UNAVAILABLE",
+  "walk_forward_origins": 1,
+  "selected_specs": {
+    "revenue_growth": "regime_t",
+    "gross_margin": "regime_t",
+    "ebit_margin": "regime_t",
+    "opex_ratio": "regime_t",
+    "effective_tax_rate": "regime_t",
+    "parent_share_of_net_income": "regime_t",
+    "receivables_to_revenue": "regime_t",
+    "inventory_to_cogs": "regime_t",
+    "payables_to_cogs": "regime_t",
+    "capex_to_revenue": "regime_t",
+    "da_to_revenue": "regime_t",
+    "acquisitions_to_revenue": "regime_t",
+    "cost_of_debt": "regime_t",
+    "debt_to_revenue": "regime_t",
+    "payout_ratio": "regime_t",
+    "repurchases_to_net_income": "regime_t",
+    "diluted_share_growth": "regime_t",
+    "cash_to_revenue": "regime_t"
+  },
+  "low_confidence_drivers": [
+    "acquisitions_to_revenue",
+    "capex_to_revenue",
+    "cash_to_revenue",
+    "cost_of_debt",
+    "da_to_revenue",
+    "debt_to_revenue",
+    "diluted_share_growth",
+    "ebit_margin",
+    "effective_tax_rate",
+    "gross_margin",
+    "inventory_to_cogs",
+    "opex_ratio",
+    "parent_share_of_net_income",
+    "payables_to_cogs",
+    "payout_ratio",
+    "receivables_to_revenue",
+    "repurchases_to_net_income",
+    "revenue_growth"
+  ],
+  "sampler_version": "PATH-SAMPLER-1",
+  "n_paths": 30,
+  "n_years": 3,
+  "n_valid": 30,
+  "n_invalid": 0,
+  "invalid_fraction": 0.0,
+  "dependence_overlap_years": 2,
+  "seed_stable": true,
+  "central_year1_state": "RECOVERY",
+  "financial_n_valid": 30,
+  "financial_n_failed": 0,
+  "financial_flags": [],
+  "year1_fcff_mean": 200332160.4749,
+  "year1_fcff_per_share_p50": 0.182742,
+  "valid_path_id_hash": "60d7400996c29fe6"
+}
+
+[exit 0]
+
+$ /workspace/dsde-valuation/.venv/bin/python -m vms.cli.main value --input /tmp/e01_isolated_evidence/bundle/run1/demo/data --ticker SYN000001.SZ --as-of 2025-06-30 --out /tmp/e01_isolated_evidence/bundle/run2/val --paths 30 --years 3 --seed 42
+{
+  "run_id": "vms-e8b94750181c490c",
+  "schema_version": "vms-0.2.phase12",
+  "out": "/tmp/e01_isolated_evidence/bundle/run2/val",
+  "seed": 42,
+  "instrument_id": "SYN000001.SZ",
+  "as_of": "2025-06-30T15:00:00+08:00",
+  "status": "PASS",
+  "mode": "production",
+  "pit_complete": true,
+  "issues": {
+    "CUMULATIVE_DERIVED": 255,
+    "EXPLICIT_MISSING_VALUE": 17,
+    "LATE_PUBLICATION": 24,
+    "RESTATEMENT_KNOWN": 4,
+    "VENDOR_ADJUSTED_CLOSE_EXCLUDED": 1
+  },
+  "excluded_post_as_of": {
+    "financial": 0,
+    "market": 0,
+    "corporate_actions": 0,
+    "peers": 0
+  },
+  "profile": "SUPPORTED",
+  "fundamental_regime": {
+    "GROWTH": 0.0269,
+    "STABLE": 0.0618,
+    "DETERIORATING": 0.2527,
+    "RECOVERY": 0.6586
+  },
+  "fundamental_regime_period": "2025-03-31",
+  "market_regime": "UNAVAILABLE",
+  "walk_forward_origins": 1,
+  "selected_specs": {
+    "revenue_growth": "regime_t",
+    "gross_margin": "regime_t",
+    "ebit_margin": "regime_t",
+    "opex_ratio": "regime_t",
+    "effective_tax_rate": "regime_t",
+    "parent_share_of_net_income": "regime_t",
+    "receivables_to_revenue": "regime_t",
+    "inventory_to_cogs": "regime_t",
+    "payables_to_cogs": "regime_t",
+    "capex_to_revenue": "regime_t",
+    "da_to_revenue": "regime_t",
+    "acquisitions_to_revenue": "regime_t",
+    "cost_of_debt": "regime_t",
+    "debt_to_revenue": "regime_t",
+    "payout_ratio": "regime_t",
+    "repurchases_to_net_income": "regime_t",
+    "diluted_share_growth": "regime_t",
+    "cash_to_revenue": "regime_t"
+  },
+  "low_confidence_drivers": [
+    "acquisitions_to_revenue",
+    "capex_to_revenue",
+    "cash_to_revenue",
+    "cost_of_debt",
+    "da_to_revenue",
+    "debt_to_revenue",
+    "diluted_share_growth",
+    "ebit_margin",
+    "effective_tax_rate",
+    "gross_margin",
+    "inventory_to_cogs",
+    "opex_ratio",
+    "parent_share_of_net_income",
+    "payables_to_cogs",
+    "payout_ratio",
+    "receivables_to_revenue",
+    "repurchases_to_net_income",
+    "revenue_growth"
+  ],
+  "sampler_version": "PATH-SAMPLER-1",
+  "n_paths": 30,
+  "n_years": 3,
+  "n_valid": 30,
+  "n_invalid": 0,
+  "invalid_fraction": 0.0,
+  "dependence_overlap_years": 2,
+  "seed_stable": true,
+  "central_year1_state": "RECOVERY",
+  "financial_n_valid": 30,
+  "financial_n_failed": 0,
+  "financial_flags": [],
+  "year1_fcff_mean": 200332160.4749,
+  "year1_fcff_per_share_p50": 0.182742,
+  "valid_path_id_hash": "60d7400996c29fe6",
+  "wacc": 0.084303,
+  "terminal_growth": 0.03,
+  "central_ev_dcf": 3436868501.9481,
+  "central_vps_dcf": 2.989232,
+  "central_tv_fraction": 0.8589,
+  "n_valid_dcf": 30,
+  "n_failed_valuation": 0,
+  "valuation_flags": [
+    "TV_FRACTION_HIGH_PRESENT"
+  ]
+}
+
+[exit 0]
+
+$ /workspace/dsde-valuation/.venv/bin/python -m vms.cli.main returns --input /tmp/e01_isolated_evidence/bundle/run1/demo/data --ticker SYN000001.SZ --as-of 2025-06-30 --out /tmp/e01_isolated_evidence/bundle/run2/ret --paths 30 --years 3 --horizons 1,3 --seed 42
+{
+  "run_id": "vms-80ba16f550700244",
+  "schema_version": "vms-0.2.phase12",
+  "out": "/tmp/e01_isolated_evidence/bundle/run2/ret",
+  "seed": 42,
+  "instrument_id": "SYN000001.SZ",
+  "as_of": "2025-06-30T15:00:00+08:00",
+  "status": "PASS",
+  "mode": "production",
+  "pit_complete": true,
+  "issues": {
+    "CUMULATIVE_DERIVED": 255,
+    "EXPLICIT_MISSING_VALUE": 17,
+    "LATE_PUBLICATION": 24,
+    "RESTATEMENT_KNOWN": 4,
+    "VENDOR_ADJUSTED_CLOSE_EXCLUDED": 1
+  },
+  "excluded_post_as_of": {
+    "financial": 0,
+    "market": 0,
+    "corporate_actions": 0,
+    "peers": 0
+  },
+  "profile": "SUPPORTED",
+  "fundamental_regime": {
+    "GROWTH": 0.0269,
+    "STABLE": 0.0618,
+    "DETERIORATING": 0.2527,
+    "RECOVERY": 0.6586
+  },
+  "fundamental_regime_period": "2025-03-31",
+  "market_regime": "UNAVAILABLE",
+  "walk_forward_origins": 1,
+  "selected_specs": {
+    "revenue_growth": "regime_t",
+    "gross_margin": "regime_t",
+    "ebit_margin": "regime_t",
+    "opex_ratio": "regime_t",
+    "effective_tax_rate": "regime_t",
+    "parent_share_of_net_income": "regime_t",
+    "receivables_to_revenue": "regime_t",
+    "inventory_to_cogs": "regime_t",
+    "payables_to_cogs": "regime_t",
+    "capex_to_revenue": "regime_t",
+    "da_to_revenue": "regime_t",
+    "acquisitions_to_revenue": "regime_t",
+    "cost_of_debt": "regime_t",
+    "debt_to_revenue": "regime_t",
+    "payout_ratio": "regime_t",
+    "repurchases_to_net_income": "regime_t",
+    "diluted_share_growth": "regime_t",
+    "cash_to_revenue": "regime_t"
+  },
+  "low_confidence_drivers": [
+    "acquisitions_to_revenue",
+    "capex_to_revenue",
+    "cash_to_revenue",
+    "cost_of_debt",
+    "da_to_revenue",
+    "debt_to_revenue",
+    "diluted_share_growth",
+    "ebit_margin",
+    "effective_tax_rate",
+    "gross_margin",
+    "inventory_to_cogs",
+    "opex_ratio",
+    "parent_share_of_net_income",
+    "payables_to_cogs",
+    "payout_ratio",
+    "receivables_to_revenue",
+    "repurchases_to_net_income",
+    "revenue_growth"
+  ],
+  "sampler_version": "PATH-SAMPLER-1",
+  "n_paths": 30,
+  "n_years": 3,
+  "n_valid": 30,
+  "n_invalid": 0,
+  "invalid_fraction": 0.0,
+  "dependence_overlap_years": 2,
+  "seed_stable": true,
+  "central_year1_state": "RECOVERY",
+  "financial_n_valid": 30,
+  "financial_n_failed": 0,
+  "financial_flags": [],
+  "year1_fcff_mean": 200332160.4749,
+  "year1_fcff_per_share_p50": 0.182742,
+  "valid_path_id_hash": "60d7400996c29fe6",
+  "wacc": 0.084303,
+  "terminal_growth": 0.03,
+  "central_ev_dcf": 3436868501.9481,
+  "central_vps_dcf": 2.989232,
+  "central_tv_fraction": 0.8589,
+  "n_valid_dcf": 30,
+  "n_failed_valuation": 0,
+  "valuation_flags": [
+    "TV_FRACTION_HIGH_PRESENT"
+  ],
+  "spot_price": 21.32,
+  "n_entry_prices": 7,
+  "horizons_years": [
+    1,
+    3
+  ],
+  "n_valid_return_paths": 30,
+  "spot_h1_mean_return": -0.8538205316851744,
+  "spot_h1_p_loss": 1.0,
+  "return_flags": [
+    "RARE_STATE_RESULTS_PRESENT"
+  ],
+  "dividend_treatment": "DIVIDEND-NO-REINVEST-v1"
+}
+
+[exit 0]
+
+$ /workspace/dsde-valuation/.venv/bin/python -m vms.cli.main sensitivity --input /tmp/e01_isolated_evidence/bundle/run1/demo/data --ticker SYN000001.SZ --as-of 2025-06-30 --out /tmp/e01_isolated_evidence/bundle/run2/sens --paths 20 --years 3 --seed 42
+{
+  "run_id": "vms-6aac22521311cd6f",
+  "schema_version": "vms-0.2.phase12",
+  "out": "/tmp/e01_isolated_evidence/bundle/run2/sens",
+  "seed": 42,
+  "sensitivity_content_hash": "5aed597414c3295a",
+  "n_sensitivity_cases": 20,
+  "top_dimensions": [
+    "parameter_uncertainty",
+    "capex_to_revenue+receivables_to_revenue",
+    "cost_of_equity"
+  ],
+  "tail_risk_included": true,
+  "interval_labeling": "MC_PERCENTILE_NOT_CI"
+}
+
+[exit 0]
+
+$ /workspace/dsde-valuation/.venv/bin/python -m vms.cli.main evaluate --universe /workspace/dsde-valuation/config/universe.synthetic.yaml --start 2018-01-01 --end 2022-12-31 --out /tmp/e01_isolated_evidence/bundle/run2/eval
+{
+  "run_id": "vms-6fd31742108e6c73",
+  "schema_version": "vms-0.2.phase12",
+  "out": "/tmp/e01_isolated_evidence/bundle/run2/eval",
+  "universe_id": "synthetic_offline_v1",
+  "n_forecasts_persisted": 8,
+  "n_scored": 8,
+  "n_excluded_pit_incomplete": 0,
+  "labels": {
+    "ENGINEERING_PASS": true,
+    "DATA_QUALITY_PASS": true,
+    "CALIBRATION_PASS": null,
+    "CALIBRATION_STATUS": "INSUFFICIENT",
+    "CALIBRATION_CLAIM": "CALIBRATION_INSUFFICIENT",
+    "ENSEMBLE_CALIBRATED": false,
+    "ENSEMBLE_CLAIM": "ENSEMBLE_UNCALIBRATED",
+    "investment_value": "INVESTMENT_VALUE_NOT_ESTABLISHED",
+    "investment_value_reason": "Synthetic or no predeclared leakage-safe OOS alpha evidence (SPEC §17.4; never claim supported on synthetic demo)",
+    "data_label": "SYNTHETIC",
+    "pass_claim_authorized": false,
+    "release_gates": {
+      "ENGINEERING_PASS": true,
+      "DATA_QUALITY_PASS": true,
+      "CALIBRATION_PASS": false,
+      "CALIBRATION_INSUFFICIENT": true,
+      "ENSEMBLE_CALIBRATED": false,
+      "INVESTMENT_VALUE_NOT_ESTABLISHED": true
+    }
+  },
+  "content_hash": "78eac4d26b52c50b",
+  "baselines_present": [
+    "central_dcf",
+    "constant_growth_dcf",
+    "current_multiple_persistence",
+    "dcf_only",
+    "dcf_plus_multiple",
+    "exit_multiple",
+    "historical_median",
+    "no_regime"
+  ]
+}
+
+[exit 0]

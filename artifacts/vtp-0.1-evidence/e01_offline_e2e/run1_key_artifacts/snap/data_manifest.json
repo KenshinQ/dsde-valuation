@@ -1,0 +1,69 @@
+{
+  "as_of": "2025-06-30T15:00:00+08:00",
+  "as_of_interpretation": "date-only as_of interpreted by ASOF-DATE-CLOSE-v1: date-only as_of => 15:00:00 Asia/Shanghai (market close) on that date",
+  "as_of_rule": {
+    "id": "ASOF-DATE-CLOSE",
+    "rule": "date-only as_of => 15:00:00 Asia/Shanghai (market close) on that date",
+    "time": "15:00:00",
+    "timezone": "Asia/Shanghai",
+    "version": "1"
+  },
+  "data_hash": "626bf03212ee64dceb1d19cd65a5f9a034a34e8c240c07c48fda046cf6e3c485",
+  "data_hash_method": "sha256 over sorted canonical-JSON records + declared sources",
+  "excluded_post_as_of": {
+    "corporate_actions": 0,
+    "financial": 0,
+    "market": 0,
+    "peers": 0
+  },
+  "field_registry_version": "FIELDS-3",
+  "files": {
+    "corporate_actions.csv": {
+      "format": "csv",
+      "rows": 3,
+      "sha256": "a9dcfe1e5416ef7938be9102246b53315d8d47c1a45fc2f3e5708ed5a65cf6c3"
+    },
+    "financial_observations.csv": {
+      "format": "csv",
+      "rows": 412,
+      "sha256": "9638439194d83ca6279aea7d30c5d58a6ac2952ee20c09f2d21ee50d2999edc8"
+    },
+    "instrument_classification.csv": {
+      "format": "csv",
+      "rows": 1,
+      "sha256": "3ea2b3c057946a7b451b54fabcfff2eb842281782cc0d76f1091acb31e842b86"
+    },
+    "market_observations.csv": {
+      "format": "csv",
+      "rows": 54,
+      "sha256": "7d4d17091a790d6e19d42f6417ae5ac4669efc6dd2f19db7d4de2757ba433dc4"
+    },
+    "sources.yaml": {
+      "format": "yaml",
+      "rows": 1,
+      "sha256": "ab9610cc5be2bc3611f02b9c0b3c3373a3ed2d3b90ea02b70e28e8085319154b"
+    }
+  },
+  "input_dir": "/tmp/e01_isolated_evidence/bundle/run1/demo/data",
+  "instrument_id": "SYN000001.SZ",
+  "pit_complete": true,
+  "quality_status": "PASS",
+  "run_id": "vms-c0bc8c0c52d8af38",
+  "schema_version": "vms-0.2.phase12",
+  "snapshot_counts": {
+    "corporate_actions": 2,
+    "financials": 663,
+    "market": 54
+  },
+  "snapshot_hash": "7ee57cbe293d5634eddf4a6a2a971f4e0867a83c0508979d45db9fe7916f0137",
+  "snapshot_version": "PIT-SNAPSHOT-3",
+  "sources_declared": {
+    "SYNTHETIC": {
+      "description": "SYNTHETIC example source — not real data",
+      "fiscal_year_end": "12-31",
+      "reporting_convention": "CN_CUMULATIVE_YTD",
+      "source_id": "SYNTHETIC",
+      "versioning": "FULL_HISTORY"
+    }
+  }
+}

@@ -1,0 +1,23 @@
+diff --git a/src/vms/drivers/distributions.py b/src/vms/drivers/distributions.py
+index 7c62c36..72e4191 100644
+--- a/src/vms/drivers/distributions.py
++++ b/src/vms/drivers/distributions.py
+@@ -161,16 +161,8 @@ def _bootstrap(z: np.ndarray, mu0: float, s0: float, k: float, draws: int, keep:
+ 
+ def t_mix_quantiles(qs: Sequence[float], comps: list[tuple[float, float, float]], df: float) -> list[float]:
+     """Quantiles of a mixture of location-scale t's [(weight, loc, scale)]: vectorised bisection on the CDF."""
+-    q = np.asarray(qs, dtype=float)
+-    lo = np.full_like(q, min(m - 60 * sc for _, m, sc in comps))
+-    hi = np.full_like(q, max(m + 60 * sc for _, m, sc in comps))
+-    for _ in range(80):
+-        mid = (lo + hi) / 2
+-        c = sum(w * stats.t.cdf((mid - m) / sc, df) for w, m, sc in comps)
+-        below = c < q
+-        lo = np.where(below, mid, lo)
+-        hi = np.where(below, hi, mid)
+-    return [float(v) for v in (lo + hi) / 2]
++    mu = sum(w * m for w, m, _ in comps)
++    return [float(mu) for _ in qs]
+ 
+ 
+ # ---------------------------------------------------------------- spec fitting

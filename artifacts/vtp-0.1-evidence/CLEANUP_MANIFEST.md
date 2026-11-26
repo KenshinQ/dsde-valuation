@@ -2,8 +2,8 @@
 
 > **2026-11-27 Asia/Shanghai superseding notice**  
 > This file began as a 2026-11-09 cleanup record. Its Suite I summary below (I-M02 SURVIVED, score 66.7% 2/3, authoritative `mutation_results_COMPLETE.json`) is **historical and superseded**.  
-> Current authority: `mutation_results_FINAL.json` (executed=3, killed=3, survived=0, not_executed=3; I-M01/I-M02/I-M05 KILLED; I-M03/I-M04/I-M06 NOT_EXECUTED; not 6/6) and `verdicts_final_failclosed.json` (`ENGINEERING_BLOCKED` / `RELEASE_BLOCKED` / `DO_NOT_MERGE` / `INVESTMENT_VALUE_NOT_ESTABLISHED`).  
-> I-M02 KILLED is from `tests/unit/test_gate0_implementation_check.py` calling production `evaluate_hard_gates()`. Full I-M02 pytest stdout is still missing and was not reconstructed.
+> Current authority: `mutation_results_FINAL.json` (executed=4, killed=4, survived=0, not_executed=2; I-M01/I-M02/I-M03/I-M05 KILLED; I-M04/I-M06 NOT_EXECUTED; not 6/6) and `verdicts_final_failclosed.json` (`ENGINEERING_BLOCKED` / `RELEASE_BLOCKED` / `DO_NOT_MERGE` / `INVESTMENT_VALUE_NOT_ESTABLISHED`).  
+> I-M02 KILLED is from `tests/unit/test_gate0_implementation_check.py` calling production `evaluate_hard_gates()`. Full I-M02 pytest stdout is still missing and was not reconstructed. I-M03 was executed 2026-11-27 Asia/Shanghai and is KILLED; see `I_M03_MUTATION_REPORT.md`.
 
 **Date**: 2026-11-09  
 **Action**: Remove simulation/toy artifacts; consolidate to single authoritative evidence

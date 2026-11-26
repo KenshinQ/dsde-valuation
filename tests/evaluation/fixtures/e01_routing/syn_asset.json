@@ -1,0 +1,38 @@
+{
+  "fixture_id": "syn_asset",
+  "vtp_company_id": "SYN-ASSET",
+  "expected_primary": "ASSET_HEAVY_OR_RESOURCE",
+  "allow_low_confidence": false,
+  "design_note": "VTP-0.1 §4.2 SYN-ASSET: material PPE, asset-centric. Classifier rule R_ASSET_PPE (ppe_to_assets>=0.40). Frozen before routing. Not investment advice.",
+  "features": {
+    "instrument_id": "SYN_ASSET.SZ",
+    "as_of": "2025-06-30",
+    "fixture_id": "syn_asset",
+    "revenue_cagr_3y": 0.03,
+    "fcf_to_revenue": 0.01,
+    "ebit_margin": 0.08,
+    "ebit_margin_stdev_3y": 0.04,
+    "net_income_to_revenue": 0.05,
+    "interest_income_to_revenue": 0.0,
+    "financial_assets_to_assets": 0.04,
+    "investment_assets_to_assets": 0.05,
+    "equity_method_income_to_pretax": 0.0,
+    "ppe_to_assets": 0.55,
+    "debt_to_assets": 0.30,
+    "cash_to_assets": 0.06,
+    "net_cash_to_assets": -0.24,
+    "dividend_payout": 0.10,
+    "book_equity": 1.2e10,
+    "n_segments": 1,
+    "has_listed_subsidiaries": false,
+    "history_years": 10,
+    "industry_scheme": "SW2021_L1",
+    "industry_name": "有色金属",
+    "low_data_quality": false
+  },
+  "available_fields": [
+    "revenue", "ebit", "cash_flow_from_operations", "capex", "total_equity",
+    "interest_bearing_debt", "cash", "total_assets", "total_liabilities",
+    "parent_net_income"
+  ]
+}

@@ -1,0 +1,29 @@
+# Official VTP-0.1 Suite G — commands run 2026-11-27 Asia/Shanghai (CST, UTC+8)
+# Python 3.13.5, pytest 9.2.0
+# Worktree: /workspace/dsde-valuation-suiteg (branch test/suite-g-official-counterfactuals @ 7fc9722b8fa31127b835573e8ba54d6ff165cb76)
+# Production APIs loaded from the editable install of /workspace/dsde-valuation (master src, unchanged).
+# Invoke the runner as a module (python -m ...); `python path/to/script.py` fails because `tests` is not on sys.path.
+
+unset PYTHONPATH
+export PATH="/workspace/dsde-valuation/.venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+
+# Official numerical counterfactuals (G-01..G-05) on production market-pricing APIs
+cd /workspace/dsde-valuation-suiteg
+python -m tests.evaluation.suite_g_production_counterfactuals --out artifacts-out/official
+# exit 0; G-01..G-05 all PASS; toy_model_used=false
+
+# Official close tests including G-06 evaluation-report labels
+python -m pytest tests/evaluation/test_suite_g_official_counterfactuals.py -v --tb=short \
+  --junitxml=artifacts-out/official/Suite_G_Official_Counterfactuals_junit.xml
+# 6 passed in 2.97s, exit 0
+
+# Supporting only (NOT official close): existing phase-9 / property / evaluation twins
+cd /workspace/dsde-valuation
+python -m pytest \
+  tests/unit/test_phase9_acceptance.py \
+  tests/property/test_exit_price_properties.py \
+  tests/unit/test_evaluation.py::test_targets_scored_separately_and_iv_not_price \
+  tests/unit/test_phase11_acceptance.py::test_ac4_future_price_not_intrinsic_truth \
+  -v --tb=short \
+  --junitxml=artifacts-out/supporting/Suite_G_Supporting_phase9_property_eval_junit.xml
+# 15 passed in 3.32s, exit 0

@@ -1,0 +1,26 @@
+{
+  "as_of_interpretation": "date-only as_of interpreted by ASOF-DATE-CLOSE-v1: date-only as_of => 15:00:00 Asia/Shanghai (market close) on that date",
+  "as_of_rule": {
+    "id": "ASOF-DATE-CLOSE",
+    "rule": "date-only as_of => 15:00:00 Asia/Shanghai (market close) on that date",
+    "time": "15:00:00",
+    "timezone": "Asia/Shanghai",
+    "version": "1"
+  },
+  "request": {
+    "as_of": "2025-06-30T15:00:00+08:00",
+    "configuration_version": "vms-default-0.2.phase12",
+    "horizons_years": [
+      1,
+      3,
+      5
+    ],
+    "instrument_id": "SYN000001.SZ",
+    "monte_carlo_paths": 40,
+    "random_seed": 42,
+    "spot_price": 21.32,
+    "target": "FUNDAMENTAL_VALUE_CURRENT"
+  },
+  "run_id": "vms-80b7dfa9f5fd3e89",
+  "schema_version": "vms-0.2.phase12"
+}

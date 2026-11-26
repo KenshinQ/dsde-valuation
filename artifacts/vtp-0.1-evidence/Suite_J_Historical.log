@@ -1,0 +1,15 @@
+Command: /workspace/.venv-vtp/bin/pytest -v --tb=short --junit-xml /workspace/artifacts/vtp-0.1-evidence/Suite_J_Historical_junit.xml tests/unit/test_evaluation.py tests/unit/test_walk_forward.py tests/integration/test_cli_evaluate.py tests/leakage/test_eval_weight_freeze.py\nExit code: 0\n\n=== STDOUT ===\n============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.1.1, pluggy-1.7.0
+rootdir: /workspace
+configfile: pyproject.toml
+plugins: hypothesis-6.170.5
+collected 19 items
+
+tests/unit/test_evaluation.py ........                                   [ 42%]
+tests/unit/test_walk_forward.py ......                                   [ 73%]
+tests/integration/test_cli_evaluate.py .                                 [ 78%]
+tests/leakage/test_eval_weight_freeze.py ....                            [100%]
+
+- generated xml file: /workspace/artifacts/vtp-0.1-evidence/Suite_J_Historical_junit.xml -
+============================== 19 passed in 9.44s ==============================
+\n\n=== STDERR ===\n

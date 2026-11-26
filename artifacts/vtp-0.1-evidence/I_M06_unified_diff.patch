@@ -1,0 +1,11 @@
+--- a/src/vms/sampling/simulate.py
++++ b/src/vms/sampling/simulate.py
+@@ -310,7 +310,7 @@
+         r = _one_path(i, regimes=regimes, dist=distributions, years=years, states=states, chol=chol,
+                       names=names, df=df, seed=seed, parameter_mode=parameter_mode)
+         if isinstance(r, InvalidPathSummary):
+-            invalid.append(r)
++            pass
+         else:
+             valid.append(r)
+     by_reason = {c: 0 for c in INVALID_REASON_CODES}

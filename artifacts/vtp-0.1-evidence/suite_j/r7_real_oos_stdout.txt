@@ -1,0 +1,12 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.5, pytest-9.2.0, pluggy-1.7.0
+rootdir: /workspace/dsde-valuation
+configfile: pyproject.toml
+plugins: hypothesis-6.170.17
+collected 14 items
+
+tests/unit/test_r7_fi_real_oos.py .............                          [ 92%]
+tests/integration/test_cli_calibrate_rim_real.py .                       [100%]
+
+------- generated xml file: /tmp/suite_j_evidence/junit_r7_real_oos.xml --------
+============================= 14 passed in 47.35s ==============================

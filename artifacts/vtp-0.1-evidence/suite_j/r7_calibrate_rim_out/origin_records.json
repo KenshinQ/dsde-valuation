@@ -1,0 +1,890 @@
+{
+  "n": 15,
+  "records": [
+    {
+      "instrument_id": "000001.SZ",
+      "origin_as_of": "2018-03-15T15:00:00+08:00",
+      "horizon_years": 1,
+      "profile_id": "FINANCIAL_INSTITUTION",
+      "pit_complete": false,
+      "pit_policy": "PIT_ASSUMED",
+      "vendor_latest_as_of": true,
+      "quality_status": "PIT_INCOMPLETE",
+      "rim_status": "VALID",
+      "forecast_path": "forecasts/000001.SZ/2018-03-15_h1.json",
+      "persisted_before_outcomes": true,
+      "frozen_weights_hash": "048b3d5ef82306ef",
+      "track_b": {
+        "status": "SKIP",
+        "hist_n": 2,
+        "min_required": 12,
+        "median_pb": 0.9937277823426276,
+        "skip_reason": "INSUFFICIENT_OWN_PB_HISTORY",
+        "year_funnel": [
+          {
+            "year": 2014,
+            "status": "SKIP_NO_COMMON_EQUITY",
+            "reason": "MISSING_OTHER_EQUITY_INSTRUMENTS"
+          },
+          {
+            "year": 2015,
+            "status": "SKIP_NO_COMMON_EQUITY",
+            "reason": "MISSING_OTHER_EQUITY_INSTRUMENTS"
+          },
+          {
+            "year": 2016,
+            "status": "INCLUDED",
+            "reason": null
+          },
+          {
+            "year": 2017,
+            "status": "INCLUDED",
+            "reason": null
+          }
+        ],
+        "assumption_ids": [
+          "HITHINK-NO-VENDOR-QFQ-v1",
+          "MARKET-PRICING-NO-SILENT-INTRINSIC-EXIT-v1",
+          "RIM-COMMON-EQUITY-v1",
+          "RIM-EXIT-OWN-PB-HIST-v1"
+        ]
+      }
+    },
+    {
+      "instrument_id": "000001.SZ",
+      "origin_as_of": "2019-03-07T15:00:00+08:00",
+      "horizon_years": 1,
+      "profile_id": "FINANCIAL_INSTITUTION",
+      "pit_complete": false,
+      "pit_policy": "PIT_ASSUMED",
+      "vendor_latest_as_of": true,
+      "quality_status": "PIT_INCOMPLETE",
+      "rim_status": "VALID",
+      "forecast_path": "forecasts/000001.SZ/2019-03-07_h1.json",
+      "persisted_before_outcomes": true,
+      "frozen_weights_hash": "048b3d5ef82306ef",
+      "track_b": {
+        "status": "SKIP",
+        "hist_n": 3,
+        "min_required": 12,
+        "median_pb": 0.8574934607481149,
+        "skip_reason": "INSUFFICIENT_OWN_PB_HISTORY",
+        "year_funnel": [
+          {
+            "year": 2014,
+            "status": "SKIP_NO_COMMON_EQUITY",
+            "reason": "MISSING_OTHER_EQUITY_INSTRUMENTS"
+          },
+          {
+            "year": 2015,
+            "status": "SKIP_NO_COMMON_EQUITY",
+            "reason": "MISSING_OTHER_EQUITY_INSTRUMENTS"
+          },
+          {
+            "year": 2016,
+            "status": "INCLUDED",
+            "reason": null
+          },
+          {
+            "year": 2017,
+            "status": "INCLUDED",
+            "reason": null
+          },
+          {
+            "year": 2018,
+            "status": "INCLUDED",
+            "reason": null
+          }
+        ],
+        "assumption_ids": [
+          "HITHINK-NO-VENDOR-QFQ-v1",
+          "MARKET-PRICING-NO-SILENT-INTRINSIC-EXIT-v1",
+          "RIM-COMMON-EQUITY-v1",
+          "RIM-EXIT-OWN-PB-HIST-v1"
+        ]
+      }
+    },
+    {
+      "instrument_id": "000001.SZ",
+      "origin_as_of": "2020-02-14T15:00:00+08:00",
+      "horizon_years": 1,
+      "profile_id": "FINANCIAL_INSTITUTION",
+      "pit_complete": false,
+      "pit_policy": "PIT_ASSUMED",
+      "vendor_latest_as_of": true,
+      "quality_status": "PIT_INCOMPLETE",
+      "rim_status": "VALID",
+      "forecast_path": "forecasts/000001.SZ/2020-02-14_h1.json",
+      "persisted_before_outcomes": true,
+      "frozen_weights_hash": "048b3d5ef82306ef",
+      "track_b": {
+        "status": "SKIP",
+        "hist_n": 4,
+        "min_required": 12,
+        "median_pb": 0.9937277823426276,
+        "skip_reason": "INSUFFICIENT_OWN_PB_HISTORY",
+        "year_funnel": [
+          {
+            "year": 2014,
+            "status": "SKIP_NO_COMMON_EQUITY",
+            "reason": "MISSING_OTHER_EQUITY_INSTRUMENTS"
+          },
+          {
+            "year": 2015,
+            "status": "SKIP_NO_COMMON_EQUITY",
+            "reason": "MISSING_OTHER_EQUITY_INSTRUMENTS"
+          },
+          {
+            "year": 2016,
+            "status": "INCLUDED",
+            "reason": null
+          },
+          {
+            "year": 2017,
+            "status": "INCLUDED",
+            "reason": null
+          },
+          {
+            "year": 2018,
+            "status": "INCLUDED",
+            "reason": null
+          },
+          {
+            "year": 2019,
+            "status": "INCLUDED",
+            "reason": null
+          }
+        ],
+        "assumption_ids": [
+          "HITHINK-NO-VENDOR-QFQ-v1",
+          "MARKET-PRICING-NO-SILENT-INTRINSIC-EXIT-v1",
+          "RIM-COMMON-EQUITY-v1",
+          "RIM-EXIT-OWN-PB-HIST-v1"
+        ]
+      }
+    },
+    {
+      "instrument_id": "000001.SZ",
+      "origin_as_of": "2021-02-02T15:00:00+08:00",
+      "horizon_years": 1,
+      "profile_id": "FINANCIAL_INSTITUTION",
+      "pit_complete": false,
+      "pit_policy": "PIT_ASSUMED",
+      "vendor_latest_as_of": true,
+      "quality_status": "PIT_INCOMPLETE",
+      "rim_status": "VALID",
+      "forecast_path": "forecasts/000001.SZ/2021-02-02_h1.json",
+      "persisted_before_outcomes": true,
+      "frozen_weights_hash": "048b3d5ef82306ef",
+      "track_b": {
+        "status": "SKIP",
+        "hist_n": 5,
+        "min_required": 12,
+        "median_pb": 1.1299621039371404,
+        "skip_reason": "INSUFFICIENT_OWN_PB_HISTORY",
+        "year_funnel": [
+          {
+            "year": 2014,
+            "status": "SKIP_NO_COMMON_EQUITY",
+            "reason": "MISSING_OTHER_EQUITY_INSTRUMENTS"
+          },
+          {
+            "year": 2015,
+            "status": "SKIP_NO_COMMON_EQUITY",
+            "reason": "MISSING_OTHER_EQUITY_INSTRUMENTS"
+          },
+          {
+            "year": 2016,
+            "status": "INCLUDED",
+            "reason": null
+          },
+          {
+            "year": 2017,
+            "status": "INCLUDED",
+            "reason": null
+          },
+          {
+            "year": 2018,
+            "status": "INCLUDED",
+            "reason": null
+          },
+          {
+            "year": 2019,
+            "status": "INCLUDED",
+            "reason": null
+          },
+          {
+            "year": 2020,
+            "status": "INCLUDED",
+            "reason": null
+          }
+        ],
+        "assumption_ids": [
+          "HITHINK-NO-VENDOR-QFQ-v1",
+          "MARKET-PRICING-NO-SILENT-INTRINSIC-EXIT-v1",
+          "RIM-COMMON-EQUITY-v1",
+          "RIM-EXIT-OWN-PB-HIST-v1"
+        ]
+      }
+    },
+    {
+      "instrument_id": "000001.SZ",
+      "origin_as_of": "2022-03-10T15:00:00+08:00",
+      "horizon_years": 1,
+      "profile_id": "FINANCIAL_INSTITUTION",
+      "pit_complete": false,
+      "pit_policy": "PIT_ASSUMED",
+      "vendor_latest_as_of": true,
+      "quality_status": "PIT_INCOMPLETE",
+      "rim_status": "VALID",
+      "forecast_path": "forecasts/000001.SZ/2022-03-10_h1.json",
+      "persisted_before_outcomes": true,
+      "frozen_weights_hash": "048b3d5ef82306ef",
+      "track_b": {
+        "status": "SKIP",
+        "hist_n": 6,
+        "min_required": 12,
+        "median_pb": 1.0562338966387432,
+        "skip_reason": "INSUFFICIENT_OWN_PB_HISTORY",
+        "year_funnel": [
+          {
+            "year": 2014,
+            "status": "SKIP_NO_COMMON_EQUITY",
+            "reason": "MISSING_OTHER_EQUITY_INSTRUMENTS"
+          },
+          {
+            "year": 2015,
+            "status": "SKIP_NO_COMMON_EQUITY",
+            "reason": "MISSING_OTHER_EQUITY_INSTRUMENTS"
+          },
+          {
+            "year": 2016,
+            "status": "INCLUDED",
+            "reason": null
+          },
+          {
+            "year": 2017,
+            "status": "INCLUDED",
+            "reason": null
+          },
+          {
+            "year": 2018,
+            "status": "INCLUDED",
+            "reason": null
+          },
+          {
+            "year": 2019,
+            "status": "INCLUDED",
+            "reason": null
+          },
+          {
+            "year": 2020,
+            "status": "INCLUDED",
+            "reason": null
+          },
+          {
+            "year": 2021,
+            "status": "INCLUDED",
+            "reason": null
+          }
+        ],
+        "assumption_ids": [
+          "HITHINK-NO-VENDOR-QFQ-v1",
+          "MARKET-PRICING-NO-SILENT-INTRINSIC-EXIT-v1",
+          "RIM-COMMON-EQUITY-v1",
+          "RIM-EXIT-OWN-PB-HIST-v1"
+        ]
+      }
+    },
+    {
+      "instrument_id": "600036.SH",
+      "origin_as_of": "2018-03-24T15:00:00+08:00",
+      "horizon_years": 1,
+      "profile_id": "FINANCIAL_INSTITUTION",
+      "pit_complete": false,
+      "pit_policy": "PIT_ASSUMED",
+      "vendor_latest_as_of": true,
+      "quality_status": "PIT_INCOMPLETE",
+      "rim_status": "VALID",
+      "forecast_path": "forecasts/600036.SH/2018-03-24_h1.json",
+      "persisted_before_outcomes": true,
+      "frozen_weights_hash": "048b3d5ef82306ef",
+      "track_b": {
+        "status": "SKIP",
+        "hist_n": 1,
+        "min_required": 12,
+        "median_pb": 1.6404530350917752,
+        "skip_reason": "INSUFFICIENT_OWN_PB_HISTORY",
+        "year_funnel": [
+          {
+            "year": 2014,
+            "status": "SKIP_NO_COMMON_EQUITY",
+            "reason": "MISSING_OTHER_EQUITY_INSTRUMENTS"
+          },
+          {
+            "year": 2015,
+            "status": "SKIP_NO_COMMON_EQUITY",
+            "reason": "MISSING_OTHER_EQUITY_INSTRUMENTS"
+          },
+          {
+            "year": 2016,
+            "status": "SKIP_NO_COMMON_EQUITY",
+            "reason": "MISSING_OTHER_EQUITY_INSTRUMENTS"
+          },
+          {
+            "year": 2017,
+            "status": "INCLUDED",
+            "reason": null
+          }
+        ],
+        "assumption_ids": [
+          "HITHINK-NO-VENDOR-QFQ-v1",
+          "MARKET-PRICING-NO-SILENT-INTRINSIC-EXIT-v1",
+          "RIM-COMMON-EQUITY-v1",
+          "RIM-EXIT-OWN-PB-HIST-v1"
+        ]
+      }
+    },
+    {
+      "instrument_id": "600036.SH",
+      "origin_as_of": "2019-03-23T15:00:00+08:00",
+      "horizon_years": 1,
+      "profile_id": "FINANCIAL_INSTITUTION",
+      "pit_complete": false,
+      "pit_policy": "PIT_ASSUMED",
+      "vendor_latest_as_of": true,
+      "quality_status": "PIT_INCOMPLETE",
+      "rim_status": "VALID",
+      "forecast_path": "forecasts/600036.SH/2019-03-23_h1.json",
+      "persisted_before_outcomes": true,
+      "frozen_weights_hash": "048b3d5ef82306ef",
+      "track_b": {
+        "status": "SKIP",
+        "hist_n": 2,
+        "min_required": 12,
+        "median_pb": 1.4481648057738004,
+        "skip_reason": "INSUFFICIENT_OWN_PB_HISTORY",
+        "year_funnel": [
+          {
+            "year": 2014,
+            "status": "SKIP_NO_COMMON_EQUITY",
+            "reason": "MISSING_OTHER_EQUITY_INSTRUMENTS"
+          },
+          {
+            "year": 2015,
+            "status": "SKIP_NO_COMMON_EQUITY",
+            "reason": "MISSING_OTHER_EQUITY_INSTRUMENTS"
+          },
+          {
+            "year": 2016,
+            "status": "SKIP_NO_COMMON_EQUITY",
+            "reason": "MISSING_OTHER_EQUITY_INSTRUMENTS"
+          },
+          {
+            "year": 2017,
+            "status": "INCLUDED",
+            "reason": null
+          },
+          {
+            "year": 2018,
+            "status": "INCLUDED",
+            "reason": null
+          }
+        ],
+        "assumption_ids": [
+          "HITHINK-NO-VENDOR-QFQ-v1",
+          "MARKET-PRICING-NO-SILENT-INTRINSIC-EXIT-v1",
+          "RIM-COMMON-EQUITY-v1",
+          "RIM-EXIT-OWN-PB-HIST-v1"
+        ]
+      }
+    },
+    {
+      "instrument_id": "600036.SH",
+      "origin_as_of": "2020-03-21T15:00:00+08:00",
+      "horizon_years": 1,
+      "profile_id": "FINANCIAL_INSTITUTION",
+      "pit_complete": false,
+      "pit_policy": "PIT_ASSUMED",
+      "vendor_latest_as_of": true,
+      "quality_status": "PIT_INCOMPLETE",
+      "rim_status": "VALID",
+      "forecast_path": "forecasts/600036.SH/2020-03-21_h1.json",
+      "persisted_before_outcomes": true,
+      "frozen_weights_hash": "048b3d5ef82306ef",
+      "track_b": {
+        "status": "SKIP",
+        "hist_n": 3,
+        "min_required": 12,
+        "median_pb": 1.6404530350917752,
+        "skip_reason": "INSUFFICIENT_OWN_PB_HISTORY",
+        "year_funnel": [
+          {
+            "year": 2014,
+            "status": "SKIP_NO_COMMON_EQUITY",
+            "reason": "MISSING_OTHER_EQUITY_INSTRUMENTS"
+          },
+          {
+            "year": 2015,
+            "status": "SKIP_NO_COMMON_EQUITY",
+            "reason": "MISSING_OTHER_EQUITY_INSTRUMENTS"
+          },
+          {
+            "year": 2016,
+            "status": "SKIP_NO_COMMON_EQUITY",
+            "reason": "MISSING_OTHER_EQUITY_INSTRUMENTS"
+          },
+          {
+            "year": 2017,
+            "status": "INCLUDED",
+            "reason": null
+          },
+          {
+            "year": 2018,
+            "status": "INCLUDED",
+            "reason": null
+          },
+          {
+            "year": 2019,
+            "status": "INCLUDED",
+            "reason": null
+          }
+        ],
+        "assumption_ids": [
+          "HITHINK-NO-VENDOR-QFQ-v1",
+          "MARKET-PRICING-NO-SILENT-INTRINSIC-EXIT-v1",
+          "RIM-COMMON-EQUITY-v1",
+          "RIM-EXIT-OWN-PB-HIST-v1"
+        ]
+      }
+    },
+    {
+      "instrument_id": "600036.SH",
+      "origin_as_of": "2021-03-20T15:00:00+08:00",
+      "horizon_years": 1,
+      "profile_id": "FINANCIAL_INSTITUTION",
+      "pit_complete": false,
+      "pit_policy": "PIT_ASSUMED",
+      "vendor_latest_as_of": true,
+      "quality_status": "PIT_INCOMPLETE",
+      "rim_status": "VALID",
+      "forecast_path": "forecasts/600036.SH/2021-03-20_h1.json",
+      "persisted_before_outcomes": true,
+      "frozen_weights_hash": "048b3d5ef82306ef",
+      "track_b": {
+        "status": "SKIP",
+        "hist_n": 4,
+        "min_required": 12,
+        "median_pb": 1.6411747931953446,
+        "skip_reason": "INSUFFICIENT_OWN_PB_HISTORY",
+        "year_funnel": [
+          {
+            "year": 2014,
+            "status": "SKIP_NO_COMMON_EQUITY",
+            "reason": "MISSING_OTHER_EQUITY_INSTRUMENTS"
+          },
+          {
+            "year": 2015,
+            "status": "SKIP_NO_COMMON_EQUITY",
+            "reason": "MISSING_OTHER_EQUITY_INSTRUMENTS"
+          },
+          {
+            "year": 2016,
+            "status": "SKIP_NO_COMMON_EQUITY",
+            "reason": "MISSING_OTHER_EQUITY_INSTRUMENTS"
+          },
+          {
+            "year": 2017,
+            "status": "INCLUDED",
+            "reason": null
+          },
+          {
+            "year": 2018,
+            "status": "INCLUDED",
+            "reason": null
+          },
+          {
+            "year": 2019,
+            "status": "INCLUDED",
+            "reason": null
+          },
+          {
+            "year": 2020,
+            "status": "INCLUDED",
+            "reason": null
+          }
+        ],
+        "assumption_ids": [
+          "HITHINK-NO-VENDOR-QFQ-v1",
+          "MARKET-PRICING-NO-SILENT-INTRINSIC-EXIT-v1",
+          "RIM-COMMON-EQUITY-v1",
+          "RIM-EXIT-OWN-PB-HIST-v1"
+        ]
+      }
+    },
+    {
+      "instrument_id": "600036.SH",
+      "origin_as_of": "2022-03-19T15:00:00+08:00",
+      "horizon_years": 1,
+      "profile_id": "FINANCIAL_INSTITUTION",
+      "pit_complete": false,
+      "pit_policy": "PIT_ASSUMED",
+      "vendor_latest_as_of": true,
+      "quality_status": "PIT_INCOMPLETE",
+      "rim_status": "VALID",
+      "forecast_path": "forecasts/600036.SH/2022-03-19_h1.json",
+      "persisted_before_outcomes": true,
+      "frozen_weights_hash": "048b3d5ef82306ef",
+      "track_b": {
+        "status": "SKIP",
+        "hist_n": 5,
+        "min_required": 12,
+        "median_pb": 1.641896551298914,
+        "skip_reason": "INSUFFICIENT_OWN_PB_HISTORY",
+        "year_funnel": [
+          {
+            "year": 2014,
+            "status": "SKIP_NO_COMMON_EQUITY",
+            "reason": "MISSING_OTHER_EQUITY_INSTRUMENTS"
+          },
+          {
+            "year": 2015,
+            "status": "SKIP_NO_COMMON_EQUITY",
+            "reason": "MISSING_OTHER_EQUITY_INSTRUMENTS"
+          },
+          {
+            "year": 2016,
+            "status": "SKIP_NO_COMMON_EQUITY",
+            "reason": "MISSING_OTHER_EQUITY_INSTRUMENTS"
+          },
+          {
+            "year": 2017,
+            "status": "INCLUDED",
+            "reason": null
+          },
+          {
+            "year": 2018,
+            "status": "INCLUDED",
+            "reason": null
+          },
+          {
+            "year": 2019,
+            "status": "INCLUDED",
+            "reason": null
+          },
+          {
+            "year": 2020,
+            "status": "INCLUDED",
+            "reason": null
+          },
+          {
+            "year": 2021,
+            "status": "INCLUDED",
+            "reason": null
+          }
+        ],
+        "assumption_ids": [
+          "HITHINK-NO-VENDOR-QFQ-v1",
+          "MARKET-PRICING-NO-SILENT-INTRINSIC-EXIT-v1",
+          "RIM-COMMON-EQUITY-v1",
+          "RIM-EXIT-OWN-PB-HIST-v1"
+        ]
+      }
+    },
+    {
+      "instrument_id": "601398.SH",
+      "origin_as_of": "2018-03-28T15:00:00+08:00",
+      "horizon_years": 1,
+      "profile_id": "FINANCIAL_INSTITUTION",
+      "pit_complete": false,
+      "pit_policy": "PIT_ASSUMED",
+      "vendor_latest_as_of": true,
+      "quality_status": "PIT_INCOMPLETE",
+      "rim_status": "VALID",
+      "forecast_path": "forecasts/601398.SH/2018-03-28_h1.json",
+      "persisted_before_outcomes": true,
+      "frozen_weights_hash": "048b3d5ef82306ef",
+      "track_b": {
+        "status": "SKIP",
+        "hist_n": 2,
+        "min_required": 12,
+        "median_pb": 0.9584136688006986,
+        "skip_reason": "INSUFFICIENT_OWN_PB_HISTORY",
+        "year_funnel": [
+          {
+            "year": 2014,
+            "status": "SKIP_NO_SHARES",
+            "reason": "MISSING_OR_NONPOSITIVE_SHARES"
+          },
+          {
+            "year": 2015,
+            "status": "SKIP_NO_SHARES",
+            "reason": "MISSING_OR_NONPOSITIVE_SHARES"
+          },
+          {
+            "year": 2016,
+            "status": "INCLUDED",
+            "reason": null
+          },
+          {
+            "year": 2017,
+            "status": "INCLUDED",
+            "reason": null
+          }
+        ],
+        "assumption_ids": [
+          "HITHINK-NO-VENDOR-QFQ-v1",
+          "MARKET-PRICING-NO-SILENT-INTRINSIC-EXIT-v1",
+          "RIM-COMMON-EQUITY-v1",
+          "RIM-EXIT-OWN-PB-HIST-v1"
+        ]
+      }
+    },
+    {
+      "instrument_id": "601398.SH",
+      "origin_as_of": "2019-03-29T15:00:00+08:00",
+      "horizon_years": 1,
+      "profile_id": "FINANCIAL_INSTITUTION",
+      "pit_complete": false,
+      "pit_policy": "PIT_ASSUMED",
+      "vendor_latest_as_of": true,
+      "quality_status": "PIT_INCOMPLETE",
+      "rim_status": "VALID",
+      "forecast_path": "forecasts/601398.SH/2019-03-29_h1.json",
+      "persisted_before_outcomes": true,
+      "frozen_weights_hash": "048b3d5ef82306ef",
+      "track_b": {
+        "status": "SKIP",
+        "hist_n": 3,
+        "min_required": 12,
+        "median_pb": 0.8402099422896276,
+        "skip_reason": "INSUFFICIENT_OWN_PB_HISTORY",
+        "year_funnel": [
+          {
+            "year": 2014,
+            "status": "SKIP_NO_SHARES",
+            "reason": "MISSING_OR_NONPOSITIVE_SHARES"
+          },
+          {
+            "year": 2015,
+            "status": "SKIP_NO_SHARES",
+            "reason": "MISSING_OR_NONPOSITIVE_SHARES"
+          },
+          {
+            "year": 2016,
+            "status": "INCLUDED",
+            "reason": null
+          },
+          {
+            "year": 2017,
+            "status": "INCLUDED",
+            "reason": null
+          },
+          {
+            "year": 2018,
+            "status": "INCLUDED",
+            "reason": null
+          }
+        ],
+        "assumption_ids": [
+          "HITHINK-NO-VENDOR-QFQ-v1",
+          "MARKET-PRICING-NO-SILENT-INTRINSIC-EXIT-v1",
+          "RIM-COMMON-EQUITY-v1",
+          "RIM-EXIT-OWN-PB-HIST-v1"
+        ]
+      }
+    },
+    {
+      "instrument_id": "601398.SH",
+      "origin_as_of": "2020-03-28T15:00:00+08:00",
+      "horizon_years": 1,
+      "profile_id": "FINANCIAL_INSTITUTION",
+      "pit_complete": false,
+      "pit_policy": "PIT_ASSUMED",
+      "vendor_latest_as_of": true,
+      "quality_status": "PIT_INCOMPLETE",
+      "rim_status": "VALID",
+      "forecast_path": "forecasts/601398.SH/2020-03-28_h1.json",
+      "persisted_before_outcomes": true,
+      "frozen_weights_hash": "048b3d5ef82306ef",
+      "track_b": {
+        "status": "SKIP",
+        "hist_n": 4,
+        "min_required": 12,
+        "median_pb": 0.8443201485626597,
+        "skip_reason": "INSUFFICIENT_OWN_PB_HISTORY",
+        "year_funnel": [
+          {
+            "year": 2014,
+            "status": "SKIP_NO_SHARES",
+            "reason": "MISSING_OR_NONPOSITIVE_SHARES"
+          },
+          {
+            "year": 2015,
+            "status": "SKIP_NO_SHARES",
+            "reason": "MISSING_OR_NONPOSITIVE_SHARES"
+          },
+          {
+            "year": 2016,
+            "status": "INCLUDED",
+            "reason": null
+          },
+          {
+            "year": 2017,
+            "status": "INCLUDED",
+            "reason": null
+          },
+          {
+            "year": 2018,
+            "status": "INCLUDED",
+            "reason": null
+          },
+          {
+            "year": 2019,
+            "status": "INCLUDED",
+            "reason": null
+          }
+        ],
+        "assumption_ids": [
+          "HITHINK-NO-VENDOR-QFQ-v1",
+          "MARKET-PRICING-NO-SILENT-INTRINSIC-EXIT-v1",
+          "RIM-COMMON-EQUITY-v1",
+          "RIM-EXIT-OWN-PB-HIST-v1"
+        ]
+      }
+    },
+    {
+      "instrument_id": "601398.SH",
+      "origin_as_of": "2021-03-27T15:00:00+08:00",
+      "horizon_years": 1,
+      "profile_id": "FINANCIAL_INSTITUTION",
+      "pit_complete": false,
+      "pit_policy": "PIT_ASSUMED",
+      "vendor_latest_as_of": true,
+      "quality_status": "PIT_INCOMPLETE",
+      "rim_status": "VALID",
+      "forecast_path": "forecasts/601398.SH/2021-03-27_h1.json",
+      "persisted_before_outcomes": true,
+      "frozen_weights_hash": "048b3d5ef82306ef",
+      "track_b": {
+        "status": "SKIP",
+        "hist_n": 5,
+        "min_required": 12,
+        "median_pb": 0.8402099422896276,
+        "skip_reason": "INSUFFICIENT_OWN_PB_HISTORY",
+        "year_funnel": [
+          {
+            "year": 2014,
+            "status": "SKIP_NO_SHARES",
+            "reason": "MISSING_OR_NONPOSITIVE_SHARES"
+          },
+          {
+            "year": 2015,
+            "status": "SKIP_NO_SHARES",
+            "reason": "MISSING_OR_NONPOSITIVE_SHARES"
+          },
+          {
+            "year": 2016,
+            "status": "INCLUDED",
+            "reason": null
+          },
+          {
+            "year": 2017,
+            "status": "INCLUDED",
+            "reason": null
+          },
+          {
+            "year": 2018,
+            "status": "INCLUDED",
+            "reason": null
+          },
+          {
+            "year": 2019,
+            "status": "INCLUDED",
+            "reason": null
+          },
+          {
+            "year": 2020,
+            "status": "INCLUDED",
+            "reason": null
+          }
+        ],
+        "assumption_ids": [
+          "HITHINK-NO-VENDOR-QFQ-v1",
+          "MARKET-PRICING-NO-SILENT-INTRINSIC-EXIT-v1",
+          "RIM-COMMON-EQUITY-v1",
+          "RIM-EXIT-OWN-PB-HIST-v1"
+        ]
+      }
+    },
+    {
+      "instrument_id": "601398.SH",
+      "origin_as_of": "2022-03-31T15:00:00+08:00",
+      "horizon_years": 1,
+      "profile_id": "FINANCIAL_INSTITUTION",
+      "pit_complete": false,
+      "pit_policy": "PIT_ASSUMED",
+      "vendor_latest_as_of": true,
+      "quality_status": "PIT_INCOMPLETE",
+      "rim_status": "VALID",
+      "forecast_path": "forecasts/601398.SH/2022-03-31_h1.json",
+      "persisted_before_outcomes": true,
+      "frozen_weights_hash": "048b3d5ef82306ef",
+      "track_b": {
+        "status": "SKIP",
+        "hist_n": 6,
+        "min_required": 12,
+        "median_pb": 0.8373029309479911,
+        "skip_reason": "INSUFFICIENT_OWN_PB_HISTORY",
+        "year_funnel": [
+          {
+            "year": 2014,
+            "status": "SKIP_NO_SHARES",
+            "reason": "MISSING_OR_NONPOSITIVE_SHARES"
+          },
+          {
+            "year": 2015,
+            "status": "SKIP_NO_SHARES",
+            "reason": "MISSING_OR_NONPOSITIVE_SHARES"
+          },
+          {
+            "year": 2016,
+            "status": "INCLUDED",
+            "reason": null
+          },
+          {
+            "year": 2017,
+            "status": "INCLUDED",
+            "reason": null
+          },
+          {
+            "year": 2018,
+            "status": "INCLUDED",
+            "reason": null
+          },
+          {
+            "year": 2019,
+            "status": "INCLUDED",
+            "reason": null
+          },
+          {
+            "year": 2020,
+            "status": "INCLUDED",
+            "reason": null
+          },
+          {
+            "year": 2021,
+            "status": "INCLUDED",
+            "reason": null
+          }
+        ],
+        "assumption_ids": [
+          "HITHINK-NO-VENDOR-QFQ-v1",
+          "MARKET-PRICING-NO-SILENT-INTRINSIC-EXIT-v1",
+          "RIM-COMMON-EQUITY-v1",
+          "RIM-EXIT-OWN-PB-HIST-v1"
+        ]
+      }
+    }
+  ]
+}

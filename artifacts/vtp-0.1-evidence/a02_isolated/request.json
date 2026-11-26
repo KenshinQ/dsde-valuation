@@ -1,0 +1,13 @@
+{
+  "as_of": "2025-06-30T15:00:00+08:00",
+  "as_of_interpretation": "date-only as_of interpreted by ASOF-DATE-CLOSE-v1: date-only as_of => 15:00:00 Asia/Shanghai (market close) on that date",
+  "investment_value": "INVESTMENT_VALUE_NOT_ESTABLISHED",
+  "paths": 10,
+  "pattern": "mature_operating",
+  "run_id": "vms-ea2c613a02700517",
+  "schema_version": "vms-0.2.phase12",
+  "seed": 42,
+  "status": "PHASE12_RELEASE_EXAMPLES_NOT_INVESTMENT_ADVICE",
+  "target": "FUNDAMENTAL_VALUE_CURRENT",
+  "years": 2
+}

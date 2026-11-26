@@ -1,0 +1,11 @@
+{
+  "total_decisions": 480,
+  "matches": 74,
+  "mismatches": 62,
+  "unknown_expected": 344,
+  "eligible_count": 220,
+  "ineligible_count": 120,
+  "warn_count": 36,
+  "conditional_count": 56,
+  "blocked_count": 48
+}

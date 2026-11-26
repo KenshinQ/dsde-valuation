@@ -1,0 +1,5 @@
+Criterion_ID,Criterion_Description,Test_IDs,Status,Evidence_Files,Exit_Code,Notes
+A-01,Clean install,test_a01_clean_install.py,EXECUTED,,,
+A-02,Offline synthetic run,test_a02_offline_synthetic_run.py,EXECUTED,,,
+A-03,Schema validation,tests/unit/test_schemas.py,EXECUTED,,,
+A-04,API/CLI parity,tests/integration/test_cli.py,EXECUTED,,,

@@ -1,0 +1,7 @@
+mutation_id,description,fault_type,status
+I-M01,债务符号反转 (debt sign reversal),SIGN_FLIP,KILLED
+I-M02,绕过硬门禁 (bypass hard gate),GATE_BYPASS,KILLED
+I-M03,纳入post-as_of观察 (include post-as_of data),TEMPORAL_LEAKAGE,KILLED
+I-M04,distribution mixture改均值 (mixture→mean),DISTRIBUTION_COLLAPSE,KILLED
+I-M05,exit强制intrinsic (force exit=intrinsic),PRICING_FORCED,KILLED
+I-M06,静默丢弃失败MC路径 (drop failed paths silently),SILENT_DROP,KILLED

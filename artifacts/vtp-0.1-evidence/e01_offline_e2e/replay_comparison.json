@@ -1,0 +1,155 @@
+{
+  "differed": {
+    "est": [],
+    "eval": [
+      {
+        "path": "forecasts/SYN000000.SZ/2019-04-20_h1.json",
+        "run1": "383eda9799e1f6ae9a663ea4dfba65129145d80ea386445c02d36f127d9096d4",
+        "run2": "599912abe2c5b5978d8c5b09a390ad4e0380d5a23aa89007c5cb98efcae70a8f"
+      },
+      {
+        "path": "forecasts/SYN000000.SZ/2020-04-20_h1.json",
+        "run1": "9122824266905a61d2405abf2c739dafa03317dbec6dc12e9ba882e139991dc3",
+        "run2": "08def6a76c0c31da68ae80e5e00c8bf78fa9ab180e49af0cec32d6fb128cb1c5"
+      },
+      {
+        "path": "forecasts/SYN000000.SZ/2021-04-20_h1.json",
+        "run1": "b1a5810f608cc11c33c4c17cb771fc201a4f4ca356bb24e7288b7d57bb5b810d",
+        "run2": "a2ed28df46a4e51ea8133c0b54f8011483d34d0167e32d792065f7ad3a0817db"
+      },
+      {
+        "path": "forecasts/SYN000000.SZ/2022-04-20_h1.json",
+        "run1": "fdb4d63daefb1566a968ef0f4e7c52bc7df39868d60185afcdc4ff9ce96f1b2d",
+        "run2": "115ed1c7181c42346c3b2c5a2df699104cacd1d55fe0e354af48f3c8728d3781"
+      },
+      {
+        "path": "forecasts/SYN000001.SZ/2019-04-20_h1.json",
+        "run1": "3a187d9538647815cae2585aa37ac2001f999c814ade58e0f07a09d08fa04eff",
+        "run2": "02f985f6f72c22edcab80011df8fca8f4b84bca2271cb6cd3897cca07b6cf665"
+      },
+      {
+        "path": "forecasts/SYN000001.SZ/2020-04-20_h1.json",
+        "run1": "aa7e89f8fccf5d1ef4649748c223d13363ae04a8593de3995f23c8ae7752a8c8",
+        "run2": "55b07a794f3ac8c1c5674407d3ebc1ed5c1e4f89c72d86a83fdc3a15617022be"
+      },
+      {
+        "path": "forecasts/SYN000001.SZ/2021-04-20_h1.json",
+        "run1": "db8caa170bb26aac71ff638a87a92b50aa2f5c0951445b4f114f98d4f3d19dbb",
+        "run2": "d3634f1ae94fdb9643d160591e254ac86803856901fb1c9cf844c1e183265e98"
+      },
+      {
+        "path": "forecasts/SYN000001.SZ/2022-04-20_h1.json",
+        "run1": "1f1071a5fc7e78610e5ead045e37ebbb3dd13a06d71bedf0ef51d1034cdd8858",
+        "run2": "418a20ce9e48fbcde4c33b87d987969d3438c6e739ad4f7198743a50856fc8e6"
+      }
+    ],
+    "fp": [],
+    "ret": [],
+    "sens": [],
+    "sim": [],
+    "snap": [],
+    "val": []
+  },
+  "matched": {
+    "est": [
+      "data_manifest.json",
+      "data_quality_report.json",
+      "driver_diagnostics.json",
+      "pit_snapshot.json",
+      "state_posterior.json"
+    ],
+    "eval": [
+      "data/SYN000000.SZ/corporate_actions.csv",
+      "data/SYN000000.SZ/financial_observations.csv",
+      "data/SYN000000.SZ/instrument_classification.csv",
+      "data/SYN000000.SZ/market_observations.csv",
+      "data/SYN000000.SZ/sources.yaml",
+      "data/SYN000001.SZ/corporate_actions.csv",
+      "data/SYN000001.SZ/financial_observations.csv",
+      "data/SYN000001.SZ/instrument_classification.csv",
+      "data/SYN000001.SZ/market_observations.csv",
+      "data/SYN000001.SZ/sources.yaml",
+      "evaluation_report.json",
+      "frozen_weights.json",
+      "origin_records.json",
+      "simulation_metadata.json"
+    ],
+    "fp": [
+      "data_manifest.json",
+      "data_quality_report.json",
+      "driver_diagnostics.json",
+      "financial_path_bundle.json",
+      "financial_path_ledgers.parquet",
+      "pit_snapshot.json",
+      "simulation_bundle.json",
+      "simulation_metadata.json",
+      "state_posterior.json"
+    ],
+    "ret": [
+      "data_manifest.json",
+      "data_quality_report.json",
+      "driver_diagnostics.json",
+      "financial_path_bundle.json",
+      "financial_path_ledgers.parquet",
+      "path_returns.parquet",
+      "path_valuations.parquet",
+      "pit_snapshot.json",
+      "return_distribution_summary.json",
+      "simulation_bundle.json",
+      "simulation_metadata.json",
+      "state_posterior.json",
+      "valuation_summary.json"
+    ],
+    "sens": [
+      "sensitivity_report.json",
+      "simulation_metadata.json"
+    ],
+    "sim": [
+      "data_manifest.json",
+      "data_quality_report.json",
+      "driver_diagnostics.json",
+      "pit_snapshot.json",
+      "simulation_bundle.json",
+      "simulation_metadata.json",
+      "state_posterior.json"
+    ],
+    "snap": [
+      "data_manifest.json",
+      "data_quality_report.json",
+      "pit_snapshot.json"
+    ],
+    "val": [
+      "data_manifest.json",
+      "data_quality_report.json",
+      "driver_diagnostics.json",
+      "financial_path_bundle.json",
+      "financial_path_ledgers.parquet",
+      "path_valuations.parquet",
+      "pit_snapshot.json",
+      "simulation_bundle.json",
+      "simulation_metadata.json",
+      "state_posterior.json",
+      "valuation_summary.json"
+    ]
+  },
+  "only_in_run1": {
+    "est": [],
+    "eval": [],
+    "fp": [],
+    "ret": [],
+    "sens": [],
+    "sim": [],
+    "snap": [],
+    "val": []
+  },
+  "only_in_run2": {
+    "est": [],
+    "eval": [],
+    "fp": [],
+    "ret": [],
+    "sens": [],
+    "sim": [],
+    "snap": [],
+    "val": []
+  }
+}

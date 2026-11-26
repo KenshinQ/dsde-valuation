@@ -1,0 +1,509 @@
+{
+  "config": {
+    "base_currency": "CNY",
+    "capital_allocation": {
+      "default_policy": "conservative_baseline",
+      "policies": {
+        "conservative_baseline": {
+          "version": "1"
+        },
+        "fixed_payout": {
+          "payout_ratio": 0.3,
+          "version": "1"
+        },
+        "historical_continuation": {
+          "version": "1"
+        },
+        "min_cash_excess_distribution": {
+          "dividend_share": 0.5,
+          "min_cash_to_revenue": 0.15,
+          "version": "1"
+        },
+        "target_leverage": {
+          "debt_to_ebitda_max": 2.5,
+          "debt_to_ebitda_min": 0.5,
+          "version": "1"
+        }
+      }
+    },
+    "configuration_version": "vms-default-0.2.phase12",
+    "driver_profile": "driver_profiles/operating_company.yaml",
+    "entry_price_grid": {
+      "relative_to_spot": [
+        0.7,
+        0.8,
+        0.9,
+        1.0,
+        1.1,
+        1.2,
+        1.3
+      ]
+    },
+    "estimation": {
+      "bootstrap_draws": 400,
+      "boundary_eps": 0.001,
+      "max_history_years": 10,
+      "min_empirical_n": 6,
+      "min_history_years": 3,
+      "min_regime_support": 3.0,
+      "persisted_param_draws": 200,
+      "prior_strength": 2.0,
+      "regime_prior_strength": 2.0,
+      "student_t_df": 4.0,
+      "version": "1",
+      "walk_forward": {
+        "coverage_tolerance": 0.15,
+        "default_spec": "regime_t",
+        "min_origins": 3,
+        "min_train_years": 3,
+        "quantiles": [
+          0.1,
+          0.5,
+          0.9
+        ]
+      }
+    },
+    "horizons_years": [
+      1,
+      3,
+      5
+    ],
+    "industry": {
+      "caution": [
+        "房地产",
+        "公用事业"
+      ],
+      "default_profile": "operating_company",
+      "profile_map": {},
+      "scheme": "SW2021_L1",
+      "unsupported": [
+        "银行",
+        "非银金融"
+      ]
+    },
+    "market_pricing": {
+      "convergence": {
+        "blend_weight": 0.5,
+        "enabled": false,
+        "scenario_id": "CONVERGENCE_TO_INTRINSIC",
+        "stochastic_rate": 0.25
+      },
+      "default_metric_id": "ev_ebitda",
+      "dependence": {
+        "fundamental_tilt": null,
+        "mode": "NONE"
+      },
+      "fallback_prior": {
+        "COMPRESSED": 0.15,
+        "DISLOCATION": 0.05,
+        "EXPANDED": 0.25,
+        "NORMAL": 0.55
+      },
+      "families": [
+        {
+          "center": 15.0,
+          "log_sigma": 0.3,
+          "max_multiple": 60.0,
+          "metric_id": "pe",
+          "min_multiple": 3.0
+        },
+        {
+          "center": 2.0,
+          "log_sigma": 0.25,
+          "max_multiple": 12.0,
+          "metric_id": "pb",
+          "min_multiple": 0.3
+        },
+        {
+          "center": 12.0,
+          "log_sigma": 0.25,
+          "max_multiple": 40.0,
+          "metric_id": "ev_ebit",
+          "min_multiple": 2.0
+        },
+        {
+          "center": 8.0,
+          "log_sigma": 0.25,
+          "max_multiple": 30.0,
+          "metric_id": "ev_ebitda",
+          "min_multiple": 2.0
+        },
+        {
+          "center": 2.5,
+          "log_sigma": 0.3,
+          "max_multiple": 20.0,
+          "metric_id": "ev_sales",
+          "min_multiple": 0.2
+        }
+      ],
+      "lease_debt_like": 0.0,
+      "mean_reversion": {
+        "enabled": false,
+        "estimation_status": "UNSUPPORTED",
+        "fast_reversion_rate": 0.35,
+        "normal_stay": 0.8,
+        "slow_reversion_rate": 0.1
+      },
+      "min_history_obs_for_estimation": 12,
+      "minority_interest_book": 0.0,
+      "other_senior_claims": 0.0,
+      "state_scales": {
+        "COMPRESSED": 0.75,
+        "DISLOCATION": 0.55,
+        "EXPANDED": 1.3,
+        "NORMAL": 1.0
+      },
+      "version": "vms-market-pricing-0.2.phase12"
+    },
+    "method_registry_file": "method_registry.yaml",
+    "mode": "production",
+    "monte_carlo": {
+      "artifact_path_cap": 500,
+      "correlation_prior_strength": 5.0,
+      "default_paths": 10000,
+      "default_seed": 42,
+      "max_invalid_path_fraction": 0.05,
+      "min_correlation_years": 5
+    },
+    "multiples": {
+      "aggregator": "median",
+      "filters": {
+        "exclude_subject_self": true,
+        "max_abs_growth_diff": null,
+        "max_abs_leverage_diff": null,
+        "max_abs_profitability_diff": null,
+        "max_size_ratio": null,
+        "require_same_profile": false
+      },
+      "max_dispersion_ratio": 2.0,
+      "near_zero_eps": 1e-06,
+      "peer_min_count": 5,
+      "peer_warn_count": 8,
+      "shrink_prior": null,
+      "shrink_strength": 0.0,
+      "trim_pct": 0.1,
+      "winsor_pct": 0.1
+    },
+    "profiles_file": "profiles.yaml",
+    "projection": {
+      "bs_residual_warn_ratio": 0.05,
+      "cash_interest_rate": 0.0,
+      "default_years": 5,
+      "driver_history_years": 5,
+      "invariant_abs_tol": 1.0,
+      "min_cash_to_revenue": 0.05,
+      "min_history_years": 3,
+      "revolver_spread": 0.0,
+      "statutory_tax_rate": 0.25,
+      "tax_loss_carryforward_years": 5
+    },
+    "quality": {
+      "adj_factor_rel_tol": 0.001,
+      "balance_sheet_rel_tol": 0.005,
+      "late_publication_days": 120,
+      "max_capex_to_revenue": 5.0,
+      "require_industry_classification": true,
+      "share_change_rel_tol": 0.01,
+      "unit_jump_ratio": 100.0
+    },
+    "regimes": {
+      "market_regime_source": "none",
+      "min_state_support": 2.0,
+      "model": "rule_based",
+      "model_version": "1",
+      "rules": {
+        "growth_high": 0.1,
+        "growth_low": 0.0,
+        "margin_band": 0.01,
+        "recovery_carry": 0.5,
+        "tau_growth": 0.03,
+        "tau_margin": 0.005
+      },
+      "states": [
+        "GROWTH",
+        "STABLE",
+        "DETERIORATING",
+        "RECOVERY"
+      ],
+      "transition_prior": {
+        "move": 0.5,
+        "stay": 2.0
+      }
+    },
+    "returns": {
+      "cvar_levels": [
+        0.95,
+        0.99
+      ],
+      "hurdles": [
+        0.0,
+        0.08,
+        0.15
+      ],
+      "loss_thresholds": [
+        -0.4,
+        -0.2
+      ]
+    },
+    "router_file": "router.yaml",
+    "sensitivity": {
+      "check_seed_stability": false,
+      "exit_multiple_shock": 1.0,
+      "n_paths": 50,
+      "oat_driver_shocks": {
+        "capex_to_revenue": 0.01,
+        "diluted_share_growth": 0.01,
+        "ebit_margin": 0.01,
+        "receivables_to_revenue": 0.02,
+        "revenue_growth": 0.02
+      },
+      "policy_alt": "historical_continuation",
+      "posterior_tilt": 0.15,
+      "posterior_tilt_state": "GROWTH",
+      "terminal_growth_shock": 0.005,
+      "transition_stay_boost": 0.5,
+      "wacc_shock": 0.01
+    },
+    "terminal_value": {
+      "max_terminal_growth": 0.04,
+      "min_wacc_minus_g": 0.01,
+      "terminal_growth": 0.03,
+      "tv_fraction_warning": 0.75
+    },
+    "timezone": "Asia/Shanghai",
+    "valuation": {
+      "beta": 1.0,
+      "beta_n_eff": 0.0,
+      "beta_prior": 1.0,
+      "beta_shrink_strength": 2.0,
+      "composite_weights": null,
+      "cost_of_debt": null,
+      "cost_of_equity": null,
+      "erp": 0.06,
+      "exit_multiple": {
+        "metric": "ebitda",
+        "multiple": 8.0,
+        "normalize_years": 1,
+        "peers": [],
+        "shrink_prior": 8.0,
+        "shrink_strength": 2.0
+      },
+      "lease_debt_like": 0.0,
+      "minority_interest_book": null,
+      "other_senior_claims": 0.0,
+      "risk_free_rate": 0.025,
+      "target_debt_weight": null,
+      "target_equity_weight": null,
+      "tax_rate": null,
+      "use_snapshot_capital_structure": true
+    }
+  },
+  "driver_profile": {
+    "bounds_status": "placeholder",
+    "drivers": [
+      {
+        "description": "",
+        "family": "demand",
+        "lower": -0.8,
+        "name": "revenue_growth",
+        "prior": 0.05,
+        "prior_scale": 0.15,
+        "role": "projection",
+        "transform": "log1p",
+        "upper": 3.0
+      },
+      {
+        "description": "",
+        "family": "profitability",
+        "lower": 0.0,
+        "name": "gross_margin",
+        "prior": 0.3,
+        "prior_scale": 0.4,
+        "role": "projection",
+        "transform": "logit",
+        "upper": 1.0
+      },
+      {
+        "description": "",
+        "family": "profitability",
+        "lower": -1.0,
+        "name": "ebit_margin",
+        "prior": 0.08,
+        "prior_scale": 0.1,
+        "role": "projection",
+        "transform": "logit",
+        "upper": 1.0
+      },
+      {
+        "description": "",
+        "family": "profitability",
+        "lower": 0.0,
+        "name": "opex_ratio",
+        "prior": 0.2,
+        "prior_scale": 0.3,
+        "role": "diagnostic",
+        "transform": "logit",
+        "upper": 1.0
+      },
+      {
+        "description": "",
+        "family": "profitability",
+        "lower": 0.0,
+        "name": "effective_tax_rate",
+        "prior": 0.25,
+        "prior_scale": 0.3,
+        "role": "projection",
+        "transform": "logit",
+        "upper": 0.5
+      },
+      {
+        "description": "",
+        "family": "profitability",
+        "lower": 0.0,
+        "name": "parent_share_of_net_income",
+        "prior": 0.95,
+        "prior_scale": 0.5,
+        "role": "projection",
+        "transform": "logit",
+        "upper": 1.0
+      },
+      {
+        "description": "",
+        "family": "working_capital",
+        "lower": 0.0,
+        "name": "receivables_to_revenue",
+        "prior": 0.2,
+        "prior_scale": 0.08,
+        "role": "projection",
+        "transform": "log1p",
+        "upper": 3.0
+      },
+      {
+        "description": "",
+        "family": "working_capital",
+        "lower": 0.0,
+        "name": "inventory_to_cogs",
+        "prior": 0.2,
+        "prior_scale": 0.1,
+        "role": "projection",
+        "transform": "log1p",
+        "upper": 5.0
+      },
+      {
+        "description": "",
+        "family": "working_capital",
+        "lower": 0.0,
+        "name": "payables_to_cogs",
+        "prior": 0.15,
+        "prior_scale": 0.08,
+        "role": "projection",
+        "transform": "log1p",
+        "upper": 3.0
+      },
+      {
+        "description": "",
+        "family": "reinvestment",
+        "lower": 0.0,
+        "name": "capex_to_revenue",
+        "prior": 0.05,
+        "prior_scale": 0.4,
+        "role": "projection",
+        "transform": "logit",
+        "upper": 1.0
+      },
+      {
+        "description": "",
+        "family": "reinvestment",
+        "lower": 0.0,
+        "name": "da_to_revenue",
+        "prior": 0.04,
+        "prior_scale": 0.3,
+        "role": "projection",
+        "transform": "logit",
+        "upper": 1.0
+      },
+      {
+        "description": "",
+        "family": "reinvestment",
+        "lower": -0.5,
+        "name": "acquisitions_to_revenue",
+        "prior": 0.0,
+        "prior_scale": 0.02,
+        "role": "projection",
+        "transform": "identity",
+        "upper": 1.0
+      },
+      {
+        "description": "",
+        "family": "capital_structure",
+        "lower": 0.0,
+        "name": "cost_of_debt",
+        "prior": 0.04,
+        "prior_scale": 0.3,
+        "role": "projection",
+        "transform": "logit",
+        "upper": 0.3
+      },
+      {
+        "description": "",
+        "family": "capital_structure",
+        "lower": 0.0,
+        "name": "debt_to_revenue",
+        "prior": 0.1,
+        "prior_scale": 0.1,
+        "role": "projection",
+        "transform": "log1p",
+        "upper": 10.0
+      },
+      {
+        "description": "",
+        "family": "capital_structure",
+        "lower": 0.0,
+        "name": "payout_ratio",
+        "prior": 0.3,
+        "prior_scale": 0.15,
+        "role": "projection",
+        "transform": "identity",
+        "upper": 2.0
+      },
+      {
+        "description": "",
+        "family": "capital_structure",
+        "lower": 0.0,
+        "name": "repurchases_to_net_income",
+        "prior": 0.0,
+        "prior_scale": 0.05,
+        "role": "projection",
+        "transform": "identity",
+        "upper": 2.0
+      },
+      {
+        "description": "",
+        "family": "capital_structure",
+        "lower": -0.2,
+        "name": "diluted_share_growth",
+        "prior": 0.0,
+        "prior_scale": 0.01,
+        "role": "projection",
+        "transform": "log1p",
+        "upper": 1.0
+      },
+      {
+        "description": "",
+        "family": "capital_structure",
+        "lower": 0.0,
+        "name": "cash_to_revenue",
+        "prior": 0.2,
+        "prior_scale": 0.1,
+        "role": "diagnostic",
+        "transform": "log1p",
+        "upper": 10.0
+      }
+    ],
+    "profile_id": "operating_company",
+    "profile_version": "0.3.0",
+    "supported": true
+  },
+  "run_id": "vms-80b7dfa9f5fd3e89",
+  "schema_version": "vms-0.2.phase12"
+}

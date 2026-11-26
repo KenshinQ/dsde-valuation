@@ -8,3 +8,6 @@ build/
 dist/
 runs/
 out/
+.venv*
+*.pyc
+__pycache__/

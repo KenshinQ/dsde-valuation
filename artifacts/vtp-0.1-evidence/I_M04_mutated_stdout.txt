@@ -1,0 +1,24 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.5, pytest-9.2.0, pluggy-1.7.0
+rootdir: /workspace/dsde-valuation
+configfile: pyproject.toml
+plugins: hypothesis-6.170.17
+collected 20 items
+
+tests/unit/test_distributions.py F...................                    [100%]
+
+=================================== FAILURES ===================================
+_____________ test_mixture_quantiles_match_t_for_single_component ______________
+tests/unit/test_distributions.py:97: in test_mixture_quantiles_match_t_for_single_component
+    assert q == pytest.approx([0.3 + 0.2 * stats.t.ppf(p, 4.0) for p in (0.1, 0.5, 0.9)], abs=1e-9)
+E   assert [0.3, 0.3, 0.3] == approx([-0.00...88 ± 1.0e-09])
+E     
+E     comparison failed. Mismatched elements: 2 / 3:
+E     Max absolute difference: 0.3066412548117888
+E     Max relative difference: 1.022137516039296
+E     Index | Obtained | Expected                       
+E     0     | 0.3      | -0.006641254811788733 ± 1.0e-09
+E     2     | 0.3      | 0.6066412548117888 ± 1.0e-09
+=========================== short test summary info ============================
+FAILED tests/unit/test_distributions.py::test_mixture_quantiles_match_t_for_single_component
+========================= 1 failed, 19 passed in 0.22s =========================

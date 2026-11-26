@@ -1,0 +1,14 @@
+Command: /workspace/.venv-vtp/bin/pytest -v --tb=short --junit-xml /workspace/artifacts/vtp-0.1-evidence/Suite_I_Properties_junit.xml tests/property/test_properties.py tests/property/test_regime_properties.py tests/property/test_projection_properties.py\nExit code: 0\n\n=== STDOUT ===\n============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.1.1, pluggy-1.7.0
+rootdir: /workspace
+configfile: pyproject.toml
+plugins: hypothesis-6.170.5
+collected 5 items
+
+tests/property/test_properties.py ...                                    [ 60%]
+tests/property/test_regime_properties.py .                               [ 80%]
+tests/property/test_projection_properties.py .                           [100%]
+
+- generated xml file: /workspace/artifacts/vtp-0.1-evidence/Suite_I_Properties_junit.xml -
+============================== 5 passed in 1.70s ===============================
+\n\n=== STDERR ===\n

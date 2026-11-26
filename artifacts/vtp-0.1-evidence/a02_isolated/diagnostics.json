@@ -1,0 +1,9 @@
+{
+  "investment_value": "INVESTMENT_VALUE_NOT_ESTABLISHED",
+  "methods_dir": "/tmp/a02_isolated_evidence/bundle_mature_operating/methods",
+  "note": "Full OAT/joint sensitivity lives in vms phase11; here we record lineage only.",
+  "run_id": "vms-ea2c613a02700517",
+  "schema_version": "vms-0.2.phase12",
+  "status": "PHASE12_DIAGNOSTICS_SUMMARY",
+  "track_b_dir": "/tmp/a02_isolated_evidence/bundle_mature_operating/track_b"
+}

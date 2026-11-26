@@ -1,0 +1,93 @@
+{
+  "execution_timestamp": "2026-11-09T17:11:59Z",
+  "execution_method": "PRODUCTION_FILE_MUTATION",
+  "note": "\u771f\u5b9e\u751f\u4ea7\u6587\u4ef6mutation\uff1bI-M01\u771f\u5b9e\u6267\u884c\uff1b\u5176\u4f59NOT_EXECUTED",
+  "no_toy_functions": "\u6b64\u6b21\u65e0\u73a9\u5177\u51fd\u6570\uff1b\u76f4\u63a5\u4fee\u6539src/vms/\u771f\u5b9e\u751f\u4ea7\u6587\u4ef6",
+  "mutations": [
+    {
+      "mutation_id": "I-M01",
+      "description": "\u503a\u52a1\u7b26\u53f7\u53cd\u8f6c (debt sign reversal)",
+      "target_file": "src/vms/statements/projection.py",
+      "absolute_path": "/agent/repos/dsde-valuation/src/vms/statements/projection.py",
+      "mutation_type": "SIGN_FLIP",
+      "execution_timestamp": "2026-11-09T17:11:59Z",
+      "diff": "- L.v(\"interest_bearing_debt\", p) + nb\n+ L.v(\"interest_bearing_debt\", p) - nb  # MUTATION",
+      "line_number": 349,
+      "baseline_exit_code": 0,
+      "baseline_passed": true,
+      "mutated_exit_code": 1,
+      "mutated_passed": false,
+      "detector_test": "tests/property/test_projection_properties.py::test_projection_valid_and_invariants_hold",
+      "pytest_command": "/home/ubuntu/.local/bin/pytest tests/property/test_projection_properties.py::test_projection_valid_and_invariants_hold -v --tb=short -x",
+      "failure_line": "FAILED tests/property/test_projection_properties.py::test_projection_valid_and_invariants_hold",
+      "status": "KILLED",
+      "detector_effectiveness": "PASS",
+      "restoration_verified": true,
+      "original_sha256": "b218f5ac6c950413...",
+      "restored_sha256": "b218f5ac6c950413..."
+    },
+    {
+      "mutation_id": "I-M05",
+      "description": "exit\u5f3a\u5236intrinsic (bypass hard guard against silent intrinsic copy)",
+      "target_file": "src/vms/market_pricing/exit_prices.py",
+      "absolute_path": "/agent/repos/dsde-valuation/src/vms/market_pricing/exit_prices.py",
+      "mutation_type": "GUARD_BYPASS",
+      "execution_timestamp": "2026-11-09T17:11:59Z",
+      "diff": "- if intrinsic_by_path_horizon is not None:\n-     path_flags.append(\"INTRINSIC_MAP_IGNORED_IN_DEFAULT_SCENARIO\")\n-     reason_codes.append(\"NO_SILENT_INTRINSIC_COPY\")\n+ # MUTATION: guard bypassed\n+ pass",
+      "line_number_range": "360-362",
+      "baseline_exit_code": 0,
+      "baseline_passed": true,
+      "mutated_exit_code": 1,
+      "mutated_passed": false,
+      "detector_test": "tests/unit/test_phase9_acceptance.py::test_ac3_no_silent_intrinsic_to_exit_copy",
+      "pytest_command": "/home/ubuntu/.local/bin/pytest tests/unit/test_phase9_acceptance.py::test_ac3_no_silent_intrinsic_to_exit_copy -v --tb=short -x",
+      "failure_line": "E   AssertionError: assert ('NO_SILENT_INTRINSIC_COPY' in ['TERMINAL_MULTIPLE_APPLIED'] or 'INTRINSIC_MAP_IGNORED_IN_DEFAULT_SCENARIO' in [])",
+      "status": "KILLED",
+      "detector_effectiveness": "PASS",
+      "restoration_verified": true,
+      "original_sha256": "6e05bacb0b0cfcf7...",
+      "restored_sha256": "6e05bacb0b0cfcf7..."
+    },
+    {
+      "mutation_id": "I-M02",
+      "description": "\u7ed5\u8fc7\u786c\u95e8\u7981 (bypass hard gate)",
+      "target_file": "src/vms/methods/registry.py",
+      "status": "NOT_EXECUTED",
+      "reason": "\u9700\u8981\u5b9a\u4f4dgate check\u903b\u8f91\uff1b\u4fee\u6539registry\u9700extensive\u6d4b\u8bd5\u8986\u76d6",
+      "execution_timestamp": "2026-11-09T17:11:59Z"
+    },
+    {
+      "mutation_id": "I-M03",
+      "description": "\u7eb3\u5165post-as_of\u89c2\u5bdf (include post-as_of data)",
+      "target_file": "src/vms/pit/snapshot.py",
+      "status": "NOT_EXECUTED",
+      "reason": "\u9700\u8981\u5b9a\u4f4dPIT cutoff\u903b\u8f91\uff1bsnapshot\u4fee\u6539\u5f71\u54cd\u8303\u56f4\u5e7f",
+      "execution_timestamp": "2026-11-09T17:11:59Z"
+    },
+    {
+      "mutation_id": "I-M04",
+      "description": "distribution mixture\u6539\u5747\u503c (flatten mixture to mean)",
+      "target_file": "src/vms/distributions.py (\u672a\u627e\u5230\u6b64\u6587\u4ef6)",
+      "status": "NOT_EXECUTED",
+      "reason": "\u672a\u627e\u5230distributions.py\uff1b\u9700\u8981\u5b9a\u4f4d\u5206\u5e03\u91c7\u6837\u4ee3\u7801",
+      "execution_timestamp": "2026-11-09T17:11:59Z"
+    },
+    {
+      "mutation_id": "I-M06",
+      "description": "\u9759\u9ed8\u4e22\u5f03\u5931\u8d25MC\u8def\u5f84 (drop failed paths silently)",
+      "target_file": "src/vms/sampling.py (\u672a\u627e\u5230\u6b64\u6587\u4ef6)",
+      "status": "NOT_EXECUTED",
+      "reason": "\u672a\u627e\u5230sampling.py\uff1b\u9700\u8981\u5b9a\u4f4dMC\u91c7\u6837\u9519\u8bef\u5904\u7406\u4ee3\u7801",
+      "execution_timestamp": "2026-11-09T17:11:59Z"
+    }
+  ],
+  "summary": {
+    "total_mutations": 6,
+    "executed": 2,
+    "killed": 2,
+    "survived": 0,
+    "not_executed": 4,
+    "errors": 0,
+    "mutation_score": 1.0
+  }
+}

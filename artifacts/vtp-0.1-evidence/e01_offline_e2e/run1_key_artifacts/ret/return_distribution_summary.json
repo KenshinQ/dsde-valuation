@@ -1,0 +1,6134 @@
+{
+  "assumptions": [
+    "ANNUALIZED-GEO-ENDYEAR-v1",
+    "DIVIDEND-NO-REINVEST-v1",
+    "ENTRY-PRICE-GRID-v1",
+    "HORIZON-EQUITY-REMAINING-PV-v1",
+    "PRICE-REGIME-INVARIANT-v1",
+    "EV-EQUITY-BRIDGE-v1",
+    "TV-GORDON-v1"
+  ],
+  "by_regime": [
+    {
+      "cells": [
+        {
+          "entry_price": 14.924,
+          "horizon_years": 1,
+          "n_failed": 0,
+          "n_valid": 0,
+          "relative_to_spot": 0.7,
+          "stats": {
+            "n": 0
+          }
+        },
+        {
+          "entry_price": 17.056,
+          "horizon_years": 1,
+          "n_failed": 0,
+          "n_valid": 0,
+          "relative_to_spot": 0.8,
+          "stats": {
+            "n": 0
+          }
+        },
+        {
+          "entry_price": 19.188000000000002,
+          "horizon_years": 1,
+          "n_failed": 0,
+          "n_valid": 0,
+          "relative_to_spot": 0.9000000000000001,
+          "stats": {
+            "n": 0
+          }
+        },
+        {
+          "entry_price": 21.32,
+          "horizon_years": 1,
+          "n_failed": 0,
+          "n_valid": 0,
+          "relative_to_spot": 1.0,
+          "stats": {
+            "n": 0
+          }
+        },
+        {
+          "entry_price": 23.452,
+          "horizon_years": 1,
+          "n_failed": 0,
+          "n_valid": 0,
+          "relative_to_spot": 1.1,
+          "stats": {
+            "n": 0
+          }
+        },
+        {
+          "entry_price": 25.584,
+          "horizon_years": 1,
+          "n_failed": 0,
+          "n_valid": 0,
+          "relative_to_spot": 1.2,
+          "stats": {
+            "n": 0
+          }
+        },
+        {
+          "entry_price": 27.716,
+          "horizon_years": 1,
+          "n_failed": 0,
+          "n_valid": 0,
+          "relative_to_spot": 1.3,
+          "stats": {
+            "n": 0
+          }
+        },
+        {
+          "entry_price": 14.924,
+          "horizon_years": 3,
+          "n_failed": 0,
+          "n_valid": 0,
+          "relative_to_spot": 0.7,
+          "stats": {
+            "n": 0
+          }
+        },
+        {
+          "entry_price": 17.056,
+          "horizon_years": 3,
+          "n_failed": 0,
+          "n_valid": 0,
+          "relative_to_spot": 0.8,
+          "stats": {
+            "n": 0
+          }
+        },
+        {
+          "entry_price": 19.188000000000002,
+          "horizon_years": 3,
+          "n_failed": 0,
+          "n_valid": 0,
+          "relative_to_spot": 0.9000000000000001,
+          "stats": {
+            "n": 0
+          }
+        },
+        {
+          "entry_price": 21.32,
+          "horizon_years": 3,
+          "n_failed": 0,
+          "n_valid": 0,
+          "relative_to_spot": 1.0,
+          "stats": {
+            "n": 0
+          }
+        },
+        {
+          "entry_price": 23.452,
+          "horizon_years": 3,
+          "n_failed": 0,
+          "n_valid": 0,
+          "relative_to_spot": 1.1,
+          "stats": {
+            "n": 0
+          }
+        },
+        {
+          "entry_price": 25.584,
+          "horizon_years": 3,
+          "n_failed": 0,
+          "n_valid": 0,
+          "relative_to_spot": 1.2,
+          "stats": {
+            "n": 0
+          }
+        },
+        {
+          "entry_price": 27.716,
+          "horizon_years": 3,
+          "n_failed": 0,
+          "n_valid": 0,
+          "relative_to_spot": 1.3,
+          "stats": {
+            "n": 0
+          }
+        }
+      ],
+      "n_paths": 0,
+      "parameter_uncertainty_flags": [
+        "DERIVED_INPUT",
+        "PRIOR_DOMINATED_ROW:GROWTH,STABLE,DETERIORATING,RECOVERY",
+        "RARE_STATE_LOW_SUPPORT",
+        "STATES_EXCEED_SUPPORT"
+      ],
+      "state": "GROWTH",
+      "support_count": 0.0070193952455511995
+    },
+    {
+      "cells": [
+        {
+          "entry_price": 14.924,
+          "horizon_years": 1,
+          "n_failed": 0,
+          "n_valid": 2,
+          "relative_to_spot": 0.7,
+          "stats": {
+            "annualized_convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+            "annualized_geometric": {
+              "convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+              "mean": -0.3507986860187668,
+              "median": -0.3507986860187668,
+              "n": 2,
+              "n_undefined": 0,
+              "p05": -0.6083617625246441
+            },
+            "compounding_convention": "DIVIDEND-NO-REINVEST-v1",
+            "cvar": {
+              "0.95": -0.6369798821364083,
+              "0.99": -0.6369798821364083
+            },
+            "mcse": {
+              "mean": 0.2861811961176416,
+              "p05_note": "quantile MCSE not reported; use repeated-seed stability diagnostics",
+              "p_loss": 0.0
+            },
+            "mean": -0.3507986860187668,
+            "median": -0.3507986860187668,
+            "n": 2,
+            "p01": -0.6312562582140555,
+            "p05": -0.6083617625246441,
+            "p_exceed_hurdle": {
+              "0.0": 0.0,
+              "0.08": 0.0,
+              "0.15": 0.0
+            },
+            "p_loss": 1.0,
+            "p_loss_beyond": {
+              "-0.2": 0.5,
+              "-0.4": 0.5
+            },
+            "terminal_price": {
+              "mean": 9.628858571412025,
+              "median": 9.628858571412025,
+              "n": 2,
+              "p01": 5.443714831571788,
+              "p05": 5.785359218497522
+            },
+            "terminal_vps": {
+              "mean": 9.628858571412025,
+              "median": 9.628858571412025,
+              "n": 2,
+              "p01": 5.443714831571788,
+              "p05": 5.785359218497522
+            }
+          }
+        },
+        {
+          "entry_price": 17.056,
+          "horizon_years": 1,
+          "n_failed": 0,
+          "n_valid": 2,
+          "relative_to_spot": 0.8,
+          "stats": {
+            "annualized_convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+            "annualized_geometric": {
+              "convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+              "mean": -0.431948850266421,
+              "median": -0.431948850266421,
+              "n": 2,
+              "n_undefined": 0,
+              "p05": -0.6573165422090638
+            },
+            "compounding_convention": "DIVIDEND-NO-REINVEST-v1",
+            "cvar": {
+              "0.95": -0.6823573968693574,
+              "0.99": -0.6823573968693574
+            },
+            "mcse": {
+              "mean": 0.2504085466029363,
+              "p05_note": "quantile MCSE not reported; use repeated-seed stability diagnostics",
+              "p_loss": 0.0
+            },
+            "mean": -0.431948850266421,
+            "median": -0.431948850266421,
+            "n": 2,
+            "p01": -0.6773492259372986,
+            "p05": -0.6573165422090638,
+            "p_exceed_hurdle": {
+              "0.0": 0.0,
+              "0.08": 0.0,
+              "0.15": 0.0
+            },
+            "p_loss": 1.0,
+            "p_loss_beyond": {
+              "-0.2": 0.5,
+              "-0.4": 0.5
+            },
+            "terminal_price": {
+              "mean": 9.628858571412025,
+              "median": 9.628858571412025,
+              "n": 2,
+              "p01": 5.443714831571788,
+              "p05": 5.785359218497522
+            },
+            "terminal_vps": {
+              "mean": 9.628858571412025,
+              "median": 9.628858571412025,
+              "n": 2,
+              "p01": 5.443714831571788,
+              "p05": 5.785359218497522
+            }
+          }
+        },
+        {
+          "entry_price": 19.188000000000002,
+          "horizon_years": 1,
+          "n_failed": 0,
+          "n_valid": 2,
+          "relative_to_spot": 0.9000000000000001,
+          "stats": {
+            "annualized_convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+            "annualized_geometric": {
+              "convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+              "mean": -0.49506564468126313,
+              "median": -0.49506564468126313,
+              "n": 2,
+              "n_undefined": 0,
+              "p05": -0.6953924819636123
+            },
+            "compounding_convention": "DIVIDEND-NO-REINVEST-v1",
+            "cvar": {
+              "0.95": -0.7176510194394288,
+              "0.99": -0.7176510194394288
+            },
+            "mcse": {
+              "mean": 0.22258537475816562,
+              "p05_note": "quantile MCSE not reported; use repeated-seed stability diagnostics",
+              "p_loss": 0.0
+            },
+            "mean": -0.49506564468126313,
+            "median": -0.49506564468126313,
+            "n": 2,
+            "p01": -0.7131993119442654,
+            "p05": -0.6953924819636123,
+            "p_exceed_hurdle": {
+              "0.0": 0.0,
+              "0.08": 0.0,
+              "0.15": 0.0
+            },
+            "p_loss": 1.0,
+            "p_loss_beyond": {
+              "-0.2": 1.0,
+              "-0.4": 0.5
+            },
+            "terminal_price": {
+              "mean": 9.628858571412025,
+              "median": 9.628858571412025,
+              "n": 2,
+              "p01": 5.443714831571788,
+              "p05": 5.785359218497522
+            },
+            "terminal_vps": {
+              "mean": 9.628858571412025,
+              "median": 9.628858571412025,
+              "n": 2,
+              "p01": 5.443714831571788,
+              "p05": 5.785359218497522
+            }
+          }
+        },
+        {
+          "entry_price": 21.32,
+          "horizon_years": 1,
+          "n_failed": 0,
+          "n_valid": 2,
+          "relative_to_spot": 1.0,
+          "stats": {
+            "annualized_convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+            "annualized_geometric": {
+              "convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+              "mean": -0.5455590802131367,
+              "median": -0.5455590802131367,
+              "n": 2,
+              "n_undefined": 0,
+              "p05": -0.725853233767251
+            },
+            "compounding_convention": "DIVIDEND-NO-REINVEST-v1",
+            "cvar": {
+              "0.95": -0.7458859174954858,
+              "0.99": -0.7458859174954858
+            },
+            "mcse": {
+              "mean": 0.20032683728234907,
+              "p05_note": "quantile MCSE not reported; use repeated-seed stability diagnostics",
+              "p_loss": 0.0
+            },
+            "mean": -0.5455590802131367,
+            "median": -0.5455590802131367,
+            "n": 2,
+            "p01": -0.7418793807498388,
+            "p05": -0.725853233767251,
+            "p_exceed_hurdle": {
+              "0.0": 0.0,
+              "0.08": 0.0,
+              "0.15": 0.0
+            },
+            "p_loss": 1.0,
+            "p_loss_beyond": {
+              "-0.2": 1.0,
+              "-0.4": 0.5
+            },
+            "terminal_price": {
+              "mean": 9.628858571412025,
+              "median": 9.628858571412025,
+              "n": 2,
+              "p01": 5.443714831571788,
+              "p05": 5.785359218497522
+            },
+            "terminal_vps": {
+              "mean": 9.628858571412025,
+              "median": 9.628858571412025,
+              "n": 2,
+              "p01": 5.443714831571788,
+              "p05": 5.785359218497522
+            }
+          }
+        },
+        {
+          "entry_price": 23.452,
+          "horizon_years": 1,
+          "n_failed": 0,
+          "n_valid": 2,
+          "relative_to_spot": 1.1,
+          "stats": {
+            "annualized_convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+            "annualized_geometric": {
+              "convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+              "mean": -0.5868718911028517,
+              "median": -0.5868718911028517,
+              "n": 2,
+              "n_undefined": 0,
+              "p05": -0.7507756670611373
+            },
+            "compounding_convention": "DIVIDEND-NO-REINVEST-v1",
+            "cvar": {
+              "0.95": -0.768987197723169,
+              "0.99": -0.768987197723169
+            },
+            "mcse": {
+              "mean": 0.18211530662031736,
+              "p05_note": "quantile MCSE not reported; use repeated-seed stability diagnostics",
+              "p_loss": 0.0
+            },
+            "mean": -0.5868718911028517,
+            "median": -0.5868718911028517,
+            "n": 2,
+            "p01": -0.7653448915907627,
+            "p05": -0.7507756670611373,
+            "p_exceed_hurdle": {
+              "0.0": 0.0,
+              "0.08": 0.0,
+              "0.15": 0.0
+            },
+            "p_loss": 1.0,
+            "p_loss_beyond": {
+              "-0.2": 1.0,
+              "-0.4": 1.0
+            },
+            "terminal_price": {
+              "mean": 9.628858571412025,
+              "median": 9.628858571412025,
+              "n": 2,
+              "p01": 5.443714831571788,
+              "p05": 5.785359218497522
+            },
+            "terminal_vps": {
+              "mean": 9.628858571412025,
+              "median": 9.628858571412025,
+              "n": 2,
+              "p01": 5.443714831571788,
+              "p05": 5.785359218497522
+            }
+          }
+        },
+        {
+          "entry_price": 25.584,
+          "horizon_years": 1,
+          "n_failed": 0,
+          "n_valid": 2,
+          "relative_to_spot": 1.2,
+          "stats": {
+            "annualized_convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+            "annualized_geometric": {
+              "convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+              "mean": -0.6212992335109473,
+              "median": -0.6212992335109473,
+              "n": 2,
+              "n_undefined": 0,
+              "p05": -0.7715443614727091
+            },
+            "compounding_convention": "DIVIDEND-NO-REINVEST-v1",
+            "cvar": {
+              "0.95": -0.7882382645795716,
+              "0.99": -0.7882382645795716
+            },
+            "mcse": {
+              "mean": 0.16693903106862426,
+              "p05_note": "quantile MCSE not reported; use repeated-seed stability diagnostics",
+              "p_loss": 0.0
+            },
+            "mean": -0.6212992335109473,
+            "median": -0.6212992335109473,
+            "n": 2,
+            "p01": -0.7848994839581991,
+            "p05": -0.7715443614727091,
+            "p_exceed_hurdle": {
+              "0.0": 0.0,
+              "0.08": 0.0,
+              "0.15": 0.0
+            },
+            "p_loss": 1.0,
+            "p_loss_beyond": {
+              "-0.2": 1.0,
+              "-0.4": 1.0
+            },
+            "terminal_price": {
+              "mean": 9.628858571412025,
+              "median": 9.628858571412025,
+              "n": 2,
+              "p01": 5.443714831571788,
+              "p05": 5.785359218497522
+            },
+            "terminal_vps": {
+              "mean": 9.628858571412025,
+              "median": 9.628858571412025,
+              "n": 2,
+              "p01": 5.443714831571788,
+              "p05": 5.785359218497522
+            }
+          }
+        },
+        {
+          "entry_price": 27.716,
+          "horizon_years": 1,
+          "n_failed": 0,
+          "n_valid": 2,
+          "relative_to_spot": 1.3,
+          "stats": {
+            "annualized_convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+            "annualized_geometric": {
+              "convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+              "mean": -0.6504300617024129,
+              "median": -0.6504300617024129,
+              "n": 2,
+              "n_undefined": 0,
+              "p05": -0.7891178721286546
+            },
+            "compounding_convention": "DIVIDEND-NO-REINVEST-v1",
+            "cvar": {
+              "0.95": -0.8045276288426815,
+              "0.99": -0.8045276288426815
+            },
+            "mcse": {
+              "mean": 0.15409756714026854,
+              "p05_note": "quantile MCSE not reported; use repeated-seed stability diagnostics",
+              "p_loss": 0.0
+            },
+            "mean": -0.6504300617024129,
+            "median": -0.6504300617024129,
+            "n": 2,
+            "p01": -0.801445677499876,
+            "p05": -0.7891178721286546,
+            "p_exceed_hurdle": {
+              "0.0": 0.0,
+              "0.08": 0.0,
+              "0.15": 0.0
+            },
+            "p_loss": 1.0,
+            "p_loss_beyond": {
+              "-0.2": 1.0,
+              "-0.4": 1.0
+            },
+            "terminal_price": {
+              "mean": 9.628858571412025,
+              "median": 9.628858571412025,
+              "n": 2,
+              "p01": 5.443714831571788,
+              "p05": 5.785359218497522
+            },
+            "terminal_vps": {
+              "mean": 9.628858571412025,
+              "median": 9.628858571412025,
+              "n": 2,
+              "p01": 5.443714831571788,
+              "p05": 5.785359218497522
+            }
+          }
+        },
+        {
+          "entry_price": 14.924,
+          "horizon_years": 3,
+          "n_failed": 0,
+          "n_valid": 2,
+          "relative_to_spot": 0.7,
+          "stats": {
+            "annualized_convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+            "annualized_geometric": {
+              "convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+              "mean": -0.10688110541602819,
+              "median": -0.10688110541602819,
+              "n": 2,
+              "n_undefined": 0,
+              "p05": -0.23283004245532737
+            },
+            "compounding_convention": "DIVIDEND-NO-REINVEST-v1",
+            "cvar": {
+              "0.95": -0.5727433998876403,
+              "0.99": -0.5727433998876403
+            },
+            "mcse": {
+              "mean": 0.3376226665452291,
+              "p05_note": "quantile MCSE not reported; use repeated-seed stability diagnostics",
+              "p_loss": 0.3535533905932738
+            },
+            "mean": -0.23512073334241124,
+            "median": -0.23512073334241124,
+            "n": 2,
+            "p01": -0.5659909465567358,
+            "p05": -0.5389811332331175,
+            "p_exceed_hurdle": {
+              "0.0": 0.5,
+              "0.08": 0.5,
+              "0.15": 0.0
+            },
+            "p_loss": 0.5,
+            "p_loss_beyond": {
+              "-0.2": 0.5,
+              "-0.4": 0.5
+            },
+            "terminal_price": {
+              "mean": 11.249192386455556,
+              "median": 11.249192386455556,
+              "n": 2,
+              "p01": 6.364850287200661,
+              "p05": 6.7635720912214685
+            },
+            "terminal_vps": {
+              "mean": 11.249192386455556,
+              "median": 11.249192386455556,
+              "n": 2,
+              "p01": 6.364850287200661,
+              "p05": 6.7635720912214685
+            }
+          }
+        },
+        {
+          "entry_price": 17.056,
+          "horizon_years": 3,
+          "n_failed": 0,
+          "n_valid": 2,
+          "relative_to_spot": 0.8,
+          "stats": {
+            "annualized_convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+            "annualized_geometric": {
+              "convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+              "mean": -0.14576250831355697,
+              "median": -0.14576250831355697,
+              "n": 2,
+              "n_undefined": 0,
+              "p05": -0.2662283328633129
+            },
+            "compounding_convention": "DIVIDEND-NO-REINVEST-v1",
+            "cvar": {
+              "0.95": -0.6261504749016853,
+              "0.99": -0.6261504749016853
+            },
+            "mcse": {
+              "mean": 0.2954198332270754,
+              "p05_note": "quantile MCSE not reported; use repeated-seed stability diagnostics",
+              "p_loss": 0.0
+            },
+            "mean": -0.33073064167460986,
+            "median": -0.33073064167460986,
+            "n": 2,
+            "p01": -0.6202420782371438,
+            "p05": -0.5966084915789778,
+            "p_exceed_hurdle": {
+              "0.0": 0.0,
+              "0.08": 0.0,
+              "0.15": 0.0
+            },
+            "p_loss": 1.0,
+            "p_loss_beyond": {
+              "-0.2": 0.5,
+              "-0.4": 0.5
+            },
+            "terminal_price": {
+              "mean": 11.249192386455556,
+              "median": 11.249192386455556,
+              "n": 2,
+              "p01": 6.364850287200661,
+              "p05": 6.7635720912214685
+            },
+            "terminal_vps": {
+              "mean": 11.249192386455556,
+              "median": 11.249192386455556,
+              "n": 2,
+              "p01": 6.364850287200661,
+              "p05": 6.7635720912214685
+            }
+          }
+        },
+        {
+          "entry_price": 19.188000000000002,
+          "horizon_years": 3,
+          "n_failed": 0,
+          "n_valid": 2,
+          "relative_to_spot": 0.9000000000000001,
+          "stats": {
+            "annualized_convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+            "annualized_geometric": {
+              "convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+              "mean": -0.17865089644983284,
+              "median": -0.17865089644983284,
+              "n": 2,
+              "n_undefined": 0,
+              "p05": -0.29447875224557485
+            },
+            "compounding_convention": "DIVIDEND-NO-REINVEST-v1",
+            "cvar": {
+              "0.95": -0.6676893110237203,
+              "0.99": -0.6676893110237203
+            },
+            "mcse": {
+              "mean": 0.26259540731295594,
+              "p05_note": "quantile MCSE not reported; use repeated-seed stability diagnostics",
+              "p_loss": 0.0
+            },
+            "mean": -0.40509390371076437,
+            "median": -0.40509390371076437,
+            "n": 2,
+            "p01": -0.6624374028774612,
+            "p05": -0.6414297702924248,
+            "p_exceed_hurdle": {
+              "0.0": 0.0,
+              "0.08": 0.0,
+              "0.15": 0.0
+            },
+            "p_loss": 1.0,
+            "p_loss_beyond": {
+              "-0.2": 0.5,
+              "-0.4": 0.5
+            },
+            "terminal_price": {
+              "mean": 11.249192386455556,
+              "median": 11.249192386455556,
+              "n": 2,
+              "p01": 6.364850287200661,
+              "p05": 6.7635720912214685
+            },
+            "terminal_vps": {
+              "mean": 11.249192386455556,
+              "median": 11.249192386455556,
+              "n": 2,
+              "p01": 6.364850287200661,
+              "p05": 6.7635720912214685
+            }
+          }
+        },
+        {
+          "entry_price": 21.32,
+          "horizon_years": 3,
+          "n_failed": 0,
+          "n_valid": 2,
+          "relative_to_spot": 1.0,
+          "stats": {
+            "annualized_convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+            "annualized_geometric": {
+              "convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+              "mean": -0.20699615946696343,
+              "median": -0.20699615946696343,
+              "n": 2,
+              "n_undefined": 0,
+              "p05": -0.31882672467938405
+            },
+            "compounding_convention": "DIVIDEND-NO-REINVEST-v1",
+            "cvar": {
+              "0.95": -0.7009203799213483,
+              "0.99": -0.7009203799213483
+            },
+            "mcse": {
+              "mean": 0.23633586658166034,
+              "p05_note": "quantile MCSE not reported; use repeated-seed stability diagnostics",
+              "p_loss": 0.0
+            },
+            "mean": -0.46458451333968787,
+            "median": -0.46458451333968787,
+            "n": 2,
+            "p01": -0.696193662589715,
+            "p05": -0.6772867932631822,
+            "p_exceed_hurdle": {
+              "0.0": 0.0,
+              "0.08": 0.0,
+              "0.15": 0.0
+            },
+            "p_loss": 1.0,
+            "p_loss_beyond": {
+              "-0.2": 1.0,
+              "-0.4": 0.5
+            },
+            "terminal_price": {
+              "mean": 11.249192386455556,
+              "median": 11.249192386455556,
+              "n": 2,
+              "p01": 6.364850287200661,
+              "p05": 6.7635720912214685
+            },
+            "terminal_vps": {
+              "mean": 11.249192386455556,
+              "median": 11.249192386455556,
+              "n": 2,
+              "p01": 6.364850287200661,
+              "p05": 6.7635720912214685
+            }
+          }
+        },
+        {
+          "entry_price": 23.452,
+          "horizon_years": 3,
+          "n_failed": 0,
+          "n_valid": 2,
+          "relative_to_spot": 1.1,
+          "stats": {
+            "annualized_convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+            "annualized_geometric": {
+              "convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+              "mean": -0.23179393978498508,
+              "median": -0.23179393978498508,
+              "n": 2,
+              "n_undefined": 0,
+              "p05": -0.3401274856297394
+            },
+            "compounding_convention": "DIVIDEND-NO-REINVEST-v1",
+            "cvar": {
+              "0.95": -0.7281094362921348,
+              "0.99": -0.7281094362921348
+            },
+            "mcse": {
+              "mean": 0.21485078780150937,
+              "p05_note": "quantile MCSE not reported; use repeated-seed stability diagnostics",
+              "p_loss": 0.0
+            },
+            "mean": -0.5132586484906254,
+            "median": -0.5132586484906254,
+            "n": 2,
+            "p01": -0.7238124205361046,
+            "p05": -0.7066243575119838,
+            "p_exceed_hurdle": {
+              "0.0": 0.0,
+              "0.08": 0.0,
+              "0.15": 0.0
+            },
+            "p_loss": 1.0,
+            "p_loss_beyond": {
+              "-0.2": 1.0,
+              "-0.4": 0.5
+            },
+            "terminal_price": {
+              "mean": 11.249192386455556,
+              "median": 11.249192386455556,
+              "n": 2,
+              "p01": 6.364850287200661,
+              "p05": 6.7635720912214685
+            },
+            "terminal_vps": {
+              "mean": 11.249192386455556,
+              "median": 11.249192386455556,
+              "n": 2,
+              "p01": 6.364850287200661,
+              "p05": 6.7635720912214685
+            }
+          }
+        },
+        {
+          "entry_price": 25.584,
+          "horizon_years": 3,
+          "n_failed": 0,
+          "n_valid": 2,
+          "relative_to_spot": 1.2,
+          "stats": {
+            "annualized_convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+            "annualized_geometric": {
+              "convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+              "mean": -0.25375481501738684,
+              "median": -0.25375481501738684,
+              "n": 2,
+              "n_undefined": 0,
+              "p05": -0.35899140601240404
+            },
+            "compounding_convention": "DIVIDEND-NO-REINVEST-v1",
+            "cvar": {
+              "0.95": -0.7507669832677901,
+              "0.99": -0.7507669832677901
+            },
+            "mcse": {
+              "mean": 0.19694655548471693,
+              "p05_note": "quantile MCSE not reported; use repeated-seed stability diagnostics",
+              "p_loss": 0.0
+            },
+            "mean": -0.5538204277830732,
+            "median": -0.5538204277830732,
+            "n": 2,
+            "p01": -0.7468280521580958,
+            "p05": -0.7310723277193184,
+            "p_exceed_hurdle": {
+              "0.0": 0.0,
+              "0.08": 0.0,
+              "0.15": 0.0
+            },
+            "p_loss": 1.0,
+            "p_loss_beyond": {
+              "-0.2": 1.0,
+              "-0.4": 0.5
+            },
+            "terminal_price": {
+              "mean": 11.249192386455556,
+              "median": 11.249192386455556,
+              "n": 2,
+              "p01": 6.364850287200661,
+              "p05": 6.7635720912214685
+            },
+            "terminal_vps": {
+              "mean": 11.249192386455556,
+              "median": 11.249192386455556,
+              "n": 2,
+              "p01": 6.364850287200661,
+              "p05": 6.7635720912214685
+            }
+          }
+        },
+        {
+          "entry_price": 27.716,
+          "horizon_years": 3,
+          "n_failed": 0,
+          "n_valid": 2,
+          "relative_to_spot": 1.3,
+          "stats": {
+            "annualized_convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+            "annualized_geometric": {
+              "convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+              "mean": -0.27340204170211985,
+              "median": -0.27340204170211985,
+              "n": 2,
+              "n_undefined": 0,
+              "p05": -0.3758679519605426
+            },
+            "compounding_convention": "DIVIDEND-NO-REINVEST-v1",
+            "cvar": {
+              "0.95": -0.7699387537856525,
+              "0.99": -0.7699387537856525
+            },
+            "mcse": {
+              "mean": 0.18179682044743098,
+              "p05_note": "quantile MCSE not reported; use repeated-seed stability diagnostics",
+              "p_loss": 0.0
+            },
+            "mean": -0.5881419333382214,
+            "median": -0.5881419333382214,
+            "n": 2,
+            "p01": -0.7663028173767038,
+            "p05": -0.7517590717409094,
+            "p_exceed_hurdle": {
+              "0.0": 0.0,
+              "0.08": 0.0,
+              "0.15": 0.0
+            },
+            "p_loss": 1.0,
+            "p_loss_beyond": {
+              "-0.2": 1.0,
+              "-0.4": 1.0
+            },
+            "terminal_price": {
+              "mean": 11.249192386455556,
+              "median": 11.249192386455556,
+              "n": 2,
+              "p01": 6.364850287200661,
+              "p05": 6.7635720912214685
+            },
+            "terminal_vps": {
+              "mean": 11.249192386455556,
+              "median": 11.249192386455556,
+              "n": 2,
+              "p01": 6.364850287200661,
+              "p05": 6.7635720912214685
+            }
+          }
+        }
+      ],
+      "n_paths": 2,
+      "parameter_uncertainty_flags": [
+        "DERIVED_INPUT",
+        "PRIOR_DOMINATED_ROW:GROWTH,STABLE,DETERIORATING,RECOVERY",
+        "RARE_STATE_LOW_SUPPORT",
+        "STATES_EXCEED_SUPPORT"
+      ],
+      "state": "STABLE",
+      "support_count": 0.07405194950760782
+    },
+    {
+      "cells": [
+        {
+          "entry_price": 14.924,
+          "horizon_years": 1,
+          "n_failed": 0,
+          "n_valid": 8,
+          "relative_to_spot": 0.7,
+          "stats": {
+            "annualized_convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+            "annualized_geometric": {
+              "convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+              "mean": -0.6270860323057387,
+              "median": -0.5446691562740862,
+              "n": 6,
+              "n_undefined": 2,
+              "p05": -0.9699847264020274
+            },
+            "compounding_convention": "DIVIDEND-NO-REINVEST-v1",
+            "cvar": {
+              "0.95": -1.5886368015490768,
+              "0.99": -1.5886368015490768
+            },
+            "mcse": {
+              "mean": 0.1661769391513418,
+              "p05_note": "quantile MCSE not reported; use repeated-seed stability diagnostics",
+              "p_loss": 0.0
+            },
+            "mean": -0.8442770428181563,
+            "median": -0.8045051533650531,
+            "n": 8,
+            "p01": -1.5756466597419634,
+            "p05": -1.5236860925135096,
+            "p_exceed_hurdle": {
+              "0.0": 0.0,
+              "0.08": 0.0,
+              "0.15": 0.0
+            },
+            "p_loss": 1.0,
+            "p_loss_beyond": {
+              "-0.2": 1.0,
+              "-0.4": 0.75
+            },
+            "terminal_price": {
+              "mean": 2.2640500369950596,
+              "median": 2.857850719296868,
+              "n": 8,
+              "p01": -8.651393708590378,
+              "p05": -7.875807831893436
+            },
+            "terminal_vps": {
+              "mean": 2.2640500369950596,
+              "median": 2.857850719296868,
+              "n": 8,
+              "p01": -8.651393708590378,
+              "p05": -7.875807831893436
+            }
+          }
+        },
+        {
+          "entry_price": 17.056,
+          "horizon_years": 1,
+          "n_failed": 0,
+          "n_valid": 8,
+          "relative_to_spot": 0.8,
+          "stats": {
+            "annualized_convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+            "annualized_geometric": {
+              "convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+              "mean": -0.6737002782675213,
+              "median": -0.6015855117398254,
+              "n": 6,
+              "n_undefined": 2,
+              "p05": -0.9737366356017739
+            },
+            "compounding_convention": "DIVIDEND-NO-REINVEST-v1",
+            "cvar": {
+              "0.95": -1.5150572013554422,
+              "0.99": -1.5150572013554422
+            },
+            "mcse": {
+              "mean": 0.14540482175742406,
+              "p05_note": "quantile MCSE not reported; use repeated-seed stability diagnostics",
+              "p_loss": 0.0
+            },
+            "mean": -0.8637424124658868,
+            "median": -0.8289420091944215,
+            "n": 8,
+            "p01": -1.503690827274218,
+            "p05": -1.4582253309493207,
+            "p_exceed_hurdle": {
+              "0.0": 0.0,
+              "0.08": 0.0,
+              "0.15": 0.0
+            },
+            "p_loss": 1.0,
+            "p_loss_beyond": {
+              "-0.2": 1.0,
+              "-0.4": 1.0
+            },
+            "terminal_price": {
+              "mean": 2.2640500369950596,
+              "median": 2.857850719296868,
+              "n": 8,
+              "p01": -8.651393708590378,
+              "p05": -7.875807831893436
+            },
+            "terminal_vps": {
+              "mean": 2.2640500369950596,
+              "median": 2.857850719296868,
+              "n": 8,
+              "p01": -8.651393708590378,
+              "p05": -7.875807831893436
+            }
+          }
+        },
+        {
+          "entry_price": 19.188000000000002,
+          "horizon_years": 1,
+          "n_failed": 0,
+          "n_valid": 8,
+          "relative_to_spot": 0.9000000000000001,
+          "stats": {
+            "annualized_convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+            "annualized_geometric": {
+              "convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+              "mean": -0.7099558029044634,
+              "median": -0.6458537882131782,
+              "n": 6,
+              "n_undefined": 2,
+              "p05": -0.9766547872015767
+            },
+            "compounding_convention": "DIVIDEND-NO-REINVEST-v1",
+            "cvar": {
+              "0.95": -1.4578286234270597,
+              "0.99": -1.4578286234270597
+            },
+            "mcse": {
+              "mean": 0.1292487304510436,
+              "p05_note": "quantile MCSE not reported; use repeated-seed stability diagnostics",
+              "p_loss": 0.0
+            },
+            "mean": -0.8788821444141217,
+            "median": -0.8479484526172636,
+            "n": 8,
+            "p01": -1.4477251797993047,
+            "p05": -1.4073114052882851,
+            "p_exceed_hurdle": {
+              "0.0": 0.0,
+              "0.08": 0.0,
+              "0.15": 0.0
+            },
+            "p_loss": 1.0,
+            "p_loss_beyond": {
+              "-0.2": 1.0,
+              "-0.4": 1.0
+            },
+            "terminal_price": {
+              "mean": 2.2640500369950596,
+              "median": 2.857850719296868,
+              "n": 8,
+              "p01": -8.651393708590378,
+              "p05": -7.875807831893436
+            },
+            "terminal_vps": {
+              "mean": 2.2640500369950596,
+              "median": 2.857850719296868,
+              "n": 8,
+              "p01": -8.651393708590378,
+              "p05": -7.875807831893436
+            }
+          }
+        },
+        {
+          "entry_price": 21.32,
+          "horizon_years": 1,
+          "n_failed": 0,
+          "n_valid": 8,
+          "relative_to_spot": 1.0,
+          "stats": {
+            "annualized_convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+            "annualized_geometric": {
+              "convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+              "mean": -0.7389602226140172,
+              "median": -0.6812684093918603,
+              "n": 6,
+              "n_undefined": 2,
+              "p05": -0.9789893084814192
+            },
+            "compounding_convention": "DIVIDEND-NO-REINVEST-v1",
+            "cvar": {
+              "0.95": -1.4120457610843538,
+              "0.99": -1.4120457610843538
+            },
+            "mcse": {
+              "mean": 0.11632385740593924,
+              "p05_note": "quantile MCSE not reported; use repeated-seed stability diagnostics",
+              "p_loss": 0.0
+            },
+            "mean": -0.8909939299727094,
+            "median": -0.8631536073555373,
+            "n": 8,
+            "p01": -1.4029526618193744,
+            "p05": -1.3665802647594567,
+            "p_exceed_hurdle": {
+              "0.0": 0.0,
+              "0.08": 0.0,
+              "0.15": 0.0
+            },
+            "p_loss": 1.0,
+            "p_loss_beyond": {
+              "-0.2": 1.0,
+              "-0.4": 1.0
+            },
+            "terminal_price": {
+              "mean": 2.2640500369950596,
+              "median": 2.857850719296868,
+              "n": 8,
+              "p01": -8.651393708590378,
+              "p05": -7.875807831893436
+            },
+            "terminal_vps": {
+              "mean": 2.2640500369950596,
+              "median": 2.857850719296868,
+              "n": 8,
+              "p01": -8.651393708590378,
+              "p05": -7.875807831893436
+            }
+          }
+        },
+        {
+          "entry_price": 23.452,
+          "horizon_years": 1,
+          "n_failed": 0,
+          "n_valid": 8,
+          "relative_to_spot": 1.1,
+          "stats": {
+            "annualized_convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+            "annualized_geometric": {
+              "convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+              "mean": -0.7626911114672882,
+              "median": -0.7102440085380548,
+              "n": 6,
+              "n_undefined": 2,
+              "p05": -0.9808993713467447
+            },
+            "compounding_convention": "DIVIDEND-NO-REINVEST-v1",
+            "cvar": {
+              "0.95": -1.3745870555312307,
+              "0.99": -1.3745870555312307
+            },
+            "mcse": {
+              "mean": 0.10574896127812661,
+              "p05_note": "quantile MCSE not reported; use repeated-seed stability diagnostics",
+              "p_loss": 0.0
+            },
+            "mean": -0.9009035727024632,
+            "median": -0.8755941885050338,
+            "n": 8,
+            "p01": -1.3663206016539766,
+            "p05": -1.3332547861449606,
+            "p_exceed_hurdle": {
+              "0.0": 0.0,
+              "0.08": 0.0,
+              "0.15": 0.0
+            },
+            "p_loss": 1.0,
+            "p_loss_beyond": {
+              "-0.2": 1.0,
+              "-0.4": 1.0
+            },
+            "terminal_price": {
+              "mean": 2.2640500369950596,
+              "median": 2.857850719296868,
+              "n": 8,
+              "p01": -8.651393708590378,
+              "p05": -7.875807831893436
+            },
+            "terminal_vps": {
+              "mean": 2.2640500369950596,
+              "median": 2.857850719296868,
+              "n": 8,
+              "p01": -8.651393708590378,
+              "p05": -7.875807831893436
+            }
+          }
+        },
+        {
+          "entry_price": 25.584,
+          "horizon_years": 1,
+          "n_failed": 0,
+          "n_valid": 8,
+          "relative_to_spot": 1.2,
+          "stats": {
+            "annualized_convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+            "annualized_geometric": {
+              "convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+              "mean": -0.7824668521783477,
+              "median": -0.7343903411598836,
+              "n": 6,
+              "n_undefined": 2,
+              "p05": -0.9824910904011827
+            },
+            "compounding_convention": "DIVIDEND-NO-REINVEST-v1",
+            "cvar": {
+              "0.95": -1.3433714675702948,
+              "0.99": -1.3433714675702948
+            },
+            "mcse": {
+              "mean": 0.09693654783828272,
+              "p05_note": "quantile MCSE not reported; use repeated-seed stability diagnostics",
+              "p_loss": 0.0
+            },
+            "mean": -0.9091616083105911,
+            "median": -0.8859613394629478,
+            "n": 8,
+            "p01": -1.3357938848494786,
+            "p05": -1.305483553966214,
+            "p_exceed_hurdle": {
+              "0.0": 0.0,
+              "0.08": 0.0,
+              "0.15": 0.0
+            },
+            "p_loss": 1.0,
+            "p_loss_beyond": {
+              "-0.2": 1.0,
+              "-0.4": 1.0
+            },
+            "terminal_price": {
+              "mean": 2.2640500369950596,
+              "median": 2.857850719296868,
+              "n": 8,
+              "p01": -8.651393708590378,
+              "p05": -7.875807831893436
+            },
+            "terminal_vps": {
+              "mean": 2.2640500369950596,
+              "median": 2.857850719296868,
+              "n": 8,
+              "p01": -8.651393708590378,
+              "p05": -7.875807831893436
+            }
+          }
+        },
+        {
+          "entry_price": 27.716,
+          "horizon_years": 1,
+          "n_failed": 0,
+          "n_valid": 8,
+          "relative_to_spot": 1.3,
+          "stats": {
+            "annualized_convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+            "annualized_geometric": {
+              "convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+              "mean": -0.7992001712415515,
+              "median": -0.7548218533783541,
+              "n": 6,
+              "n_undefined": 2,
+              "p05": -0.9838379296010916
+            },
+            "compounding_convention": "DIVIDEND-NO-REINVEST-v1",
+            "cvar": {
+              "0.95": -1.3169582777571953,
+              "0.99": -1.3169582777571953
+            },
+            "mcse": {
+              "mean": 0.08947989031226097,
+              "p05_note": "quantile MCSE not reported; use repeated-seed stability diagnostics",
+              "p_loss": 0.0
+            },
+            "mean": -0.9161491769020842,
+            "median": -0.894733544119644,
+            "n": 8,
+            "p01": -1.3099635860149035,
+            "p05": -1.281984819045736,
+            "p_exceed_hurdle": {
+              "0.0": 0.0,
+              "0.08": 0.0,
+              "0.15": 0.0
+            },
+            "p_loss": 1.0,
+            "p_loss_beyond": {
+              "-0.2": 1.0,
+              "-0.4": 1.0
+            },
+            "terminal_price": {
+              "mean": 2.2640500369950596,
+              "median": 2.857850719296868,
+              "n": 8,
+              "p01": -8.651393708590378,
+              "p05": -7.875807831893436
+            },
+            "terminal_vps": {
+              "mean": 2.2640500369950596,
+              "median": 2.857850719296868,
+              "n": 8,
+              "p01": -8.651393708590378,
+              "p05": -7.875807831893436
+            }
+          }
+        },
+        {
+          "entry_price": 14.924,
+          "horizon_years": 3,
+          "n_failed": 0,
+          "n_valid": 8,
+          "relative_to_spot": 0.7,
+          "stats": {
+            "annualized_convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+            "annualized_geometric": {
+              "convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+              "mean": -0.3303925559358573,
+              "median": -0.1937846375423139,
+              "n": 6,
+              "n_undefined": 2,
+              "p05": -0.72686345839289
+            },
+            "compounding_convention": "DIVIDEND-NO-REINVEST-v1",
+            "cvar": {
+              "0.95": -1.7395225687569829,
+              "0.99": -1.7395225687569829
+            },
+            "mcse": {
+              "mean": 0.19979227243192865,
+              "p05_note": "quantile MCSE not reported; use repeated-seed stability diagnostics",
+              "p_loss": 0.0
+            },
+            "mean": -0.8275729612347429,
+            "median": -0.7759964662524009,
+            "n": 8,
+            "p01": -1.7215016544119475,
+            "p05": -1.6494179970318057,
+            "p_exceed_hurdle": {
+              "0.0": 0.0,
+              "0.08": 0.0,
+              "0.15": 0.0
+            },
+            "p_loss": 1.0,
+            "p_loss_beyond": {
+              "-0.2": 1.0,
+              "-0.4": 0.625
+            },
+            "terminal_price": {
+              "mean": 2.436631214049689,
+              "median": 3.201408775647552,
+              "n": 8,
+              "p01": -10.867830894544126,
+              "p05": -9.801068658147013
+            },
+            "terminal_vps": {
+              "mean": 2.436631214049689,
+              "median": 3.201408775647552,
+              "n": 8,
+              "p01": -10.867830894544126,
+              "p05": -9.801068658147013
+            }
+          }
+        },
+        {
+          "entry_price": 17.056,
+          "horizon_years": 3,
+          "n_failed": 0,
+          "n_valid": 8,
+          "relative_to_spot": 0.8,
+          "stats": {
+            "annualized_convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+            "annualized_geometric": {
+              "convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+              "mean": -0.3595435200165917,
+              "median": -0.22888274656227414,
+              "n": 6,
+              "n_undefined": 2,
+              "p05": -0.7387542962025762
+            },
+            "compounding_convention": "DIVIDEND-NO-REINVEST-v1",
+            "cvar": {
+              "0.95": -1.6470822476623599,
+              "0.99": -1.6470822476623599
+            },
+            "mcse": {
+              "mean": 0.17481823837793753,
+              "p05_note": "quantile MCSE not reported; use repeated-seed stability diagnostics",
+              "p_loss": 0.0
+            },
+            "mean": -0.8491263410804,
+            "median": -0.8039969079708508,
+            "n": 8,
+            "p01": -1.631313947610454,
+            "p05": -1.5682407474028297,
+            "p_exceed_hurdle": {
+              "0.0": 0.0,
+              "0.08": 0.0,
+              "0.15": 0.0
+            },
+            "p_loss": 1.0,
+            "p_loss_beyond": {
+              "-0.2": 1.0,
+              "-0.4": 0.75
+            },
+            "terminal_price": {
+              "mean": 2.436631214049689,
+              "median": 3.201408775647552,
+              "n": 8,
+              "p01": -10.867830894544126,
+              "p05": -9.801068658147013
+            },
+            "terminal_vps": {
+              "mean": 2.436631214049689,
+              "median": 3.201408775647552,
+              "n": 8,
+              "p01": -10.867830894544126,
+              "p05": -9.801068658147013
+            }
+          }
+        },
+        {
+          "entry_price": 19.188000000000002,
+          "horizon_years": 3,
+          "n_failed": 0,
+          "n_valid": 8,
+          "relative_to_spot": 0.9000000000000001,
+          "stats": {
+            "annualized_convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+            "annualized_geometric": {
+              "convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+              "mean": -0.38420127796222275,
+              "median": -0.2585709817152073,
+              "n": 6,
+              "n_undefined": 2,
+              "p05": -0.7488123306356729
+            },
+            "compounding_convention": "DIVIDEND-NO-REINVEST-v1",
+            "cvar": {
+              "0.95": -1.5751842201443198,
+              "0.99": -1.5751842201443198
+            },
+            "mcse": {
+              "mean": 0.15539398966927778,
+              "p05_note": "quantile MCSE not reported; use repeated-seed stability diagnostics",
+              "p_loss": 0.0
+            },
+            "mean": -0.8658900809603556,
+            "median": -0.825775029307423,
+            "n": 8,
+            "p01": -1.5611679534315144,
+            "p05": -1.5051028865802931,
+            "p_exceed_hurdle": {
+              "0.0": 0.0,
+              "0.08": 0.0,
+              "0.15": 0.0
+            },
+            "p_loss": 1.0,
+            "p_loss_beyond": {
+              "-0.2": 1.0,
+              "-0.4": 1.0
+            },
+            "terminal_price": {
+              "mean": 2.436631214049689,
+              "median": 3.201408775647552,
+              "n": 8,
+              "p01": -10.867830894544126,
+              "p05": -9.801068658147013
+            },
+            "terminal_vps": {
+              "mean": 2.436631214049689,
+              "median": 3.201408775647552,
+              "n": 8,
+              "p01": -10.867830894544126,
+              "p05": -9.801068658147013
+            }
+          }
+        },
+        {
+          "entry_price": 21.32,
+          "horizon_years": 3,
+          "n_failed": 0,
+          "n_valid": 8,
+          "relative_to_spot": 1.0,
+          "stats": {
+            "annualized_convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+            "annualized_geometric": {
+              "convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+              "mean": -0.40545287081881315,
+              "median": -0.28415815340745926,
+              "n": 6,
+              "n_undefined": 2,
+              "p05": -0.7574809716849131
+            },
+            "compounding_convention": "DIVIDEND-NO-REINVEST-v1",
+            "cvar": {
+              "0.95": -1.5176657981298882,
+              "0.99": -1.5176657981298882
+            },
+            "mcse": {
+              "mean": 0.13985459070235007,
+              "p05_note": "quantile MCSE not reported; use repeated-seed stability diagnostics",
+              "p_loss": 0.0
+            },
+            "mean": -0.87930107286432,
+            "median": -0.8431975263766807,
+            "n": 8,
+            "p01": -1.5050511580883634,
+            "p05": -1.454592597922264,
+            "p_exceed_hurdle": {
+              "0.0": 0.0,
+              "0.08": 0.0,
+              "0.15": 0.0
+            },
+            "p_loss": 1.0,
+            "p_loss_beyond": {
+              "-0.2": 1.0,
+              "-0.4": 1.0
+            },
+            "terminal_price": {
+              "mean": 2.436631214049689,
+              "median": 3.201408775647552,
+              "n": 8,
+              "p01": -10.867830894544126,
+              "p05": -9.801068658147013
+            },
+            "terminal_vps": {
+              "mean": 2.436631214049689,
+              "median": 3.201408775647552,
+              "n": 8,
+              "p01": -10.867830894544126,
+              "p05": -9.801068658147013
+            }
+          }
+        },
+        {
+          "entry_price": 23.452,
+          "horizon_years": 3,
+          "n_failed": 0,
+          "n_valid": 8,
+          "relative_to_spot": 1.1,
+          "stats": {
+            "annualized_convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+            "annualized_geometric": {
+              "convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+              "mean": -0.42404477207396374,
+              "median": -0.3065430246362251,
+              "n": 6,
+              "n_undefined": 2,
+              "p05": -0.7650647099717982
+            },
+            "compounding_convention": "DIVIDEND-NO-REINVEST-v1",
+            "cvar": {
+              "0.95": -1.4706052710271709,
+              "0.99": -1.4706052710271709
+            },
+            "mcse": {
+              "mean": 0.1271405370021364,
+              "p05_note": "quantile MCSE not reported; use repeated-seed stability diagnostics",
+              "p_loss": 0.0
+            },
+            "mean": -0.8902737026039274,
+            "median": -0.8574522967060734,
+            "n": 8,
+            "p01": -1.4591374164439666,
+            "p05": -1.413265998111149,
+            "p_exceed_hurdle": {
+              "0.0": 0.0,
+              "0.08": 0.0,
+              "0.15": 0.0
+            },
+            "p_loss": 1.0,
+            "p_loss_beyond": {
+              "-0.2": 1.0,
+              "-0.4": 1.0
+            },
+            "terminal_price": {
+              "mean": 2.436631214049689,
+              "median": 3.201408775647552,
+              "n": 8,
+              "p01": -10.867830894544126,
+              "p05": -9.801068658147013
+            },
+            "terminal_vps": {
+              "mean": 2.436631214049689,
+              "median": 3.201408775647552,
+              "n": 8,
+              "p01": -10.867830894544126,
+              "p05": -9.801068658147013
+            }
+          }
+        },
+        {
+          "entry_price": 25.584,
+          "horizon_years": 3,
+          "n_failed": 0,
+          "n_valid": 8,
+          "relative_to_spot": 1.2,
+          "stats": {
+            "annualized_convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+            "annualized_geometric": {
+              "convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+              "mean": -0.44050973057272014,
+              "median": -0.32636703137569306,
+              "n": 6,
+              "n_undefined": 2,
+              "p05": -0.771780856666285
+            },
+            "compounding_convention": "DIVIDEND-NO-REINVEST-v1",
+            "cvar": {
+              "0.95": -1.43138816510824,
+              "0.99": -1.43138816510824
+            },
+            "mcse": {
+              "mean": 0.11654549225195837,
+              "p05_note": "quantile MCSE not reported; use repeated-seed stability diagnostics",
+              "p_loss": 0.0
+            },
+            "mean": -0.8994175607202668,
+            "median": -0.8693312719805673,
+            "n": 8,
+            "p01": -1.420875965073636,
+            "p05": -1.37882716493522,
+            "p_exceed_hurdle": {
+              "0.0": 0.0,
+              "0.08": 0.0,
+              "0.15": 0.0
+            },
+            "p_loss": 1.0,
+            "p_loss_beyond": {
+              "-0.2": 1.0,
+              "-0.4": 1.0
+            },
+            "terminal_price": {
+              "mean": 2.436631214049689,
+              "median": 3.201408775647552,
+              "n": 8,
+              "p01": -10.867830894544126,
+              "p05": -9.801068658147013
+            },
+            "terminal_vps": {
+              "mean": 2.436631214049689,
+              "median": 3.201408775647552,
+              "n": 8,
+              "p01": -10.867830894544126,
+              "p05": -9.801068658147013
+            }
+          }
+        },
+        {
+          "entry_price": 27.716,
+          "horizon_years": 3,
+          "n_failed": 0,
+          "n_valid": 8,
+          "relative_to_spot": 1.3,
+          "stats": {
+            "annualized_convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+            "annualized_geometric": {
+              "convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+              "mean": -0.45524005295543163,
+              "median": -0.34410251550773435,
+              "n": 6,
+              "n_undefined": 2,
+              "p05": -0.7777894357943068
+            },
+            "compounding_convention": "DIVIDEND-NO-REINVEST-v1",
+            "cvar": {
+              "0.95": -1.398204460099914,
+              "0.99": -1.398204460099914
+            },
+            "mcse": {
+              "mean": 0.10758045438642311,
+              "p05_note": "quantile MCSE not reported; use repeated-seed stability diagnostics",
+              "p_loss": 0.0
+            },
+            "mean": -0.9071546714340923,
+            "median": -0.8793827125974467,
+            "n": 8,
+            "p01": -1.3885008908372025,
+            "p05": -1.349686613786357,
+            "p_exceed_hurdle": {
+              "0.0": 0.0,
+              "0.08": 0.0,
+              "0.15": 0.0
+            },
+            "p_loss": 1.0,
+            "p_loss_beyond": {
+              "-0.2": 1.0,
+              "-0.4": 1.0
+            },
+            "terminal_price": {
+              "mean": 2.436631214049689,
+              "median": 3.201408775647552,
+              "n": 8,
+              "p01": -10.867830894544126,
+              "p05": -9.801068658147013
+            },
+            "terminal_vps": {
+              "mean": 2.436631214049689,
+              "median": 3.201408775647552,
+              "n": 8,
+              "p01": -10.867830894544126,
+              "p05": -9.801068658147013
+            }
+          }
+        }
+      ],
+      "n_paths": 8,
+      "parameter_uncertainty_flags": [
+        "DERIVED_INPUT",
+        "PRIOR_DOMINATED_ROW:GROWTH,STABLE,DETERIORATING,RECOVERY",
+        "RARE_STATE_LOW_SUPPORT",
+        "STATES_EXCEED_SUPPORT"
+      ],
+      "state": "DETERIORATING",
+      "support_count": 1.082780135138697
+    },
+    {
+      "cells": [
+        {
+          "entry_price": 14.924,
+          "horizon_years": 1,
+          "n_failed": 0,
+          "n_valid": 20,
+          "relative_to_spot": 0.7,
+          "stats": {
+            "annualized_convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+            "annualized_geometric": {
+              "convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+              "mean": -0.6337809208610345,
+              "median": -0.6631062577943827,
+              "n": 12,
+              "n_undefined": 8,
+              "p05": -0.955531935795339
+            },
+            "compounding_convention": "DIVIDEND-NO-REINVEST-v1",
+            "cvar": {
+              "0.95": -1.2644813447868595,
+              "0.99": -1.2644813447868595
+            },
+            "mcse": {
+              "mean": 0.07207106525725422,
+              "p05_note": "quantile MCSE not reported; use repeated-seed stability diagnostics",
+              "p_loss": 0.04873397172404484
+            },
+            "mean": -0.8139675964533775,
+            "median": -0.9286134850844311,
+            "n": 20,
+            "p01": -1.246545027684274,
+            "p05": -1.1747997592739319,
+            "p_exceed_hurdle": {
+              "0.0": 0.05,
+              "0.08": 0.05,
+              "0.15": 0.0
+            },
+            "p_loss": 0.95,
+            "p_loss_beyond": {
+              "-0.2": 0.95,
+              "-0.4": 0.9
+            },
+            "terminal_price": {
+              "mean": 2.71639221315513,
+              "median": 1.0054477529167305,
+              "n": 20,
+              "p01": -3.739597226660147,
+              "p05": -2.668790314448923
+            },
+            "terminal_vps": {
+              "mean": 2.71639221315513,
+              "median": 1.0054477529167305,
+              "n": 20,
+              "p01": -3.739597226660147,
+              "p05": -2.668790314448923
+            }
+          }
+        },
+        {
+          "entry_price": 17.056,
+          "horizon_years": 1,
+          "n_failed": 0,
+          "n_valid": 20,
+          "relative_to_spot": 0.8,
+          "stats": {
+            "annualized_convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+            "annualized_geometric": {
+              "convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+              "mean": -0.6795583057534053,
+              "median": -0.7052179755700849,
+              "n": 12,
+              "n_undefined": 8,
+              "p05": -0.9610904438209218
+            },
+            "compounding_convention": "DIVIDEND-NO-REINVEST-v1",
+            "cvar": {
+              "0.95": -1.231421176688502,
+              "0.99": -1.231421176688502
+            },
+            "mcse": {
+              "mean": 0.06306218210009744,
+              "p05_note": "quantile MCSE not reported; use repeated-seed stability diagnostics",
+              "p_loss": 0.0
+            },
+            "mean": -0.8372216468967052,
+            "median": -0.9375367994488772,
+            "n": 20,
+            "p01": -1.2157268992237396,
+            "p05": -1.1529497893646903,
+            "p_exceed_hurdle": {
+              "0.0": 0.0,
+              "0.08": 0.0,
+              "0.15": 0.0
+            },
+            "p_loss": 1.0,
+            "p_loss_beyond": {
+              "-0.2": 0.95,
+              "-0.4": 0.95
+            },
+            "terminal_price": {
+              "mean": 2.71639221315513,
+              "median": 1.0054477529167305,
+              "n": 20,
+              "p01": -3.739597226660147,
+              "p05": -2.668790314448923
+            },
+            "terminal_vps": {
+              "mean": 2.71639221315513,
+              "median": 1.0054477529167305,
+              "n": 20,
+              "p01": -3.739597226660147,
+              "p05": -2.668790314448923
+            }
+          }
+        },
+        {
+          "entry_price": 19.188000000000002,
+          "horizon_years": 1,
+          "n_failed": 0,
+          "n_valid": 20,
+          "relative_to_spot": 0.9000000000000001,
+          "stats": {
+            "annualized_convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+            "annualized_geometric": {
+              "convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+              "mean": -0.7151629384474715,
+              "median": -0.7379715338400754,
+              "n": 12,
+              "n_undefined": 8,
+              "p05": -0.9654137278408194
+            },
+            "compounding_convention": "DIVIDEND-NO-REINVEST-v1",
+            "cvar": {
+              "0.95": -1.2057077126120017,
+              "0.99": -1.2057077126120017
+            },
+            "mcse": {
+              "mean": 0.05605527297786438,
+              "p05_note": "quantile MCSE not reported; use repeated-seed stability diagnostics",
+              "p_loss": 0.0
+            },
+            "mean": -0.8553081305748492,
+            "median": -0.9444771550656685,
+            "n": 20,
+            "p01": -1.1917572437544353,
+            "p05": -1.1359553683241692,
+            "p_exceed_hurdle": {
+              "0.0": 0.0,
+              "0.08": 0.0,
+              "0.15": 0.0
+            },
+            "p_loss": 1.0,
+            "p_loss_beyond": {
+              "-0.2": 0.95,
+              "-0.4": 0.95
+            },
+            "terminal_price": {
+              "mean": 2.71639221315513,
+              "median": 1.0054477529167305,
+              "n": 20,
+              "p01": -3.739597226660147,
+              "p05": -2.668790314448923
+            },
+            "terminal_vps": {
+              "mean": 2.71639221315513,
+              "median": 1.0054477529167305,
+              "n": 20,
+              "p01": -3.739597226660147,
+              "p05": -2.668790314448923
+            }
+          }
+        },
+        {
+          "entry_price": 21.32,
+          "horizon_years": 1,
+          "n_failed": 0,
+          "n_valid": 20,
+          "relative_to_spot": 1.0,
+          "stats": {
+            "annualized_convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+            "annualized_geometric": {
+              "convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+              "mean": -0.7436466446027242,
+              "median": -0.7641743804560679,
+              "n": 12,
+              "n_undefined": 8,
+              "p05": -0.9688723550567374
+            },
+            "compounding_convention": "DIVIDEND-NO-REINVEST-v1",
+            "cvar": {
+              "0.95": -1.1851369413508015,
+              "0.99": -1.1851369413508015
+            },
+            "mcse": {
+              "mean": 0.05044974568007794,
+              "p05_note": "quantile MCSE not reported; use repeated-seed stability diagnostics",
+              "p_loss": 0.0
+            },
+            "mean": -0.8697773175173641,
+            "median": -0.9500294395591018,
+            "n": 20,
+            "p01": -1.1725815193789917,
+            "p05": -1.1223598314917522,
+            "p_exceed_hurdle": {
+              "0.0": 0.0,
+              "0.08": 0.0,
+              "0.15": 0.0
+            },
+            "p_loss": 1.0,
+            "p_loss_beyond": {
+              "-0.2": 1.0,
+              "-0.4": 0.95
+            },
+            "terminal_price": {
+              "mean": 2.71639221315513,
+              "median": 1.0054477529167305,
+              "n": 20,
+              "p01": -3.739597226660147,
+              "p05": -2.668790314448923
+            },
+            "terminal_vps": {
+              "mean": 2.71639221315513,
+              "median": 1.0054477529167305,
+              "n": 20,
+              "p01": -3.739597226660147,
+              "p05": -2.668790314448923
+            }
+          }
+        },
+        {
+          "entry_price": 23.452,
+          "horizon_years": 1,
+          "n_failed": 0,
+          "n_valid": 20,
+          "relative_to_spot": 1.1,
+          "stats": {
+            "annualized_convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+            "annualized_geometric": {
+              "convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+              "mean": -0.7669514950933857,
+              "median": -0.78561307314188,
+              "n": 12,
+              "n_undefined": 8,
+              "p05": -0.9717021409606703
+            },
+            "compounding_convention": "DIVIDEND-NO-REINVEST-v1",
+            "cvar": {
+              "0.95": -1.1683063103189106,
+              "0.99": -1.1683063103189106
+            },
+            "mcse": {
+              "mean": 0.045863405163707224,
+              "p05_note": "quantile MCSE not reported; use repeated-seed stability diagnostics",
+              "p_loss": 0.0
+            },
+            "mean": -0.8816157431976037,
+            "median": -0.9545722177810017,
+            "n": 20,
+            "p01": -1.156892290344538,
+            "p05": -1.1112362104470475,
+            "p_exceed_hurdle": {
+              "0.0": 0.0,
+              "0.08": 0.0,
+              "0.15": 0.0
+            },
+            "p_loss": 1.0,
+            "p_loss_beyond": {
+              "-0.2": 1.0,
+              "-0.4": 0.95
+            },
+            "terminal_price": {
+              "mean": 2.71639221315513,
+              "median": 1.0054477529167305,
+              "n": 20,
+              "p01": -3.739597226660147,
+              "p05": -2.668790314448923
+            },
+            "terminal_vps": {
+              "mean": 2.71639221315513,
+              "median": 1.0054477529167305,
+              "n": 20,
+              "p01": -3.739597226660147,
+              "p05": -2.668790314448923
+            }
+          }
+        },
+        {
+          "entry_price": 25.584,
+          "horizon_years": 1,
+          "n_failed": 0,
+          "n_valid": 20,
+          "relative_to_spot": 1.2,
+          "stats": {
+            "annualized_convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+            "annualized_geometric": {
+              "convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+              "mean": -0.7863722038356036,
+              "median": -0.8034786503800566,
+              "n": 12,
+              "n_undefined": 8,
+              "p05": -0.9740602958806145
+            },
+            "compounding_convention": "DIVIDEND-NO-REINVEST-v1",
+            "cvar": {
+              "0.95": -1.1542807844590013,
+              "0.99": -1.1542807844590013
+            },
+            "mcse": {
+              "mean": 0.042041454733398285,
+              "p05_note": "quantile MCSE not reported; use repeated-seed stability diagnostics",
+              "p_loss": 0.0
+            },
+            "mean": -0.891481097931137,
+            "median": -0.9583578662992516,
+            "n": 20,
+            "p01": -1.1438179328158264,
+            "p05": -1.101966526243127,
+            "p_exceed_hurdle": {
+              "0.0": 0.0,
+              "0.08": 0.0,
+              "0.15": 0.0
+            },
+            "p_loss": 1.0,
+            "p_loss_beyond": {
+              "-0.2": 1.0,
+              "-0.4": 0.95
+            },
+            "terminal_price": {
+              "mean": 2.71639221315513,
+              "median": 1.0054477529167305,
+              "n": 20,
+              "p01": -3.739597226660147,
+              "p05": -2.668790314448923
+            },
+            "terminal_vps": {
+              "mean": 2.71639221315513,
+              "median": 1.0054477529167305,
+              "n": 20,
+              "p01": -3.739597226660147,
+              "p05": -2.668790314448923
+            }
+          }
+        },
+        {
+          "entry_price": 27.716,
+          "horizon_years": 1,
+          "n_failed": 0,
+          "n_valid": 20,
+          "relative_to_spot": 1.3,
+          "stats": {
+            "annualized_convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+            "annualized_geometric": {
+              "convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+              "mean": -0.8028051112328648,
+              "median": -0.8185956772738984,
+              "n": 12,
+              "n_undefined": 8,
+              "p05": -0.9760556577359518
+            },
+            "compounding_convention": "DIVIDEND-NO-REINVEST-v1",
+            "cvar": {
+              "0.95": -1.142413031808309,
+              "0.99": -1.142413031808309
+            },
+            "mcse": {
+              "mean": 0.03880749667698303,
+              "p05_note": "quantile MCSE not reported; use repeated-seed stability diagnostics",
+              "p_loss": 0.0
+            },
+            "mean": -0.8998287057825879,
+            "median": -0.9615611073531551,
+            "n": 20,
+            "p01": -1.1327550149069168,
+            "p05": -1.094122947301348,
+            "p_exceed_hurdle": {
+              "0.0": 0.0,
+              "0.08": 0.0,
+              "0.15": 0.0
+            },
+            "p_loss": 1.0,
+            "p_loss_beyond": {
+              "-0.2": 1.0,
+              "-0.4": 1.0
+            },
+            "terminal_price": {
+              "mean": 2.71639221315513,
+              "median": 1.0054477529167305,
+              "n": 20,
+              "p01": -3.739597226660147,
+              "p05": -2.668790314448923
+            },
+            "terminal_vps": {
+              "mean": 2.71639221315513,
+              "median": 1.0054477529167305,
+              "n": 20,
+              "p01": -3.739597226660147,
+              "p05": -2.668790314448923
+            }
+          }
+        },
+        {
+          "entry_price": 14.924,
+          "horizon_years": 3,
+          "n_failed": 0,
+          "n_valid": 20,
+          "relative_to_spot": 0.7,
+          "stats": {
+            "annualized_convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+            "annualized_geometric": {
+              "convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+              "mean": -0.29715151118874084,
+              "median": -0.2728953733422186,
+              "n": 12,
+              "n_undefined": 8,
+              "p05": -0.633240203148651
+            },
+            "compounding_convention": "DIVIDEND-NO-REINVEST-v1",
+            "cvar": {
+              "0.95": -1.3166009600411968,
+              "0.99": -1.3166009600411968
+            },
+            "mcse": {
+              "mean": 0.07931762420870396,
+              "p05_note": "quantile MCSE not reported; use repeated-seed stability diagnostics",
+              "p_loss": 0.04873397172404484
+            },
+            "mean": -0.8016709209629891,
+            "median": -0.8551340048726797,
+            "n": 20,
+            "p01": -1.3086303665907386,
+            "p05": -1.276747992788906,
+            "p_exceed_hurdle": {
+              "0.0": 0.05,
+              "0.08": 0.0,
+              "0.15": 0.0
+            },
+            "p_loss": 0.95,
+            "p_loss_beyond": {
+              "-0.2": 0.95,
+              "-0.4": 0.9
+            },
+            "terminal_price": {
+              "mean": 2.7983608777962403,
+              "median": 1.9937702089344076,
+              "n": 20,
+              "p01": -4.7981424814738585,
+              "p05": -4.2843814015851835
+            },
+            "terminal_vps": {
+              "mean": 2.7983608777962403,
+              "median": 1.9937702089344076,
+              "n": 20,
+              "p01": -4.7981424814738585,
+              "p05": -4.2843814015851835
+            }
+          }
+        },
+        {
+          "entry_price": 17.056,
+          "horizon_years": 3,
+          "n_failed": 0,
+          "n_valid": 20,
+          "relative_to_spot": 0.8,
+          "stats": {
+            "annualized_convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+            "annualized_geometric": {
+              "convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+              "mean": -0.32774960449424584,
+              "median": -0.3045494432641269,
+              "n": 12,
+              "n_undefined": 8,
+              "p05": -0.6492068740078939
+            },
+            "compounding_convention": "DIVIDEND-NO-REINVEST-v1",
+            "cvar": {
+              "0.95": -1.277025840036047,
+              "0.99": -1.277025840036047
+            },
+            "mcse": {
+              "mean": 0.06940292118261594,
+              "p05_note": "quantile MCSE not reported; use repeated-seed stability diagnostics",
+              "p_loss": 0.0
+            },
+            "mean": -0.8264620558426155,
+            "median": -0.8732422542635947,
+            "n": 20,
+            "p01": -1.2700515707668962,
+            "p05": -1.2421544936902926,
+            "p_exceed_hurdle": {
+              "0.0": 0.0,
+              "0.08": 0.0,
+              "0.15": 0.0
+            },
+            "p_loss": 1.0,
+            "p_loss_beyond": {
+              "-0.2": 0.95,
+              "-0.4": 0.9
+            },
+            "terminal_price": {
+              "mean": 2.7983608777962403,
+              "median": 1.9937702089344076,
+              "n": 20,
+              "p01": -4.7981424814738585,
+              "p05": -4.2843814015851835
+            },
+            "terminal_vps": {
+              "mean": 2.7983608777962403,
+              "median": 1.9937702089344076,
+              "n": 20,
+              "p01": -4.7981424814738585,
+              "p05": -4.2843814015851835
+            }
+          }
+        },
+        {
+          "entry_price": 19.188000000000002,
+          "horizon_years": 3,
+          "n_failed": 0,
+          "n_valid": 20,
+          "relative_to_spot": 0.9000000000000001,
+          "stats": {
+            "annualized_convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+            "annualized_geometric": {
+              "convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+              "mean": -0.35363143729522717,
+              "median": -0.3313244889184261,
+              "n": 12,
+              "n_undefined": 8,
+              "p05": -0.6627125098473948
+            },
+            "compounding_convention": "DIVIDEND-NO-REINVEST-v1",
+            "cvar": {
+              "0.95": -1.246245191143153,
+              "0.99": -1.246245191143153
+            },
+            "mcse": {
+              "mean": 0.06169148549565862,
+              "p05_note": "quantile MCSE not reported; use repeated-seed stability diagnostics",
+              "p_loss": 0.0
+            },
+            "mean": -0.8457440496378805,
+            "median": -0.8873264482343064,
+            "n": 20,
+            "p01": -1.2400458406816854,
+            "p05": -1.2152484388358158,
+            "p_exceed_hurdle": {
+              "0.0": 0.0,
+              "0.08": 0.0,
+              "0.15": 0.0
+            },
+            "p_loss": 1.0,
+            "p_loss_beyond": {
+              "-0.2": 0.95,
+              "-0.4": 0.9
+            },
+            "terminal_price": {
+              "mean": 2.7983608777962403,
+              "median": 1.9937702089344076,
+              "n": 20,
+              "p01": -4.7981424814738585,
+              "p05": -4.2843814015851835
+            },
+            "terminal_vps": {
+              "mean": 2.7983608777962403,
+              "median": 1.9937702089344076,
+              "n": 20,
+              "p01": -4.7981424814738585,
+              "p05": -4.2843814015851835
+            }
+          }
+        },
+        {
+          "entry_price": 21.32,
+          "horizon_years": 3,
+          "n_failed": 0,
+          "n_valid": 20,
+          "relative_to_spot": 1.0,
+          "stats": {
+            "annualized_convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+            "annualized_geometric": {
+              "convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+              "mean": -0.3759380141657435,
+              "median": -0.3544008923049962,
+              "n": 12,
+              "n_undefined": 8,
+              "p05": -0.674352508697384
+            },
+            "compounding_convention": "DIVIDEND-NO-REINVEST-v1",
+            "cvar": {
+              "0.95": -1.2216206720288376,
+              "0.99": -1.2216206720288376
+            },
+            "mcse": {
+              "mean": 0.05552233694609275,
+              "p05_note": "quantile MCSE not reported; use repeated-seed stability diagnostics",
+              "p_loss": 0.0
+            },
+            "mean": -0.8611696446740924,
+            "median": -0.8985938034108758,
+            "n": 20,
+            "p01": -1.216041256613517,
+            "p05": -1.1937235949522342,
+            "p_exceed_hurdle": {
+              "0.0": 0.0,
+              "0.08": 0.0,
+              "0.15": 0.0
+            },
+            "p_loss": 1.0,
+            "p_loss_beyond": {
+              "-0.2": 1.0,
+              "-0.4": 0.95
+            },
+            "terminal_price": {
+              "mean": 2.7983608777962403,
+              "median": 1.9937702089344076,
+              "n": 20,
+              "p01": -4.7981424814738585,
+              "p05": -4.2843814015851835
+            },
+            "terminal_vps": {
+              "mean": 2.7983608777962403,
+              "median": 1.9937702089344076,
+              "n": 20,
+              "p01": -4.7981424814738585,
+              "p05": -4.2843814015851835
+            }
+          }
+        },
+        {
+          "entry_price": 23.452,
+          "horizon_years": 3,
+          "n_failed": 0,
+          "n_valid": 20,
+          "relative_to_spot": 1.1,
+          "stats": {
+            "annualized_convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+            "annualized_geometric": {
+              "convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+              "mean": -0.3954528654672757,
+              "median": -0.3745892243506146,
+              "n": 12,
+              "n_undefined": 8,
+              "p05": -0.6845357317004517
+            },
+            "compounding_convention": "DIVIDEND-NO-REINVEST-v1",
+            "cvar": {
+              "0.95": -1.2014733382080343,
+              "0.99": -1.2014733382080343
+            },
+            "mcse": {
+              "mean": 0.05047485176917523,
+              "p05_note": "quantile MCSE not reported; use repeated-seed stability diagnostics",
+              "p_loss": 0.0
+            },
+            "mean": -0.8737905860673567,
+            "median": -0.9078125485553417,
+            "n": 20,
+            "p01": -1.1964011423759247,
+            "p05": -1.1761123590474858,
+            "p_exceed_hurdle": {
+              "0.0": 0.0,
+              "0.08": 0.0,
+              "0.15": 0.0
+            },
+            "p_loss": 1.0,
+            "p_loss_beyond": {
+              "-0.2": 1.0,
+              "-0.4": 0.95
+            },
+            "terminal_price": {
+              "mean": 2.7983608777962403,
+              "median": 1.9937702089344076,
+              "n": 20,
+              "p01": -4.7981424814738585,
+              "p05": -4.2843814015851835
+            },
+            "terminal_vps": {
+              "mean": 2.7983608777962403,
+              "median": 1.9937702089344076,
+              "n": 20,
+              "p01": -4.7981424814738585,
+              "p05": -4.2843814015851835
+            }
+          }
+        },
+        {
+          "entry_price": 25.584,
+          "horizon_years": 3,
+          "n_failed": 0,
+          "n_valid": 20,
+          "relative_to_spot": 1.2,
+          "stats": {
+            "annualized_convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+            "annualized_geometric": {
+              "convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+              "mean": -0.4127351870749225,
+              "median": -0.3924679794455582,
+              "n": 12,
+              "n_undefined": 8,
+              "p05": -0.6935539779695168
+            },
+            "compounding_convention": "DIVIDEND-NO-REINVEST-v1",
+            "cvar": {
+              "0.95": -1.1846838933573647,
+              "0.99": -1.1846838933573647
+            },
+            "mcse": {
+              "mean": 0.04626861412174397,
+              "p05_note": "quantile MCSE not reported; use repeated-seed stability diagnostics",
+              "p_loss": 0.0
+            },
+            "mean": -0.8843080372284102,
+            "median": -0.9154948361757298,
+            "n": 20,
+            "p01": -1.180034380511264,
+            "p05": -1.1614363291268617,
+            "p_exceed_hurdle": {
+              "0.0": 0.0,
+              "0.08": 0.0,
+              "0.15": 0.0
+            },
+            "p_loss": 1.0,
+            "p_loss_beyond": {
+              "-0.2": 1.0,
+              "-0.4": 0.95
+            },
+            "terminal_price": {
+              "mean": 2.7983608777962403,
+              "median": 1.9937702089344076,
+              "n": 20,
+              "p01": -4.7981424814738585,
+              "p05": -4.2843814015851835
+            },
+            "terminal_vps": {
+              "mean": 2.7983608777962403,
+              "median": 1.9937702089344076,
+              "n": 20,
+              "p01": -4.7981424814738585,
+              "p05": -4.2843814015851835
+            }
+          }
+        },
+        {
+          "entry_price": 27.716,
+          "horizon_years": 3,
+          "n_failed": 0,
+          "n_valid": 20,
+          "relative_to_spot": 1.3,
+          "stats": {
+            "annualized_convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+            "annualized_geometric": {
+              "convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+              "mean": -0.4281967607449424,
+              "median": -0.4084631504245777,
+              "n": 12,
+              "n_undefined": 8,
+              "p05": -0.7016221231081791
+            },
+            "compounding_convention": "DIVIDEND-NO-REINVEST-v1",
+            "cvar": {
+              "0.95": -1.1704774400221827,
+              "0.99": -1.1704774400221827
+            },
+            "mcse": {
+              "mean": 0.042709489958532895,
+              "p05_note": "quantile MCSE not reported; use repeated-seed stability diagnostics",
+              "p_loss": 0.0
+            },
+            "mean": -0.893207418980071,
+            "median": -0.9219952333929813,
+            "n": 20,
+            "p01": -1.1661855820103975,
+            "p05": -1.149018149963257,
+            "p_exceed_hurdle": {
+              "0.0": 0.0,
+              "0.08": 0.0,
+              "0.15": 0.0
+            },
+            "p_loss": 1.0,
+            "p_loss_beyond": {
+              "-0.2": 1.0,
+              "-0.4": 1.0
+            },
+            "terminal_price": {
+              "mean": 2.7983608777962403,
+              "median": 1.9937702089344076,
+              "n": 20,
+              "p01": -4.7981424814738585,
+              "p05": -4.2843814015851835
+            },
+            "terminal_vps": {
+              "mean": 2.7983608777962403,
+              "median": 1.9937702089344076,
+              "n": 20,
+              "p01": -4.7981424814738585,
+              "p05": -4.2843814015851835
+            }
+          }
+        }
+      ],
+      "n_paths": 20,
+      "parameter_uncertainty_flags": [
+        "DERIVED_INPUT",
+        "PRIOR_DOMINATED_ROW:GROWTH,STABLE,DETERIORATING,RECOVERY",
+        "RARE_STATE_LOW_SUPPORT",
+        "STATES_EXCEED_SUPPORT"
+      ],
+      "state": "RECOVERY",
+      "support_count": 0.33614852010814406
+    }
+  ],
+  "dividend_treatment": "DIVIDEND-NO-REINVEST-v1",
+  "entry_prices": [
+    14.924,
+    17.056,
+    19.188000000000002,
+    21.32,
+    23.452,
+    25.584,
+    27.716
+  ],
+  "flags": [
+    "RARE_STATE_RESULTS_PRESENT"
+  ],
+  "horizons_years": [
+    1,
+    3
+  ],
+  "label": "ENTRY_PRICE_CONDITIONED_RETURNS",
+  "mixture": [
+    {
+      "entry_price": 14.924,
+      "horizon_years": 1,
+      "n_failed": 0,
+      "n_valid": 30,
+      "relative_to_spot": 0.7,
+      "stats": {
+        "annualized_convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+        "annualized_geometric": {
+          "convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+          "mean": -0.603474230810219,
+          "median": -0.6555004810765475,
+          "n": 20,
+          "n_undefined": 10,
+          "p05": -0.9748281975260329
+        },
+        "compounding_convention": "DIVIDEND-NO-REINVEST-v1",
+        "cvar": {
+          "0.95": -1.4958500743554093,
+          "0.99": -1.5886368015490768
+        },
+        "mcse": {
+          "mean": 0.06868927730228438,
+          "p05_note": "quantile MCSE not reported; use repeated-seed stability diagnostics",
+          "p_loss": 0.0327730693416725
+        },
+        "mean": -0.7911721881216777,
+        "median": -0.8180717419888544,
+        "n": 30,
+        "p01": -1.5348204997767496,
+        "p05": -1.3407014460930446,
+        "p_exceed_hurdle": {
+          "0.0": 0.03333333333333333,
+          "0.08": 0.03333333333333333,
+          "0.15": 0.0
+        },
+        "p_loss": 0.9666666666666667,
+        "p_loss_beyond": {
+          "-0.2": 0.9333333333333333,
+          "-0.4": 0.8333333333333334
+        },
+        "terminal_price": {
+          "mean": 3.0565987233962364,
+          "median": 2.655067012572468,
+          "n": 30,
+          "p01": -8.042004805471352,
+          "p05": -5.1447218695938
+        },
+        "terminal_vps": {
+          "mean": 3.0565987233962364,
+          "median": 2.655067012572468,
+          "n": 30,
+          "p01": -8.042004805471352,
+          "p05": -5.1447218695938
+        }
+      }
+    },
+    {
+      "entry_price": 17.056,
+      "horizon_years": 1,
+      "n_failed": 0,
+      "n_valid": 30,
+      "relative_to_spot": 0.8,
+      "stats": {
+        "annualized_convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+        "annualized_geometric": {
+          "convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+          "mean": -0.6530399519589417,
+          "median": -0.698562920941979,
+          "n": 20,
+          "n_undefined": 10,
+          "p05": -0.9779746728352788
+        },
+        "compounding_convention": "DIVIDEND-NO-REINVEST-v1",
+        "cvar": {
+          "0.95": -1.433868815060983,
+          "0.99": -1.5150572013554422
+        },
+        "mcse": {
+          "mean": 0.06010311763949883,
+          "p05_note": "quantile MCSE not reported; use repeated-seed stability diagnostics",
+          "p_loss": 0.0
+        },
+        "mean": -0.8172756646064682,
+        "median": -0.8408127742402476,
+        "n": 30,
+        "p01": -1.467967937304656,
+        "p05": -1.298113765331414,
+        "p_exceed_hurdle": {
+          "0.0": 0.0,
+          "0.08": 0.0,
+          "0.15": 0.0
+        },
+        "p_loss": 1.0,
+        "p_loss_beyond": {
+          "-0.2": 0.9333333333333333,
+          "-0.4": 0.9333333333333333
+        },
+        "terminal_price": {
+          "mean": 3.0565987233962364,
+          "median": 2.655067012572468,
+          "n": 30,
+          "p01": -8.042004805471352,
+          "p05": -5.1447218695938
+        },
+        "terminal_vps": {
+          "mean": 3.0565987233962364,
+          "median": 2.655067012572468,
+          "n": 30,
+          "p01": -8.042004805471352,
+          "p05": -5.1447218695938
+        }
+      }
+    },
+    {
+      "entry_price": 19.188000000000002,
+      "horizon_years": 1,
+      "n_failed": 0,
+      "n_valid": 30,
+      "relative_to_spot": 0.9000000000000001,
+      "stats": {
+        "annualized_convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+        "annualized_geometric": {
+          "convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+          "mean": -0.6915910684079483,
+          "median": -0.7320559297262036,
+          "n": 20,
+          "n_undefined": 10,
+          "p05": -0.9804219314091367
+        },
+        "compounding_convention": "DIVIDEND-NO-REINVEST-v1",
+        "cvar": {
+          "0.95": -1.385661168943096,
+          "0.99": -1.4578286234270597
+        },
+        "mcse": {
+          "mean": 0.05342499345733229,
+          "p05_note": "quantile MCSE not reported; use repeated-seed stability diagnostics",
+          "p_loss": 0.0
+        },
+        "mean": -0.8375783685390826,
+        "median": -0.8585002437691089,
+        "n": 30,
+        "p01": -1.4159714998263608,
+        "p05": -1.2649900136279235,
+        "p_exceed_hurdle": {
+          "0.0": 0.0,
+          "0.08": 0.0,
+          "0.15": 0.0
+        },
+        "p_loss": 1.0,
+        "p_loss_beyond": {
+          "-0.2": 0.9666666666666667,
+          "-0.4": 0.9333333333333333
+        },
+        "terminal_price": {
+          "mean": 3.0565987233962364,
+          "median": 2.655067012572468,
+          "n": 30,
+          "p01": -8.042004805471352,
+          "p05": -5.1447218695938
+        },
+        "terminal_vps": {
+          "mean": 3.0565987233962364,
+          "median": 2.655067012572468,
+          "n": 30,
+          "p01": -8.042004805471352,
+          "p05": -5.1447218695938
+        }
+      }
+    },
+    {
+      "entry_price": 21.32,
+      "horizon_years": 1,
+      "n_failed": 0,
+      "n_valid": 30,
+      "relative_to_spot": 1.0,
+      "stats": {
+        "annualized_convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+        "annualized_geometric": {
+          "convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+          "mean": -0.7224319615671534,
+          "median": -0.7588503367535832,
+          "n": 20,
+          "n_undefined": 10,
+          "p05": -0.9823797382682231
+        },
+        "compounding_convention": "DIVIDEND-NO-REINVEST-v1",
+        "cvar": {
+          "0.95": -1.3470950520487865,
+          "0.99": -1.4120457610843538
+        },
+        "mcse": {
+          "mean": 0.04808249411159907,
+          "p05_note": "quantile MCSE not reported; use repeated-seed stability diagnostics",
+          "p_loss": 0.0
+        },
+        "mean": -0.8538205316851744,
+        "median": -0.8726502193921979,
+        "n": 30,
+        "p01": -1.3743743498437246,
+        "p05": -1.2384910122651311,
+        "p_exceed_hurdle": {
+          "0.0": 0.0,
+          "0.08": 0.0,
+          "0.15": 0.0
+        },
+        "p_loss": 1.0,
+        "p_loss_beyond": {
+          "-0.2": 1.0,
+          "-0.4": 0.9333333333333333
+        },
+        "terminal_price": {
+          "mean": 3.0565987233962364,
+          "median": 2.655067012572468,
+          "n": 30,
+          "p01": -8.042004805471352,
+          "p05": -5.1447218695938
+        },
+        "terminal_vps": {
+          "mean": 3.0565987233962364,
+          "median": 2.655067012572468,
+          "n": 30,
+          "p01": -8.042004805471352,
+          "p05": -5.1447218695938
+        }
+      }
+    },
+    {
+      "entry_price": 23.452,
+      "horizon_years": 1,
+      "n_failed": 0,
+      "n_valid": 30,
+      "relative_to_spot": 1.1,
+      "stats": {
+        "annualized_convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+        "annualized_geometric": {
+          "convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+          "mean": -0.7476654196065031,
+          "median": -0.7807730334123484,
+          "n": 20,
+          "n_undefined": 10,
+          "p05": -0.9839815802438392
+        },
+        "compounding_convention": "DIVIDEND-NO-REINVEST-v1",
+        "cvar": {
+          "0.95": -1.3155409564079878,
+          "0.99": -1.3745870555312307
+        },
+        "mcse": {
+          "mean": 0.04371135828327188,
+          "p05_note": "quantile MCSE not reported; use repeated-seed stability diagnostics",
+          "p_loss": 0.0
+        },
+        "mean": -0.8671095742592495,
+        "median": -0.8842274721747255,
+        "n": 30,
+        "p01": -1.3403403180397497,
+        "p05": -1.2168100111501194,
+        "p_exceed_hurdle": {
+          "0.0": 0.0,
+          "0.08": 0.0,
+          "0.15": 0.0
+        },
+        "p_loss": 1.0,
+        "p_loss_beyond": {
+          "-0.2": 1.0,
+          "-0.4": 0.9666666666666667
+        },
+        "terminal_price": {
+          "mean": 3.0565987233962364,
+          "median": 2.655067012572468,
+          "n": 30,
+          "p01": -8.042004805471352,
+          "p05": -5.1447218695938
+        },
+        "terminal_vps": {
+          "mean": 3.0565987233962364,
+          "median": 2.655067012572468,
+          "n": 30,
+          "p01": -8.042004805471352,
+          "p05": -5.1447218695938
+        }
+      }
+    },
+    {
+      "entry_price": 25.584,
+      "horizon_years": 1,
+      "n_failed": 0,
+      "n_valid": 30,
+      "relative_to_spot": 1.2,
+      "stats": {
+        "annualized_convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+        "annualized_geometric": {
+          "convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+          "mean": -0.768693301305961,
+          "median": -0.7990419472946526,
+          "n": 20,
+          "n_undefined": 10,
+          "p05": -0.9853164485568525
+        },
+        "compounding_convention": "DIVIDEND-NO-REINVEST-v1",
+        "cvar": {
+          "0.95": -1.289245876707322,
+          "0.99": -1.3433714675702948
+        },
+        "mcse": {
+          "mean": 0.04006874509299922,
+          "p05_note": "quantile MCSE not reported; use repeated-seed stability diagnostics",
+          "p_loss": 0.0
+        },
+        "mean": -0.878183776404312,
+        "median": -0.8938751828268316,
+        "n": 30,
+        "p01": -1.3119786248697707,
+        "p05": -1.1987425102209426,
+        "p_exceed_hurdle": {
+          "0.0": 0.0,
+          "0.08": 0.0,
+          "0.15": 0.0
+        },
+        "p_loss": 1.0,
+        "p_loss_beyond": {
+          "-0.2": 1.0,
+          "-0.4": 0.9666666666666667
+        },
+        "terminal_price": {
+          "mean": 3.0565987233962364,
+          "median": 2.655067012572468,
+          "n": 30,
+          "p01": -8.042004805471352,
+          "p05": -5.1447218695938
+        },
+        "terminal_vps": {
+          "mean": 3.0565987233962364,
+          "median": 2.655067012572468,
+          "n": 30,
+          "p01": -8.042004805471352,
+          "p05": -5.1447218695938
+        }
+      }
+    },
+    {
+      "entry_price": 27.716,
+      "horizon_years": 1,
+      "n_failed": 0,
+      "n_valid": 30,
+      "relative_to_spot": 1.3,
+      "stats": {
+        "annualized_convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+        "annualized_geometric": {
+          "convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+          "mean": -0.7864861242824256,
+          "median": -0.8145002590412178,
+          "n": 20,
+          "n_undefined": 10,
+          "p05": -0.9864459525140177
+        },
+        "compounding_convention": "DIVIDEND-NO-REINVEST-v1",
+        "cvar": {
+          "0.95": -1.266996193883682,
+          "0.99": -1.3169582777571953
+        },
+        "mcse": {
+          "mean": 0.036986533931999285,
+          "p05_note": "quantile MCSE not reported; use repeated-seed stability diagnostics",
+          "p_loss": 0.0
+        },
+        "mean": -0.8875542551424419,
+        "median": -0.9020386303016907,
+        "n": 30,
+        "p01": -1.2879802691105575,
+        "p05": -1.1834546248193318,
+        "p_exceed_hurdle": {
+          "0.0": 0.0,
+          "0.08": 0.0,
+          "0.15": 0.0
+        },
+        "p_loss": 1.0,
+        "p_loss_beyond": {
+          "-0.2": 1.0,
+          "-0.4": 1.0
+        },
+        "terminal_price": {
+          "mean": 3.0565987233962364,
+          "median": 2.655067012572468,
+          "n": 30,
+          "p01": -8.042004805471352,
+          "p05": -5.1447218695938
+        },
+        "terminal_vps": {
+          "mean": 3.0565987233962364,
+          "median": 2.655067012572468,
+          "n": 30,
+          "p01": -8.042004805471352,
+          "p05": -5.1447218695938
+        }
+      }
+    },
+    {
+      "entry_price": 14.924,
+      "horizon_years": 3,
+      "n_failed": 0,
+      "n_valid": 30,
+      "relative_to_spot": 0.7,
+      "stats": {
+        "annualized_convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+        "annualized_geometric": {
+          "convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+          "mean": -0.2880967840356045,
+          "median": -0.262032344526743,
+          "n": 20,
+          "n_undefined": 10,
+          "p05": -0.6940735185729043
+        },
+        "compounding_convention": "DIVIDEND-NO-REINVEST-v1",
+        "cvar": {
+          "0.95": -1.6108017520067297,
+          "0.99": -1.7395225687569829
+        },
+        "mcse": {
+          "mean": 0.07931289789738839,
+          "p05_note": "quantile MCSE not reported; use repeated-seed stability diagnostics",
+          "p_loss": 0.045542003404264876
+        },
+        "mean": -0.7708081191940848,
+        "median": -0.7249759215725842,
+        "n": 30,
+        "p01": -1.664864495041836,
+        "p05": -1.4076149464096006,
+        "p_exceed_hurdle": {
+          "0.0": 0.06666666666666667,
+          "0.08": 0.03333333333333333,
+          "0.15": 0.0
+        },
+        "p_loss": 0.9333333333333333,
+        "p_loss_beyond": {
+          "-0.2": 0.9333333333333333,
+          "-0.4": 0.8
+        },
+        "terminal_price": {
+          "mean": 3.2652884013744474,
+          "median": 3.913552681107429,
+          "n": 30,
+          "p01": -10.029660565946394,
+          "p05": -6.245523216160255
+        },
+        "terminal_vps": {
+          "mean": 3.2652884013744474,
+          "median": 3.913552681107429,
+          "n": 30,
+          "p01": -10.029660565946394,
+          "p05": -6.245523216160255
+        }
+      }
+    },
+    {
+      "entry_price": 17.056,
+      "horizon_years": 3,
+      "n_failed": 0,
+      "n_valid": 30,
+      "relative_to_spot": 0.8,
+      "stats": {
+        "annualized_convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+        "annualized_geometric": {
+          "convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+          "mean": -0.31908906953288063,
+          "median": -0.29415932998388783,
+          "n": 20,
+          "n_undefined": 10,
+          "p05": -0.7073918470211349
+        },
+        "compounding_convention": "DIVIDEND-NO-REINVEST-v1",
+        "cvar": {
+          "0.95": -1.5344515330058883,
+          "0.99": -1.6470822476623599
+        },
+        "mcse": {
+          "mean": 0.06939878566021485,
+          "p05_note": "quantile MCSE not reported; use repeated-seed stability diagnostics",
+          "p_loss": 0.0
+        },
+        "mean": -0.7994571042948242,
+        "median": -0.7593539313760111,
+        "n": 30,
+        "p01": -1.5817564331616063,
+        "p05": -1.3566630781084004,
+        "p_exceed_hurdle": {
+          "0.0": 0.0,
+          "0.08": 0.0,
+          "0.15": 0.0
+        },
+        "p_loss": 1.0,
+        "p_loss_beyond": {
+          "-0.2": 0.9333333333333333,
+          "-0.4": 0.8333333333333334
+        },
+        "terminal_price": {
+          "mean": 3.2652884013744474,
+          "median": 3.913552681107429,
+          "n": 30,
+          "p01": -10.029660565946394,
+          "p05": -6.245523216160255
+        },
+        "terminal_vps": {
+          "mean": 3.2652884013744474,
+          "median": 3.913552681107429,
+          "n": 30,
+          "p01": -10.029660565946394,
+          "p05": -6.245523216160255
+        }
+      }
+    },
+    {
+      "entry_price": 19.188000000000002,
+      "horizon_years": 3,
+      "n_failed": 0,
+      "n_valid": 30,
+      "relative_to_spot": 0.9000000000000001,
+      "stats": {
+        "annualized_convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+        "annualized_geometric": {
+          "convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+          "mean": -0.34530433541078637,
+          "median": -0.32133439797584595,
+          "n": 20,
+          "n_undefined": 10,
+          "p05": -0.7186573447318583
+        },
+        "compounding_convention": "DIVIDEND-NO-REINVEST-v1",
+        "cvar": {
+          "0.95": -1.4750680293385674,
+          "0.99": -1.5751842201443198
+        },
+        "mcse": {
+          "mean": 0.06168780947574651,
+          "p05_note": "quantile MCSE not reported; use repeated-seed stability diagnostics",
+          "p_loss": 0.0
+        },
+        "mean": -0.8217396482620664,
+        "median": -0.7860923834453433,
+        "n": 30,
+        "p01": -1.5171168294769835,
+        "p05": -1.317033847207467,
+        "p_exceed_hurdle": {
+          "0.0": 0.0,
+          "0.08": 0.0,
+          "0.15": 0.0
+        },
+        "p_loss": 1.0,
+        "p_loss_beyond": {
+          "-0.2": 0.9333333333333333,
+          "-0.4": 0.9
+        },
+        "terminal_price": {
+          "mean": 3.2652884013744474,
+          "median": 3.913552681107429,
+          "n": 30,
+          "p01": -10.029660565946394,
+          "p05": -6.245523216160255
+        },
+        "terminal_vps": {
+          "mean": 3.2652884013744474,
+          "median": 3.913552681107429,
+          "n": 30,
+          "p01": -10.029660565946394,
+          "p05": -6.245523216160255
+        }
+      }
+    },
+    {
+      "entry_price": 21.32,
+      "horizon_years": 3,
+      "n_failed": 0,
+      "n_valid": 30,
+      "relative_to_spot": 1.0,
+      "stats": {
+        "annualized_convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+        "annualized_geometric": {
+          "convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+          "mean": -0.3678982856917864,
+          "median": -0.3447555655486903,
+          "n": 20,
+          "n_undefined": 10,
+          "p05": -0.7283666529018481
+        },
+        "compounding_convention": "DIVIDEND-NO-REINVEST-v1",
+        "cvar": {
+          "0.95": -1.4275612264047108,
+          "0.99": -1.5176657981298882
+        },
+        "mcse": {
+          "mean": 0.05551902852817188,
+          "p05_note": "quantile MCSE not reported; use repeated-seed stability diagnostics",
+          "p_loss": 0.0
+        },
+        "mean": -0.8395656834358595,
+        "median": -0.8074831451008089,
+        "n": 30,
+        "p01": -1.4654051465292854,
+        "p05": -1.2853304624867203,
+        "p_exceed_hurdle": {
+          "0.0": 0.0,
+          "0.08": 0.0,
+          "0.15": 0.0
+        },
+        "p_loss": 1.0,
+        "p_loss_beyond": {
+          "-0.2": 1.0,
+          "-0.4": 0.9333333333333333
+        },
+        "terminal_price": {
+          "mean": 3.2652884013744474,
+          "median": 3.913552681107429,
+          "n": 30,
+          "p01": -10.029660565946394,
+          "p05": -6.245523216160255
+        },
+        "terminal_vps": {
+          "mean": 3.2652884013744474,
+          "median": 3.913552681107429,
+          "n": 30,
+          "p01": -10.029660565946394,
+          "p05": -6.245523216160255
+        }
+      }
+    },
+    {
+      "entry_price": 23.452,
+      "horizon_years": 3,
+      "n_failed": 0,
+      "n_valid": 30,
+      "relative_to_spot": 1.1,
+      "stats": {
+        "annualized_convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+        "annualized_geometric": {
+          "convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+          "mean": -0.38766454488105306,
+          "median": -0.36524551365437413,
+          "n": 20,
+          "n_undefined": 10,
+          "p05": -0.7368608161380074
+        },
+        "compounding_convention": "DIVIDEND-NO-REINVEST-v1",
+        "cvar": {
+          "0.95": -1.3886920240042824,
+          "0.99": -1.4706052710271709
+        },
+        "mcse": {
+          "mean": 0.05047184411651988,
+          "p05_note": "quantile MCSE not reported; use repeated-seed stability diagnostics",
+          "p_loss": 0.0
+        },
+        "mean": -0.8541506213053268,
+        "median": -0.8249846773643719,
+        "n": 30,
+        "p01": -1.4230955877538956,
+        "p05": -1.259391329533382,
+        "p_exceed_hurdle": {
+          "0.0": 0.0,
+          "0.08": 0.0,
+          "0.15": 0.0
+        },
+        "p_loss": 1.0,
+        "p_loss_beyond": {
+          "-0.2": 1.0,
+          "-0.4": 0.9333333333333333
+        },
+        "terminal_price": {
+          "mean": 3.2652884013744474,
+          "median": 3.913552681107429,
+          "n": 30,
+          "p01": -10.029660565946394,
+          "p05": -6.245523216160255
+        },
+        "terminal_vps": {
+          "mean": 3.2652884013744474,
+          "median": 3.913552681107429,
+          "n": 30,
+          "p01": -10.029660565946394,
+          "p05": -6.245523216160255
+        }
+      }
+    },
+    {
+      "entry_price": 25.584,
+      "horizon_years": 3,
+      "n_failed": 0,
+      "n_valid": 30,
+      "relative_to_spot": 1.2,
+      "stats": {
+        "annualized_convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+        "annualized_geometric": {
+          "convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+          "mean": -0.40516951291850817,
+          "median": -0.38339137945754415,
+          "n": 20,
+          "n_undefined": 10,
+          "p05": -0.744383233735093
+        },
+        "compounding_convention": "DIVIDEND-NO-REINVEST-v1",
+        "cvar": {
+          "0.95": -1.3563010220039255,
+          "0.99": -1.43138816510824
+        },
+        "mcse": {
+          "mean": 0.04626585710680989,
+          "p05_note": "quantile MCSE not reported; use repeated-seed stability diagnostics",
+          "p_loss": 0.0
+        },
+        "mean": -0.8663047361965494,
+        "median": -0.8395692875840075,
+        "n": 30,
+        "p01": -1.3878376221077378,
+        "p05": -1.2377753854056002,
+        "p_exceed_hurdle": {
+          "0.0": 0.0,
+          "0.08": 0.0,
+          "0.15": 0.0
+        },
+        "p_loss": 1.0,
+        "p_loss_beyond": {
+          "-0.2": 1.0,
+          "-0.4": 0.9333333333333333
+        },
+        "terminal_price": {
+          "mean": 3.2652884013744474,
+          "median": 3.913552681107429,
+          "n": 30,
+          "p01": -10.029660565946394,
+          "p05": -6.245523216160255
+        },
+        "terminal_vps": {
+          "mean": 3.2652884013744474,
+          "median": 3.913552681107429,
+          "n": 30,
+          "p01": -10.029660565946394,
+          "p05": -6.245523216160255
+        }
+      }
+    },
+    {
+      "entry_price": 27.716,
+      "horizon_years": 3,
+      "n_failed": 0,
+      "n_valid": 30,
+      "relative_to_spot": 1.3,
+      "stats": {
+        "annualized_convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+        "annualized_geometric": {
+          "convention": "ANNUALIZED-GEO-ENDYEAR-v1: (1+R)^(1/H)-1",
+          "mean": -0.4208302765038069,
+          "median": -0.39962552017610753,
+          "n": 20,
+          "n_undefined": 10,
+          "p05": -0.7511131405435935
+        },
+        "compounding_convention": "DIVIDEND-NO-REINVEST-v1",
+        "cvar": {
+          "0.95": -1.328893251080547,
+          "0.99": -1.398204460099914
+        },
+        "mcse": {
+          "mean": 0.04270694502167067,
+          "p05_note": "quantile MCSE not reported; use repeated-seed stability diagnostics",
+          "p_loss": 0.0
+        },
+        "mean": -0.8765889872583535,
+        "median": -0.8519101116160068,
+        "n": 30,
+        "p01": -1.358003958868681,
+        "p05": -1.219484971143631,
+        "p_exceed_hurdle": {
+          "0.0": 0.0,
+          "0.08": 0.0,
+          "0.15": 0.0
+        },
+        "p_loss": 1.0,
+        "p_loss_beyond": {
+          "-0.2": 1.0,
+          "-0.4": 1.0
+        },
+        "terminal_price": {
+          "mean": 3.2652884013744474,
+          "median": 3.913552681107429,
+          "n": 30,
+          "p01": -10.029660565946394,
+          "p05": -6.245523216160255
+        },
+        "terminal_vps": {
+          "mean": 3.2652884013744474,
+          "median": 3.913552681107429,
+          "n": 30,
+          "p01": -10.029660565946394,
+          "p05": -6.245523216160255
+        }
+      }
+    }
+  ],
+  "n_input_paths": 30,
+  "n_valid_paths": 30,
+  "notes": [
+    "Dividend treatment: DIVIDEND-NO-REINVEST-v1 (cumulative cash DPS, no reinvestment).",
+    "Horizon equity: HORIZON-EQUITY-REMAINING-PV-v1 (remaining FCFF PV + TV to H, then bridge).",
+    "Annualized geometric: ANNUALIZED-GEO-ENDYEAR-v1.",
+    "No claim of universally optimal buy price; allocation is a portfolio decision.",
+    "Lower entry price does not alter fundamental regime odds; paths are held fixed across the price grid."
+  ],
+  "path_returns": [
+    {
+      "annualized_geometric": -0.35964848198796906,
+      "cum_dps": 0.059096047927104725,
+      "entry_price": 14.924,
+      "flags": [],
+      "holding_return": -0.35964848198796906,
+      "horizon_years": 1,
+      "initial_state": "DETERIORATING",
+      "invalid_reason": null,
+      "path_id": "mc:0",
+      "valid": true,
+      "value_per_share": 9.497510006884445
+    },
+    {
+      "annualized_geometric": -0.439692421739473,
+      "cum_dps": 0.059096047927104725,
+      "entry_price": 17.056,
+      "flags": [],
+      "holding_return": -0.439692421739473,
+      "horizon_years": 1,
+      "initial_state": "DETERIORATING",
+      "invalid_reason": null,
+      "path_id": "mc:0",
+      "valid": true,
+      "value_per_share": 9.497510006884445
+    },
+    {
+      "annualized_geometric": -0.5019488193239761,
+      "cum_dps": 0.059096047927104725,
+      "entry_price": 19.188000000000002,
+      "flags": [],
+      "holding_return": -0.5019488193239761,
+      "horizon_years": 1,
+      "initial_state": "DETERIORATING",
+      "invalid_reason": null,
+      "path_id": "mc:0",
+      "valid": true,
+      "value_per_share": 9.497510006884445
+    },
+    {
+      "annualized_geometric": -0.5517539373915784,
+      "cum_dps": 0.059096047927104725,
+      "entry_price": 21.32,
+      "flags": [],
+      "holding_return": -0.5517539373915784,
+      "horizon_years": 1,
+      "initial_state": "DETERIORATING",
+      "invalid_reason": null,
+      "path_id": "mc:0",
+      "valid": true,
+      "value_per_share": 9.497510006884445
+    },
+    {
+      "annualized_geometric": -0.5925035794468895,
+      "cum_dps": 0.059096047927104725,
+      "entry_price": 23.452,
+      "flags": [],
+      "holding_return": -0.5925035794468895,
+      "horizon_years": 1,
+      "initial_state": "DETERIORATING",
+      "invalid_reason": null,
+      "path_id": "mc:0",
+      "valid": true,
+      "value_per_share": 9.497510006884445
+    },
+    {
+      "annualized_geometric": -0.626461614492982,
+      "cum_dps": 0.059096047927104725,
+      "entry_price": 25.584,
+      "flags": [],
+      "holding_return": -0.626461614492982,
+      "horizon_years": 1,
+      "initial_state": "DETERIORATING",
+      "invalid_reason": null,
+      "path_id": "mc:0",
+      "valid": true,
+      "value_per_share": 9.497510006884445
+    },
+    {
+      "annualized_geometric": -0.6551953364550603,
+      "cum_dps": 0.059096047927104725,
+      "entry_price": 27.716,
+      "flags": [],
+      "holding_return": -0.6551953364550603,
+      "horizon_years": 1,
+      "initial_state": "DETERIORATING",
+      "invalid_reason": null,
+      "path_id": "mc:0",
+      "valid": true,
+      "value_per_share": 9.497510006884445
+    },
+    {
+      "annualized_geometric": -0.08590026833672992,
+      "cum_dps": 0.09573738090120934,
+      "entry_price": 14.924,
+      "flags": [],
+      "holding_return": -0.23619808242825893,
+      "horizon_years": 3,
+      "initial_state": "DETERIORATING",
+      "invalid_reason": null,
+      "path_id": "mc:0",
+      "valid": true,
+      "value_per_share": 11.303242436939454
+    },
+    {
+      "annualized_geometric": -0.12569505956872862,
+      "cum_dps": 0.09573738090120934,
+      "entry_price": 17.056,
+      "flags": [],
+      "holding_return": -0.3316733221247266,
+      "horizon_years": 3,
+      "initial_state": "DETERIORATING",
+      "invalid_reason": null,
+      "path_id": "mc:0",
+      "valid": true,
+      "value_per_share": 11.303242436939454
+    },
+    {
+      "annualized_geometric": -0.15935605023023647,
+      "cum_dps": 0.09573738090120934,
+      "entry_price": 19.188000000000002,
+      "flags": [],
+      "holding_return": -0.40593184188864595,
+      "horizon_years": 3,
+      "initial_state": "DETERIORATING",
+      "invalid_reason": null,
+      "path_id": "mc:0",
+      "valid": true,
+      "value_per_share": 11.303242436939454
+    },
+    {
+      "annualized_geometric": -0.188367190264345,
+      "cum_dps": 0.09573738090120934,
+      "entry_price": 21.32,
+      "flags": [],
+      "holding_return": -0.4653386576997813,
+      "horizon_years": 3,
+      "initial_state": "DETERIORATING",
+      "invalid_reason": null,
+      "path_id": "mc:0",
+      "valid": true,
+      "value_per_share": 11.303242436939454
+    },
+    {
+      "annualized_geometric": -0.21374751137501546,
+      "cum_dps": 0.09573738090120934,
+      "entry_price": 23.452,
+      "flags": [],
+      "holding_return": -0.5139442342725284,
+      "horizon_years": 3,
+      "initial_state": "DETERIORATING",
+      "invalid_reason": null,
+      "path_id": "mc:0",
+      "valid": true,
+      "value_per_share": 11.303242436939454
+    },
+    {
+      "annualized_geometric": -0.23622428381680782,
+      "cum_dps": 0.09573738090120934,
+      "entry_price": 25.584,
+      "flags": [],
+      "holding_return": -0.5544488814164844,
+      "horizon_years": 3,
+      "initial_state": "DETERIORATING",
+      "invalid_reason": null,
+      "path_id": "mc:0",
+      "valid": true,
+      "value_per_share": 11.303242436939454
+    },
+    {
+      "annualized_geometric": -0.25633305628747394,
+      "cum_dps": 0.09573738090120934,
+      "entry_price": 27.716,
+      "flags": [],
+      "holding_return": -0.5887220443844472,
+      "horizon_years": 3,
+      "initial_state": "DETERIORATING",
+      "invalid_reason": null,
+      "path_id": "mc:0",
+      "valid": true,
+      "value_per_share": 11.303242436939454
+    },
+    {
+      "annualized_geometric": -0.3831332073972463,
+      "cum_dps": 0.06129801536761615,
+      "entry_price": 14.924,
+      "flags": [],
+      "holding_return": -0.3831332073972463,
+      "horizon_years": 1,
+      "initial_state": "DETERIORATING",
+      "invalid_reason": null,
+      "path_id": "mc:1",
+      "valid": true,
+      "value_per_share": 9.14482199743588
+    },
+    {
+      "annualized_geometric": -0.4602415564725906,
+      "cum_dps": 0.06129801536761615,
+      "entry_price": 17.056,
+      "flags": [],
+      "holding_return": -0.4602415564725906,
+      "horizon_years": 1,
+      "initial_state": "DETERIORATING",
+      "invalid_reason": null,
+      "path_id": "mc:1",
+      "valid": true,
+      "value_per_share": 9.14482199743588
+    },
+    {
+      "annualized_geometric": -0.520214716864525,
+      "cum_dps": 0.06129801536761615,
+      "entry_price": 19.188000000000002,
+      "flags": [],
+      "holding_return": -0.520214716864525,
+      "horizon_years": 1,
+      "initial_state": "DETERIORATING",
+      "invalid_reason": null,
+      "path_id": "mc:1",
+      "valid": true,
+      "value_per_share": 9.14482199743588
+    },
+    {
+      "annualized_geometric": -0.5681932451780725,
+      "cum_dps": 0.06129801536761615,
+      "entry_price": 21.32,
+      "flags": [],
+      "holding_return": -0.5681932451780725,
+      "horizon_years": 1,
+      "initial_state": "DETERIORATING",
+      "invalid_reason": null,
+      "path_id": "mc:1",
+      "valid": true,
+      "value_per_share": 9.14482199743588
+    },
+    {
+      "annualized_geometric": -0.6074484047073386,
+      "cum_dps": 0.06129801536761615,
+      "entry_price": 23.452,
+      "flags": [],
+      "holding_return": -0.6074484047073386,
+      "horizon_years": 1,
+      "initial_state": "DETERIORATING",
+      "invalid_reason": null,
+      "path_id": "mc:1",
+      "valid": true,
+      "value_per_share": 9.14482199743588
+    },
+    {
+      "annualized_geometric": -0.6401610376483937,
+      "cum_dps": 0.06129801536761615,
+      "entry_price": 25.584,
+      "flags": [],
+      "holding_return": -0.6401610376483937,
+      "horizon_years": 1,
+      "initial_state": "DETERIORATING",
+      "invalid_reason": null,
+      "path_id": "mc:1",
+      "valid": true,
+      "value_per_share": 9.14482199743588
+    },
+    {
+      "annualized_geometric": -0.6678409578292865,
+      "cum_dps": 0.06129801536761615,
+      "entry_price": 27.716,
+      "flags": [],
+      "holding_return": -0.6678409578292865,
+      "horizon_years": 1,
+      "initial_state": "DETERIORATING",
+      "invalid_reason": null,
+      "path_id": "mc:1",
+      "valid": true,
+      "value_per_share": 9.14482199743588
+    },
+    {
+      "annualized_geometric": -0.10855436692368114,
+      "cum_dps": 0.21553817827654112,
+      "entry_price": 14.924,
+      "flags": [],
+      "holding_return": -0.291590159186753,
+      "horizon_years": 3,
+      "initial_state": "DETERIORATING",
+      "invalid_reason": null,
+      "path_id": "mc:1",
+      "valid": true,
+      "value_per_share": 10.356770286020357
+    },
+    {
+      "annualized_geometric": -0.14736292537101803,
+      "cum_dps": 0.21553817827654112,
+      "entry_price": 17.056,
+      "flags": [],
+      "holding_return": -0.38014138928840896,
+      "horizon_years": 3,
+      "initial_state": "DETERIORATING",
+      "invalid_reason": null,
+      "path_id": "mc:1",
+      "valid": true,
+      "value_per_share": 10.356770286020357
+    },
+    {
+      "annualized_geometric": -0.1801896969921234,
+      "cum_dps": 0.21553817827654112,
+      "entry_price": 19.188000000000002,
+      "flags": [],
+      "holding_return": -0.44901456825636354,
+      "horizon_years": 3,
+      "initial_state": "DETERIORATING",
+      "invalid_reason": null,
+      "path_id": "mc:1",
+      "valid": true,
+      "value_per_share": 10.356770286020357
+    },
+    {
+      "annualized_geometric": -0.20848185505557038,
+      "cum_dps": 0.21553817827654112,
+      "entry_price": 21.32,
+      "flags": [],
+      "holding_return": -0.5041131114307271,
+      "horizon_years": 3,
+      "initial_state": "DETERIORATING",
+      "invalid_reason": null,
+      "path_id": "mc:1",
+      "valid": true,
+      "value_per_share": 10.356770286020357
+    },
+    {
+      "annualized_geometric": -0.23323317664168852,
+      "cum_dps": 0.21553817827654112,
+      "entry_price": 23.452,
+      "flags": [],
+      "holding_return": -0.5491937376642975,
+      "horizon_years": 3,
+      "initial_state": "DETERIORATING",
+      "invalid_reason": null,
+      "path_id": "mc:1",
+      "valid": true,
+      "value_per_share": 10.356770286020357
+    },
+    {
+      "annualized_geometric": -0.25515290809421565,
+      "cum_dps": 0.21553817827654112,
+      "entry_price": 25.584,
+      "flags": [],
+      "holding_return": -0.5867609261922726,
+      "horizon_years": 3,
+      "initial_state": "DETERIORATING",
+      "invalid_reason": null,
+      "path_id": "mc:1",
+      "valid": true,
+      "value_per_share": 10.356770286020357
+    },
+    {
+      "annualized_geometric": -0.2747633256280695,
+      "cum_dps": 0.21553817827654112,
+      "entry_price": 27.716,
+      "flags": [],
+      "holding_return": -0.6185485472544056,
+      "horizon_years": 3,
+      "initial_state": "DETERIORATING",
+      "invalid_reason": null,
+      "path_id": "mc:1",
+      "valid": true,
+      "value_per_share": 10.356770286020357
+    },
+    {
+      "annualized_geometric": -0.32069788792293985,
+      "cum_dps": 0.058992541232497545,
+      "entry_price": 14.924,
+      "flags": [],
+      "holding_return": -0.3206978879229399,
+      "horizon_years": 1,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:2",
+      "valid": true,
+      "value_per_share": 10.078912179405547
+    },
+    {
+      "annualized_geometric": -0.4056106519325725,
+      "cum_dps": 0.058992541232497545,
+      "entry_price": 17.056,
+      "flags": [],
+      "holding_return": -0.4056106519325725,
+      "horizon_years": 1,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:2",
+      "valid": true,
+      "value_per_share": 10.078912179405547
+    },
+    {
+      "annualized_geometric": -0.4716539128289534,
+      "cum_dps": 0.058992541232497545,
+      "entry_price": 19.188000000000002,
+      "flags": [],
+      "holding_return": -0.47165391282895336,
+      "horizon_years": 1,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:2",
+      "valid": true,
+      "value_per_share": 10.078912179405547
+    },
+    {
+      "annualized_geometric": -0.524488521546058,
+      "cum_dps": 0.058992541232497545,
+      "entry_price": 21.32,
+      "flags": [],
+      "holding_return": -0.524488521546058,
+      "horizon_years": 1,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:2",
+      "valid": true,
+      "value_per_share": 10.078912179405547
+    },
+    {
+      "annualized_geometric": -0.5677168377691436,
+      "cum_dps": 0.058992541232497545,
+      "entry_price": 23.452,
+      "flags": [],
+      "holding_return": -0.5677168377691436,
+      "horizon_years": 1,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:2",
+      "valid": true,
+      "value_per_share": 10.078912179405547
+    },
+    {
+      "annualized_geometric": -0.603740434621715,
+      "cum_dps": 0.058992541232497545,
+      "entry_price": 25.584,
+      "flags": [],
+      "holding_return": -0.603740434621715,
+      "horizon_years": 1,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:2",
+      "valid": true,
+      "value_per_share": 10.078912179405547
+    },
+    {
+      "annualized_geometric": -0.6342219396508139,
+      "cum_dps": 0.058992541232497545,
+      "entry_price": 27.716,
+      "flags": [],
+      "holding_return": -0.6342219396508139,
+      "horizon_years": 1,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:2",
+      "valid": true,
+      "value_per_share": 10.078912179405547
+    },
+    {
+      "annualized_geometric": -0.07640839085443973,
+      "cum_dps": 0.1730127085058564,
+      "entry_price": 14.924,
+      "flags": [],
+      "holding_return": -0.2121565366758077,
+      "horizon_years": 3,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:2",
+      "valid": true,
+      "value_per_share": 11.584763138144389
+    },
+    {
+      "annualized_geometric": -0.11661640535926465,
+      "cum_dps": 0.1730127085058564,
+      "entry_price": 17.056,
+      "flags": [],
+      "holding_return": -0.3106369695913318,
+      "horizon_years": 3,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:2",
+      "valid": true,
+      "value_per_share": 11.584763138144389
+    },
+    {
+      "annualized_geometric": -0.15062692680852385,
+      "cum_dps": 0.1730127085058564,
+      "entry_price": 19.188000000000002,
+      "flags": [],
+      "holding_return": -0.38723286185896166,
+      "horizon_years": 3,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:2",
+      "valid": true,
+      "value_per_share": 11.584763138144389
+    },
+    {
+      "annualized_geometric": -0.17993931426376908,
+      "cum_dps": 0.1730127085058564,
+      "entry_price": 21.32,
+      "flags": [],
+      "holding_return": -0.44850957567306543,
+      "horizon_years": 3,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:2",
+      "valid": true,
+      "value_per_share": 11.584763138144389
+    },
+    {
+      "annualized_geometric": -0.205583180904647,
+      "cum_dps": 0.1730127085058564,
+      "entry_price": 23.452,
+      "flags": [],
+      "holding_return": -0.49864506879369586,
+      "horizon_years": 3,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:2",
+      "valid": true,
+      "value_per_share": 11.584763138144389
+    },
+    {
+      "annualized_geometric": -0.2282933488533242,
+      "cum_dps": 0.1730127085058564,
+      "entry_price": 25.584,
+      "flags": [],
+      "holding_return": -0.5404246463942212,
+      "horizon_years": 3,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:2",
+      "valid": true,
+      "value_per_share": 11.584763138144389
+    },
+    {
+      "annualized_geometric": -0.24861092786664551,
+      "cum_dps": 0.1730127085058564,
+      "entry_price": 27.716,
+      "flags": [],
+      "holding_return": -0.5757765966715888,
+      "horizon_years": 3,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:2",
+      "valid": true,
+      "value_per_share": 11.584763138144389
+    },
+    {
+      "annualized_geometric": null,
+      "cum_dps": 0.05918365347867086,
+      "entry_price": 14.924,
+      "flags": [
+        "ANNUALIZED_UNDEFINED_TOTAL_LOSS"
+      ],
+      "holding_return": -1.025066245213563,
+      "horizon_years": 1,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:3",
+      "valid": true,
+      "value_per_share": -0.4332722970458845
+    },
+    {
+      "annualized_geometric": null,
+      "cum_dps": 0.05918365347867086,
+      "entry_price": 17.056,
+      "flags": [
+        "ANNUALIZED_UNDEFINED_TOTAL_LOSS"
+      ],
+      "holding_return": -1.0219329645618676,
+      "horizon_years": 1,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:3",
+      "valid": true,
+      "value_per_share": -0.4332722970458845
+    },
+    {
+      "annualized_geometric": null,
+      "cum_dps": 0.05918365347867086,
+      "entry_price": 19.188000000000002,
+      "flags": [
+        "ANNUALIZED_UNDEFINED_TOTAL_LOSS"
+      ],
+      "holding_return": -1.0194959684994378,
+      "horizon_years": 1,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:3",
+      "valid": true,
+      "value_per_share": -0.4332722970458845
+    },
+    {
+      "annualized_geometric": null,
+      "cum_dps": 0.05918365347867086,
+      "entry_price": 21.32,
+      "flags": [
+        "ANNUALIZED_UNDEFINED_TOTAL_LOSS"
+      ],
+      "holding_return": -1.017546371649494,
+      "horizon_years": 1,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:3",
+      "valid": true,
+      "value_per_share": -0.4332722970458845
+    },
+    {
+      "annualized_geometric": null,
+      "cum_dps": 0.05918365347867086,
+      "entry_price": 23.452,
+      "flags": [
+        "ANNUALIZED_UNDEFINED_TOTAL_LOSS"
+      ],
+      "holding_return": -1.0159512469540855,
+      "horizon_years": 1,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:3",
+      "valid": true,
+      "value_per_share": -0.4332722970458845
+    },
+    {
+      "annualized_geometric": null,
+      "cum_dps": 0.05918365347867086,
+      "entry_price": 25.584,
+      "flags": [
+        "ANNUALIZED_UNDEFINED_TOTAL_LOSS"
+      ],
+      "holding_return": -1.0146219763745783,
+      "horizon_years": 1,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:3",
+      "valid": true,
+      "value_per_share": -0.4332722970458845
+    },
+    {
+      "annualized_geometric": null,
+      "cum_dps": 0.05918365347867086,
+      "entry_price": 27.716,
+      "flags": [
+        "ANNUALIZED_UNDEFINED_TOTAL_LOSS"
+      ],
+      "holding_return": -1.0134972089611491,
+      "horizon_years": 1,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:3",
+      "valid": true,
+      "value_per_share": -0.4332722970458845
+    },
+    {
+      "annualized_geometric": null,
+      "cum_dps": 0.10316004763198056,
+      "entry_price": 14.924,
+      "flags": [
+        "ANNUALIZED_UNDEFINED_TOTAL_LOSS"
+      ],
+      "holding_return": -1.1768230982852317,
+      "horizon_years": 3,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:3",
+      "valid": true,
+      "value_per_share": -2.742067966440777
+    },
+    {
+      "annualized_geometric": null,
+      "cum_dps": 0.10316004763198056,
+      "entry_price": 17.056,
+      "flags": [
+        "ANNUALIZED_UNDEFINED_TOTAL_LOSS"
+      ],
+      "holding_return": -1.1547202109995778,
+      "horizon_years": 3,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:3",
+      "valid": true,
+      "value_per_share": -2.742067966440777
+    },
+    {
+      "annualized_geometric": null,
+      "cum_dps": 0.10316004763198056,
+      "entry_price": 19.188000000000002,
+      "flags": [
+        "ANNUALIZED_UNDEFINED_TOTAL_LOSS"
+      ],
+      "holding_return": -1.137529076444069,
+      "horizon_years": 3,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:3",
+      "valid": true,
+      "value_per_share": -2.742067966440777
+    },
+    {
+      "annualized_geometric": null,
+      "cum_dps": 0.10316004763198056,
+      "entry_price": 21.32,
+      "flags": [
+        "ANNUALIZED_UNDEFINED_TOTAL_LOSS"
+      ],
+      "holding_return": -1.1237761687996621,
+      "horizon_years": 3,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:3",
+      "valid": true,
+      "value_per_share": -2.742067966440777
+    },
+    {
+      "annualized_geometric": null,
+      "cum_dps": 0.10316004763198056,
+      "entry_price": 23.452,
+      "flags": [
+        "ANNUALIZED_UNDEFINED_TOTAL_LOSS"
+      ],
+      "holding_return": -1.1125237898178748,
+      "horizon_years": 3,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:3",
+      "valid": true,
+      "value_per_share": -2.742067966440777
+    },
+    {
+      "annualized_geometric": null,
+      "cum_dps": 0.10316004763198056,
+      "entry_price": 25.584,
+      "flags": [
+        "ANNUALIZED_UNDEFINED_TOTAL_LOSS"
+      ],
+      "holding_return": -1.1031468073330517,
+      "horizon_years": 3,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:3",
+      "valid": true,
+      "value_per_share": -2.742067966440777
+    },
+    {
+      "annualized_geometric": null,
+      "cum_dps": 0.10316004763198056,
+      "entry_price": 27.716,
+      "flags": [
+        "ANNUALIZED_UNDEFINED_TOTAL_LOSS"
+      ],
+      "holding_return": -1.0952124375382017,
+      "horizon_years": 3,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:3",
+      "valid": true,
+      "value_per_share": -2.742067966440777
+    },
+    {
+      "annualized_geometric": null,
+      "cum_dps": 0.060023225090842576,
+      "entry_price": 14.924,
+      "flags": [
+        "ANNUALIZED_UNDEFINED_TOTAL_LOSS"
+      ],
+      "holding_return": -1.4030633471617417,
+      "horizon_years": 1,
+      "initial_state": "DETERIORATING",
+      "invalid_reason": null,
+      "path_id": "mc:4",
+      "valid": true,
+      "value_per_share": -6.0753406181326755
+    },
+    {
+      "annualized_geometric": null,
+      "cum_dps": 0.060023225090842576,
+      "entry_price": 17.056,
+      "flags": [
+        "ANNUALIZED_UNDEFINED_TOTAL_LOSS"
+      ],
+      "holding_return": -1.352680428766524,
+      "horizon_years": 1,
+      "initial_state": "DETERIORATING",
+      "invalid_reason": null,
+      "path_id": "mc:4",
+      "valid": true,
+      "value_per_share": -6.0753406181326755
+    },
+    {
+      "annualized_geometric": null,
+      "cum_dps": 0.060023225090842576,
+      "entry_price": 19.188000000000002,
+      "flags": [
+        "ANNUALIZED_UNDEFINED_TOTAL_LOSS"
+      ],
+      "holding_return": -1.3134937144591323,
+      "horizon_years": 1,
+      "initial_state": "DETERIORATING",
+      "invalid_reason": null,
+      "path_id": "mc:4",
+      "valid": true,
+      "value_per_share": -6.0753406181326755
+    },
+    {
+      "annualized_geometric": null,
+      "cum_dps": 0.060023225090842576,
+      "entry_price": 21.32,
+      "flags": [
+        "ANNUALIZED_UNDEFINED_TOTAL_LOSS"
+      ],
+      "holding_return": -1.2821443430132191,
+      "horizon_years": 1,
+      "initial_state": "DETERIORATING",
+      "invalid_reason": null,
+      "path_id": "mc:4",
+      "valid": true,
+      "value_per_share": -6.0753406181326755
+    },
+    {
+      "annualized_geometric": null,
+      "cum_dps": 0.060023225090842576,
+      "entry_price": 23.452,
+      "flags": [
+        "ANNUALIZED_UNDEFINED_TOTAL_LOSS"
+      ],
+      "holding_return": -1.2564948572847447,
+      "horizon_years": 1,
+      "initial_state": "DETERIORATING",
+      "invalid_reason": null,
+      "path_id": "mc:4",
+      "valid": true,
+      "value_per_share": -6.0753406181326755
+    },
+    {
+      "annualized_geometric": null,
+      "cum_dps": 0.060023225090842576,
+      "entry_price": 25.584,
+      "flags": [
+        "ANNUALIZED_UNDEFINED_TOTAL_LOSS"
+      ],
+      "holding_return": -1.2351202858443493,
+      "horizon_years": 1,
+      "initial_state": "DETERIORATING",
+      "invalid_reason": null,
+      "path_id": "mc:4",
+      "valid": true,
+      "value_per_share": -6.0753406181326755
+    },
+    {
+      "annualized_geometric": null,
+      "cum_dps": 0.060023225090842576,
+      "entry_price": 27.716,
+      "flags": [
+        "ANNUALIZED_UNDEFINED_TOTAL_LOSS"
+      ],
+      "holding_return": -1.2170341100101687,
+      "horizon_years": 1,
+      "initial_state": "DETERIORATING",
+      "invalid_reason": null,
+      "path_id": "mc:4",
+      "valid": true,
+      "value_per_share": -6.0753406181326755
+    },
+    {
+      "annualized_geometric": null,
+      "cum_dps": 0.13008044588606135,
+      "entry_price": 14.924,
+      "flags": [
+        "ANNUALIZED_UNDEFINED_TOTAL_LOSS"
+      ],
+      "holding_return": -1.4820809352564766,
+      "horizon_years": 3,
+      "initial_state": "DETERIORATING",
+      "invalid_reason": null,
+      "path_id": "mc:4",
+      "valid": true,
+      "value_per_share": -7.324656323653715
+    },
+    {
+      "annualized_geometric": null,
+      "cum_dps": 0.13008044588606135,
+      "entry_price": 17.056,
+      "flags": [
+        "ANNUALIZED_UNDEFINED_TOTAL_LOSS"
+      ],
+      "holding_return": -1.4218208183494168,
+      "horizon_years": 3,
+      "initial_state": "DETERIORATING",
+      "invalid_reason": null,
+      "path_id": "mc:4",
+      "valid": true,
+      "value_per_share": -7.324656323653715
+    },
+    {
+      "annualized_geometric": null,
+      "cum_dps": 0.13008044588606135,
+      "entry_price": 19.188000000000002,
+      "flags": [
+        "ANNUALIZED_UNDEFINED_TOTAL_LOSS"
+      ],
+      "holding_return": -1.374951838532815,
+      "horizon_years": 3,
+      "initial_state": "DETERIORATING",
+      "invalid_reason": null,
+      "path_id": "mc:4",
+      "valid": true,
+      "value_per_share": -7.324656323653715
+    },
+    {
+      "annualized_geometric": null,
+      "cum_dps": 0.13008044588606135,
+      "entry_price": 21.32,
+      "flags": [
+        "ANNUALIZED_UNDEFINED_TOTAL_LOSS"
+      ],
+      "holding_return": -1.3374566546795335,
+      "horizon_years": 3,
+      "initial_state": "DETERIORATING",
+      "invalid_reason": null,
+      "path_id": "mc:4",
+      "valid": true,
+      "value_per_share": -7.324656323653715
+    },
+    {
+      "annualized_geometric": null,
+      "cum_dps": 0.13008044588606135,
+      "entry_price": 23.452,
+      "flags": [
+        "ANNUALIZED_UNDEFINED_TOTAL_LOSS"
+      ],
+      "holding_return": -1.306778776981394,
+      "horizon_years": 3,
+      "initial_state": "DETERIORATING",
+      "invalid_reason": null,
+      "path_id": "mc:4",
+      "valid": true,
+      "value_per_share": -7.324656323653715
+    },
+    {
+      "annualized_geometric": null,
+      "cum_dps": 0.13008044588606135,
+      "entry_price": 25.584,
+      "flags": [
+        "ANNUALIZED_UNDEFINED_TOTAL_LOSS"
+      ],
+      "holding_return": -1.281213878899611,
+      "horizon_years": 3,
+      "initial_state": "DETERIORATING",
+      "invalid_reason": null,
+      "path_id": "mc:4",
+      "valid": true,
+      "value_per_share": -7.324656323653715
+    },
+    {
+      "annualized_geometric": null,
+      "cum_dps": 0.13008044588606135,
+      "entry_price": 27.716,
+      "flags": [
+        "ANNUALIZED_UNDEFINED_TOTAL_LOSS"
+      ],
+      "holding_return": -1.2595820420611796,
+      "horizon_years": 3,
+      "initial_state": "DETERIORATING",
+      "invalid_reason": null,
+      "path_id": "mc:4",
+      "valid": true,
+      "value_per_share": -7.324656323653715
+    },
+    {
+      "annualized_geometric": -0.6665702035972814,
+      "cum_dps": 0.059947357198590186,
+      "entry_price": 14.924,
+      "flags": [],
+      "holding_return": -0.6665702035972814,
+      "horizon_years": 1,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:5",
+      "valid": true,
+      "value_per_share": 4.9161589243155825
+    },
+    {
+      "annualized_geometric": -0.7082489281476212,
+      "cum_dps": 0.059947357198590186,
+      "entry_price": 17.056,
+      "flags": [],
+      "holding_return": -0.7082489281476212,
+      "horizon_years": 1,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:5",
+      "valid": true,
+      "value_per_share": 4.9161589243155825
+    },
+    {
+      "annualized_geometric": -0.7406657139089966,
+      "cum_dps": 0.059947357198590186,
+      "entry_price": 19.188000000000002,
+      "flags": [],
+      "holding_return": -0.7406657139089966,
+      "horizon_years": 1,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:5",
+      "valid": true,
+      "value_per_share": 4.9161589243155825
+    },
+    {
+      "annualized_geometric": -0.7665991425180969,
+      "cum_dps": 0.059947357198590186,
+      "entry_price": 21.32,
+      "flags": [],
+      "holding_return": -0.7665991425180969,
+      "horizon_years": 1,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:5",
+      "valid": true,
+      "value_per_share": 4.9161589243155825
+    },
+    {
+      "annualized_geometric": -0.7878174022891791,
+      "cum_dps": 0.059947357198590186,
+      "entry_price": 23.452,
+      "flags": [],
+      "holding_return": -0.7878174022891791,
+      "horizon_years": 1,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:5",
+      "valid": true,
+      "value_per_share": 4.9161589243155825
+    },
+    {
+      "annualized_geometric": -0.8054992854317474,
+      "cum_dps": 0.059947357198590186,
+      "entry_price": 25.584,
+      "flags": [],
+      "holding_return": -0.8054992854317474,
+      "horizon_years": 1,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:5",
+      "valid": true,
+      "value_per_share": 4.9161589243155825
+    },
+    {
+      "annualized_geometric": -0.8204608788600746,
+      "cum_dps": 0.059947357198590186,
+      "entry_price": 27.716,
+      "flags": [],
+      "holding_return": -0.8204608788600746,
+      "horizon_years": 1,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:5",
+      "valid": true,
+      "value_per_share": 4.9161589243155825
+    },
+    {
+      "annualized_geometric": -0.2745211186927231,
+      "cum_dps": 0.12827823300634628,
+      "entry_price": 14.924,
+      "flags": [],
+      "holding_return": -0.6181662401418756,
+      "horizon_years": 3,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:5",
+      "valid": true,
+      "value_per_share": 5.570208799116301
+    },
+    {
+      "annualized_geometric": -0.30610441275224054,
+      "cum_dps": 0.12827823300634628,
+      "entry_price": 17.056,
+      "flags": [],
+      "holding_return": -0.6658954601241412,
+      "horizon_years": 3,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:5",
+      "valid": true,
+      "value_per_share": 5.570208799116301
+    },
+    {
+      "annualized_geometric": -0.3328195916358081,
+      "cum_dps": 0.12827823300634628,
+      "entry_price": 19.188000000000002,
+      "flags": [],
+      "holding_return": -0.7030181867770144,
+      "horizon_years": 3,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:5",
+      "valid": true,
+      "value_per_share": 5.570208799116301
+    },
+    {
+      "annualized_geometric": -0.35584439810752355,
+      "cum_dps": 0.12827823300634628,
+      "entry_price": 21.32,
+      "flags": [],
+      "holding_return": -0.732716368099313,
+      "horizon_years": 3,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:5",
+      "valid": true,
+      "value_per_share": 5.570208799116301
+    },
+    {
+      "annualized_geometric": -0.37598759072512256,
+      "cum_dps": 0.12827823300634628,
+      "entry_price": 23.452,
+      "flags": [],
+      "holding_return": -0.7570148800902846,
+      "horizon_years": 3,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:5",
+      "valid": true,
+      "value_per_share": 5.570208799116301
+    },
+    {
+      "annualized_geometric": -0.39382637041363533,
+      "cum_dps": 0.12827823300634628,
+      "entry_price": 25.584,
+      "flags": [],
+      "holding_return": -0.7772636400827608,
+      "horizon_years": 3,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:5",
+      "valid": true,
+      "value_per_share": 5.570208799116301
+    },
+    {
+      "annualized_geometric": -0.4097857775233349,
+      "cum_dps": 0.12827823300634628,
+      "entry_price": 27.716,
+      "flags": [],
+      "holding_return": -0.7943972062302407,
+      "horizon_years": 3,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:5",
+      "valid": true,
+      "value_per_share": 5.570208799116301
+    },
+    {
+      "annualized_geometric": -0.6369798821364083,
+      "cum_dps": 0.05940850415588527,
+      "entry_price": 14.924,
+      "flags": [],
+      "holding_return": -0.6369798821364083,
+      "horizon_years": 1,
+      "initial_state": "STABLE",
+      "invalid_reason": null,
+      "path_id": "mc:6",
+      "valid": true,
+      "value_per_share": 5.358303734840355
+    },
+    {
+      "annualized_geometric": -0.6823573968693574,
+      "cum_dps": 0.05940850415588527,
+      "entry_price": 17.056,
+      "flags": [],
+      "holding_return": -0.6823573968693574,
+      "horizon_years": 1,
+      "initial_state": "STABLE",
+      "invalid_reason": null,
+      "path_id": "mc:6",
+      "valid": true,
+      "value_per_share": 5.358303734840355
+    },
+    {
+      "annualized_geometric": -0.7176510194394288,
+      "cum_dps": 0.05940850415588527,
+      "entry_price": 19.188000000000002,
+      "flags": [],
+      "holding_return": -0.7176510194394288,
+      "horizon_years": 1,
+      "initial_state": "STABLE",
+      "invalid_reason": null,
+      "path_id": "mc:6",
+      "valid": true,
+      "value_per_share": 5.358303734840355
+    },
+    {
+      "annualized_geometric": -0.7458859174954858,
+      "cum_dps": 0.05940850415588527,
+      "entry_price": 21.32,
+      "flags": [],
+      "holding_return": -0.7458859174954858,
+      "horizon_years": 1,
+      "initial_state": "STABLE",
+      "invalid_reason": null,
+      "path_id": "mc:6",
+      "valid": true,
+      "value_per_share": 5.358303734840355
+    },
+    {
+      "annualized_geometric": -0.768987197723169,
+      "cum_dps": 0.05940850415588527,
+      "entry_price": 23.452,
+      "flags": [],
+      "holding_return": -0.768987197723169,
+      "horizon_years": 1,
+      "initial_state": "STABLE",
+      "invalid_reason": null,
+      "path_id": "mc:6",
+      "valid": true,
+      "value_per_share": 5.358303734840355
+    },
+    {
+      "annualized_geometric": -0.7882382645795716,
+      "cum_dps": 0.05940850415588527,
+      "entry_price": 25.584,
+      "flags": [],
+      "holding_return": -0.7882382645795716,
+      "horizon_years": 1,
+      "initial_state": "STABLE",
+      "invalid_reason": null,
+      "path_id": "mc:6",
+      "valid": true,
+      "value_per_share": 5.358303734840355
+    },
+    {
+      "annualized_geometric": -0.8045276288426815,
+      "cum_dps": 0.05940850415588527,
+      "entry_price": 27.716,
+      "flags": [],
+      "holding_return": -0.8045276288426815,
+      "horizon_years": 1,
+      "initial_state": "STABLE",
+      "invalid_reason": null,
+      "path_id": "mc:6",
+      "valid": true,
+      "value_per_share": 5.358303734840355
+    },
+    {
+      "annualized_geometric": -0.24682436879302727,
+      "cum_dps": 0.1112076638813975,
+      "entry_price": 14.924,
+      "flags": [],
+      "holding_return": -0.5727433998876403,
+      "horizon_years": 3,
+      "initial_state": "STABLE",
+      "invalid_reason": null,
+      "path_id": "mc:6",
+      "valid": true,
+      "value_per_share": 6.265169836195459
+    },
+    {
+      "annualized_geometric": -0.2796134244799524,
+      "cum_dps": 0.1112076638813975,
+      "entry_price": 17.056,
+      "flags": [],
+      "holding_return": -0.6261504749016853,
+      "horizon_years": 3,
+      "initial_state": "STABLE",
+      "invalid_reason": null,
+      "path_id": "mc:6",
+      "valid": true,
+      "value_per_share": 6.265169836195459
+    },
+    {
+      "annualized_geometric": -0.3073485140006573,
+      "cum_dps": 0.1112076638813975,
+      "entry_price": 19.188000000000002,
+      "flags": [],
+      "holding_return": -0.6676893110237203,
+      "horizon_years": 3,
+      "initial_state": "STABLE",
+      "invalid_reason": null,
+      "path_id": "mc:6",
+      "valid": true,
+      "value_per_share": 6.265169836195459
+    },
+    {
+      "annualized_geometric": -0.3312523430363197,
+      "cum_dps": 0.1112076638813975,
+      "entry_price": 21.32,
+      "flags": [],
+      "holding_return": -0.7009203799213483,
+      "horizon_years": 3,
+      "initial_state": "STABLE",
+      "invalid_reason": null,
+      "path_id": "mc:6",
+      "valid": true,
+      "value_per_share": 6.265169836195459
+    },
+    {
+      "annualized_geometric": -0.3521645462791565,
+      "cum_dps": 0.1112076638813975,
+      "entry_price": 23.452,
+      "flags": [],
+      "holding_return": -0.7281094362921348,
+      "horizon_years": 3,
+      "initial_state": "STABLE",
+      "invalid_reason": null,
+      "path_id": "mc:6",
+      "valid": true,
+      "value_per_share": 6.265169836195459
+    },
+    {
+      "annualized_geometric": -0.37068436056740595,
+      "cum_dps": 0.1112076638813975,
+      "entry_price": 25.584,
+      "flags": [],
+      "holding_return": -0.7507669832677901,
+      "horizon_years": 3,
+      "initial_state": "STABLE",
+      "invalid_reason": null,
+      "path_id": "mc:6",
+      "valid": true,
+      "value_per_share": 6.265169836195459
+    },
+    {
+      "annualized_geometric": -0.3872530531003674,
+      "cum_dps": 0.1112076638813975,
+      "entry_price": 27.716,
+      "flags": [],
+      "holding_return": -0.7699387537856525,
+      "horizon_years": 3,
+      "initial_state": "STABLE",
+      "invalid_reason": null,
+      "path_id": "mc:6",
+      "valid": true,
+      "value_per_share": 6.265169836195459
+    },
+    {
+      "annualized_geometric": 0.09648884772174449,
+      "cum_dps": 0.060577790072682616,
+      "entry_price": 14.924,
+      "flags": [],
+      "holding_return": 0.09648884772174451,
+      "horizon_years": 1,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:7",
+      "valid": true,
+      "value_per_share": 16.303421773326633
+    },
+    {
+      "annualized_geometric": -0.04057225824347366,
+      "cum_dps": 0.060577790072682616,
+      "entry_price": 17.056,
+      "flags": [],
+      "holding_return": -0.04057225824347364,
+      "horizon_years": 1,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:7",
+      "valid": true,
+      "value_per_share": 16.303421773326633
+    },
+    {
+      "annualized_geometric": -0.14717534066086557,
+      "cum_dps": 0.060577790072682616,
+      "entry_price": 19.188000000000002,
+      "flags": [],
+      "holding_return": -0.14717534066086552,
+      "horizon_years": 1,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:7",
+      "valid": true,
+      "value_per_share": 16.303421773326633
+    },
+    {
+      "annualized_geometric": -0.23245780659477888,
+      "cum_dps": 0.060577790072682616,
+      "entry_price": 21.32,
+      "flags": [],
+      "holding_return": -0.23245780659477888,
+      "horizon_years": 1,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:7",
+      "valid": true,
+      "value_per_share": 16.303421773326633
+    },
+    {
+      "annualized_geometric": -0.3022343696316172,
+      "cum_dps": 0.060577790072682616,
+      "entry_price": 23.452,
+      "flags": [],
+      "holding_return": -0.3022343696316172,
+      "horizon_years": 1,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:7",
+      "valid": true,
+      "value_per_share": 16.303421773326633
+    },
+    {
+      "annualized_geometric": -0.36038150549564907,
+      "cum_dps": 0.060577790072682616,
+      "entry_price": 25.584,
+      "flags": [],
+      "holding_return": -0.36038150549564907,
+      "horizon_years": 1,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:7",
+      "valid": true,
+      "value_per_share": 16.303421773326633
+    },
+    {
+      "annualized_geometric": -0.40958292814983,
+      "cum_dps": 0.060577790072682616,
+      "entry_price": 27.716,
+      "flags": [],
+      "holding_return": -0.40958292814982994,
+      "horizon_years": 1,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:7",
+      "valid": true,
+      "value_per_share": 16.303421773326633
+    },
+    {
+      "annualized_geometric": 0.016507665946121852,
+      "cum_dps": 0.17828132213347175,
+      "entry_price": 14.924,
+      "flags": [],
+      "holding_return": 0.05034500533240308,
+      "horizon_years": 3,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:7",
+      "valid": true,
+      "value_per_share": 15.497067537447311
+    },
+    {
+      "annualized_geometric": -0.027745394142242197,
+      "cum_dps": 0.17828132213347175,
+      "entry_price": 17.056,
+      "flags": [],
+      "holding_return": -0.08094812033414739,
+      "horizon_years": 3,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:7",
+      "valid": true,
+      "value_per_share": 15.497067537447311
+    },
+    {
+      "annualized_geometric": -0.06517747498150006,
+      "cum_dps": 0.17828132213347175,
+      "entry_price": 19.188000000000002,
+      "flags": [],
+      "holding_return": -0.18306499585257552,
+      "horizon_years": 3,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:7",
+      "valid": true,
+      "value_per_share": 15.497067537447311
+    },
+    {
+      "annualized_geometric": -0.09743877560440761,
+      "cum_dps": 0.17828132213347175,
+      "entry_price": 21.32,
+      "flags": [],
+      "holding_return": -0.2647584962673179,
+      "horizon_years": 3,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:7",
+      "valid": true,
+      "value_per_share": 15.497067537447311
+    },
+    {
+      "annualized_geometric": -0.12566249133204166,
+      "cum_dps": 0.17828132213347175,
+      "entry_price": 23.452,
+      "flags": [],
+      "holding_return": -0.331598632970289,
+      "horizon_years": 3,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:7",
+      "valid": true,
+      "value_per_share": 15.497067537447311
+    },
+    {
+      "annualized_geometric": -0.15065736957277287,
+      "cum_dps": 0.17828132213347175,
+      "entry_price": 25.584,
+      "flags": [],
+      "holding_return": -0.38729874688943156,
+      "horizon_years": 3,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:7",
+      "valid": true,
+      "value_per_share": 15.497067537447311
+    },
+    {
+      "annualized_geometric": -0.17301895733082306,
+      "cum_dps": 0.17828132213347175,
+      "entry_price": 27.716,
+      "flags": [],
+      "holding_return": -0.43442961251332146,
+      "horizon_years": 3,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:7",
+      "valid": true,
+      "value_per_share": 15.497067537447311
+    },
+    {
+      "annualized_geometric": -0.918366498971144,
+      "cum_dps": 0.059655157470748066,
+      "entry_price": 14.924,
+      "flags": [],
+      "holding_return": -0.918366498971144,
+      "horizon_years": 1,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:8",
+      "valid": true,
+      "value_per_share": 1.1586432118838992
+    },
+    {
+      "annualized_geometric": -0.928570686599751,
+      "cum_dps": 0.059655157470748066,
+      "entry_price": 17.056,
+      "flags": [],
+      "holding_return": -0.928570686599751,
+      "horizon_years": 1,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:8",
+      "valid": true,
+      "value_per_share": 1.1586432118838992
+    },
+    {
+      "annualized_geometric": -0.9365072769775563,
+      "cum_dps": 0.059655157470748066,
+      "entry_price": 19.188000000000002,
+      "flags": [],
+      "holding_return": -0.9365072769775563,
+      "horizon_years": 1,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:8",
+      "valid": true,
+      "value_per_share": 1.1586432118838992
+    },
+    {
+      "annualized_geometric": -0.9428565492798007,
+      "cum_dps": 0.059655157470748066,
+      "entry_price": 21.32,
+      "flags": [],
+      "holding_return": -0.9428565492798007,
+      "horizon_years": 1,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:8",
+      "valid": true,
+      "value_per_share": 1.1586432118838992
+    },
+    {
+      "annualized_geometric": -0.9480514084361826,
+      "cum_dps": 0.059655157470748066,
+      "entry_price": 23.452,
+      "flags": [],
+      "holding_return": -0.9480514084361826,
+      "horizon_years": 1,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:8",
+      "valid": true,
+      "value_per_share": 1.1586432118838992
+    },
+    {
+      "annualized_geometric": -0.9523804577331674,
+      "cum_dps": 0.059655157470748066,
+      "entry_price": 25.584,
+      "flags": [],
+      "holding_return": -0.9523804577331674,
+      "horizon_years": 1,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:8",
+      "valid": true,
+      "value_per_share": 1.1586432118838992
+    },
+    {
+      "annualized_geometric": -0.9560434994460005,
+      "cum_dps": 0.059655157470748066,
+      "entry_price": 27.716,
+      "flags": [],
+      "holding_return": -0.9560434994460005,
+      "horizon_years": 1,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:8",
+      "valid": true,
+      "value_per_share": 1.1586432118838992
+    },
+    {
+      "annualized_geometric": -0.5860291611996228,
+      "cum_dps": 0.17702806102189345,
+      "entry_price": 14.924,
+      "flags": [],
+      "holding_return": -0.92905704928277,
+      "horizon_years": 3,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:8",
+      "valid": true,
+      "value_per_share": 0.8817245354820467
+    },
+    {
+      "annualized_geometric": -0.6040511368501584,
+      "cum_dps": 0.17702806102189345,
+      "entry_price": 17.056,
+      "flags": [],
+      "holding_return": -0.9379249181224238,
+      "horizon_years": 3,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:8",
+      "valid": true,
+      "value_per_share": 0.8817245354820467
+    },
+    {
+      "annualized_geometric": -0.6192952815056226,
+      "cum_dps": 0.17702806102189345,
+      "entry_price": 19.188000000000002,
+      "flags": [],
+      "holding_return": -0.9448221494421545,
+      "horizon_years": 3,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:8",
+      "valid": true,
+      "value_per_share": 0.8817245354820467
+    },
+    {
+      "annualized_geometric": -0.6324336356244042,
+      "cum_dps": 0.17702806102189345,
+      "entry_price": 21.32,
+      "flags": [],
+      "holding_return": -0.9503399344979391,
+      "horizon_years": 3,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:8",
+      "valid": true,
+      "value_per_share": 0.8817245354820467
+    },
+    {
+      "annualized_geometric": -0.6439276908738127,
+      "cum_dps": 0.17702806102189345,
+      "entry_price": 23.452,
+      "flags": [],
+      "holding_return": -0.9548544859072173,
+      "horizon_years": 3,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:8",
+      "valid": true,
+      "value_per_share": 0.8817245354820467
+    },
+    {
+      "annualized_geometric": -0.6541068081177521,
+      "cum_dps": 0.17702806102189345,
+      "entry_price": 25.584,
+      "flags": [],
+      "holding_return": -0.9586166120816159,
+      "horizon_years": 3,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:8",
+      "valid": true,
+      "value_per_share": 0.8817245354820467
+    },
+    {
+      "annualized_geometric": -0.6632135227557495,
+      "cum_dps": 0.17702806102189345,
+      "entry_price": 27.716,
+      "flags": [],
+      "holding_return": -0.9617999496137992,
+      "horizon_years": 3,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:8",
+      "valid": true,
+      "value_per_share": 0.8817245354820467
+    },
+    {
+      "annualized_geometric": -0.955624835047512,
+      "cum_dps": 0.05928558704437247,
+      "entry_price": 14.924,
+      "flags": [],
+      "holding_return": -0.955624835047512,
+      "horizon_years": 1,
+      "initial_state": "DETERIORATING",
+      "invalid_reason": null,
+      "path_id": "mc:9",
+      "valid": true,
+      "value_per_share": 0.60296937470656
+    },
+    {
+      "annualized_geometric": -0.9611717306665729,
+      "cum_dps": 0.05928558704437247,
+      "entry_price": 17.056,
+      "flags": [],
+      "holding_return": -0.9611717306665729,
+      "horizon_years": 1,
+      "initial_state": "DETERIORATING",
+      "invalid_reason": null,
+      "path_id": "mc:9",
+      "valid": true,
+      "value_per_share": 0.60296937470656
+    },
+    {
+      "annualized_geometric": -0.9654859828147315,
+      "cum_dps": 0.05928558704437247,
+      "entry_price": 19.188000000000002,
+      "flags": [],
+      "holding_return": -0.9654859828147315,
+      "horizon_years": 1,
+      "initial_state": "DETERIORATING",
+      "invalid_reason": null,
+      "path_id": "mc:9",
+      "valid": true,
+      "value_per_share": 0.60296937470656
+    },
+    {
+      "annualized_geometric": -0.9689373845332584,
+      "cum_dps": 0.05928558704437247,
+      "entry_price": 21.32,
+      "flags": [],
+      "holding_return": -0.9689373845332584,
+      "horizon_years": 1,
+      "initial_state": "DETERIORATING",
+      "invalid_reason": null,
+      "path_id": "mc:9",
+      "valid": true,
+      "value_per_share": 0.60296937470656
+    },
+    {
+      "annualized_geometric": -0.9717612586665985,
+      "cum_dps": 0.05928558704437247,
+      "entry_price": 23.452,
+      "flags": [],
+      "holding_return": -0.9717612586665985,
+      "horizon_years": 1,
+      "initial_state": "DETERIORATING",
+      "invalid_reason": null,
+      "path_id": "mc:9",
+      "valid": true,
+      "value_per_share": 0.60296937470656
+    },
+    {
+      "annualized_geometric": -0.9741144871110486,
+      "cum_dps": 0.05928558704437247,
+      "entry_price": 25.584,
+      "flags": [],
+      "holding_return": -0.9741144871110486,
+      "horizon_years": 1,
+      "initial_state": "DETERIORATING",
+      "invalid_reason": null,
+      "path_id": "mc:9",
+      "valid": true,
+      "value_per_share": 0.60296937470656
+    },
+    {
+      "annualized_geometric": -0.9761056804101987,
+      "cum_dps": 0.05928558704437247,
+      "entry_price": 27.716,
+      "flags": [],
+      "holding_return": -0.9761056804101987,
+      "horizon_years": 1,
+      "initial_state": "DETERIORATING",
+      "invalid_reason": null,
+      "path_id": "mc:9",
+      "valid": true,
+      "value_per_share": 0.60296937470656
+    },
+    {
+      "annualized_geometric": -0.6467702211193773,
+      "cum_dps": 0.1606017338404192,
+      "entry_price": 14.924,
+      "flags": [],
+      "holding_return": -0.9559270695248259,
+      "horizon_years": 3,
+      "initial_state": "DETERIORATING",
+      "invalid_reason": null,
+      "path_id": "mc:9",
+      "valid": true,
+      "value_per_share": 0.49714268057107935
+    },
+    {
+      "annualized_geometric": -0.6621478706477302,
+      "cum_dps": 0.1606017338404192,
+      "entry_price": 17.056,
+      "flags": [],
+      "holding_return": -0.9614361858342225,
+      "horizon_years": 3,
+      "initial_state": "DETERIORATING",
+      "invalid_reason": null,
+      "path_id": "mc:9",
+      "valid": true,
+      "value_per_share": 0.49714268057107935
+    },
+    {
+      "annualized_geometric": -0.6751552744094975,
+      "cum_dps": 0.1606017338404192,
+      "entry_price": 19.188000000000002,
+      "flags": [],
+      "holding_return": -0.9657210540748645,
+      "horizon_years": 3,
+      "initial_state": "DETERIORATING",
+      "invalid_reason": null,
+      "path_id": "mc:9",
+      "valid": true,
+      "value_per_share": 0.49714268057107935
+    },
+    {
+      "annualized_geometric": -0.6863658657972411,
+      "cum_dps": 0.1606017338404192,
+      "entry_price": 21.32,
+      "flags": [],
+      "holding_return": -0.9691489486673781,
+      "horizon_years": 3,
+      "initial_state": "DETERIORATING",
+      "invalid_reason": null,
+      "path_id": "mc:9",
+      "valid": true,
+      "value_per_share": 0.49714268057107935
+    },
+    {
+      "annualized_geometric": -0.6961734227883458,
+      "cum_dps": 0.1606017338404192,
+      "entry_price": 23.452,
+      "flags": [],
+      "holding_return": -0.9719535896976164,
+      "horizon_years": 3,
+      "initial_state": "DETERIORATING",
+      "invalid_reason": null,
+      "path_id": "mc:9",
+      "valid": true,
+      "value_per_share": 0.49714268057107935
+    },
+    {
+      "annualized_geometric": -0.7048589798282963,
+      "cum_dps": 0.1606017338404192,
+      "entry_price": 25.584,
+      "flags": [],
+      "holding_return": -0.9742907905561484,
+      "horizon_years": 3,
+      "initial_state": "DETERIORATING",
+      "invalid_reason": null,
+      "path_id": "mc:9",
+      "valid": true,
+      "value_per_share": 0.49714268057107935
+    },
+    {
+      "annualized_geometric": -0.7126294856137532,
+      "cum_dps": 0.1606017338404192,
+      "entry_price": 27.716,
+      "flags": [],
+      "holding_return": -0.9762684220518293,
+      "horizon_years": 3,
+      "initial_state": "DETERIORATING",
+      "invalid_reason": null,
+      "path_id": "mc:9",
+      "valid": true,
+      "value_per_share": 0.49714268057107935
+    },
+    {
+      "annualized_geometric": null,
+      "cum_dps": 0.059656463163413595,
+      "entry_price": 14.924,
+      "flags": [
+        "ANNUALIZED_UNDEFINED_TOTAL_LOSS"
+      ],
+      "holding_return": -1.0134537857197585,
+      "horizon_years": 1,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:10",
+      "valid": true,
+      "value_per_share": -0.26044076124508814
+    },
+    {
+      "annualized_geometric": null,
+      "cum_dps": 0.059656463163413595,
+      "entry_price": 17.056,
+      "flags": [
+        "ANNUALIZED_UNDEFINED_TOTAL_LOSS"
+      ],
+      "holding_return": -1.0117720625047886,
+      "horizon_years": 1,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:10",
+      "valid": true,
+      "value_per_share": -0.26044076124508814
+    },
+    {
+      "annualized_geometric": null,
+      "cum_dps": 0.059656463163413595,
+      "entry_price": 19.188000000000002,
+      "flags": [
+        "ANNUALIZED_UNDEFINED_TOTAL_LOSS"
+      ],
+      "holding_return": -1.0104640555598121,
+      "horizon_years": 1,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:10",
+      "valid": true,
+      "value_per_share": -0.26044076124508814
+    },
+    {
+      "annualized_geometric": null,
+      "cum_dps": 0.059656463163413595,
+      "entry_price": 21.32,
+      "flags": [
+        "ANNUALIZED_UNDEFINED_TOTAL_LOSS"
+      ],
+      "holding_return": -1.009417650003831,
+      "horizon_years": 1,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:10",
+      "valid": true,
+      "value_per_share": -0.26044076124508814
+    },
+    {
+      "annualized_geometric": null,
+      "cum_dps": 0.059656463163413595,
+      "entry_price": 23.452,
+      "flags": [
+        "ANNUALIZED_UNDEFINED_TOTAL_LOSS"
+      ],
+      "holding_return": -1.0085615000034827,
+      "horizon_years": 1,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:10",
+      "valid": true,
+      "value_per_share": -0.26044076124508814
+    },
+    {
+      "annualized_geometric": null,
+      "cum_dps": 0.059656463163413595,
+      "entry_price": 25.584,
+      "flags": [
+        "ANNUALIZED_UNDEFINED_TOTAL_LOSS"
+      ],
+      "holding_return": -1.0078480416698592,
+      "horizon_years": 1,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:10",
+      "valid": true,
+      "value_per_share": -0.26044076124508814
+    },
+    {
+      "annualized_geometric": null,
+      "cum_dps": 0.059656463163413595,
+      "entry_price": 27.716,
+      "flags": [
+        "ANNUALIZED_UNDEFINED_TOTAL_LOSS"
+      ],
+      "holding_return": -1.007244346156793,
+      "horizon_years": 1,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:10",
+      "valid": true,
+      "value_per_share": -0.26044076124508814
+    },
+    {
+      "annualized_geometric": null,
+      "cum_dps": 0.13497058760561206,
+      "entry_price": 14.924,
+      "flags": [
+        "ANNUALIZED_UNDEFINED_TOTAL_LOSS"
+      ],
+      "holding_return": -1.022849110689012,
+      "horizon_years": 3,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:10",
+      "valid": true,
+      "value_per_share": -0.47597071552842934
+    },
+    {
+      "annualized_geometric": null,
+      "cum_dps": 0.13497058760561206,
+      "entry_price": 17.056,
+      "flags": [
+        "ANNUALIZED_UNDEFINED_TOTAL_LOSS"
+      ],
+      "holding_return": -1.0199929718528857,
+      "horizon_years": 3,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:10",
+      "valid": true,
+      "value_per_share": -0.47597071552842934
+    },
+    {
+      "annualized_geometric": null,
+      "cum_dps": 0.13497058760561206,
+      "entry_price": 19.188000000000002,
+      "flags": [
+        "ANNUALIZED_UNDEFINED_TOTAL_LOSS"
+      ],
+      "holding_return": -1.0177715305358983,
+      "horizon_years": 3,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:10",
+      "valid": true,
+      "value_per_share": -0.47597071552842934
+    },
+    {
+      "annualized_geometric": null,
+      "cum_dps": 0.13497058760561206,
+      "entry_price": 21.32,
+      "flags": [
+        "ANNUALIZED_UNDEFINED_TOTAL_LOSS"
+      ],
+      "holding_return": -1.0159943774823086,
+      "horizon_years": 3,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:10",
+      "valid": true,
+      "value_per_share": -0.47597071552842934
+    },
+    {
+      "annualized_geometric": null,
+      "cum_dps": 0.13497058760561206,
+      "entry_price": 23.452,
+      "flags": [
+        "ANNUALIZED_UNDEFINED_TOTAL_LOSS"
+      ],
+      "holding_return": -1.014540343165735,
+      "horizon_years": 3,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:10",
+      "valid": true,
+      "value_per_share": -0.47597071552842934
+    },
+    {
+      "annualized_geometric": null,
+      "cum_dps": 0.13497058760561206,
+      "entry_price": 25.584,
+      "flags": [
+        "ANNUALIZED_UNDEFINED_TOTAL_LOSS"
+      ],
+      "holding_return": -1.013328647901924,
+      "horizon_years": 3,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:10",
+      "valid": true,
+      "value_per_share": -0.47597071552842934
+    },
+    {
+      "annualized_geometric": null,
+      "cum_dps": 0.13497058760561206,
+      "entry_price": 27.716,
+      "flags": [
+        "ANNUALIZED_UNDEFINED_TOTAL_LOSS"
+      ],
+      "holding_return": -1.0123033672940835,
+      "horizon_years": 3,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:10",
+      "valid": true,
+      "value_per_share": -0.47597071552842934
+    },
+    {
+      "annualized_geometric": -0.7177769850065646,
+      "cum_dps": 0.060405462500993,
+      "entry_price": 14.924,
+      "flags": [],
+      "holding_return": -0.7177769850065646,
+      "horizon_years": 1,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:11",
+      "valid": true,
+      "value_per_share": 4.151490813261036
+    },
+    {
+      "annualized_geometric": -0.7530548618807441,
+      "cum_dps": 0.060405462500993,
+      "entry_price": 17.056,
+      "flags": [],
+      "holding_return": -0.7530548618807441,
+      "horizon_years": 1,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:11",
+      "valid": true,
+      "value_per_share": 4.151490813261036
+    },
+    {
+      "annualized_geometric": -0.7804932105606615,
+      "cum_dps": 0.060405462500993,
+      "entry_price": 19.188000000000002,
+      "flags": [],
+      "holding_return": -0.7804932105606615,
+      "horizon_years": 1,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:11",
+      "valid": true,
+      "value_per_share": 4.151490813261036
+    },
+    {
+      "annualized_geometric": -0.8024438895045952,
+      "cum_dps": 0.060405462500993,
+      "entry_price": 21.32,
+      "flags": [],
+      "holding_return": -0.8024438895045952,
+      "horizon_years": 1,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:11",
+      "valid": true,
+      "value_per_share": 4.151490813261036
+    },
+    {
+      "annualized_geometric": -0.8204035359132684,
+      "cum_dps": 0.060405462500993,
+      "entry_price": 23.452,
+      "flags": [],
+      "holding_return": -0.8204035359132684,
+      "horizon_years": 1,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:11",
+      "valid": true,
+      "value_per_share": 4.151490813261036
+    },
+    {
+      "annualized_geometric": -0.835369907920496,
+      "cum_dps": 0.060405462500993,
+      "entry_price": 25.584,
+      "flags": [],
+      "holding_return": -0.835369907920496,
+      "horizon_years": 1,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:11",
+      "valid": true,
+      "value_per_share": 4.151490813261036
+    },
+    {
+      "annualized_geometric": -0.8480337611573809,
+      "cum_dps": 0.060405462500993,
+      "entry_price": 27.716,
+      "flags": [],
+      "holding_return": -0.8480337611573809,
+      "horizon_years": 1,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:11",
+      "valid": true,
+      "value_per_share": 4.151490813261036
+    },
+    {
+      "annualized_geometric": -0.30807990016325304,
+      "cum_dps": 0.22242158701709974,
+      "entry_price": 14.924,
+      "flags": [],
+      "holding_return": -0.6687408826825791,
+      "horizon_years": 3,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:11",
+      "valid": true,
+      "value_per_share": 4.721289479828089
+    },
+    {
+      "annualized_geometric": -0.338202232517651,
+      "cum_dps": 0.22242158701709974,
+      "entry_price": 17.056,
+      "flags": [],
+      "holding_return": -0.7101482723472567,
+      "horizon_years": 3,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:11",
+      "valid": true,
+      "value_per_share": 4.721289479828089
+    },
+    {
+      "annualized_geometric": -0.36368163614545335,
+      "cum_dps": 0.22242158701709974,
+      "entry_price": 19.188000000000002,
+      "flags": [],
+      "holding_return": -0.7423540198642282,
+      "horizon_years": 3,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:11",
+      "valid": true,
+      "value_per_share": 4.721289479828089
+    },
+    {
+      "annualized_geometric": -0.3856413744688125,
+      "cum_dps": 0.22242158701709974,
+      "entry_price": 21.32,
+      "flags": [],
+      "holding_return": -0.7681186178778053,
+      "horizon_years": 3,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:11",
+      "valid": true,
+      "value_per_share": 4.721289479828089
+    },
+    {
+      "annualized_geometric": -0.40485279496100546,
+      "cum_dps": 0.22242158701709974,
+      "entry_price": 23.452,
+      "flags": [],
+      "holding_return": -0.7891987435252776,
+      "horizon_years": 3,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:11",
+      "valid": true,
+      "value_per_share": 4.721289479828089
+    },
+    {
+      "annualized_geometric": -0.4218663987213245,
+      "cum_dps": 0.22242158701709974,
+      "entry_price": 25.584,
+      "flags": [],
+      "holding_return": -0.8067655148981712,
+      "horizon_years": 3,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:11",
+      "valid": true,
+      "value_per_share": 4.721289479828089
+    },
+    {
+      "annualized_geometric": -0.43708756482995115,
+      "cum_dps": 0.22242158701709974,
+      "entry_price": 27.716,
+      "flags": [],
+      "holding_return": -0.8216297060598503,
+      "horizon_years": 3,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:11",
+      "valid": true,
+      "value_per_share": 4.721289479828089
+    },
+    {
+      "annualized_geometric": -0.6533854716825943,
+      "cum_dps": 0.06014315672178583,
+      "entry_price": 14.924,
+      "flags": [],
+      "holding_return": -0.6533854716825943,
+      "horizon_years": 1,
+      "initial_state": "DETERIORATING",
+      "invalid_reason": null,
+      "path_id": "mc:12",
+      "valid": true,
+      "value_per_share": 5.112732063887176
+    },
+    {
+      "annualized_geometric": -0.6967122877222701,
+      "cum_dps": 0.06014315672178583,
+      "entry_price": 17.056,
+      "flags": [],
+      "holding_return": -0.6967122877222701,
+      "horizon_years": 1,
+      "initial_state": "DETERIORATING",
+      "invalid_reason": null,
+      "path_id": "mc:12",
+      "valid": true,
+      "value_per_share": 5.112732063887176
+    },
+    {
+      "annualized_geometric": -0.7304109224197957,
+      "cum_dps": 0.06014315672178583,
+      "entry_price": 19.188000000000002,
+      "flags": [],
+      "holding_return": -0.7304109224197957,
+      "horizon_years": 1,
+      "initial_state": "DETERIORATING",
+      "invalid_reason": null,
+      "path_id": "mc:12",
+      "valid": true,
+      "value_per_share": 5.112732063887176
+    },
+    {
+      "annualized_geometric": -0.757369830177816,
+      "cum_dps": 0.06014315672178583,
+      "entry_price": 21.32,
+      "flags": [],
+      "holding_return": -0.757369830177816,
+      "horizon_years": 1,
+      "initial_state": "DETERIORATING",
+      "invalid_reason": null,
+      "path_id": "mc:12",
+      "valid": true,
+      "value_per_share": 5.112732063887176
+    },
+    {
+      "annualized_geometric": -0.7794271183434691,
+      "cum_dps": 0.06014315672178583,
+      "entry_price": 23.452,
+      "flags": [],
+      "holding_return": -0.7794271183434691,
+      "horizon_years": 1,
+      "initial_state": "DETERIORATING",
+      "invalid_reason": null,
+      "path_id": "mc:12",
+      "valid": true,
+      "value_per_share": 5.112732063887176
+    },
+    {
+      "annualized_geometric": -0.7978081918148467,
+      "cum_dps": 0.06014315672178583,
+      "entry_price": 25.584,
+      "flags": [],
+      "holding_return": -0.7978081918148467,
+      "horizon_years": 1,
+      "initial_state": "DETERIORATING",
+      "invalid_reason": null,
+      "path_id": "mc:12",
+      "valid": true,
+      "value_per_share": 5.112732063887176
+    },
+    {
+      "annualized_geometric": -0.8133614078290893,
+      "cum_dps": 0.06014315672178583,
+      "entry_price": 27.716,
+      "flags": [],
+      "holding_return": -0.8133614078290893,
+      "horizon_years": 1,
+      "initial_state": "DETERIORATING",
+      "invalid_reason": null,
+      "path_id": "mc:12",
+      "valid": true,
+      "value_per_share": 5.112732063887176
+    },
+    {
+      "annualized_geometric": -0.26078599585283846,
+      "cum_dps": 0.12263819016281173,
+      "entry_price": 14.924,
+      "flags": [],
+      "holding_return": -0.596065862979976,
+      "horizon_years": 3,
+      "initial_state": "DETERIORATING",
+      "invalid_reason": null,
+      "path_id": "mc:12",
+      "valid": true,
+      "value_per_share": 5.905674870724025
+    },
+    {
+      "annualized_geometric": -0.2929672403624284,
+      "cum_dps": 0.12263819016281173,
+      "entry_price": 17.056,
+      "flags": [],
+      "holding_return": -0.646557630107479,
+      "horizon_years": 3,
+      "initial_state": "DETERIORATING",
+      "invalid_reason": null,
+      "path_id": "mc:12",
+      "valid": true,
+      "value_per_share": 5.905674870724025
+    },
+    {
+      "annualized_geometric": -0.3201882041463008,
+      "cum_dps": 0.12263819016281173,
+      "entry_price": 19.188000000000002,
+      "flags": [],
+      "holding_return": -0.6858290045399814,
+      "horizon_years": 3,
+      "initial_state": "DETERIORATING",
+      "invalid_reason": null,
+      "path_id": "mc:12",
+      "valid": true,
+      "value_per_share": 5.905674870724025
+    },
+    {
+      "annualized_geometric": -0.3436489275735639,
+      "cum_dps": 0.12263819016281173,
+      "entry_price": 21.32,
+      "flags": [],
+      "holding_return": -0.7172461040859832,
+      "horizon_years": 3,
+      "initial_state": "DETERIORATING",
+      "invalid_reason": null,
+      "path_id": "mc:12",
+      "valid": true,
+      "value_per_share": 5.905674870724025
+    },
+    {
+      "annualized_geometric": -0.3641734810165691,
+      "cum_dps": 0.12263819016281173,
+      "entry_price": 23.452,
+      "flags": [],
+      "holding_return": -0.7429510037145303,
+      "horizon_years": 3,
+      "initial_state": "DETERIORATING",
+      "invalid_reason": null,
+      "path_id": "mc:12",
+      "valid": true,
+      "value_per_share": 5.905674870724025
+    },
+    {
+      "annualized_geometric": -0.38234999325202224,
+      "cum_dps": 0.12263819016281173,
+      "entry_price": 25.584,
+      "flags": [],
+      "holding_return": -0.764371753404986,
+      "horizon_years": 3,
+      "initial_state": "DETERIORATING",
+      "invalid_reason": null,
+      "path_id": "mc:12",
+      "valid": true,
+      "value_per_share": 5.905674870724025
+    },
+    {
+      "annualized_geometric": -0.3986115517030655,
+      "cum_dps": 0.12263819016281173,
+      "entry_price": 27.716,
+      "flags": [],
+      "holding_return": -0.782497003143064,
+      "horizon_years": 3,
+      "initial_state": "DETERIORATING",
+      "invalid_reason": null,
+      "path_id": "mc:12",
+      "valid": true,
+      "value_per_share": 5.905674870724025
+    },
+    {
+      "annualized_geometric": -0.6880500013855654,
+      "cum_dps": 0.05984072030572733,
+      "entry_price": 14.924,
+      "flags": [],
+      "holding_return": -0.6880500013855654,
+      "horizon_years": 1,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:13",
+      "valid": true,
+      "value_per_share": 4.595701059016096
+    },
+    {
+      "annualized_geometric": -0.7270437512123697,
+      "cum_dps": 0.05984072030572733,
+      "entry_price": 17.056,
+      "flags": [],
+      "holding_return": -0.7270437512123697,
+      "horizon_years": 1,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:13",
+      "valid": true,
+      "value_per_share": 4.595701059016096
+    },
+    {
+      "annualized_geometric": -0.7573722232998842,
+      "cum_dps": 0.05984072030572733,
+      "entry_price": 19.188000000000002,
+      "flags": [],
+      "holding_return": -0.7573722232998842,
+      "horizon_years": 1,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:13",
+      "valid": true,
+      "value_per_share": 4.595701059016096
+    },
+    {
+      "annualized_geometric": -0.7816350009698958,
+      "cum_dps": 0.05984072030572733,
+      "entry_price": 21.32,
+      "flags": [],
+      "holding_return": -0.7816350009698958,
+      "horizon_years": 1,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:13",
+      "valid": true,
+      "value_per_share": 4.595701059016096
+    },
+    {
+      "annualized_geometric": -0.8014863645180871,
+      "cum_dps": 0.05984072030572733,
+      "entry_price": 23.452,
+      "flags": [],
+      "holding_return": -0.8014863645180871,
+      "horizon_years": 1,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:13",
+      "valid": true,
+      "value_per_share": 4.595701059016096
+    },
+    {
+      "annualized_geometric": -0.8180291674749132,
+      "cum_dps": 0.05984072030572733,
+      "entry_price": 25.584,
+      "flags": [],
+      "holding_return": -0.8180291674749132,
+      "horizon_years": 1,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:13",
+      "valid": true,
+      "value_per_share": 4.595701059016096
+    },
+    {
+      "annualized_geometric": -0.8320269238229967,
+      "cum_dps": 0.05984072030572733,
+      "entry_price": 27.716,
+      "flags": [],
+      "holding_return": -0.8320269238229967,
+      "horizon_years": 1,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:13",
+      "valid": true,
+      "value_per_share": 4.595701059016096
+    },
+    {
+      "annualized_geometric": -0.2848797452906767,
+      "cum_dps": 0.14508653853914136,
+      "entry_price": 14.924,
+      "flags": [],
+      "holding_return": -0.6342896623376761,
+      "horizon_years": 3,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:13",
+      "valid": true,
+      "value_per_share": 5.312774540733379
+    },
+    {
+      "annualized_geometric": -0.31601208266720116,
+      "cum_dps": 0.14508653853914136,
+      "entry_price": 17.056,
+      "flags": [],
+      "holding_return": -0.6800034545454667,
+      "horizon_years": 3,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:13",
+      "valid": true,
+      "value_per_share": 5.312774540733379
+    },
+    {
+      "annualized_geometric": -0.34234581342087445,
+      "cum_dps": 0.14508653853914136,
+      "entry_price": 19.188000000000002,
+      "flags": [],
+      "holding_return": -0.7155586262626371,
+      "horizon_years": 3,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:13",
+      "valid": true,
+      "value_per_share": 5.312774540733379
+    },
+    {
+      "annualized_geometric": -0.36504186411640394,
+      "cum_dps": 0.14508653853914136,
+      "entry_price": 21.32,
+      "flags": [],
+      "holding_return": -0.7440027636363733,
+      "horizon_years": 3,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:13",
+      "valid": true,
+      "value_per_share": 5.312774540733379
+    },
+    {
+      "annualized_geometric": -0.38489744559025685,
+      "cum_dps": 0.14508653853914136,
+      "entry_price": 23.452,
+      "flags": [],
+      "holding_return": -0.7672752396694302,
+      "horizon_years": 3,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:13",
+      "valid": true,
+      "value_per_share": 5.312774540733379
+    },
+    {
+      "annualized_geometric": -0.40248151730240034,
+      "cum_dps": 0.14508653853914136,
+      "entry_price": 25.584,
+      "flags": [],
+      "holding_return": -0.7866689696969777,
+      "horizon_years": 3,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:13",
+      "valid": true,
+      "value_per_share": 5.312774540733379
+    },
+    {
+      "annualized_geometric": -0.4182130507368855,
+      "cum_dps": 0.14508653853914136,
+      "entry_price": 27.716,
+      "flags": [],
+      "holding_return": -0.8030790489510565,
+      "horizon_years": 3,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:13",
+      "valid": true,
+      "value_per_share": 5.312774540733379
+    },
+    {
+      "annualized_geometric": -0.9759081703035423,
+      "cum_dps": 0.060153585595492914,
+      "entry_price": 14.924,
+      "flags": [],
+      "holding_return": -0.9759081703035423,
+      "horizon_years": 1,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:14",
+      "valid": true,
+      "value_per_share": 0.29939288079444115
+    },
+    {
+      "annualized_geometric": -0.9789196490155996,
+      "cum_dps": 0.060153585595492914,
+      "entry_price": 17.056,
+      "flags": [],
+      "holding_return": -0.9789196490155996,
+      "horizon_years": 1,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:14",
+      "valid": true,
+      "value_per_share": 0.29939288079444115
+    },
+    {
+      "annualized_geometric": -0.9812619102360886,
+      "cum_dps": 0.060153585595492914,
+      "entry_price": 19.188000000000002,
+      "flags": [],
+      "holding_return": -0.9812619102360886,
+      "horizon_years": 1,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:14",
+      "valid": true,
+      "value_per_share": 0.29939288079444115
+    },
+    {
+      "annualized_geometric": -0.9831357192124797,
+      "cum_dps": 0.060153585595492914,
+      "entry_price": 21.32,
+      "flags": [],
+      "holding_return": -0.9831357192124797,
+      "horizon_years": 1,
+      "initial_state": "RECOVERY",
+      "invalid_reason": null,
+      "path_id": "mc:14",
+      "valid": true,
+      "value_per_share": 0.29939288079444115
+    }
+  ],
+  "path_returns_note": "JSON embeds at most 200 path-return rows; full grid in path_returns.parquet",
+  "path_returns_parquet": "path_returns.parquet",
+  "relative_to_spot": [
+    0.7,
+    0.8,
+    0.9000000000000001,
+    1.0,
+    1.1,
+    1.2,
+    1.3
+  ],
+  "run_id": "vms-80ba16f550700244",
+  "schema_kind": "ReturnDistributionBundle",
+  "schema_version": "vms-0.2.phase12",
+  "spot_price": 21.32,
+  "valuation_ref": {
+    "n_valid_dcf": 30,
+    "terminal_growth": 0.03,
+    "valid_path_id_hash": "60d7400996c29fe6",
+    "wacc_point": 0.07075
+  },
+  "version": "RET-1"
+}

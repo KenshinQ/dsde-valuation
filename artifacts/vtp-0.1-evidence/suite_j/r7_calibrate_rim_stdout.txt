@@ -1,0 +1,126 @@
+{
+  "assumption": "EVAL-RIM-FI-DEPOSIT-REAL-OOS-v1",
+  "baselines_present": [
+    "central_rim",
+    "fi_note",
+    "historical_roe_median"
+  ],
+  "calibration_claim": "CALIBRATION_INSUFFICIENT",
+  "content_hash": "79eb2ae707853084",
+  "data_label": "HITHINK_EM_LEAN_FI",
+  "declared_instruments": [
+    "000001.SZ",
+    "600036.SH",
+    "601398.SH"
+  ],
+  "evaluation_targets_declared": [
+    "driver_roe",
+    "intrinsic_value",
+    "market_price"
+  ],
+  "fi_real_prefer_local": true,
+  "fi_real_rest_calls": 0,
+  "frozen_weights": {
+    "content_hash": "048b3d5ef82306ef",
+    "frozen_before_test": true,
+    "test_window_start": "2016-01-01"
+  },
+  "implemented_phase": "PHASE_12",
+  "includes_000001": true,
+  "investment_value": "INVESTMENT_VALUE_NOT_ESTABLISHED",
+  "labels": {
+    "CALIBRATION_CLAIM": "CALIBRATION_INSUFFICIENT",
+    "CALIBRATION_PASS": null,
+    "CALIBRATION_STATUS": "INSUFFICIENT",
+    "DATA_QUALITY_PASS": true,
+    "ENGINEERING_PASS": true,
+    "ENSEMBLE_CALIBRATED": false,
+    "ENSEMBLE_CLAIM": "ENSEMBLE_UNCALIBRATED",
+    "data_label": "HITHINK_EM_LEAN_FI",
+    "investment_value": "INVESTMENT_VALUE_NOT_ESTABLISHED",
+    "investment_value_reason": "Synthetic or no predeclared leakage-safe OOS alpha evidence (SPEC §17.4; never claim supported on synthetic demo)",
+    "pass_claim_authorized": false,
+    "release_gates": {
+      "CALIBRATION_INSUFFICIENT": true,
+      "CALIBRATION_PASS": false,
+      "DATA_QUALITY_PASS": true,
+      "ENGINEERING_PASS": true,
+      "ENSEMBLE_CALIBRATED": false,
+      "INVESTMENT_VALUE_NOT_ESTABLISHED": true
+    }
+  },
+  "min_hist_pb_points": 12,
+  "n_excluded_pit_incomplete": 0,
+  "n_forecasts_persisted": 15,
+  "n_scored": 15,
+  "n_track_b_eligible": 0,
+  "n_track_b_skipped": 15,
+  "out": "/tmp/suite_j_evidence/r7_calibrate_rim_out",
+  "pass_claim": {
+    "artifact_n_unbiased": null,
+    "artifact_path": null,
+    "artifact_universe_data_label": null,
+    "authorized": false,
+    "pit_incomplete_excluded": null,
+    "protocol_id": null,
+    "reason": "NO_ARTIFACT",
+    "run_data_label": "HITHINK_EM_LEAN_FI",
+    "run_n_unbiased": 0
+  },
+  "prefer_local": true,
+  "release_gates": {
+    "CALIBRATION_INSUFFICIENT": true,
+    "CALIBRATION_PASS": false,
+    "DATA_QUALITY_PASS": true,
+    "ENGINEERING_PASS": true,
+    "ENSEMBLE_CALIBRATED": false,
+    "INVESTMENT_VALUE_NOT_ESTABLISHED": true
+  },
+  "run_id": "vms-5d7a24416e6ac990",
+  "schema_version": "vms-0.2.phase12",
+  "split_mode": "chronological",
+  "status": "R6_BANK_RIM_WALK_FORWARD_CALIBRATION_NOT_INVESTMENT_ADVICE",
+  "track_b_skips_sample": [
+    {
+      "hist_n": 2,
+      "instrument_id": "000001.SZ",
+      "min_required": 12,
+      "origin_as_of": "2018-03-15T15:00:00+08:00",
+      "origin_fy": 2017,
+      "skip_reason": "INSUFFICIENT_OWN_PB_HISTORY"
+    },
+    {
+      "hist_n": 3,
+      "instrument_id": "000001.SZ",
+      "min_required": 12,
+      "origin_as_of": "2019-03-07T15:00:00+08:00",
+      "origin_fy": 2018,
+      "skip_reason": "INSUFFICIENT_OWN_PB_HISTORY"
+    },
+    {
+      "hist_n": 4,
+      "instrument_id": "000001.SZ",
+      "min_required": 12,
+      "origin_as_of": "2020-02-14T15:00:00+08:00",
+      "origin_fy": 2019,
+      "skip_reason": "INSUFFICIENT_OWN_PB_HISTORY"
+    },
+    {
+      "hist_n": 5,
+      "instrument_id": "000001.SZ",
+      "min_required": 12,
+      "origin_as_of": "2021-02-02T15:00:00+08:00",
+      "origin_fy": 2020,
+      "skip_reason": "INSUFFICIENT_OWN_PB_HISTORY"
+    },
+    {
+      "hist_n": 6,
+      "instrument_id": "000001.SZ",
+      "min_required": 12,
+      "origin_as_of": "2022-03-10T15:00:00+08:00",
+      "origin_fy": 2021,
+      "skip_reason": "INSUFFICIENT_OWN_PB_HISTORY"
+    }
+  ],
+  "universe_id": "fi_deposit_lean_r7_v1"
+}

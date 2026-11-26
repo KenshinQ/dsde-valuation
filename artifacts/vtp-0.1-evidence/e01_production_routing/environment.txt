@@ -1,0 +1,5 @@
+timestamp_asia_shanghai=2026-11-27 02:23:09 CST
+python=Python 3.13.5
+pytest=pytest 9.2.0
+master_base=dd84fc16f54c397d3ba88e953a384dfecd550466
+api=vms.router.route_methods

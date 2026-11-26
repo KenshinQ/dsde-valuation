@@ -1,0 +1,11 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.5, pytest-9.2.0, pluggy-1.7.0
+rootdir: /workspace/dsde-valuation-e01-route
+configfile: pyproject.toml
+plugins: hypothesis-6.170.17
+collected 4 items
+
+tests/evaluation/test_e01_production_routing_matrix.py ....              [100%]
+
+---------- generated xml file: /tmp/e01_evidence/junit_e01_tests.xml -----------
+============================== 4 passed in 0.28s ===============================

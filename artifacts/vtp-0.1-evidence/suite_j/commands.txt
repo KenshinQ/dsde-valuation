@@ -1,0 +1,42 @@
+# 2026-11-27 Asia/Shanghai (CST). Python 3.13.5, pytest 9.2.0.
+# Repo at run time: dea7173e338620c0c07925b43a198b7e005bc264 (PR #33 branch).
+# Production src/vms was not modified.
+
+# 1) Synthetic evaluation-code regression + existing j00 declaration + live smoke
+/workspace/dsde-valuation/.venv/bin/python -m pytest -v --tb=short \
+  --junit-xml /tmp/suite_j_evidence/junit_synth_eval_and_j00.xml \
+  tests/unit/test_evaluation.py \
+  tests/unit/test_walk_forward.py \
+  tests/integration/test_cli_evaluate.py \
+  tests/leakage/test_eval_weight_freeze.py \
+  tests/vtp_0_1/suite_j/test_j00_historical_validation_status.py \
+  tests/integration/test_hithink_live_smoke.py
+# exit 0, 24 passed in 14.99s
+
+# 2) R7 real-OOS tests (previously skipped: local DuckDB required)
+/workspace/dsde-valuation/.venv/bin/python -m pytest -v --tb=short \
+  --junit-xml /tmp/suite_j_evidence/junit_r7_real_oos.xml \
+  tests/unit/test_r7_fi_real_oos.py \
+  tests/integration/test_cli_calibrate_rim_real.py
+# exit 0, 14 passed in 47.35s
+
+# 3) Durable official R7 CLI walk-forward (same args as the CLI smoke)
+/workspace/dsde-valuation/.venv/bin/vms calibrate-rim \
+  --out /tmp/suite_j_evidence/r7_calibrate_rim_out \
+  --universe config/universe.fi_deposit_lean_real.yaml \
+  --start 2016-01-01 \
+  --end 2022-12-31 \
+  --seed 42
+# exit 0, fi_real_rest_calls=0, n_forecasts_persisted=15, n_unbiased_pit_complete=0
+
+# 4) Supporting R4/R5 local-panel tests (previously skipped)
+/workspace/dsde-valuation/.venv/bin/python -m pytest -v --tb=short \
+  --junit-xml /tmp/suite_j_evidence/junit_r4_r5_local.xml \
+  tests/unit/methods/test_rim_r4_fi_peer_panel.py \
+  tests/unit/methods/test_rim_r5_subject_hist_depth.py
+# exit 0, 25 passed in 43.41s
+
+# 5) New official close-criteria tests (thin PR from master)
+/workspace/dsde-valuation/.venv/bin/python -m pytest -v --tb=short \
+  tests/evaluation/test_suite_j_official_close_criteria.py
+# exit 0, 11 passed in 0.17s (worktree /workspace/dsde-valuation-suitej)

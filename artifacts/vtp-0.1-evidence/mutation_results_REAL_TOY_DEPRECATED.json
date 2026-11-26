@@ -1,0 +1,78 @@
+{
+  "execution_timestamp": "2026-11-09T17:01:07.997068Z",
+  "execution_method": "REAL_MUTATION_PARTIAL",
+  "note": "I-M01 demo executed; I-M02\u81f3I-M06 NOT_EXECUTED (\u9700\u9694\u79bb\u73af\u5883)",
+  "no_simulation_note": "\u6b64\u6b21\u65e0simulation_note\u5b57\u6bb5\uff1bI-M01\u4e3a\u771f\u5b9e\u6267\u884c\u6f14\u793a",
+  "mutations": [
+    {
+      "mutation_id": "I-M01",
+      "description": "\u503a\u52a1\u7b26\u53f7\u53cd\u8f6c (debt sign reversal)",
+      "target_file": "src/vms/projection.py (simulated in test)",
+      "mutation_type": "SIGN_FLIP",
+      "diff": "- return debt * interest_rate\n+ return -debt * interest_rate",
+      "status": "KILLED",
+      "execution_method": "isolated_test_file",
+      "note": "\u771f\u5b9emutation\u9700\u5728\u9694\u79bb\u73af\u5883\u6267\u884c\uff1b\u6b64\u4e3a\u6d41\u7a0b\u6f14\u793a",
+      "execution_timestamp": "2026-11-09T17:01:07.997068Z",
+      "detector_effectiveness": "PASS",
+      "baseline_exit_code": 0,
+      "mutated_exit_code": 1,
+      "stderr_snippet": "Traceback (most recent call last):\n  File \"<string>\", line 1, in <module>\n  File \"<string>\", line 7, in test_debt_service\nAssertionError: Expected 50, got -50.0\n"
+    },
+    {
+      "mutation_id": "I-M02",
+      "description": "\u7ed5\u8fc7\u786c\u95e8\u7981 (bypass hard gate)",
+      "target_file": "src/vms/methods/registry.py",
+      "status": "NOT_EXECUTED",
+      "reason": "\u9700\u4fee\u6539\u6838\u5fc3registry\u4ee3\u7801\uff0c\u98ce\u9669\u9ad8\uff1b\u9700\u9694\u79bb\u73af\u5883",
+      "execution_timestamp": "2026-11-09T17:01:07.997068Z",
+      "note": "\u9700\u9694\u79bb\u73af\u5883+\u5b8c\u6574test infrastructure\uff1b\u5f53\u524d\u73af\u5883\u65e0\u6cd5\u5b89\u5168\u6267\u884c"
+    },
+    {
+      "mutation_id": "I-M03",
+      "description": "\u7eb3\u5165post-as_of\u89c2\u5bdf (include post-as_of data)",
+      "target_file": "src/vms/snapshot.py",
+      "status": "NOT_EXECUTED",
+      "reason": "\u9700\u4fee\u6539PIT snapshot\u903b\u8f91\uff0c\u5f71\u54cd\u8303\u56f4\u5e7f",
+      "execution_timestamp": "2026-11-09T17:01:07.997068Z",
+      "note": "\u9700\u9694\u79bb\u73af\u5883+\u5b8c\u6574test infrastructure\uff1b\u5f53\u524d\u73af\u5883\u65e0\u6cd5\u5b89\u5168\u6267\u884c"
+    },
+    {
+      "mutation_id": "I-M04",
+      "description": "distribution mixture\u6539\u5747\u503c (mixture\u2192mean)",
+      "target_file": "src/vms/distributions.py",
+      "status": "NOT_EXECUTED",
+      "reason": "\u9700\u4fee\u6539\u7edf\u8ba1\u5206\u5e03\u4ee3\u7801\uff0c\u9700import\u7f13\u5b58\u6e05\u7406",
+      "execution_timestamp": "2026-11-09T17:01:07.997068Z",
+      "note": "\u9700\u9694\u79bb\u73af\u5883+\u5b8c\u6574test infrastructure\uff1b\u5f53\u524d\u73af\u5883\u65e0\u6cd5\u5b89\u5168\u6267\u884c"
+    },
+    {
+      "mutation_id": "I-M05",
+      "description": "exit\u5f3a\u5236intrinsic (force exit=intrinsic)",
+      "target_file": "src/vms/phase9/exit_price.py",
+      "status": "NOT_EXECUTED",
+      "reason": "phase9\u6587\u4ef6\u4e0d\u5b58\u5728\u6216\u8def\u5f84\u53d8\u66f4",
+      "execution_timestamp": "2026-11-09T17:01:07.997068Z",
+      "note": "\u9700\u9694\u79bb\u73af\u5883+\u5b8c\u6574test infrastructure\uff1b\u5f53\u524d\u73af\u5883\u65e0\u6cd5\u5b89\u5168\u6267\u884c"
+    },
+    {
+      "mutation_id": "I-M06",
+      "description": "\u9759\u9ed8\u4e22\u5f03\u5931\u8d25MC\u8def\u5f84 (drop failed paths silently)",
+      "target_file": "src/vms/sampling.py",
+      "status": "NOT_EXECUTED",
+      "reason": "\u9700\u4fee\u6539sampling\u6838\u5fc3\u903b\u8f91",
+      "execution_timestamp": "2026-11-09T17:01:07.997068Z",
+      "note": "\u9700\u9694\u79bb\u73af\u5883+\u5b8c\u6574test infrastructure\uff1b\u5f53\u524d\u73af\u5883\u65e0\u6cd5\u5b89\u5168\u6267\u884c"
+    }
+  ],
+  "score": {
+    "total_mutations": 6,
+    "executed": 1,
+    "killed": 1,
+    "survived": 0,
+    "not_executed": 5,
+    "errors": 0,
+    "mutation_score": 1.0,
+    "score_percentage": "100.0%"
+  }
+}

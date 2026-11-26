@@ -1,0 +1,92 @@
+{
+  "as_of": "2025-06-30T15:00:00+08:00",
+  "assumption_ids": [
+    "EM-FI-F10-v1",
+    "EM-SHARES-EQUITY-v1",
+    "EVAL-RIM-FI-DEPOSIT-REAL-OOS-v1",
+    "HITHINK-LOCAL-FIRST-v1",
+    "HITHINK-NO-VENDOR-QFQ-v1",
+    "INDUSTRY-SW-L1-PROXY-EM-v1",
+    "PIT-ASSUMED-VENDOR-LATEST-v1",
+    "PIT-INCOMPLETE-v2",
+    "RIM-SUBJECT-HIST-DEPTH-v1"
+  ],
+  "flags": [
+    "FI_REAL_OOS_PANEL",
+    "FI_REAL_PREFER_LOCAL",
+    "FORBID_DEFAULT_PB_CENTER_2",
+    "MIN_HIST_PB_POINTS_UNCHANGED",
+    "NO_INDUSTRY_UNSUPPORTED_LIFT",
+    "NO_INVENT_OEI"
+  ],
+  "fund_db": "/workspace/data/hithink_fundamentals.duckdb",
+  "instrument_ids": [
+    "000001.SZ",
+    "600036.SH",
+    "601398.SH"
+  ],
+  "investment_value": "INVESTMENT_VALUE_NOT_ESTABLISHED",
+  "market_db": "/workspace/data/market.duckdb",
+  "min_hist_pb_points_unchanged": true,
+  "no_invent_oei": true,
+  "notes": [],
+  "prefer_local": true,
+  "rest_calls": 0,
+  "source_id": "fi_real_oos_panel_v1",
+  "ticker_diagnostics": [
+    {
+      "enrichment_paths": {
+        "balance_lines": "local",
+        "bank_f10": "local",
+        "equity": "local",
+        "industry": "local",
+        "sharebonus": "local"
+      },
+      "fetch_rest_notes": [],
+      "has_revenue": true,
+      "instrument_id": "000001.SZ",
+      "n_classifications": 1,
+      "n_financial": 812,
+      "n_market": 2427,
+      "rest_calls": 0,
+      "subject_hist_detail": "te_obs=12; bank_f10_obs=136; market_bars=2132; equity_rows=63; rest_calls=0; prefer_local=True; max_annual_f10=20; price_lookback_years=20",
+      "subject_hist_rest": 0
+    },
+    {
+      "enrichment_paths": {
+        "balance_lines": "local",
+        "bank_f10": "local",
+        "equity": "local",
+        "industry": "local",
+        "sharebonus": "local"
+      },
+      "fetch_rest_notes": [],
+      "has_revenue": true,
+      "instrument_id": "600036.SH",
+      "n_classifications": 1,
+      "n_financial": 784,
+      "n_market": 2427,
+      "rest_calls": 0,
+      "subject_hist_detail": "te_obs=12; bank_f10_obs=108; market_bars=2132; equity_rows=49; rest_calls=0; prefer_local=True; max_annual_f10=20; price_lookback_years=20",
+      "subject_hist_rest": 0
+    },
+    {
+      "enrichment_paths": {
+        "balance_lines": "local",
+        "bank_f10": "local",
+        "equity": "local",
+        "industry": "local",
+        "sharebonus": "local_miss_no_rest"
+      },
+      "fetch_rest_notes": [],
+      "has_revenue": true,
+      "instrument_id": "601398.SH",
+      "n_classifications": 1,
+      "n_financial": 774,
+      "n_market": 2427,
+      "rest_calls": 0,
+      "subject_hist_detail": "te_obs=12; bank_f10_obs=98; market_bars=2132; equity_rows=46; rest_calls=0; prefer_local=True; max_annual_f10=20; price_lookback_years=20",
+      "subject_hist_rest": 0
+    }
+  ]
+}

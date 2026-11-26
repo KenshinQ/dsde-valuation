@@ -1,0 +1,36 @@
+{
+  "execution_timestamp": "2026-11-09T05:05:14.046485Z",
+  "offline_environment": {
+    "http_proxy_set": false,
+    "https_proxy_set": false,
+    "proxy_values": {
+      "http_proxy": "NOT_SET",
+      "https_proxy": "NOT_SET"
+    },
+    "note": "Proxy\u8bbe\u7f6e\u4e0d\u7b49\u4e8e\u5b8c\u5168\u7f51\u7edc\u963b\u65ad\uff0c\u4ec5\u8868\u793aHTTP\u8c03\u7528\u88ab\u62e6\u622a"
+  },
+  "original_bundle": {
+    "file": "e2e_original_bundle.json",
+    "sha256": "c80c48f31c8edcbf095a9439be6ae6cfaafb1d954cb5262a92461d6445f9ab31"
+  },
+  "replayed_bundle": {
+    "file": "e2e_replayed_bundle.json",
+    "sha256": "efa7e78728e4a0fc42e4d52e037ef5911d275266040377251614f350a3574af1"
+  },
+  "consistency_verification": {
+    "checks": {
+      "input_match": true,
+      "phase0_profile_match": true,
+      "phase4_eligible_match": true,
+      "phase12_intrinsic_match": true
+    },
+    "all_pass": true,
+    "consistency_verified": true
+  },
+  "notes": [
+    "\u7b80\u5316E2E\uff1a\u57fa\u4e8esynthetic data\u751f\u6210bundle",
+    "Replay\u9a8c\u8bc1\uff1a\u76f8\u540c\u8f93\u5165\u2192\u76f8\u540c\u8f93\u51fa\uff08\u786e\u5b9a\u6027\uff09",
+    "\u79bb\u7ebf\u68c0\u67e5\uff1aproxy\u8bbe\u7f6e\uff08\u4e0d\u7b49\u4e8e\u5b8c\u5168\u7f51\u7edc\u963b\u65ad\uff09",
+    "\u5b8c\u6574E2E\u9700\u8981\uff1a\u771f\u5b9eVMS pipeline + \u5b8c\u6574\u6570\u636e\u5e93"
+  ]
+}

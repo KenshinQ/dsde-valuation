@@ -1,0 +1,14 @@
+Command: /workspace/.venv-vtp/bin/pytest -v --tb=short --junit-xml /workspace/artifacts/vtp-0.1-evidence/Suite_E_Routing_junit.xml tests/unit/test_profiles.py tests/unit/test_profiles_phase2.py tests/unit/test_methods_registry_phase2.py\nExit code: 0\n\n=== STDOUT ===\n============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.1.1, pluggy-1.7.0
+rootdir: /workspace
+configfile: pyproject.toml
+plugins: hypothesis-6.170.5
+collected 28 items
+
+tests/unit/test_profiles.py ..........                                   [ 35%]
+tests/unit/test_profiles_phase2.py ............                          [ 78%]
+tests/unit/test_methods_registry_phase2.py ......                        [100%]
+
+- generated xml file: /workspace/artifacts/vtp-0.1-evidence/Suite_E_Routing_junit.xml -
+============================== 28 passed in 0.53s ==============================
+\n\n=== STDERR ===\n

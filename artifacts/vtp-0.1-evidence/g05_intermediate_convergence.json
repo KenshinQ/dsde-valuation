@@ -1,0 +1,15 @@
+{
+  "test": "G-05",
+  "convergence_rate": 0.5,
+  "blend_weight": 0.7,
+  "n_paths": 100,
+  "paths_non_empty": true,
+  "return_distribution": {
+    "mean": 4.897435232617894,
+    "std": 0.17939599941444404,
+    "p10": 4.6905444640783545,
+    "p50": 4.8727929748354235,
+    "p90": 5.134731395677096
+  },
+  "vacuous_check": true
+}

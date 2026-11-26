@@ -1,0 +1,16 @@
+Command: /workspace/.venv-vtp/bin/pytest -v --tb=short --junit-xml /workspace/artifacts/vtp-0.1-evidence/Suite_D_Valuation_Methods_junit.xml tests/unit/test_phase4_acceptance.py tests/unit/test_phase5_acceptance.py tests/unit/test_phase6_acceptance.py tests/unit/methods/test_rim_from_snapshot.py tests/unit/methods/test_rim_r2_common_equity.py\nExit code: 0\n\n=== STDOUT ===\n============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.1.1, pluggy-1.7.0
+rootdir: /workspace
+configfile: pyproject.toml
+plugins: hypothesis-6.170.5
+collected 43 items
+
+tests/unit/test_phase4_acceptance.py ..........                          [ 23%]
+tests/unit/test_phase5_acceptance.py ...........                         [ 48%]
+tests/unit/test_phase6_acceptance.py ........                            [ 67%]
+tests/unit/methods/test_rim_from_snapshot.py .....                       [ 79%]
+tests/unit/methods/test_rim_r2_common_equity.py .........                [100%]
+
+- generated xml file: /workspace/artifacts/vtp-0.1-evidence/Suite_D_Valuation_Methods_junit.xml -
+============================== 43 passed in 1.61s ==============================
+\n\n=== STDERR ===\n

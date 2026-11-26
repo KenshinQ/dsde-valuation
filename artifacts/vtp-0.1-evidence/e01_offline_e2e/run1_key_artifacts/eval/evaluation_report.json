@@ -1,0 +1,439 @@
+{
+  "assumptions": [
+    "DIVIDEND-NO-REINVEST-v1",
+    "EVAL-CALIBRATION-INSUFFICIENT-v1",
+    "EVAL-CHRONOLOGICAL-ONLY-v1",
+    "EVAL-FORECAST-BEFORE-OUTCOME-v1",
+    "EVAL-INVESTMENT-LABEL-v1",
+    "EVAL-SUBGROUP-DIAGNOSTICS-v1",
+    "EVAL-TARGETS-SEPARATE-v1",
+    "EVAL-WEIGHTS-FROZEN-v1",
+    "EXIT-MULTIPLE-SEPARATE-v1",
+    "PIT-ASSUMED-VENDOR-LATEST-v1",
+    "PIT-INCOMPLETE-v2",
+    "TV-GORDON-v1",
+    "WACC-CONSTRUCTION-v1",
+    "WALK-FORWARD-ORIGINS-v1"
+  ],
+  "baselines_present": [
+    "central_dcf",
+    "constant_growth_dcf",
+    "current_multiple_persistence",
+    "dcf_only",
+    "dcf_plus_multiple",
+    "exit_multiple",
+    "historical_median",
+    "no_regime"
+  ],
+  "content_hash": "78eac4d26b52c50b",
+  "data_label": "SYNTHETIC",
+  "end": "2022-12-31",
+  "excluded_pit_incomplete": [],
+  "flags": [
+    "CALIBRATION_INSUFFICIENT_FEW_ORIGINS"
+  ],
+  "frozen_weights": {
+    "content_hash": "504edef7992dbc58",
+    "frozen_before_test": true,
+    "test_window_start": "2018-01-01"
+  },
+  "horizons_years": [
+    1
+  ],
+  "label": "WALK_FORWARD_EVALUATION",
+  "labels": {
+    "CALIBRATION_CLAIM": "CALIBRATION_INSUFFICIENT",
+    "CALIBRATION_PASS": null,
+    "CALIBRATION_STATUS": "INSUFFICIENT",
+    "DATA_QUALITY_PASS": true,
+    "ENGINEERING_PASS": true,
+    "ENSEMBLE_CALIBRATED": false,
+    "ENSEMBLE_CLAIM": "ENSEMBLE_UNCALIBRATED",
+    "data_label": "SYNTHETIC",
+    "investment_value": "INVESTMENT_VALUE_NOT_ESTABLISHED",
+    "investment_value_reason": "Synthetic or no predeclared leakage-safe OOS alpha evidence (SPEC §17.4; never claim supported on synthetic demo)",
+    "pass_claim_authorized": false,
+    "release_gates": {
+      "CALIBRATION_INSUFFICIENT": true,
+      "CALIBRATION_PASS": false,
+      "DATA_QUALITY_PASS": true,
+      "ENGINEERING_PASS": true,
+      "ENSEMBLE_CALIBRATED": false,
+      "INVESTMENT_VALUE_NOT_ESTABLISHED": true
+    }
+  },
+  "n_excluded_pit_incomplete": 0,
+  "n_forecasts_persisted": 8,
+  "n_origins_attempted": 8,
+  "n_pending_outcomes": 0,
+  "n_pit_assumed": 0,
+  "n_scored": 8,
+  "n_unbiased_pit_complete": 8,
+  "notes": [
+    "Chronological walk-forward only; random splits raise RandomSplitProhibitedError (SPEC §17.1).",
+    "Forecasts persisted with outcomes=null before realization (persisted_before_outcomes).",
+    "True PIT_INCOMPLETE (undeclared/UNKNOWN) excluded from scores_unbiased; declared LATEST_ONLY may enter under pit_policy=PIT_ASSUMED / VENDOR_LATEST_AS_OF (PIT-ASSUMED-VENDOR-LATEST-v1); pit_complete stays false; PASS still fail-closed.",
+    "Cash-flow, intrinsic, market-price, and TSR scored in separate blocks (SPEC §17.2).",
+    "Intrinsic is never judged solely by matching future market prices; market-price association is labeled.",
+    "Baselines include historical median, central DCF, no-regime, exit multiple, current-multiple persistence.",
+    "Subgroup diagnostics by profile/regime are descriptive only.",
+    "Inadequate OOS → CALIBRATION_INSUFFICIENT (not inferred success).",
+    "Synthetic universes always carry INVESTMENT_VALUE_NOT_ESTABLISHED; never ENSEMBLE_CALIBRATED.",
+    "Ensemble weights frozen before test window (frozen_weights.json)."
+  ],
+  "release_gates": {
+    "CALIBRATION_INSUFFICIENT": true,
+    "CALIBRATION_PASS": false,
+    "DATA_QUALITY_PASS": true,
+    "ENGINEERING_PASS": true,
+    "ENSEMBLE_CALIBRATED": false,
+    "INVESTMENT_VALUE_NOT_ESTABLISHED": true
+  },
+  "run_id": "vms-6fd31742108e6c73",
+  "schema_kind": "EvaluationReport",
+  "schema_version": "vms-0.2.phase12",
+  "scores": {
+    "baseline_comparisons": {
+      "market_price_vs_current_multiple_persistence": {
+        "baseline": "current_multiple_persistence",
+        "label": "NO_INFORMATION_GAIN",
+        "n_forecast_is_baseline": 8,
+        "n_records": 8,
+        "note": "Market-price forecast is explicitly the persistence baseline on every record; incremental forecast-vs-baseline comparison is undefined and omitted.",
+        "reason": "FORECAST_IS_BASELINE",
+        "skipped": true
+      },
+      "operating_cash_flow_vs_historical_median": {
+        "baseline": "historical_realized_fcff_median",
+        "baseline_errors": {
+          "mae": 2559.5943787871415,
+          "mean_error": -2515.741492525177,
+          "median_abs_error": 2044.0156868326635,
+          "n": 8,
+          "rmse": 3262.536661138992
+        },
+        "forecast_errors": {
+          "mae": 2597.4898924085014,
+          "mean_error": -103.86652523070063,
+          "median_abs_error": 2332.633316932163,
+          "n": 8,
+          "rmse": 3046.2592431982803
+        },
+        "note": "Baseline is median of as-of-visible realized FCFF proxies; forecast is median-driver projected FCFF_y1."
+      }
+    },
+    "evaluation_targets_declared": [
+      "operating_cash_flow",
+      "intrinsic_value",
+      "market_price",
+      "total_shareholder_return"
+    ],
+    "intrinsic_value": {
+      "market_price_association_only": {
+        "errors": {
+          "mae": 40.927869322882984,
+          "mean_error": -40.927869322882984,
+          "median_abs_error": 40.883039787239376,
+          "n": 8,
+          "rmse": 42.519750549756644
+        },
+        "label": "MARKET_PRICE_ASSOCIATION_NOT_INTRINSIC_GROUND_TRUTH",
+        "note": "Association between intrinsic point and realized market price is reported for transparency only. Future market price is NOT ground truth for intrinsic value (SPEC §17.2 / §22.4)."
+      },
+      "note": "Intrinsic scored via coherence/stability; market price is not the truth target",
+      "price_mae_forbidden": true,
+      "stability_vs_later_origin": {
+        "n": 0
+      }
+    },
+    "market_price": {
+      "errors": {
+        "mae": 7.70125,
+        "mean_error": -7.70125,
+        "median_abs_error": 8.255000000000003,
+        "n": 8,
+        "rmse": 8.704706341973862
+      },
+      "note": "Market-price forecast errors — separate from intrinsic",
+      "vs_current_multiple_persistence": {
+        "baseline": "current_multiple_persistence",
+        "label": "NO_INFORMATION_GAIN",
+        "n_forecast_is_baseline": 8,
+        "n_records": 8,
+        "note": "Market-price forecast is explicitly the persistence baseline on every record; incremental forecast-vs-baseline comparison is undefined and omitted.",
+        "reason": "FORECAST_IS_BASELINE",
+        "skipped": true
+      }
+    },
+    "n_records": 8,
+    "operating_cash_flow": {
+      "coverage_80": {
+        "coverage": null,
+        "n": 0,
+        "nominal": 0.8
+      },
+      "crps_gaussian": {
+        "family": "gaussian",
+        "mean_crps": null,
+        "n": 0
+      },
+      "errors": {
+        "mae": 2597.4898924085014,
+        "mean_error": -103.86652523070063,
+        "median_abs_error": 2332.633316932163,
+        "n": 8,
+        "rmse": 3046.2592431982803
+      },
+      "note": "FCFF/CFO forecast errors only — not mixed with price or return scores",
+      "pinball_q10": {
+        "mean_pinball": null,
+        "n": 0,
+        "tau": 0.1
+      },
+      "pinball_q90": {
+        "mean_pinball": null,
+        "n": 0,
+        "tau": 0.9
+      }
+    },
+    "subgroups": {
+      "by_fundamental_regime": {
+        "UNKNOWN": {
+          "market_price_errors": {
+            "mae": 7.70125,
+            "mean_error": -7.70125,
+            "median_abs_error": 8.255000000000003,
+            "n": 8,
+            "rmse": 8.704706341973862
+          },
+          "n": 8,
+          "tsr_point_errors": {
+            "mae": 0.2581377456210491,
+            "mean_error": -0.2581377456210491,
+            "median_abs_error": 0.2243071510508491,
+            "n": 8,
+            "rmse": 0.31411788480749336
+          }
+        }
+      },
+      "by_profile": {
+        "operating_company": {
+          "market_price_errors": {
+            "mae": 7.70125,
+            "mean_error": -7.70125,
+            "median_abs_error": 8.255000000000003,
+            "n": 8,
+            "rmse": 8.704706341973862
+          },
+          "n": 8,
+          "tsr_point_errors": {
+            "mae": 0.2581377456210491,
+            "mean_error": -0.2581377456210491,
+            "median_abs_error": 0.2243071510508491,
+            "n": 8,
+            "rmse": 0.31411788480749336
+          }
+        }
+      },
+      "note": "Subgroup diagnostics are descriptive stability checks. They do not authorize ENSEMBLE_CALIBRATED or investment-value claims."
+    },
+    "total_shareholder_return": {
+      "hurdle_calibration": [
+        {
+          "hurdle": 0.0,
+          "n": 0
+        },
+        {
+          "hurdle": 0.08,
+          "n": 0
+        }
+      ],
+      "loss_probability_calibration": {
+        "bins": [],
+        "n": 0
+      },
+      "note": "TSR under DIVIDEND-NO-REINVEST; separate from CF and intrinsic",
+      "point_errors": {
+        "mae": 0.2581377456210491,
+        "mean_error": -0.2581377456210491,
+        "median_abs_error": 0.2243071510508491,
+        "n": 8,
+        "rmse": 0.31411788480749336
+      }
+    }
+  },
+  "scores_unbiased": {
+    "baseline_comparisons": {
+      "market_price_vs_current_multiple_persistence": {
+        "baseline": "current_multiple_persistence",
+        "label": "NO_INFORMATION_GAIN",
+        "n_forecast_is_baseline": 8,
+        "n_records": 8,
+        "note": "Market-price forecast is explicitly the persistence baseline on every record; incremental forecast-vs-baseline comparison is undefined and omitted.",
+        "reason": "FORECAST_IS_BASELINE",
+        "skipped": true
+      },
+      "operating_cash_flow_vs_historical_median": {
+        "baseline": "historical_realized_fcff_median",
+        "baseline_errors": {
+          "mae": 2559.5943787871415,
+          "mean_error": -2515.741492525177,
+          "median_abs_error": 2044.0156868326635,
+          "n": 8,
+          "rmse": 3262.536661138992
+        },
+        "forecast_errors": {
+          "mae": 2597.4898924085014,
+          "mean_error": -103.86652523070063,
+          "median_abs_error": 2332.633316932163,
+          "n": 8,
+          "rmse": 3046.2592431982803
+        },
+        "note": "Baseline is median of as-of-visible realized FCFF proxies; forecast is median-driver projected FCFF_y1."
+      }
+    },
+    "evaluation_targets_declared": [
+      "operating_cash_flow",
+      "intrinsic_value",
+      "market_price",
+      "total_shareholder_return"
+    ],
+    "intrinsic_value": {
+      "market_price_association_only": {
+        "errors": {
+          "mae": 40.927869322882984,
+          "mean_error": -40.927869322882984,
+          "median_abs_error": 40.883039787239376,
+          "n": 8,
+          "rmse": 42.519750549756644
+        },
+        "label": "MARKET_PRICE_ASSOCIATION_NOT_INTRINSIC_GROUND_TRUTH",
+        "note": "Association between intrinsic point and realized market price is reported for transparency only. Future market price is NOT ground truth for intrinsic value (SPEC §17.2 / §22.4)."
+      },
+      "note": "Intrinsic scored via coherence/stability; market price is not the truth target",
+      "price_mae_forbidden": true,
+      "stability_vs_later_origin": {
+        "n": 0
+      }
+    },
+    "market_price": {
+      "errors": {
+        "mae": 7.70125,
+        "mean_error": -7.70125,
+        "median_abs_error": 8.255000000000003,
+        "n": 8,
+        "rmse": 8.704706341973862
+      },
+      "note": "Market-price forecast errors — separate from intrinsic",
+      "vs_current_multiple_persistence": {
+        "baseline": "current_multiple_persistence",
+        "label": "NO_INFORMATION_GAIN",
+        "n_forecast_is_baseline": 8,
+        "n_records": 8,
+        "note": "Market-price forecast is explicitly the persistence baseline on every record; incremental forecast-vs-baseline comparison is undefined and omitted.",
+        "reason": "FORECAST_IS_BASELINE",
+        "skipped": true
+      }
+    },
+    "n_records": 8,
+    "operating_cash_flow": {
+      "coverage_80": {
+        "coverage": null,
+        "n": 0,
+        "nominal": 0.8
+      },
+      "crps_gaussian": {
+        "family": "gaussian",
+        "mean_crps": null,
+        "n": 0
+      },
+      "errors": {
+        "mae": 2597.4898924085014,
+        "mean_error": -103.86652523070063,
+        "median_abs_error": 2332.633316932163,
+        "n": 8,
+        "rmse": 3046.2592431982803
+      },
+      "note": "FCFF/CFO forecast errors only — not mixed with price or return scores",
+      "pinball_q10": {
+        "mean_pinball": null,
+        "n": 0,
+        "tau": 0.1
+      },
+      "pinball_q90": {
+        "mean_pinball": null,
+        "n": 0,
+        "tau": 0.9
+      }
+    },
+    "subgroups": {
+      "by_fundamental_regime": {
+        "UNKNOWN": {
+          "market_price_errors": {
+            "mae": 7.70125,
+            "mean_error": -7.70125,
+            "median_abs_error": 8.255000000000003,
+            "n": 8,
+            "rmse": 8.704706341973862
+          },
+          "n": 8,
+          "tsr_point_errors": {
+            "mae": 0.2581377456210491,
+            "mean_error": -0.2581377456210491,
+            "median_abs_error": 0.2243071510508491,
+            "n": 8,
+            "rmse": 0.31411788480749336
+          }
+        }
+      },
+      "by_profile": {
+        "operating_company": {
+          "market_price_errors": {
+            "mae": 7.70125,
+            "mean_error": -7.70125,
+            "median_abs_error": 8.255000000000003,
+            "n": 8,
+            "rmse": 8.704706341973862
+          },
+          "n": 8,
+          "tsr_point_errors": {
+            "mae": 0.2581377456210491,
+            "mean_error": -0.2581377456210491,
+            "median_abs_error": 0.2243071510508491,
+            "n": 8,
+            "rmse": 0.31411788480749336
+          }
+        }
+      },
+      "note": "Subgroup diagnostics are descriptive stability checks. They do not authorize ENSEMBLE_CALIBRATED or investment-value claims."
+    },
+    "total_shareholder_return": {
+      "hurdle_calibration": [
+        {
+          "hurdle": 0.0,
+          "n": 0
+        },
+        {
+          "hurdle": 0.08,
+          "n": 0
+        }
+      ],
+      "loss_probability_calibration": {
+        "bins": [],
+        "n": 0
+      },
+      "note": "TSR under DIVIDEND-NO-REINVEST; separate from CF and intrinsic",
+      "point_errors": {
+        "mae": 0.2581377456210491,
+        "mean_error": -0.2581377456210491,
+        "median_abs_error": 0.2243071510508491,
+        "n": 8,
+        "rmse": 0.31411788480749336
+      }
+    }
+  },
+  "split_mode": "chronological",
+  "start": "2018-01-01",
+  "universe_id": "synthetic_offline_v1",
+  "version": "EVAL-2"
+}

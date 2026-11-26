@@ -1,0 +1,21 @@
+{
+  "test": "G-03",
+  "scenario_a": {
+    "fcf": 1000,
+    "growth": 0.03,
+    "intrinsic": 14492.226596452609,
+    "exit": 10932.073372523508,
+    "hash": "66e18cd616d16575"
+  },
+  "scenario_b": {
+    "fcf": 1500,
+    "growth": 0.05,
+    "intrinsic": 30557.985911187192,
+    "exit": 22241.23091261124,
+    "hash": "06cee50d1912d2dc"
+  },
+  "intrinsic_delta": 16065.759314734583,
+  "exit_delta": 11309.157540087734,
+  "attribution_ratio": 0.7039292272800097,
+  "pass": true
+}

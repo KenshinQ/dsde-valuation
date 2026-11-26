@@ -1,0 +1,95 @@
+{
+  "as_of": "2025-06-30",
+  "classifier_version": "vms-profile-classifier-0.2.phase2",
+  "confidence": 0.87,
+  "conflicting_signals": [],
+  "feature_values": {
+    "as_of": "2025-06-30",
+    "book_equity": 10000000000.0,
+    "cash_to_assets": 0.12,
+    "debt_to_assets": 0.2,
+    "dividend_payout": 0.35,
+    "ebit_margin": 0.12,
+    "ebit_margin_stdev_3y": 0.015,
+    "equity_method_income_to_pretax": 0.0,
+    "fcf_to_revenue": 0.08,
+    "financial_assets_to_assets": 0.05,
+    "fixture_id": "mature_operating",
+    "has_listed_subsidiaries": false,
+    "history_years": 8.0,
+    "industry_name": "机械设备",
+    "industry_scheme": "SW2021_L1",
+    "instrument_id": "SYN000001.SZ",
+    "interest_income_to_revenue": 0.01,
+    "investment_assets_to_assets": 0.02,
+    "low_data_quality": false,
+    "n_segments": 1,
+    "net_cash_to_assets": -0.08,
+    "net_income_to_revenue": 0.09,
+    "ppe_to_assets": 0.25,
+    "revenue_cagr_3y": 0.05
+  },
+  "flag_hits": [
+    {
+      "detail": "dividend_payout=0.3500>0.05",
+      "feature_refs": [
+        "dividend_payout"
+      ],
+      "flag": "DIVIDEND_PAYING",
+      "profile": null,
+      "rule_id": "F_DIVIDEND_PAYING",
+      "weight": 1.0
+    }
+  ],
+  "flags": [
+    "DIVIDEND_PAYING"
+  ],
+  "instrument_id": "SYN000001.SZ",
+  "investment_value": "INVESTMENT_VALUE_NOT_ESTABLISHED",
+  "low_confidence": false,
+  "manual_override": {
+    "applied": false,
+    "overridden_primary": null,
+    "override_version": null,
+    "reason": null,
+    "source_path": null
+  },
+  "missing_fields": [],
+  "notes": "primary=MATURE_OPERATING score=4.20",
+  "primary_profile": "MATURE_OPERATING",
+  "profile_probabilities": {
+    "MATURE_OPERATING": 1.0
+  },
+  "profile_scores": {
+    "MATURE_OPERATING": 4.2
+  },
+  "rule_hits": [
+    {
+      "detail": "fcf_to_revenue=0.0800>=0.02, |cagr|=0.0500<=0.12, ebit_margin=0.1200>=0.04",
+      "feature_refs": [
+        "fcf_to_revenue",
+        "revenue_cagr_3y",
+        "ebit_margin"
+      ],
+      "flag": null,
+      "profile": "MATURE_OPERATING",
+      "rule_id": "R_MATURE_POS_FCF_STABLE",
+      "weight": 3.0
+    },
+    {
+      "detail": "moderate mature signals fcf=0.0800 cagr=0.0500 margin=0.1200",
+      "feature_refs": [
+        "fcf_to_revenue",
+        "revenue_cagr_3y",
+        "ebit_margin"
+      ],
+      "flag": null,
+      "profile": "MATURE_OPERATING",
+      "rule_id": "R_MATURE_MODERATE",
+      "weight": 1.2
+    }
+  ],
+  "rules_version": "vms-profile-rules-0.2.phase2",
+  "run_id": "vms-88f0d8bf46aa3ef7",
+  "schema_version": "vms-0.2.phase12"
+}

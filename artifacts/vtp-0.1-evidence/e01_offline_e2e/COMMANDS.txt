@@ -1,0 +1,37 @@
+# Worktree: /workspace/dsde-valuation-e01
+# Branch: test/e01-offline-e2e-smoke
+# HEAD: cd3384e8f2612c773ac16af37be52a428e05e993 (based on master dd84fc16f54c397d3ba88e953a384dfecd550466)
+# Interpreter: /workspace/dsde-valuation/.venv/bin/python (Python 3.13.5, pytest 9.2.0)
+# Time zone: Asia/Shanghai (CST, UTC+8)
+# Date: 2026-11-27
+
+## Isolation capability (same box as A-02)
+
+unshare -r --net true          # exit 0
+unshare --user --net true      # exit 0
+unshare --net true             # exit 1 (Operation not permitted without user ns)
+# Host: TCP 1.1.1.1:443 and 8.8.8.8:53 succeeded
+# Inside unshare -r --net: ENETUNREACH (errno 101); only lo; empty routes; no proxy
+
+## Pytest (1 passed, exit 0, 34.97s; junit timestamp 2026-11-27T01:50:47.463894+08:00)
+
+cd /workspace/dsde-valuation-e01
+export PYTHONPATH=/workspace/dsde-valuation-e01/src:/workspace/dsde-valuation-e01
+export VIRTUAL_ENV=/workspace/dsde-valuation/.venv
+/workspace/dsde-valuation/.venv/bin/python -m pytest \
+  tests/integration/test_e01_offline_e2e_smoke.py \
+  -v --tb=short \
+  --junitxml=/tmp/e01_isolated_evidence/junit_e01_isolated.xml
+
+## Isolated production-path + replay (exit 0; same self-check then official CLI sequence)
+
+# Official path (scripts/e2e_offline_demo.sh), demo --paths 40 (script would default to 10000),
+# later steps 40/30/30/30/20 as in the official script. Replay uses the frozen demo/data directory.
+
+env -i PATH=".../bin:/usr/bin:/bin" HOME="$HOME" LANG=C.UTF-8 LC_ALL=C.UTF-8 \
+  PYTHONPATH=<repo>/src PYTHONNOUSERSITE=1 \
+  E01_REPO=<repo> E01_OUT=<out> \
+  /usr/bin/unshare -r --net python tests/integration/e01_isolated_netns_runner.py \
+    --isolation-report isolation_self_check.json \
+    --cwd <repo> \
+    -- python tests/integration/e01_offline_e2e_smoke.py

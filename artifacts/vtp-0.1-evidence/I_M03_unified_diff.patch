@@ -1,0 +1,11 @@
+--- a/src/vms/pit/snapshot.py
++++ b/src/vms/pit/snapshot.py
+@@ -388,7 +388,7 @@
+     mkt_i = [o for o in market if o.instrument_id == instrument_id]
+     ca_i = [e for e in corporate_actions if e.instrument_id == instrument_id]
+     peer_i = [p for p in (peers or []) if p.subject_instrument_id == instrument_id]
+-    fin_k = [o for o in fin_i if o.published_at <= as_of]
++    fin_k = list(fin_i)
+     mkt_k = [o for o in mkt_i if o.timestamp <= as_of]
+     ca_k = [e for e in ca_i if e.announced_at <= as_of]
+     peer_k = [p for p in peer_i if peer_known_at(p, as_of)]

@@ -1,0 +1,14 @@
+Command: /workspace/.venv-vtp/bin/pytest -v --tb=short --junit-xml /workspace/artifacts/vtp-0.1-evidence/Suite_K_Bundle_Replay_junit.xml tests/integration/test_cli_phase0.py tests/unit/test_bundle_validation.py tests/unit/test_seeding_metadata.py\nExit code: 0\n\n=== STDOUT ===\n============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.1.1, pluggy-1.7.0
+rootdir: /workspace
+configfile: pyproject.toml
+plugins: hypothesis-6.170.5
+collected 21 items
+
+tests/integration/test_cli_phase0.py .....                               [ 23%]
+tests/unit/test_bundle_validation.py ......                              [ 52%]
+tests/unit/test_seeding_metadata.py ..........                           [100%]
+
+- generated xml file: /workspace/artifacts/vtp-0.1-evidence/Suite_K_Bundle_Replay_junit.xml -
+============================== 21 passed in 2.57s ==============================
+\n\n=== STDERR ===\n

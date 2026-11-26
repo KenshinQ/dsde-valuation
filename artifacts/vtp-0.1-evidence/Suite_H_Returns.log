@@ -1,0 +1,15 @@
+Command: /workspace/.venv-vtp/bin/pytest -v --tb=short --junit-xml /workspace/artifacts/vtp-0.1-evidence/Suite_H_Returns_junit.xml tests/unit/test_returns.py tests/unit/test_phase7_acceptance.py tests/property/test_return_properties.py tests/property/test_return_track_b_properties.py\nExit code: 0\n\n=== STDOUT ===\n============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.1.1, pluggy-1.7.0
+rootdir: /workspace
+configfile: pyproject.toml
+plugins: hypothesis-6.170.5
+collected 18 items
+
+tests/unit/test_returns.py .........                                     [ 50%]
+tests/unit/test_phase7_acceptance.py .......                             [ 88%]
+tests/property/test_return_properties.py .                               [ 94%]
+tests/property/test_return_track_b_properties.py .                       [100%]
+
+- generated xml file: /workspace/artifacts/vtp-0.1-evidence/Suite_H_Returns_junit.xml -
+============================= 18 passed in 17.89s ==============================
+\n\n=== STDERR ===\n

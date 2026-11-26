@@ -1,0 +1,37 @@
+{
+  "connect_attempts": [
+    {
+      "errno": 101,
+      "error_type": "OSError",
+      "message": "[Errno 101] Network is unreachable",
+      "result": "blocked",
+      "target": "1.1.1.1:443"
+    },
+    {
+      "errno": 101,
+      "error_type": "OSError",
+      "message": "[Errno 101] Network is unreachable",
+      "result": "blocked",
+      "target": "8.8.8.8:53"
+    }
+  ],
+  "credential_like_keys_present": [],
+  "default_route_present": false,
+  "env_proxy_keys_present": [],
+  "euid_in_ns": 0,
+  "failures": [],
+  "interfaces": [
+    "lo"
+  ],
+  "ip_route": "",
+  "isolation_mechanism": "unshare -r --net (user + network namespace)",
+  "network_unavailable": true,
+  "non_loopback_interfaces": [],
+  "proxy_used": false,
+  "sysfs_interfaces_may_be_host_view": [
+    "docker0",
+    "enp0s3",
+    "lo"
+  ],
+  "uid_in_ns": 0
+}

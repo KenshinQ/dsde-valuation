@@ -1,0 +1,22 @@
+{
+  "coverage_status": "METHODS_ELIGIBLE",
+  "expected_primary": "MATURE_OPERATING",
+  "implemented_phase": "PHASE_12",
+  "investment_value": "INVESTMENT_VALUE_NOT_ESTABLISHED",
+  "labels": {
+    "CALIBRATION_INSUFFICIENT": true,
+    "ENSEMBLE_CALIBRATED": false,
+    "INVESTMENT_VALUE_NOT_ESTABLISHED": true,
+    "INVESTMENT_VALUE_SUPPORTED": false
+  },
+  "method_outcome": "CASHFLOW_METHODS",
+  "out": "/tmp/a02_isolated_evidence/bundle_mature_operating",
+  "pattern": "mature_operating",
+  "primary_profile": "MATURE_OPERATING",
+  "schema_version": "vms-0.2.phase12",
+  "seed": 42,
+  "status": "PHASE12_RELEASE_EXAMPLES_NOT_INVESTMENT_ADVICE",
+  "track_b_outcome": "EXIT_AND_RETURNS",
+  "validation_ok": true,
+  "validation_subset": "phase12_mature_full"
+}

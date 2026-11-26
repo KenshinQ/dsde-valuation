@@ -1,0 +1,13 @@
+{
+  "attempts": [
+    {
+      "result": "connected",
+      "target": "1.1.1.1:443"
+    },
+    {
+      "result": "connected",
+      "target": "8.8.8.8:53"
+    }
+  ],
+  "note": "Host contrast shows the block is from the netns, not a dead host NIC."
+}

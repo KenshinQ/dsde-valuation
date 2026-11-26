@@ -1,0 +1,42 @@
+{
+  "config_hash": "5ccbe9b46621679daa1a24476e7ff6c96568f842810e79acfa246dd5d4cb4f8c",
+  "coverage_status": "METHODS_ELIGIBLE",
+  "data_label": "SYNTHETIC — not real market data",
+  "diagnostics": {
+    "coverage_status": "METHODS_ELIGIBLE",
+    "industrial_fcff_disabled_for_financial": false,
+    "n_eligible": 4,
+    "pattern": "mature_operating",
+    "profile_notes": []
+  },
+  "implemented_phase": "PHASE_12",
+  "investment_value": "INVESTMENT_VALUE_NOT_ESTABLISHED",
+  "labels": {
+    "CALIBRATION_INSUFFICIENT": true,
+    "ENSEMBLE_CALIBRATED": false,
+    "INVESTMENT_VALUE_NOT_ESTABLISHED": true,
+    "INVESTMENT_VALUE_SUPPORTED": false
+  },
+  "method_outcome": "CASHFLOW_METHODS",
+  "pattern": "mature_operating",
+  "phase_cli_subsets_ref": [
+    "phase0",
+    "phase10",
+    "phase11",
+    "phase12",
+    "phase12_mature_full",
+    "phase3",
+    "phase4",
+    "phase5",
+    "phase6",
+    "phase7",
+    "phase8",
+    "phase9"
+  ],
+  "run_id": "vms-ea2c613a02700517",
+  "schema_version": "vms-0.2.phase12",
+  "seed": 42,
+  "status": "PHASE12_RELEASE_EXAMPLES_NOT_INVESTMENT_ADVICE",
+  "track_b_outcome": "EXIT_AND_RETURNS",
+  "warning": "Engineering offline example. Not investment advice. No alpha claim."
+}

@@ -1,0 +1,48 @@
+{
+  "content_hash": "79eb2ae707853084",
+  "declared_instruments": [
+    "000001.SZ",
+    "600036.SH",
+    "601398.SH"
+  ],
+  "implemented_phase": "PHASE_12",
+  "labels": {
+    "CALIBRATION_CLAIM": "CALIBRATION_INSUFFICIENT",
+    "CALIBRATION_PASS": null,
+    "CALIBRATION_STATUS": "INSUFFICIENT",
+    "DATA_QUALITY_PASS": true,
+    "ENGINEERING_PASS": true,
+    "ENSEMBLE_CALIBRATED": false,
+    "ENSEMBLE_CLAIM": "ENSEMBLE_UNCALIBRATED",
+    "data_label": "HITHINK_EM_LEAN_FI",
+    "investment_value": "INVESTMENT_VALUE_NOT_ESTABLISHED",
+    "investment_value_reason": "Synthetic or no predeclared leakage-safe OOS alpha evidence (SPEC §17.4; never claim supported on synthetic demo)",
+    "pass_claim_authorized": false,
+    "release_gates": {
+      "CALIBRATION_INSUFFICIENT": true,
+      "CALIBRATION_PASS": false,
+      "DATA_QUALITY_PASS": true,
+      "ENGINEERING_PASS": true,
+      "ENSEMBLE_CALIBRATED": false,
+      "INVESTMENT_VALUE_NOT_ESTABLISHED": true
+    }
+  },
+  "lean_curated_size": 20,
+  "min_hist_pb_points": 12,
+  "n_forecasts_persisted": 15,
+  "n_scored": 15,
+  "n_track_b_eligible": 0,
+  "n_track_b_skipped": 15,
+  "release_gates": {
+    "CALIBRATION_INSUFFICIENT": true,
+    "CALIBRATION_PASS": false,
+    "DATA_QUALITY_PASS": true,
+    "ENGINEERING_PASS": true,
+    "ENSEMBLE_CALIBRATED": false,
+    "INVESTMENT_VALUE_NOT_ESTABLISHED": true
+  },
+  "run_id": "vms-5d7a24416e6ac990",
+  "schema_version": "vms-0.2.phase12",
+  "status": "R6_BANK_RIM_WALK_FORWARD_CALIBRATION_NOT_INVESTMENT_ADVICE",
+  "warning": "Deposit-taking FI RIM walk-forward (R6/R7). CALIBRATION_INSUFFICIENT for production. INVESTMENT_VALUE_NOT_ESTABLISHED. Not investment advice. Does not lift industry.unsupported (see EVAL-RIM-FI-DEPOSIT-WF-v1 / EVAL-RIM-FI-DEPOSIT-REAL-OOS-v1). Track B requires hist_n>=12."
+}

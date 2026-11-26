@@ -1,0 +1,39 @@
+sources:
+- source_id: hithink_em_notice
+  reporting_convention: CN_CUMULATIVE_YTD
+  versioning: LATEST_ONLY
+  fiscal_year_end: 12-31
+  description: "HiThink fundamentals joined to Eastmoney NOTICE_DATE for published_at\
+    \ (HITHINK-PIT-NOTICE-v1). Store is LATEST_ONLY (no restatement history) \u2192\
+    \ pit_complete=false; research may use pit_policy=PIT_ASSUMED / VENDOR_LATEST_AS_OF\
+    \ (PIT-ASSUMED-VENDOR-LATEST-v1)."
+- source_id: em_sharebonus
+  reporting_convention: UNKNOWN
+  versioning: LATEST_ONLY
+  fiscal_year_end: 12-31
+  description: "Eastmoney RPT_SHAREBONUS_DET: PLAN_NOTICE_DATE/NOTICE_DATE \u2192\
+    \ announced_at; EX_DIVIDEND_DATE \u2192 ex_date; per-10 cash/bonus ratios \xF7\
+    10 (EM-CA-SHAREBONUS-v1)."
+- source_id: em_f10_equity
+  reporting_convention: UNKNOWN
+  versioning: LATEST_ONLY
+  fiscal_year_end: 12-31
+  description: 'Eastmoney RPT_F10_EH_EQUITY: TOTAL_SHARES known at NOTICE_DATE (EM-SHARES-EQUITY-v1).
+    Diluted shares not provided separately.'
+- source_id: em_f10_industry
+  reporting_convention: UNKNOWN
+  versioning: LATEST_ONLY
+  fiscal_year_end: 12-31
+  description: Eastmoney F10 CompanySurvey board+CSRC mapped to SW2021_L1 proxy names
+    (INDUSTRY-SW-L1-PROXY-EM-v1). No official Shenwan L1 feed; no reclass history.
+- source_id: em_bank_f10
+  reporting_convention: CN_CUMULATIVE_YTD
+  versioning: LATEST_ONLY
+  fiscal_year_end: 12-31
+  description: 'Eastmoney PC_HSF10 NewFinanceAnalysis companyType=3 template: OEI/preferred/perpetual/minority/goodwill/OCI/EPS/interest
+    (EM-FI-F10-v1). published_at = NOTICE_DATE @ 15:00 Asia/Shanghai.'
+- source_id: fi_subject_hist_depth_v1
+  reporting_convention: CN_CUMULATIVE_YTD
+  versioning: FULL_HISTORY
+  fiscal_year_end: 12-31
+  description: ''

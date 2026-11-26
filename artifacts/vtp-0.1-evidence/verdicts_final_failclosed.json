@@ -4,7 +4,7 @@
   "baseline_commit": "dd84fc16f54c397d3ba88e953a384dfecd550466",
   "evidence_branch": "cursor/vtp-0.1-evidence-11d5",
   "evidence_head": "dd07b18407d5c96db9535e55e97e0b4738c2d789",
-  "note": "权威 fail-closed 判定。独立核读以 JSON 为准：executed=6, killed=6, survived=0, not_executed=0；I-M01/I-M02/I-M03/I-M04/I-M05/I-M06 均为 KILLED。这是 6/6 executed KILLED。I-M04 于 2026-11-27 Asia/Shanghai 在本机对 src/vms/drivers/distributions.py:162 t_mix_quantiles 做单点临时变异（分布混合分位数改为成分位置的加权均值），检测测例 baseline 20 passed（exit 0），mutant 1 failed / 19 passed（exit 1，test_mixture_quantiles_match_t_for_single_component 为预期 AssertionError），已还原。生产 distributions.py SHA256 还原后仍为 e8d557dfc26560ff228a993e73d61f29c34a657468389a89f5dcdcc390004dd8。I-M02 detector_results 仍缺完整 stdout（未编造）。6/6 KILLED 不解除 ENGINEERING_BLOCKED / DO_NOT_MERGE / INVESTMENT_VALUE_NOT_ESTABLISHED：Suite G、Suite J 与生产路由 10×12×4 仍阻塞。",
+  "note": "权威 fail-closed 判定。Suite I：executed=6, killed=6, not_executed=0（6/6 executed KILLED），不解除 ENGINEERING_BLOCKED。官方 VTP-0.1 Suite J 是 Historical walk-forward evaluation，不是「Distribution Checks」。2026-11-27 Asia/Shanghai 已在本机对预声明 R7 切片（EVAL-RIM-FI-DEPOSIT-REAL-OOS-v1）跑通真实本地 HiThink/EM 面板：15 个 origin 全部 pit_complete=false / PIT_ASSUMED，n_unbiased_pit_complete=0，CALIBRATION_INSUFFICIENT / ENSEMBLE_UNCALIBRATED / INVESTMENT_VALUE_NOT_ESTABLISHED 保持。J-01/J-02/J-03/J-04 为 PARTIAL，J-05 为 BLOCKED；官方 Suite J 总判仍为 BLOCKED。不得用 19 项合成 evaluation 回归、分布单元测试或 Suite I 6/6 KILLED 顶替。Suite G 与生产路由 10×12×4 仍阻塞。",
   "overall_release_decision": "RELEASE_BLOCKED",
   "engineering": "ENGINEERING_BLOCKED",
   "blocking_reasons": [
@@ -13,11 +13,11 @@
     "G-03: 生产API integration未完整",
     "G-04: MarketPricingConfig真实调用未完整",
     "G-05: 数值反事实结果部分vacuous",
-    "J-01: 真实分布测试覆盖不足",
-    "J-02: Sanity check未完整验证分布语义",
-    "J-03: Edge case coverage待补",
-    "J-04: Intrinsic method覆盖待补",
-    "J-05: 联合分布test待补"
+    "J-01: PARTIAL — R7 精简 FI RIM 协议已事前冻结并已执行；官方全量冻结协议（完整 PIT 成员规则、全部目标/基线/切片、train/cal/test 三分）未关闭",
+    "J-02: PARTIAL — 本轮 R7 为 chronological、禁止随机切分；15/15 origin 为 PIT_ASSUMED（pit_complete=false），不能声称已证明只使用完整 PIT 过去信息",
+    "J-03: PARTIAL — 仅分离评分 driver_roe / intrinsic_value / market_price；缺 revenue/EBIT/FCF、peer multiples、TSR/事件概率、ensemble 校准目标",
+    "J-04: PARTIAL — 仅 historical_roe_median / central_rim / fi_note；缺 simple multiple、no-regime、current-multiple persistence（Track B 15/15 SKIP）",
+    "J-05: BLOCKED — n_unbiased_pit_complete=0；无 pinball/CRPS/Brier/reliability；subgroup 近乎 vacuous；CALIBRATION_INSUFFICIENT"
   ],
   "mutation_status_note": "I-M01, I-M02, I-M03, I-M04, I-M05, I-M06: ALL KILLED (6/6 executed). 6/6 does not authorize ENGINEERING_ACCEPTED or investment value.",
   "gap_items": {
@@ -143,10 +143,23 @@
       "mutation_score": "100.0% (6 KILLED / 6 executed)",
       "note": "所有已执行 mutation 均 KILLED（6/6 executed）。I-M04：生产 t_mix_quantiles 必须按混合分布 CDF 给出分位数，不得压成成分位置的加权均值。I-M02 完整 stdout 仍缺失，未编造。6/6 不解除 ENGINEERING_BLOCKED / DO_NOT_MERGE / INVESTMENT_VALUE_NOT_ESTABLISHED。"
     },
-    "Suite J (Distribution Checks)": {
+    "Suite J (Historical walk-forward evaluation)": {
       "status": "BLOCKED",
-      "J-01至J-05": "BLOCKED",
-      "note": "分布测试coverage不完整"
+      "official_name": "Historical walk-forward evaluation",
+      "mislabel_note": "Earlier verdicts labeled this suite 'Distribution Checks' (真实分布/sanity/edge/intrinsic/联合分布). That does not match official VTP-0.1.md Suite J. Distribution unit tests are L3/L4, not Suite J close evidence.",
+      "J-01": "PARTIAL (R7 slice protocol predeclared and executed; full official protocol not closed)",
+      "J-02": "PARTIAL (chronological, no random split; all 15 origins PIT_ASSUMED / pit_complete=false)",
+      "J-03": "PARTIAL (driver_roe / intrinsic_value / market_price only; official target list incomplete)",
+      "J-04": "PARTIAL (historical_roe_median / central_rim / fi_note only; Track B 15/15 SKIP)",
+      "J-05": "BLOCKED (n_unbiased_pit_complete=0; no pinball/CRPS/Brier; vacuous subgroups; CALIBRATION_INSUFFICIENT)",
+      "J-06": "ACKNOWLEDGED (claim discipline held: CALIBRATION_INSUFFICIENT, ENSEMBLE_UNCALIBRATED, INVESTMENT_VALUE_NOT_ESTABLISHED)",
+      "n_forecasts_persisted": 15,
+      "n_unbiased_pit_complete": 0,
+      "n_pit_assumed": 15,
+      "assumption": "EVAL-RIM-FI-DEPOSIT-REAL-OOS-v1",
+      "evidence": "SUITE_J_HISTORICAL_WALK_FORWARD.md",
+      "tests_pr": "https://github.com/KenshinQ/dsde-valuation/pull/37",
+      "note": "2026-11-27 本机新跑证据，不是 2026-11-07 旧 19 绿 junit。R7 切片已执行，官方 Suite J 仍 BLOCKED。运行级 ENGINEERING_PASS 不是仓库 ENGINEERING_ACCEPTED。6/6 mutation 不顶替 Suite J。"
     }
   },
   "execution_evidence": {
@@ -181,20 +194,24 @@
     "i_m04_report": "I_M04_MUTATION_REPORT.md",
     "i_m04_baseline_stdout": "I_M04_baseline_stdout.txt",
     "i_m04_mutated_stdout": "I_M04_mutated_stdout.txt",
-    "i_m04_unified_diff": "I_M04_unified_diff.patch"
+    "i_m04_unified_diff": "I_M04_unified_diff.patch",
+    "suite_j_report": "SUITE_J_HISTORICAL_WALK_FORWARD.md",
+    "suite_j_dir": "suite_j/",
+    "suite_j_r7_summary": "suite_j/r7_calibrate_rim_out/calibrate_rim_summary.json",
+    "suite_j_tests_pr": "https://github.com/KenshinQ/dsde-valuation/pull/37"
   },
   "release_recommendation": "DO_NOT_MERGE",
-  "rationale": "RELEASE_BLOCKED / ENGINEERING_BLOCKED / DO_NOT_MERGE / INVESTMENT_VALUE_NOT_ESTABLISHED。G-01至G-05、J-01至J-05 仍阻塞。已执行 mutation 为 6/6 KILLED，也不能据此宣称工程验收通过或投资价值成立。A-02 已于 2026-11-27 依据隔离 netns 证据改为 PASS，单项 PASS 不解除上述阻塞。清单第 6 项（离线 E2E smoke）已于 2026-11-27 依据隔离生产路径 + replay 改为 PASS；不是 A-02 改口，也不关闭 VTP E-01 路由真值表（清单第 9 项）。本项 PASS 不解除上述阻塞。I-M04 已于 2026-11-27 依据 t_mix_quantiles 隔离变异改为 KILLED，Suite I 现为 6/6 executed KILLED；6/6 仍不解除 Suite G、Suite J 与生产路由矩阵等阻塞，也不宣称 ENGINEERING_ACCEPTED 或投资价值成立。",
+  "rationale": "RELEASE_BLOCKED / ENGINEERING_BLOCKED / DO_NOT_MERGE / INVESTMENT_VALUE_NOT_ESTABLISHED。G-01至G-05、已执行 mutation 为 6/6 KILLED，也不能据此宣称工程验收通过或投资价值成立。A-02 已于 2026-11-27 依据隔离 netns 证据改为 PASS，单项 PASS 不解除上述阻塞。清单第 6 项（离线 E2E smoke）已于 2026-11-27 依据隔离生产路径 + replay 改为 PASS；不是 A-02 改口，也不关闭 VTP E-01 路由真值表（清单第 9 项）。本项 PASS 不解除上述阻塞。I-M04 已于 2026-11-27 依据 t_mix_quantiles 隔离变异改为 KILLED，Suite I 现为 6/6 executed KILLED；6/6 仍不解除 Suite G、Suite J 与生产路由矩阵等阻塞，也不宣称 ENGINEERING_ACCEPTED 或投资价值成立。官方 VTP-0.1 Suite J 是 Historical walk-forward，不是 Distribution Checks（该错标已纠正）。2026-11-27 已执行预声明 R7 真实面板切片（15 origin，全部 PIT_ASSUMED，n_unbiased_pit_complete=0），J-01/J-02/J-03/J-04 为 PARTIAL，J-05 为 BLOCKED；官方 Suite J 总判仍 BLOCKED。不得用合成评价回归、分布单元测试或 Suite I 6/6 KILLED 顶替。Suite G 与生产路由矩阵仍阻塞。不宣称 ENGINEERING_ACCEPTED 或投资价值成立。",
   "next_required_actions": [
     "Suite I：I-M01/I-M02/I-M03/I-M04/I-M05/I-M06 已全部 KILLED（6/6 executed）。6/6 不解除仓库 BLOCKED，也不宣称 ENGINEERING_ACCEPTED 或投资价值成立。余留阻塞仍是 Suite G、Suite J 与生产路由 10×12×4（VTP 准则 E-01 路由真值表）。",
     "清单第 6 项（离线 E2E smoke / gap_items.9 / Suite E）已于 2026-11-27 依据 PR #36 与 e01_offline_e2e/ 改为 PASS。不是 A-02 改口。VTP 准则 E-01 路由真值表仍属清单第 9 项，未关闭。本项 PASS 不解除仓库 BLOCKED。",
     "A-02 已于 2026-11-27 依据 PR #35 隔离测例与 a02_isolated/ 证据改为 PASS；旧 junit_a02_fresh.xml 8/8 不能单独作为完整离线证明。A-02 PASS 不解除仓库 BLOCKED。",
     "I-M02 证据余留缺口：detector_results 未保存完整 pytest stdout/stderr/断言上下文；未从其他 artifact 恢复，禁止补造。",
+    "官方 Suite J（Historical walk-forward）仍 BLOCKED：J-01..J-04 为 PARTIAL，J-05 为 BLOCKED。要关闭需完整 PIT 无偏样本（n_unbiased_pit_complete>0）、官方其余目标/基线/proper scores 与非空子群。R7 精简切片证据见 SUITE_J_HISTORICAL_WALK_FORWARD.md；不得用合成 19 绿、分布单元测试或 6/6 KILLED 顶替。关闭准则检测测例在 PR #37。",
     "完成生产 routing API 调用 infrastructure（10×12×4，生产 vms.router.route_methods）",
-    "完成 Suite G 生产 market_pricing 调用",
-    "完成 Suite J 分布测试 coverage"
+    "完成 Suite G 生产 market_pricing 调用"
   ],
-  "verdict_alignment_timestamp": "2026-11-27T02:00:05+08:00",
+  "verdict_alignment_timestamp": "2026-11-27T02:13:56+08:00",
   "evidence_head_note": "I-M04 mutation evidence lives in dd07b18407d5c96db9535e55e97e0b4738c2d789. The previous evidence head was ed66b8377dfdb156fddd449278b0085338ab5af7 (E-01 smoke). A follow-up commit only backfills this field. Suite I is 6/6 executed KILLED. Repo is still ENGINEERING_BLOCKED / DO_NOT_MERGE / INVESTMENT_VALUE_NOT_ESTABLISHED.",
   "investment_value": "INVESTMENT_VALUE_NOT_ESTABLISHED",
   "evidence_head_reviewed": "ed66b8377dfdb156fddd449278b0085338ab5af7"

@@ -1,0 +1,13 @@
+{
+  "artifact_n_unbiased": null,
+  "artifact_path": null,
+  "artifact_universe_data_label": null,
+  "authorized": false,
+  "pit_incomplete_excluded": null,
+  "protocol_id": null,
+  "reason": "NO_ARTIFACT",
+  "run_data_label": "HITHINK_EM_LEAN_FI",
+  "run_id": "vms-5d7a24416e6ac990",
+  "run_n_unbiased": 0,
+  "schema_version": "vms-0.2.phase12"
+}

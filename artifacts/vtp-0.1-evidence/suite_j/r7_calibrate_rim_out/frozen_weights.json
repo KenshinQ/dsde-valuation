@@ -1,0 +1,15 @@
+{
+  "content_hash": "048b3d5ef82306ef",
+  "frozen_before_test": true,
+  "note": "Weights/thresholds frozen before test window. Mutating after test_window_start invalidates calibration claims (SPEC §21.3).",
+  "schema_kind": "FrozenEvalWeights",
+  "test_window_start": "2016-01-01",
+  "thresholds": {
+    "brier_pass_max": 0.35,
+    "min_hist_pb_points": 12,
+    "min_oos_for_calibration": 5
+  },
+  "weights": {
+    "rim_track_a_prior_equal": 1.0
+  }
+}

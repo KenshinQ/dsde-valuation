@@ -1,0 +1,16 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.5, pytest-9.2.0, pluggy-1.7.0
+rootdir: /workspace/dsde-valuation
+configfile: pyproject.toml
+plugins: hypothesis-6.170.17
+collected 24 items
+
+tests/unit/test_evaluation.py ........                                   [ 33%]
+tests/unit/test_walk_forward.py ......                                   [ 58%]
+tests/integration/test_cli_evaluate.py .                                 [ 62%]
+tests/leakage/test_eval_weight_freeze.py ....                            [ 79%]
+tests/vtp_0_1/suite_j/test_j00_historical_validation_status.py ...       [ 91%]
+tests/integration/test_hithink_live_smoke.py ..                          [100%]
+
+---- generated xml file: /tmp/suite_j_evidence/junit_synth_eval_and_j00.xml ----
+============================= 24 passed in 14.99s ==============================

@@ -1,0 +1,669 @@
+{
+  "assumptions": [
+    "EVAL-CALIBRATION-INSUFFICIENT-v1",
+    "EVAL-CALIBRATION-PASS-CLAIM-PROTOCOL-v1",
+    "EVAL-CHRONOLOGICAL-ONLY-v1",
+    "EVAL-FORECAST-BEFORE-OUTCOME-v1",
+    "EVAL-INVESTMENT-LABEL-v1",
+    "EVAL-IV-NOT-PRICE-TRUTH-v1",
+    "EVAL-RIM-FI-DEPOSIT-REAL-OOS-v1",
+    "EVAL-RIM-FI-DEPOSIT-WF-v1",
+    "EVAL-TARGETS-SEPARATE-v1",
+    "EVAL-WEIGHTS-FROZEN-v1",
+    "HITHINK-LATEST-ONLY-v2",
+    "HITHINK-LOCAL-FIRST-v1",
+    "PIT-ASSUMED-VENDOR-LATEST-v1",
+    "PIT-INCOMPLETE-v2",
+    "RIM-COMMON-EQUITY-v1",
+    "RIM-EXIT-OWN-PB-HIST-v1",
+    "RIM-SUBJECT-HIST-DEPTH-v1"
+  ],
+  "baselines_present": [
+    "central_rim",
+    "fi_note",
+    "historical_roe_median"
+  ],
+  "content_hash": "79eb2ae707853084",
+  "data_label": "HITHINK_EM_LEAN_FI",
+  "declared_instruments": [
+    "000001.SZ",
+    "600036.SH",
+    "601398.SH"
+  ],
+  "end": "2022-12-31",
+  "excluded_pit_incomplete": [],
+  "flags": [
+    "CALIBRATION_INSUFFICIENT_PIT_ASSUMED",
+    "PIT_ASSUMED_IN_RESEARCH_SCORES",
+    "PIT_ASSUMED_VENDOR_LATEST"
+  ],
+  "frozen_weights": {
+    "content_hash": "048b3d5ef82306ef",
+    "frozen_before_test": true,
+    "test_window_start": "2016-01-01"
+  },
+  "horizons_years": [
+    1
+  ],
+  "implemented_phase": "PHASE_12",
+  "label": "BANK_RIM_WALK_FORWARD_CALIBRATION",
+  "labels": {
+    "CALIBRATION_CLAIM": "CALIBRATION_INSUFFICIENT",
+    "CALIBRATION_PASS": null,
+    "CALIBRATION_STATUS": "INSUFFICIENT",
+    "DATA_QUALITY_PASS": true,
+    "ENGINEERING_PASS": true,
+    "ENSEMBLE_CALIBRATED": false,
+    "ENSEMBLE_CLAIM": "ENSEMBLE_UNCALIBRATED",
+    "data_label": "HITHINK_EM_LEAN_FI",
+    "investment_value": "INVESTMENT_VALUE_NOT_ESTABLISHED",
+    "investment_value_reason": "Synthetic or no predeclared leakage-safe OOS alpha evidence (SPEC §17.4; never claim supported on synthetic demo)",
+    "pass_claim_authorized": false,
+    "release_gates": {
+      "CALIBRATION_INSUFFICIENT": true,
+      "CALIBRATION_PASS": false,
+      "DATA_QUALITY_PASS": true,
+      "ENGINEERING_PASS": true,
+      "ENSEMBLE_CALIBRATED": false,
+      "INVESTMENT_VALUE_NOT_ESTABLISHED": true
+    }
+  },
+  "min_hist_pb_points": 12,
+  "n_excluded_pit_incomplete": 0,
+  "n_forecasts_persisted": 15,
+  "n_origins_attempted": 15,
+  "n_pending_outcomes": 0,
+  "n_pit_assumed": 15,
+  "n_scored": 15,
+  "n_track_b_eligible": 0,
+  "n_track_b_skipped": 15,
+  "n_unbiased_pit_complete": 0,
+  "notes": [
+    "R7 deposit-taking FI RIM chronological walk-forward on HiThink/EM lean panel (SPEC §17 / EVAL-RIM-FI-DEPOSIT-REAL-OOS-v1).",
+    "Random splits raise RandomSplitProhibitedError.",
+    "Forecasts persisted with outcomes=null before realization.",
+    "True PIT_INCOMPLETE (undeclared/UNKNOWN) excluded from scores_unbiased; declared LATEST_ONLY may enter under pit_policy=PIT_ASSUMED / VENDOR_LATEST_AS_OF; pit_complete stays false; PASS still fail-closed on strict pit_complete counts.",
+    "Targets declared separately: driver_roe, intrinsic_value, market_price (association).",
+    "Intrinsic never judged solely by matching future market prices.",
+    "Track B: hist_n < 12 → SKIP (no invent OEI / no lower floor).",
+    "Inadequate OOS → CALIBRATION_INSUFFICIENT (not inferred success).",
+    "INVESTMENT_VALUE_NOT_ESTABLISHED; never ENSEMBLE_CALIBRATED on this path.",
+    "Legacy industry.unsupported / UNSUPPORTED_PROFILE for vms value|project unchanged.",
+    "SCHEMA remains phase12; this report does not bump schema to claim calibration PASS.",
+    "fi_real materialize prefer_local=True (REST only when prefer_local=False / --refresh).",
+    "fi_real rest_calls=0"
+  ],
+  "release_gates": {
+    "CALIBRATION_INSUFFICIENT": true,
+    "CALIBRATION_PASS": false,
+    "DATA_QUALITY_PASS": true,
+    "ENGINEERING_PASS": true,
+    "ENSEMBLE_CALIBRATED": false,
+    "INVESTMENT_VALUE_NOT_ESTABLISHED": true
+  },
+  "run_id": "vms-5d7a24416e6ac990",
+  "schema_kind": "RimCalibrationReport",
+  "schema_version": "vms-0.2.phase12",
+  "scores": {
+    "baseline_comparisons": {
+      "driver_roe_vs_historical_median": {
+        "baseline": "historical_roe_median",
+        "baseline_errors": {
+          "mae": 0.013621219717144714,
+          "mean_error": 0.007982384359041875,
+          "median_abs_error": 0.014286515785866101,
+          "n": 14,
+          "rmse": 0.015695205415149665
+        },
+        "forecast_errors": {
+          "mae": 0.013621219717144714,
+          "mean_error": 0.007982384359041875,
+          "median_abs_error": 0.014286515785866101,
+          "n": 14,
+          "rmse": 0.015695205415149665
+        },
+        "note": "FI baseline; industrial central_dcf deliberately absent"
+      }
+    },
+    "driver_roe": {
+      "errors": {
+        "mae": 0.013621219717144714,
+        "mean_error": 0.007982384359041875,
+        "median_abs_error": 0.014286515785866101,
+        "n": 14,
+        "rmse": 0.015695205415149665
+      },
+      "note": "Common-equity ROE driver errors only — separate from intrinsic VPS"
+    },
+    "evaluation_targets_declared": [
+      "driver_roe",
+      "intrinsic_value",
+      "market_price"
+    ],
+    "intrinsic_value": {
+      "market_price_association_only": {
+        "errors": {
+          "mae": 5.070694566522678,
+          "mean_error": -0.4764648496008648,
+          "median_abs_error": 3.581503774926894,
+          "n": 15,
+          "rmse": 6.527328421474745
+        },
+        "label": "MARKET_PRICE_ASSOCIATION_NOT_INTRINSIC_GROUND_TRUTH",
+        "note": "Association between RIM VPS and realized market price is reported for transparency only. Future market price is NOT ground truth for intrinsic value (EVAL-IV-NOT-PRICE-TRUTH-v1 / SPEC §17.2)."
+      },
+      "note": "Intrinsic scored via coherence/stability; market price is not the truth target",
+      "price_mae_forbidden": true,
+      "stability_vs_later_origin": {
+        "mae": 1.7468637485515766,
+        "mean_error": -1.5622115141343655,
+        "median_abs_error": 0.49215766684200446,
+        "n": 15,
+        "rmse": 3.0235043602217613
+      }
+    },
+    "market_price": {
+      "errors": {
+        "mae": 4.342666666666667,
+        "mean_error": -0.29333333333333333,
+        "median_abs_error": 2.0400000000000027,
+        "n": 15,
+        "rmse": 7.074467706713582
+      },
+      "note": "Market-price forecast errors — separate from intrinsic; optional association block"
+    },
+    "n_records": 15,
+    "price_mae_as_iv_truth_forbidden": true,
+    "subgroups": {
+      "by_fundamental_regime": {
+        "UNKNOWN": {
+          "market_price_errors": {
+            "mae": 4.342666666666667,
+            "mean_error": -0.29333333333333333,
+            "median_abs_error": 2.0400000000000027,
+            "n": 15,
+            "rmse": 7.074467706713582
+          },
+          "n": 15,
+          "tsr_point_errors": {
+            "n": 0
+          }
+        }
+      },
+      "by_profile": {
+        "FINANCIAL_INSTITUTION": {
+          "market_price_errors": {
+            "mae": 4.342666666666667,
+            "mean_error": -0.29333333333333333,
+            "median_abs_error": 2.0400000000000027,
+            "n": 15,
+            "rmse": 7.074467706713582
+          },
+          "n": 15,
+          "tsr_point_errors": {
+            "n": 0
+          }
+        }
+      },
+      "note": "Subgroup diagnostics are descriptive stability checks. They do not authorize ENSEMBLE_CALIBRATED or investment-value claims."
+    },
+    "track_b": {
+      "min_hist_pb_points": 12,
+      "n_eligible": 0,
+      "n_not_assessed": 0,
+      "n_skipped": 15,
+      "note": "Track B scored only when hist_n >= MIN_HIST_PB_POINTS at origin; short OEI → honest SKIP (no invent OEI / no lower floor). Ledger rows only for status==SKIP; NOT_ASSESSED is not HIST_PB_BELOW_MIN.",
+      "skips": [
+        {
+          "hist_n": 2,
+          "instrument_id": "000001.SZ",
+          "min_required": 12,
+          "origin_as_of": "2018-03-15T15:00:00+08:00",
+          "skip_reason": "INSUFFICIENT_OWN_PB_HISTORY"
+        },
+        {
+          "hist_n": 3,
+          "instrument_id": "000001.SZ",
+          "min_required": 12,
+          "origin_as_of": "2019-03-07T15:00:00+08:00",
+          "skip_reason": "INSUFFICIENT_OWN_PB_HISTORY"
+        },
+        {
+          "hist_n": 4,
+          "instrument_id": "000001.SZ",
+          "min_required": 12,
+          "origin_as_of": "2020-02-14T15:00:00+08:00",
+          "skip_reason": "INSUFFICIENT_OWN_PB_HISTORY"
+        },
+        {
+          "hist_n": 5,
+          "instrument_id": "000001.SZ",
+          "min_required": 12,
+          "origin_as_of": "2021-02-02T15:00:00+08:00",
+          "skip_reason": "INSUFFICIENT_OWN_PB_HISTORY"
+        },
+        {
+          "hist_n": 6,
+          "instrument_id": "000001.SZ",
+          "min_required": 12,
+          "origin_as_of": "2022-03-10T15:00:00+08:00",
+          "skip_reason": "INSUFFICIENT_OWN_PB_HISTORY"
+        },
+        {
+          "hist_n": 1,
+          "instrument_id": "600036.SH",
+          "min_required": 12,
+          "origin_as_of": "2018-03-24T15:00:00+08:00",
+          "skip_reason": "INSUFFICIENT_OWN_PB_HISTORY"
+        },
+        {
+          "hist_n": 2,
+          "instrument_id": "600036.SH",
+          "min_required": 12,
+          "origin_as_of": "2019-03-23T15:00:00+08:00",
+          "skip_reason": "INSUFFICIENT_OWN_PB_HISTORY"
+        },
+        {
+          "hist_n": 3,
+          "instrument_id": "600036.SH",
+          "min_required": 12,
+          "origin_as_of": "2020-03-21T15:00:00+08:00",
+          "skip_reason": "INSUFFICIENT_OWN_PB_HISTORY"
+        },
+        {
+          "hist_n": 4,
+          "instrument_id": "600036.SH",
+          "min_required": 12,
+          "origin_as_of": "2021-03-20T15:00:00+08:00",
+          "skip_reason": "INSUFFICIENT_OWN_PB_HISTORY"
+        },
+        {
+          "hist_n": 5,
+          "instrument_id": "600036.SH",
+          "min_required": 12,
+          "origin_as_of": "2022-03-19T15:00:00+08:00",
+          "skip_reason": "INSUFFICIENT_OWN_PB_HISTORY"
+        },
+        {
+          "hist_n": 2,
+          "instrument_id": "601398.SH",
+          "min_required": 12,
+          "origin_as_of": "2018-03-28T15:00:00+08:00",
+          "skip_reason": "INSUFFICIENT_OWN_PB_HISTORY"
+        },
+        {
+          "hist_n": 3,
+          "instrument_id": "601398.SH",
+          "min_required": 12,
+          "origin_as_of": "2019-03-29T15:00:00+08:00",
+          "skip_reason": "INSUFFICIENT_OWN_PB_HISTORY"
+        },
+        {
+          "hist_n": 4,
+          "instrument_id": "601398.SH",
+          "min_required": 12,
+          "origin_as_of": "2020-03-28T15:00:00+08:00",
+          "skip_reason": "INSUFFICIENT_OWN_PB_HISTORY"
+        },
+        {
+          "hist_n": 5,
+          "instrument_id": "601398.SH",
+          "min_required": 12,
+          "origin_as_of": "2021-03-27T15:00:00+08:00",
+          "skip_reason": "INSUFFICIENT_OWN_PB_HISTORY"
+        },
+        {
+          "hist_n": 6,
+          "instrument_id": "601398.SH",
+          "min_required": 12,
+          "origin_as_of": "2022-03-31T15:00:00+08:00",
+          "skip_reason": "INSUFFICIENT_OWN_PB_HISTORY"
+        }
+      ]
+    }
+  },
+  "scores_unbiased": {
+    "baseline_comparisons": {
+      "driver_roe_vs_historical_median": {
+        "baseline": "historical_roe_median",
+        "baseline_errors": {
+          "mae": 0.013621219717144714,
+          "mean_error": 0.007982384359041875,
+          "median_abs_error": 0.014286515785866101,
+          "n": 14,
+          "rmse": 0.015695205415149665
+        },
+        "forecast_errors": {
+          "mae": 0.013621219717144714,
+          "mean_error": 0.007982384359041875,
+          "median_abs_error": 0.014286515785866101,
+          "n": 14,
+          "rmse": 0.015695205415149665
+        },
+        "note": "FI baseline; industrial central_dcf deliberately absent"
+      }
+    },
+    "driver_roe": {
+      "errors": {
+        "mae": 0.013621219717144714,
+        "mean_error": 0.007982384359041875,
+        "median_abs_error": 0.014286515785866101,
+        "n": 14,
+        "rmse": 0.015695205415149665
+      },
+      "note": "Common-equity ROE driver errors only — separate from intrinsic VPS"
+    },
+    "evaluation_targets_declared": [
+      "driver_roe",
+      "intrinsic_value",
+      "market_price"
+    ],
+    "intrinsic_value": {
+      "market_price_association_only": {
+        "errors": {
+          "mae": 5.070694566522678,
+          "mean_error": -0.4764648496008648,
+          "median_abs_error": 3.581503774926894,
+          "n": 15,
+          "rmse": 6.527328421474745
+        },
+        "label": "MARKET_PRICE_ASSOCIATION_NOT_INTRINSIC_GROUND_TRUTH",
+        "note": "Association between RIM VPS and realized market price is reported for transparency only. Future market price is NOT ground truth for intrinsic value (EVAL-IV-NOT-PRICE-TRUTH-v1 / SPEC §17.2)."
+      },
+      "note": "Intrinsic scored via coherence/stability; market price is not the truth target",
+      "price_mae_forbidden": true,
+      "stability_vs_later_origin": {
+        "mae": 1.7468637485515766,
+        "mean_error": -1.5622115141343655,
+        "median_abs_error": 0.49215766684200446,
+        "n": 15,
+        "rmse": 3.0235043602217613
+      }
+    },
+    "market_price": {
+      "errors": {
+        "mae": 4.342666666666667,
+        "mean_error": -0.29333333333333333,
+        "median_abs_error": 2.0400000000000027,
+        "n": 15,
+        "rmse": 7.074467706713582
+      },
+      "note": "Market-price forecast errors — separate from intrinsic; optional association block"
+    },
+    "n_records": 15,
+    "price_mae_as_iv_truth_forbidden": true,
+    "subgroups": {
+      "by_fundamental_regime": {
+        "UNKNOWN": {
+          "market_price_errors": {
+            "mae": 4.342666666666667,
+            "mean_error": -0.29333333333333333,
+            "median_abs_error": 2.0400000000000027,
+            "n": 15,
+            "rmse": 7.074467706713582
+          },
+          "n": 15,
+          "tsr_point_errors": {
+            "n": 0
+          }
+        }
+      },
+      "by_profile": {
+        "FINANCIAL_INSTITUTION": {
+          "market_price_errors": {
+            "mae": 4.342666666666667,
+            "mean_error": -0.29333333333333333,
+            "median_abs_error": 2.0400000000000027,
+            "n": 15,
+            "rmse": 7.074467706713582
+          },
+          "n": 15,
+          "tsr_point_errors": {
+            "n": 0
+          }
+        }
+      },
+      "note": "Subgroup diagnostics are descriptive stability checks. They do not authorize ENSEMBLE_CALIBRATED or investment-value claims."
+    },
+    "track_b": {
+      "min_hist_pb_points": 12,
+      "n_eligible": 0,
+      "n_not_assessed": 0,
+      "n_skipped": 15,
+      "note": "Track B scored only when hist_n >= MIN_HIST_PB_POINTS at origin; short OEI → honest SKIP (no invent OEI / no lower floor). Ledger rows only for status==SKIP; NOT_ASSESSED is not HIST_PB_BELOW_MIN.",
+      "skips": [
+        {
+          "hist_n": 2,
+          "instrument_id": "000001.SZ",
+          "min_required": 12,
+          "origin_as_of": "2018-03-15T15:00:00+08:00",
+          "skip_reason": "INSUFFICIENT_OWN_PB_HISTORY"
+        },
+        {
+          "hist_n": 3,
+          "instrument_id": "000001.SZ",
+          "min_required": 12,
+          "origin_as_of": "2019-03-07T15:00:00+08:00",
+          "skip_reason": "INSUFFICIENT_OWN_PB_HISTORY"
+        },
+        {
+          "hist_n": 4,
+          "instrument_id": "000001.SZ",
+          "min_required": 12,
+          "origin_as_of": "2020-02-14T15:00:00+08:00",
+          "skip_reason": "INSUFFICIENT_OWN_PB_HISTORY"
+        },
+        {
+          "hist_n": 5,
+          "instrument_id": "000001.SZ",
+          "min_required": 12,
+          "origin_as_of": "2021-02-02T15:00:00+08:00",
+          "skip_reason": "INSUFFICIENT_OWN_PB_HISTORY"
+        },
+        {
+          "hist_n": 6,
+          "instrument_id": "000001.SZ",
+          "min_required": 12,
+          "origin_as_of": "2022-03-10T15:00:00+08:00",
+          "skip_reason": "INSUFFICIENT_OWN_PB_HISTORY"
+        },
+        {
+          "hist_n": 1,
+          "instrument_id": "600036.SH",
+          "min_required": 12,
+          "origin_as_of": "2018-03-24T15:00:00+08:00",
+          "skip_reason": "INSUFFICIENT_OWN_PB_HISTORY"
+        },
+        {
+          "hist_n": 2,
+          "instrument_id": "600036.SH",
+          "min_required": 12,
+          "origin_as_of": "2019-03-23T15:00:00+08:00",
+          "skip_reason": "INSUFFICIENT_OWN_PB_HISTORY"
+        },
+        {
+          "hist_n": 3,
+          "instrument_id": "600036.SH",
+          "min_required": 12,
+          "origin_as_of": "2020-03-21T15:00:00+08:00",
+          "skip_reason": "INSUFFICIENT_OWN_PB_HISTORY"
+        },
+        {
+          "hist_n": 4,
+          "instrument_id": "600036.SH",
+          "min_required": 12,
+          "origin_as_of": "2021-03-20T15:00:00+08:00",
+          "skip_reason": "INSUFFICIENT_OWN_PB_HISTORY"
+        },
+        {
+          "hist_n": 5,
+          "instrument_id": "600036.SH",
+          "min_required": 12,
+          "origin_as_of": "2022-03-19T15:00:00+08:00",
+          "skip_reason": "INSUFFICIENT_OWN_PB_HISTORY"
+        },
+        {
+          "hist_n": 2,
+          "instrument_id": "601398.SH",
+          "min_required": 12,
+          "origin_as_of": "2018-03-28T15:00:00+08:00",
+          "skip_reason": "INSUFFICIENT_OWN_PB_HISTORY"
+        },
+        {
+          "hist_n": 3,
+          "instrument_id": "601398.SH",
+          "min_required": 12,
+          "origin_as_of": "2019-03-29T15:00:00+08:00",
+          "skip_reason": "INSUFFICIENT_OWN_PB_HISTORY"
+        },
+        {
+          "hist_n": 4,
+          "instrument_id": "601398.SH",
+          "min_required": 12,
+          "origin_as_of": "2020-03-28T15:00:00+08:00",
+          "skip_reason": "INSUFFICIENT_OWN_PB_HISTORY"
+        },
+        {
+          "hist_n": 5,
+          "instrument_id": "601398.SH",
+          "min_required": 12,
+          "origin_as_of": "2021-03-27T15:00:00+08:00",
+          "skip_reason": "INSUFFICIENT_OWN_PB_HISTORY"
+        },
+        {
+          "hist_n": 6,
+          "instrument_id": "601398.SH",
+          "min_required": 12,
+          "origin_as_of": "2022-03-31T15:00:00+08:00",
+          "skip_reason": "INSUFFICIENT_OWN_PB_HISTORY"
+        }
+      ]
+    }
+  },
+  "split_mode": "chronological",
+  "start": "2016-01-01",
+  "track_b_skips": [
+    {
+      "hist_n": 2,
+      "instrument_id": "000001.SZ",
+      "min_required": 12,
+      "origin_as_of": "2018-03-15T15:00:00+08:00",
+      "origin_fy": 2017,
+      "skip_reason": "INSUFFICIENT_OWN_PB_HISTORY"
+    },
+    {
+      "hist_n": 3,
+      "instrument_id": "000001.SZ",
+      "min_required": 12,
+      "origin_as_of": "2019-03-07T15:00:00+08:00",
+      "origin_fy": 2018,
+      "skip_reason": "INSUFFICIENT_OWN_PB_HISTORY"
+    },
+    {
+      "hist_n": 4,
+      "instrument_id": "000001.SZ",
+      "min_required": 12,
+      "origin_as_of": "2020-02-14T15:00:00+08:00",
+      "origin_fy": 2019,
+      "skip_reason": "INSUFFICIENT_OWN_PB_HISTORY"
+    },
+    {
+      "hist_n": 5,
+      "instrument_id": "000001.SZ",
+      "min_required": 12,
+      "origin_as_of": "2021-02-02T15:00:00+08:00",
+      "origin_fy": 2020,
+      "skip_reason": "INSUFFICIENT_OWN_PB_HISTORY"
+    },
+    {
+      "hist_n": 6,
+      "instrument_id": "000001.SZ",
+      "min_required": 12,
+      "origin_as_of": "2022-03-10T15:00:00+08:00",
+      "origin_fy": 2021,
+      "skip_reason": "INSUFFICIENT_OWN_PB_HISTORY"
+    },
+    {
+      "hist_n": 1,
+      "instrument_id": "600036.SH",
+      "min_required": 12,
+      "origin_as_of": "2018-03-24T15:00:00+08:00",
+      "origin_fy": 2017,
+      "skip_reason": "INSUFFICIENT_OWN_PB_HISTORY"
+    },
+    {
+      "hist_n": 2,
+      "instrument_id": "600036.SH",
+      "min_required": 12,
+      "origin_as_of": "2019-03-23T15:00:00+08:00",
+      "origin_fy": 2018,
+      "skip_reason": "INSUFFICIENT_OWN_PB_HISTORY"
+    },
+    {
+      "hist_n": 3,
+      "instrument_id": "600036.SH",
+      "min_required": 12,
+      "origin_as_of": "2020-03-21T15:00:00+08:00",
+      "origin_fy": 2019,
+      "skip_reason": "INSUFFICIENT_OWN_PB_HISTORY"
+    },
+    {
+      "hist_n": 4,
+      "instrument_id": "600036.SH",
+      "min_required": 12,
+      "origin_as_of": "2021-03-20T15:00:00+08:00",
+      "origin_fy": 2020,
+      "skip_reason": "INSUFFICIENT_OWN_PB_HISTORY"
+    },
+    {
+      "hist_n": 5,
+      "instrument_id": "600036.SH",
+      "min_required": 12,
+      "origin_as_of": "2022-03-19T15:00:00+08:00",
+      "origin_fy": 2021,
+      "skip_reason": "INSUFFICIENT_OWN_PB_HISTORY"
+    },
+    {
+      "hist_n": 2,
+      "instrument_id": "601398.SH",
+      "min_required": 12,
+      "origin_as_of": "2018-03-28T15:00:00+08:00",
+      "origin_fy": 2017,
+      "skip_reason": "INSUFFICIENT_OWN_PB_HISTORY"
+    },
+    {
+      "hist_n": 3,
+      "instrument_id": "601398.SH",
+      "min_required": 12,
+      "origin_as_of": "2019-03-29T15:00:00+08:00",
+      "origin_fy": 2018,
+      "skip_reason": "INSUFFICIENT_OWN_PB_HISTORY"
+    },
+    {
+      "hist_n": 4,
+      "instrument_id": "601398.SH",
+      "min_required": 12,
+      "origin_as_of": "2020-03-28T15:00:00+08:00",
+      "origin_fy": 2019,
+      "skip_reason": "INSUFFICIENT_OWN_PB_HISTORY"
+    },
+    {
+      "hist_n": 5,
+      "instrument_id": "601398.SH",
+      "min_required": 12,
+      "origin_as_of": "2021-03-27T15:00:00+08:00",
+      "origin_fy": 2020,
+      "skip_reason": "INSUFFICIENT_OWN_PB_HISTORY"
+    },
+    {
+      "hist_n": 6,
+      "instrument_id": "601398.SH",
+      "min_required": 12,
+      "origin_as_of": "2022-03-31T15:00:00+08:00",
+      "origin_fy": 2021,
+      "skip_reason": "INSUFFICIENT_OWN_PB_HISTORY"
+    }
+  ],
+  "universe_id": "fi_deposit_lean_r7_v1",
+  "version": "RIM-EVAL-1"
+}

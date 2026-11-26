@@ -1,0 +1,9 @@
+timestamp_asia_shanghai=2026-11-27 02:11:09 CST
+python=Python 3.13.5
+pytest=pytest 9.2.0
+repo_head_during_run=dea7173e338620c0c07925b43a198b7e005bc264
+master_base=dd84fc16f54c397d3ba88e953a384dfecd550466
+fund_db=/workspace/data/hithink_fundamentals.duckdb
+market_db=/workspace/data/market.duckdb
+-rw-r--r-- 1 box box 204484608 2026-11-27 02:09 /workspace/data/hithink_fundamentals.duckdb
+-rw-r--r-- 1 box box 581971968 2026-11-26 16:57 /workspace/data/market.duckdb

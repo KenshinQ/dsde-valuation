@@ -1,0 +1,12 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.5, pytest-9.2.0, pluggy-1.7.0
+rootdir: /workspace/dsde-valuation
+configfile: pyproject.toml
+plugins: hypothesis-6.170.17
+collected 25 items
+
+tests/unit/methods/test_rim_r4_fi_peer_panel.py .............            [ 52%]
+tests/unit/methods/test_rim_r5_subject_hist_depth.py ............        [100%]
+
+------- generated xml file: /tmp/suite_j_evidence/junit_r4_r5_local.xml --------
+============================= 25 passed in 43.41s ==============================

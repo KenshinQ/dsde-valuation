@@ -1,0 +1,160 @@
+# VTP-0.1 Synthetic Company Fixtures (§4.2)
+# Frozen before test execution - DO NOT tune to make tests pass
+
+companies:
+  SYN-MATURE:
+    description: "Mature operating company"
+    economic_profile: "MATURE_OPERATING"
+    expected_routes:
+      FCFF_DCF: "ELIGIBLE"
+      FCFE_DCF: "ELIGIBLE"
+      DDM: "CONDITIONAL"  # only if dividend gate passes
+      RIM: "ELIGIBLE"
+      PE_MULTIPLE: "ELIGIBLE"
+      PB_MULTIPLE: "ELIGIBLE"
+      EV_EBIT: "ELIGIBLE"
+      EV_EBITDA: "ELIGIBLE"
+      EV_SALES: "ELIGIBLE"
+    financial_data:
+      revenue: 10000
+      ebit: 2000
+      ebitda: 2500
+      fcf: 1500
+      book_equity: 8000
+      shares: 1000
+      dividends: 500
+    
+  SYN-GROWTH:
+    description: "Growth/reinvestment-heavy company"
+    economic_profile: "HIGH_GROWTH"
+    expected_routes:
+      FCFF_DCF: "WARN"  # single-stage may be rejected
+      EV_SALES: "ELIGIBLE"
+      PE_MULTIPLE: "INELIGIBLE"  # negative earnings
+      FCFE_DCF: "WARN"
+    financial_data:
+      revenue: 5000
+      revenue_growth: 0.50
+      ebit: -500
+      fcf: -1000
+      book_equity: 3000
+      shares: 1000
+    
+  SYN-BANK:
+    description: "Financial institution"
+    economic_profile: "FINANCIAL_INSTITUTION"
+    expected_routes:
+      RIM: "ELIGIBLE"
+      PB_MULTIPLE: "ELIGIBLE"
+      DDM: "ELIGIBLE"
+      FCFF_DCF: "INELIGIBLE"  # industrial FCFF disabled
+      EV_EBITDA: "INELIGIBLE"
+    financial_data:
+      book_equity: 50000
+      roe: 0.15
+      dividends: 4000
+      shares: 10000
+    
+  SYN-CYCLICAL:
+    description: "Cyclical manufacturer"
+    economic_profile: "CYCLICAL"
+    expected_routes:
+      FCFF_DCF: "ELIGIBLE"  # with normalization
+      PE_MULTIPLE: "WARN"  # peak earnings warning
+      MIDCYCLE_NORMALIZED: "ELIGIBLE"
+    financial_data:
+      revenue: 15000
+      ebit_peak: 3000
+      ebit_trough: 500
+      ebit_midcycle: 1500
+      fcf: 1000
+      shares: 2000
+    
+  SYN-ASSET:
+    description: "Asset-centric/resource company"
+    economic_profile: "ASSET_FOCUSED"
+    expected_routes:
+      NAV: "ELIGIBLE"
+      SOTP: "ELIGIBLE"
+      PE_MULTIPLE: "CONDITIONAL"
+    assets:
+      property_plant_equipment: 20000
+      investments: 5000
+      intangibles: 3000
+    haircuts:
+      ppe: 0.20
+      intangibles: 0.50
+    liabilities: 10000
+    shares: 1000
+    
+  SYN-HOLDCO:
+    description: "Holding/conglomerate"
+    economic_profile: "HOLDING_COMPANY"
+    expected_routes:
+      SOTP: "ELIGIBLE"
+      NAV: "ELIGIBLE"
+      PE_MULTIPLE: "WARN"  # single multiple misleading
+    segments:
+      - name: "Manufacturing"
+        value: 8000
+      - name: "Services"
+        value: 5000
+      - name: "Financial"
+        value: 3000
+    holding_costs: 500
+    debt: 2000
+    shares: 1000
+    
+  SYN-DISTRESSED:
+    description: "Distressed/turnaround"
+    economic_profile: "DISTRESSED"
+    expected_routes:
+      FCFF_DCF: "INELIGIBLE"  # going-concern rejected
+      RECOVERY_METHOD: "CONDITIONAL"  # if waterfall available
+      DDM: "INELIGIBLE"
+      PE_MULTIPLE: "INELIGIBLE"
+    financial_data:
+      book_equity: -2000  # negative equity
+      revenue: 8000
+      ebit: -1000
+      debt: 15000
+      shares: 1000
+    
+  SYN-HYBRID:
+    description: "Ambiguous/mixed profile"
+    economic_profile: "HYBRID_LOW_CONFIDENCE"
+    expected_routes:
+      profile_confidence: "LOW"
+      multi_label: true
+      coverage_gap_expected: true
+    financial_data:
+      revenue: 6000
+      ebit: 800
+      book_equity: 4000
+      shares: 1000
+    
+  SYN-BAD-DATA:
+    description: "Data-quality failure"
+    expected_routes:
+      ALL_METHODS: "BLOCKED"
+    data_issues:
+      - missing_published_at: true
+      - inconsistent_units: true
+      - balance_sheet_mismatch: true
+    
+  SYN-NO-PEERS:
+    description: "Operating company without valid peer set"
+    economic_profile: "MATURE_OPERATING"
+    expected_routes:
+      FCFF_DCF: "ELIGIBLE"
+      PE_MULTIPLE: "INELIGIBLE"  # no valid peers
+      PB_MULTIPLE: "INELIGIBLE"
+      EV_EBIT: "INELIGIBLE"
+    peer_issues:
+      peer_count: 0
+      reason: "NO_VALID_PEERS"
+    financial_data:
+      revenue: 10000
+      ebit: 2000
+      fcf: 1500
+      shares: 1000

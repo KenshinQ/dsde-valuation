@@ -3,7 +3,7 @@
   "evaluation_timestamp": "2026-11-10T01:53:26Z",
   "baseline_commit": "dd84fc16f54c397d3ba88e953a384dfecd550466",
   "evidence_branch": "cursor/vtp-0.1-evidence-11d5",
-  "evidence_head": "3f943948921cffae6e2e13794916d5d7f1817a84",
+  "evidence_head": "c14e8bd31b515dc80b0b8253309d1c8b2d25a7d7",
   "note": "权威 fail-closed 判定。Suite I 为 6/6 executed KILLED，不解除 ENGINEERING_BLOCKED。官方 VTP-0.1 E-01 是路由真值表（清单第 9 项），不是清单第 6 项离线 E2E smoke。2026-11-27 Asia/Shanghai 已用生产 vms.router.route_methods 跑完约定 10×12×4=480 格（40 次调用，无玩具路由）。官方 E-01 总判 PARTIAL（不是 PASS）：41 MATCH / 3 MISMATCH（SYN-NO-PEERS 相对法资格层推迟 peer_count=0）/80 NOT_PREDECLARED / 6 EXPECTED_NON_BINARY / 40 midcycle_normalized 不在 registry / 120 格 TOTAL_RETURN 无生产方法。旧 SimplifiedRoutingEngine 矩阵与旧 junit 不得当作本项 PASS。官方 Suite J 仍 BLOCKED；Suite G（清单第 10 项）未开始。不宣称 ENGINEERING_ACCEPTED。",
   "overall_release_decision": "RELEASE_BLOCKED",
   "engineering": "ENGINEERING_BLOCKED",
@@ -229,7 +229,7 @@
     "完成 Suite G 生产 market_pricing 调用"
   ],
   "verdict_alignment_timestamp": "2026-11-27T02:24:27+08:00",
-  "evidence_head_note": "Suite J official walk-forward evidence lives in 3f943948921cffae6e2e13794916d5d7f1817a84. The previous evidence head was dd07b18407d5c96db9535e55e97e0b4738c2d789 (I-M04). A follow-up commit only backfills this field. Official Suite J remains BLOCKED (J-01..J-04 PARTIAL, J-05 BLOCKED). Repo is still ENGINEERING_BLOCKED / DO_NOT_MERGE / INVESTMENT_VALUE_NOT_ESTABLISHED.",
+  "evidence_head_note": "Official E-01 production routing evidence lives in c14e8bd31b515dc80b0b8253309d1c8b2d25a7d7. The previous evidence head was 3f943948921cffae6e2e13794916d5d7f1817a84 (Suite J). A follow-up commit only backfills this field. Official E-01 is PARTIAL, not PASS. Repo is still ENGINEERING_BLOCKED / DO_NOT_MERGE / INVESTMENT_VALUE_NOT_ESTABLISHED.",
   "investment_value": "INVESTMENT_VALUE_NOT_ESTABLISHED",
-  "evidence_head_reviewed": "dd07b18407d5c96db9535e55e97e0b4738c2d789"
+  "evidence_head_reviewed": "3f943948921cffae6e2e13794916d5d7f1817a84"
 }

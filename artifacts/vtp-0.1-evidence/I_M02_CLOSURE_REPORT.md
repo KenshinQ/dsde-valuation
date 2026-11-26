@@ -5,6 +5,7 @@
 This addendum does not change the I-M02 KILLED conclusion from 2026-11-10. It only corrects stale SHAs and records an evidence gap.
 
 - **Reviewed head (before this alignment commit)**: `3d9c7376e2c9dcda8dc8e96bed41df819ce65887`
+- **Alignment commit (evidence_head)**: `444dfddf0a508def51ae2b8eb4e7a3cb537158ee`
 - **Baseline / master**: `dd84fc16f54c397d3ba88e953a384dfecd550466`
 - **Branch / PR**: `cursor/vtp-0.1-evidence-11d5` / [#33](https://github.com/KenshinQ/dsde-valuation/pull/33)
 - **Authoritative mutation JSON**: `artifacts/vtp-0.1-evidence/mutation_results_FINAL.json` (this alignment commit adds only an `evidence_gap` note; statuses and counts are unchanged)

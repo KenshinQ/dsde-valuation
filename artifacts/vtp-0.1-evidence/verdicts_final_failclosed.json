@@ -3,7 +3,7 @@
   "evaluation_timestamp": "2026-11-10T01:53:26Z",
   "baseline_commit": "dd84fc16f54c397d3ba88e953a384dfecd550466",
   "evidence_branch": "cursor/vtp-0.1-evidence-11d5",
-  "evidence_head": "3d9c7376e2c9dcda8dc8e96bed41df819ce65887",
+  "evidence_head": "444dfddf0a508def51ae2b8eb4e7a3cb537158ee",
   "note": "权威 fail-closed 判定。独立核读以 JSON 为准：executed=3, killed=3, survived=0, not_executed=3；I-M01/I-M02/I-M05 为 KILLED，I-M03/I-M04/I-M06 仍为 NOT_EXECUTED。不是 6/6。I-M02 检测为 tests/unit/test_gate0_implementation_check.py，直接调用生产 evaluate_hard_gates()；生产 src/vms/methods/eligibility.py SHA256 未改：8fa769cffa167135f3b22a26dc9565b16d032fe2efe1adb5d2d870aff9cffc28。I-M02 detector_results 仍缺完整 stdout/断言上下文（见 mutation_results_FINAL.json 的 evidence_gap；未编造）。",
   "overall_release_decision": "RELEASE_BLOCKED",
   "engineering": "ENGINEERING_BLOCKED",
@@ -167,6 +167,7 @@
     "验证 E-01 端到端 smoke（需可复现的离线隔离；当前无 root/unshare 则保持 NOT_VERIFIED）"
   ],
   "verdict_alignment_timestamp": "2026-11-27T00:49:16+08:00",
-  "evidence_head_note": "Independent review was against 3d9c7376e2c9dcda8dc8e96bed41df819ce65887. This field is set to that SHA in the alignment commit and backfilled to the alignment commit SHA afterwards. Do not treat the short prefix b676c97 as the current evidence head; that commit recorded I-M02 as SURVIVED before the Gate0 detector landed.",
-  "investment_value": "INVESTMENT_VALUE_NOT_ESTABLISHED"
+  "evidence_head_note": "Independent review was against 3d9c7376e2c9dcda8dc8e96bed41df819ce65887. evidence_head is the alignment commit that updated these verdicts and recorded the I-M02 stdout gap. A follow-up commit only backfills this field. Do not treat the short prefix b676c97 as the current evidence head; that commit recorded I-M02 as SURVIVED before the Gate0 detector landed.",
+  "investment_value": "INVESTMENT_VALUE_NOT_ESTABLISHED",
+  "evidence_head_reviewed": "3d9c7376e2c9dcda8dc8e96bed41df819ce65887"
 }

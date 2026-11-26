@@ -1,0 +1,12 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.5, pytest-9.2.0, pluggy-1.7.0
+rootdir: /workspace/dsde-valuation
+configfile: pyproject.toml
+plugins: hypothesis-6.170.17
+collected 3 items
+
+tests/unit/test_phase4_followups.py .                                    [ 33%]
+tests/unit/test_sampling.py .                                            [ 66%]
+tests/unit/test_path_statements.py .                                     [100%]
+
+============================== 3 passed in 11.79s ==============================

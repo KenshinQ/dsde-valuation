@@ -1,0 +1,20 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.5, pytest-9.2.0, pluggy-1.7.0
+rootdir: /workspace/dsde-valuation
+configfile: pyproject.toml
+plugins: hypothesis-6.170.17
+collected 3 items
+
+tests/unit/test_phase4_followups.py F                                    [ 33%]
+tests/unit/test_sampling.py .                                            [ 66%]
+tests/unit/test_path_statements.py .                                     [100%]
+
+=================================== FAILURES ===================================
+_________________ test_invalid_path_fraction_blocks_production _________________
+tests/unit/test_phase4_followups.py:35: in test_invalid_path_fraction_blocks_production
+    with pytest.raises(SamplingGateError, match="invalid path fraction"):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: DID NOT RAISE SamplingGateError
+=========================== short test summary info ============================
+FAILED tests/unit/test_phase4_followups.py::test_invalid_path_fraction_blocks_production
+========================= 1 failed, 2 passed in 8.79s ==========================

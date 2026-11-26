@@ -178,24 +178,65 @@
     },
     {
       "mutation_id": "I-M06",
-      "description": "Mutation I-M06",
-      "target_file": "src/vms/statements/paths.py",
-      "status": "NOT_EXECUTED",
-      "reason": "MC path error handling not located",
-      "execution_timestamp": "2026-11-10T01:53:26.568115+00:00"
+      "description": "Silently discard failed Monte Carlo paths (do not record InvalidPathSummary into invalid).",
+      "target_file": "src/vms/sampling/simulate.py",
+      "absolute_path": "/workspace/dsde-valuation/src/vms/sampling/simulate.py",
+      "mutation_type": "SILENT_DROP_INVALID",
+      "execution_timestamp": "2026-11-27T01:17:23+08:00",
+      "line_number": 313,
+      "unified_diff": "--- a/src/vms/sampling/simulate.py\n+++ b/src/vms/sampling/simulate.py\n@@ -310,7 +310,7 @@\n         r = _one_path(i, regimes=regimes, dist=distributions, years=years, states=states, chol=chol,\n                       names=names, df=df, seed=seed, parameter_mode=parameter_mode)\n         if isinstance(r, InvalidPathSummary):\n-            invalid.append(r)\n+            pass\n         else:\n             valid.append(r)\n     by_reason = {c: 0 for c in INVALID_REASON_CODES}\n",
+      "baseline_exit_code": 0,
+      "baseline_stdout": "============================= test session starts ==============================\nplatform linux -- Python 3.13.5, pytest-9.2.0, pluggy-1.7.0\nrootdir: /workspace/dsde-valuation\nconfigfile: pyproject.toml\nplugins: hypothesis-6.170.17\ncollected 3 items\n\ntests/unit/test_phase4_followups.py .                                    [ 33%]\ntests/unit/test_sampling.py .                                            [ 66%]\ntests/unit/test_path_statements.py .                                     [100%]\n\n============================== 3 passed in 11.79s ==============================\n",
+      "baseline_stderr": "",
+      "baseline_command": "pytest tests/unit/test_phase4_followups.py::test_invalid_path_fraction_blocks_production tests/unit/test_sampling.py::test_invalid_path_reasons_reported tests/unit/test_path_statements.py::test_failed_paths_never_enter_aggregates -v --tb=short",
+      "mutated_sha256_full": "fc0a0dd08bfea23ee1d083f2ef6aaf8beabedf7ebc0aa6ef1aecd838674d0a01",
+      "mutated_exit_code": 1,
+      "mutated_stdout": "============================= test session starts ==============================\nplatform linux -- Python 3.13.5, pytest-9.2.0, pluggy-1.7.0\nrootdir: /workspace/dsde-valuation\nconfigfile: pyproject.toml\nplugins: hypothesis-6.170.17\ncollected 3 items\n\ntests/unit/test_phase4_followups.py F                                    [ 33%]\ntests/unit/test_sampling.py .                                            [ 66%]\ntests/unit/test_path_statements.py .                                     [100%]\n\n=================================== FAILURES ===================================\n_________________ test_invalid_path_fraction_blocks_production _________________\ntests/unit/test_phase4_followups.py:35: in test_invalid_path_fraction_blocks_production\n    with pytest.raises(SamplingGateError, match=\"invalid path fraction\"):\n         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nE   Failed: DID NOT RAISE SamplingGateError\n=========================== short test summary info ============================\nFAILED tests/unit/test_phase4_followups.py::test_invalid_path_fraction_blocks_production\n========================= 1 failed, 2 passed in 8.79s ==========================\n",
+      "mutated_stderr": "",
+      "mutated_command": "pytest tests/unit/test_phase4_followups.py::test_invalid_path_fraction_blocks_production tests/unit/test_sampling.py::test_invalid_path_reasons_reported tests/unit/test_path_statements.py::test_failed_paths_never_enter_aggregates -v --tb=short",
+      "detector_test": "tests/unit/test_phase4_followups.py::test_invalid_path_fraction_blocks_production",
+      "status": "KILLED",
+      "failure_classification_reason": "Expected detector failure: pytest.raises(SamplingGateError) did not fire (pytest Failed: DID NOT RAISE SamplingGateError). This is the test's intended assertion that a 100% invalid-path run must be blocked; not import/syntax/collection error or timeout. 3 items collected; session finished in 8.79s. Classified KILLED, not ERROR.",
+      "detector_effectiveness": "PASS",
+      "assertion_context": "=================================== FAILURES ===================================\n_________________ test_invalid_path_fraction_blocks_production _________________\ntests/unit/test_phase4_followups.py:35: in test_invalid_path_fraction_blocks_production\n    with pytest.raises(SamplingGateError, match=\"invalid path fraction\"):\n         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nE   Failed: DID NOT RAISE SamplingGateError\n=========================== short test summary info ============================\nFAILED tests/unit/test_phase4_followups.py::test_invalid_path_fraction_blocks_production\n========================= 1 failed, 2 passed in 8.79s ==========================",
+      "failed_test_node": "tests/unit/test_phase4_followups.py::test_invalid_path_fraction_blocks_production",
+      "failed_test_nodes": [
+        "tests/unit/test_phase4_followups.py::test_invalid_path_fraction_blocks_production"
+      ],
+      "passed_under_mutant": [
+        "tests/unit/test_sampling.py::test_invalid_path_reasons_reported",
+        "tests/unit/test_path_statements.py::test_failed_paths_never_enter_aggregates"
+      ],
+      "passed_under_mutant_note": "test_invalid_path_reasons_reported only asserts n_valid + n_invalid == requested; with this seed/config that sum can still hold if no path is invalid (0 + 50 == 50), so silent drop of an empty invalid list is invisible. test_failed_paths_never_enter_aggregates is the statement-projection layer (src/vms/statements/paths.py) and does not force sampling-layer InvalidPathSummary. The designed detector test_invalid_path_fraction_blocks_production forces every path invalid and is the one that KILLED the mutation.",
+      "restoration_verified": true,
+      "original_sha256_full": "57bd06f4febfec6b762efea890cc65450ad6dbcd11ee7af563ceeca9d43cb40d",
+      "restored_sha256_full": "57bd06f4febfec6b762efea890cc65450ad6dbcd11ee7af563ceeca9d43cb40d",
+      "stdout_sidecar": {
+        "baseline": "artifacts/vtp-0.1-evidence/I_M06_baseline_stdout.txt",
+        "mutated": "artifacts/vtp-0.1-evidence/I_M06_mutated_stdout.txt",
+        "diff": "artifacts/vtp-0.1-evidence/I_M06_unified_diff.patch"
+      },
+      "search_notes": "Earlier executor targeted src/vms/statements/paths.py and left I-M06 NOT_EXECUTED ('MC path error handling not located'). Location work on 2026-11-27 found the sampling-layer record site in simulate_paths (invalid.append) to be the production symbol that would silently shrink the MC sample if skipped. statements/paths.py already records failed projection paths and excludes them from aggregates (FAILED-PATHS-EXCLUDED-v1); that is not a silent drop. _one_path's except Exception already returns InvalidPathSummary (DEPENDENCE_DRAW_FAILED), it does not continue without a record.",
+      "prior_status": {
+        "status": "NOT_EXECUTED",
+        "reason": "MC path error handling not located",
+        "target_file_then": "src/vms/statements/paths.py",
+        "note": "Superseded by this 2026-11-27 execution on src/vms/sampling/simulate.py:313."
+      }
     }
   ],
   "summary": {
     "total_planned": 6,
     "total_mutations": 6,
-    "executed": 4,
-    "killed": 4,
+    "executed": 5,
+    "killed": 5,
     "survived": 0,
     "errors": 0,
-    "not_executed": 2,
+    "not_executed": 1,
     "mutation_score": 1.0,
-    "note": "4/4 executed KILLED (I-M01/I-M02/I-M03/I-M05). I-M04 and I-M06 remain NOT_EXECUTED. Not 6/6."
+    "note": "5/5 executed KILLED (I-M01/I-M02/I-M03/I-M05/I-M06). I-M04 remains NOT_EXECUTED. Not 6/6."
   },
   "i_m02_stdout_gap": "I-M02 full pytest stdout/assertion context was never persisted in this JSON and the cited /tmp log is missing. See mutations[I-M02].evidence_gap. Not reconstructed.",
-  "i_m03_executed": "2026-11-27T01:05:10+08:00 KILLED by tests/leakage/test_leakage.py; production file restored."
+  "i_m03_executed": "2026-11-27T01:05:10+08:00 KILLED by tests/leakage/test_leakage.py; production file restored.",
+  "i_m06_executed": "2026-11-27T01:17:23+08:00 KILLED by tests/unit/test_phase4_followups.py::test_invalid_path_fraction_blocks_production; production file restored."
 }

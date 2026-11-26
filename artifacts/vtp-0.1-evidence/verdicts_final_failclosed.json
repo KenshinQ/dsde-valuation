@@ -3,7 +3,7 @@
   "evaluation_timestamp": "2026-11-10T01:53:26Z",
   "baseline_commit": "dd84fc16f54c397d3ba88e953a384dfecd550466",
   "evidence_branch": "cursor/vtp-0.1-evidence-11d5",
-  "evidence_head": "c686ae6fa03c05388486c56c7044fc7db479560b",
+  "evidence_head": "92c4375e6c9b5f6da5e9db3a04381057a1e5156b",
   "note": "权威 fail-closed 判定。独立核读以 JSON 为准：executed=5, killed=5, survived=0, not_executed=1；I-M01/I-M02/I-M03/I-M05/I-M06 为 KILLED，I-M04 仍为 NOT_EXECUTED。不是 6/6。I-M06 于 2026-11-27 Asia/Shanghai 在本机对 src/vms/sampling/simulate.py:313 做单点临时变异（失败 MC 路径不写入 invalid 列表，造成无声缩样），检测测例 baseline 3 passed（exit 0），mutant 1 failed / 2 passed（exit 1，test_invalid_path_fraction_blocks_production 未触发预期 SamplingGateError），已还原。生产 simulate.py SHA256 还原后仍为 57bd06f4febfec6b762efea890cc65450ad6dbcd11ee7af563ceeca9d43cb40d。I-M02 detector_results 仍缺完整 stdout（未编造）。",
   "overall_release_decision": "RELEASE_BLOCKED",
   "engineering": "ENGINEERING_BLOCKED",
@@ -175,7 +175,7 @@
     "验证 E-01 端到端 smoke（需可复现的离线隔离；当前无 root/unshare 则保持 NOT_VERIFIED）"
   ],
   "verdict_alignment_timestamp": "2026-11-27T01:18:21+08:00",
-  "evidence_head_note": "This I-M06 evidence commit is made on top of c686ae6fa03c05388486c56c7044fc7db479560b. evidence_head is set to that SHA here and will be backfilled to the I-M06 evidence commit afterwards.",
+  "evidence_head_note": "I-M06 execution evidence lives in 92c4375e6c9b5f6da5e9db3a04381057a1e5156b. The previous evidence head was c686ae6fa03c05388486c56c7044fc7db479560b. A follow-up commit only backfills this field. Still ENGINEERING_BLOCKED / DO_NOT_MERGE / INVESTMENT_VALUE_NOT_ESTABLISHED.",
   "investment_value": "INVESTMENT_VALUE_NOT_ESTABLISHED",
-  "evidence_head_reviewed": "86d32fdfb6817d7c6b73cf97a556ab02458b5334"
+  "evidence_head_reviewed": "c686ae6fa03c05388486c56c7044fc7db479560b"
 }

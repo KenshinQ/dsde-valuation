@@ -3,7 +3,7 @@
   "evaluation_timestamp": "2026-11-10T01:53:26Z",
   "baseline_commit": "dd84fc16f54c397d3ba88e953a384dfecd550466",
   "evidence_branch": "cursor/vtp-0.1-evidence-11d5",
-  "evidence_head": "86d32fdfb6817d7c6b73cf97a556ab02458b5334",
+  "evidence_head": "b4b3ec54e7d2ef5afc592ee839d7f33a97e7cd7d",
   "note": "权威 fail-closed 判定。独立核读以 JSON 为准：executed=4, killed=4, survived=0, not_executed=2；I-M01/I-M02/I-M03/I-M05 为 KILLED，I-M04/I-M06 仍为 NOT_EXECUTED。不是 6/6。I-M03 于 2026-11-27 Asia/Shanghai 在本机对 src/vms/pit/snapshot.py:391 做单点临时变异（去掉 financial published_at <= as_of 过滤；published_at 为 NOTICE_DATE，不是 period_end），leakage 测例 baseline 12 passed（exit 0），mutant 6 failed / 6 passed（exit 1，均为预期 AssertionError），已还原。生产 snapshot.py SHA256 还原后仍为 4d15a203af621ab5572a8d2b6fd73c8f7aeb5893182bffb5ba2dbf69afb3c534。I-M02 detector_results 仍缺完整 stdout（未编造）。",
   "overall_release_decision": "RELEASE_BLOCKED",
   "engineering": "ENGINEERING_BLOCKED",
@@ -171,7 +171,7 @@
     "验证 E-01 端到端 smoke（需可复现的离线隔离；当前无 root/unshare 则保持 NOT_VERIFIED）"
   ],
   "verdict_alignment_timestamp": "2026-11-27T01:07:11+08:00",
-  "evidence_head_note": "This I-M03 evidence commit is made on top of 86d32fdfb6817d7c6b73cf97a556ab02458b5334. evidence_head is set to that reviewed SHA here and will be backfilled to the I-M03 evidence commit afterwards.",
+  "evidence_head_note": "I-M03 execution evidence lives in b4b3ec54e7d2ef5afc592ee839d7f33a97e7cd7d. The previous evidence head was 86d32fdfb6817d7c6b73cf97a556ab02458b5334. A follow-up commit only backfills this field. Still ENGINEERING_BLOCKED / DO_NOT_MERGE / INVESTMENT_VALUE_NOT_ESTABLISHED.",
   "investment_value": "INVESTMENT_VALUE_NOT_ESTABLISHED",
-  "evidence_head_reviewed": "3d9c7376e2c9dcda8dc8e96bed41df819ce65887"
+  "evidence_head_reviewed": "86d32fdfb6817d7c6b73cf97a556ab02458b5334"
 }

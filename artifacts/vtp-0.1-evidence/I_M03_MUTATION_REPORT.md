@@ -4,6 +4,7 @@
 **Machine**: local Linux box (`/workspace/dsde-valuation`)  
 **Branch / PR**: `cursor/vtp-0.1-evidence-11d5` / [#33](https://github.com/KenshinQ/dsde-valuation/pull/33)  
 **Parent evidence head at execution**: `86d32fdfb6817d7c6b73cf97a556ab02458b5334`  
+**Evidence commit (evidence_head)**: `b4b3ec54e7d2ef5afc592ee839d7f33a97e7cd7d`  
 **Result**: **KILLED**  
 **Release**: still `ENGINEERING_BLOCKED` / `RELEASE_BLOCKED` / `DO_NOT_MERGE` / `INVESTMENT_VALUE_NOT_ESTABLISHED`  
 **Counts after this run**: executed=4, killed=4, survived=0, not_executed=2 (I-M04, I-M06). Not 6/6.

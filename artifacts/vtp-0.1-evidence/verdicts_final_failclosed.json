@@ -3,7 +3,7 @@
   "evaluation_timestamp": "2026-11-10T01:53:26Z",
   "baseline_commit": "dd84fc16f54c397d3ba88e953a384dfecd550466",
   "evidence_branch": "cursor/vtp-0.1-evidence-11d5",
-  "evidence_head": "fd614a8df5a8b026c444ce00633bceab0c2c6aa6",
+  "evidence_head": "ed66b8377dfdb156fddd449278b0085338ab5af7",
   "note": "权威 fail-closed 判定。独立核读以 JSON 为准：executed=5, killed=5, survived=0, not_executed=1；I-M01/I-M02/I-M03/I-M05/I-M06 为 KILLED，I-M04 仍为 NOT_EXECUTED。不是 6/6。I-M06 于 2026-11-27 Asia/Shanghai 在本机对 src/vms/sampling/simulate.py:313 做单点临时变异（失败 MC 路径不写入 invalid 列表，造成无声缩样），检测测例 baseline 3 passed（exit 0），mutant 1 failed / 2 passed（exit 1，test_invalid_path_fraction_blocks_production 未触发预期 SamplingGateError），已还原。生产 simulate.py SHA256 还原后仍为 57bd06f4febfec6b762efea890cc65450ad6dbcd11ee7af563ceeca9d43cb40d。I-M02 detector_results 仍缺完整 stdout（未编造）。 A-02 于 2026-11-27 Asia/Shanghai 在本机用 unshare -r --net（非代理）跑通最小完整合成工作流并自检 ENETUNREACH，有依据改为 PASS；详见 A_02_OFFLINE_SEMANTICS_GAP_AND_CLOSURE.md 与 PR #35。A-02 单项 PASS 不解除 ENGINEERING_BLOCKED / DO_NOT_MERGE / INVESTMENT_VALUE_NOT_ESTABLISHED。 清单第 6 项（verdicts Suite E / gap_items.9 离线端到端 smoke / VTP Gap #9） 于 2026-11-27 Asia/Shanghai 在本机用 unshare -r --net 跑通官方 scripts/e2e_offline_demo.sh 生产 CLI 路径，并从已保存 data 重放（K-02；evaluate forecast 仅 evaluation_as_of 时间戳不同）。有依据改为 PASS。这不是 A-02 的改口，也不是 VTP 准则 E-01 路由真值表（清单第 9 项）的关闭。详见 E_01_OFFLINE_E2E_SMOKE.md 与 PR #36。本项 PASS 不解除 ENGINEERING_BLOCKED / DO_NOT_MERGE / INVESTMENT_VALUE_NOT_ESTABLISHED。",
   "overall_release_decision": "RELEASE_BLOCKED",
   "engineering": "ENGINEERING_BLOCKED",
@@ -192,7 +192,7 @@
     "完成 Suite J 分布测试 coverage"
   ],
   "verdict_alignment_timestamp": "2026-11-27T01:53:50+08:00",
-  "evidence_head_note": "A-02 isolated-offline evidence lives in fd614a8df5a8b026c444ce00633bceab0c2c6aa6. The previous evidence head was 92c4375e6c9b5f6da5e9db3a04381057a1e5156b (I-M06). A follow-up commit only backfills this field. A-02 is PASS; repo is still ENGINEERING_BLOCKED / DO_NOT_MERGE / INVESTMENT_VALUE_NOT_ESTABLISHED.",
+  "evidence_head_note": "E-01 offline E2E smoke evidence lives in ed66b8377dfdb156fddd449278b0085338ab5af7. The previous evidence head was fd614a8df5a8b026c444ce00633bceab0c2c6aa6 (A-02). A follow-up commit only backfills this field. Item 6 (smoke) is PASS, not A-02 and not the VTP routing E-01. Repo is still ENGINEERING_BLOCKED / DO_NOT_MERGE / INVESTMENT_VALUE_NOT_ESTABLISHED.",
   "investment_value": "INVESTMENT_VALUE_NOT_ESTABLISHED",
-  "evidence_head_reviewed": "92c4375e6c9b5f6da5e9db3a04381057a1e5156b"
+  "evidence_head_reviewed": "fd614a8df5a8b026c444ce00633bceab0c2c6aa6"
 }
